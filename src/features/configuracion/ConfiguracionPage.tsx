@@ -138,6 +138,11 @@ function HorariosTab() {
   );
 }
 
+interface ModuleState {
+  key: string;
+  enabled: boolean;
+}
+
 function ModulosTab() {
   const MODS = [
     { key: "tareas", label: "Tareas", desc: "Asigna y supervisa tareas con evidencias", icon: "📋" },
@@ -145,28 +150,40 @@ function ModulosTab() {
     { key: "nomina", label: "Nómina", desc: "Calcula y aprueba el pago semanal", icon: "💰" },
     { key: "configuracion", label: "Configuración", desc: "Gestión de la plataforma", icon: "⚙️", alwaysOn: true },
   ];
-  const [modules, setModules] = useState<string[]>([]);
+  const [modules, setModules] = useState<ModuleState[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
   const [loadingMods, setLoadingMods] = useState(true);
 
   useEffect(() => {
     api.get("/empresa/modulos").then((res) => {
-      const mods = (res.data?.modules ?? []) as string[];
+      const raw = (res.data?.modules ?? []) as any[];
+      // Normalize to ModuleState objects
+      const mods = raw.map(m => typeof m === "string" ? { key: m, enabled: true } : m) as ModuleState[];
       setModules(mods);
-      auth.setModules(mods);
+      auth.setModules(mods.filter(m => m.enabled).map(m => m.key));
     }).catch(() => {
-      setModules(auth.getModules());
+      const saved = auth.getModules();
+      setModules(saved.map(k => ({ key: k, enabled: true })));
     }).finally(() => setLoadingMods(false));
   }, []);
 
   async function toggle(key: string) {
     if (key === "configuracion") return;
-    const next = modules.includes(key) ? modules.filter(m => m !== key) : [...modules, key];
+    
+    const exists = modules.find(m => m.key === key);
+    let next: ModuleState[];
+    
+    if (exists) {
+      next = modules.map(m => m.key === key ? { ...m, enabled: !m.enabled } : m);
+    } else {
+      next = [...modules, { key, enabled: true }];
+    }
+
     setSaving(key);
     try {
       await api.post("/empresa/modulos", { modules: next });
       setModules(next);
-      auth.setModules(next);
+      auth.setModules(next.filter(m => m.enabled).map(m => m.key));
     } catch { /* silent */ }
     finally { setSaving(null); }
   }
@@ -181,7 +198,9 @@ function ModulosTab() {
       </div>
       <div className="space-y-2">
         {MODS.map((m) => {
-          const active = modules.includes(m.key);
+          const mod = modules.find(x => x.key === m.key);
+          const active = m.alwaysOn || mod?.enabled === true;
+          
           return (
             <div key={m.key} className={cx("rounded-2xl border p-4 transition", active ? "border-emerald-200 bg-emerald-50" : "border-neutral-200 bg-white")}>
               <div className="flex items-center justify-between">
