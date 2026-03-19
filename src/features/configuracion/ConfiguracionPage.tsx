@@ -158,7 +158,10 @@ function ModulosTab() {
     api.get("/empresa/modulos").then((res) => {
       const raw = (res.data?.modules ?? []) as any[];
       // Normalize to ModuleState objects
-      const mods = raw.map(m => typeof m === "string" ? { key: m, enabled: true } : m) as ModuleState[];
+      const mods = raw.map(m => typeof m === "string" 
+        ? { key: m, enabled: true } 
+        : { key: m.slug ?? m.key, enabled: m.enabled === true }
+      ) as ModuleState[];
       setModules(mods);
       auth.setModules(mods.filter(m => m.enabled).map(m => m.key));
     }).catch(() => {
