@@ -174,17 +174,21 @@ function ModulosTab() {
     if (key === "configuracion") return;
     
     const exists = modules.find(m => m.key === key);
+    const enabled = !exists?.enabled;
     let next: ModuleState[];
     
     if (exists) {
-      next = modules.map(m => m.key === key ? { ...m, enabled: !m.enabled } : m);
+      next = modules.map(m => m.key === key ? { ...m, enabled } : m);
     } else {
-      next = [...modules, { key, enabled: true }];
+      next = [...modules, { key, enabled }];
     }
 
     setSaving(key);
     try {
-      await api.post("/empresa/modulos", { modules: next });
+      await api.post("/empresa/modulos", { 
+        module_slug: key, 
+        enabled 
+      });
       setModules(next);
       auth.setModules(next.filter(m => m.enabled).map(m => m.key));
     } catch { /* silent */ }
