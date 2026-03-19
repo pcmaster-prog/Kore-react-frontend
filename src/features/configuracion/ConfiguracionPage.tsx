@@ -156,7 +156,7 @@ function ModulosTab() {
 
   useEffect(() => {
     api.get("/empresa/modulos").then((res) => {
-      const raw = (res.data?.modules ?? []) as any[];
+      const raw = (Array.isArray(res.data) ? res.data : res.data?.modules ?? []) as any[];
       // Normalize to ModuleState objects
       const mods = raw.map(m => typeof m === "string" 
         ? { key: m, enabled: true } 
