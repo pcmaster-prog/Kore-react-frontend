@@ -164,6 +164,7 @@ function ModulosTab() {
       ) as ModuleState[];
       setModules(mods);
       auth.setModules(mods.filter(m => m.enabled).map(m => m.key));
+      window.dispatchEvent(new Event("kore-modules-updated"));
     }).catch(() => {
       const saved = auth.getModules();
       setModules(saved.map(k => ({ key: k, enabled: true })));
@@ -191,6 +192,7 @@ function ModulosTab() {
       });
       setModules(next);
       auth.setModules(next.filter(m => m.enabled).map(m => m.key));
+      window.dispatchEvent(new Event("kore-modules-updated"));
     } catch { /* silent */ }
     finally { setSaving(null); }
   }

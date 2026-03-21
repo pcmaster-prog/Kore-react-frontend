@@ -1,5 +1,5 @@
 // src/layout/AppShell.tsx
-import {useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { auth } from "@/features/auth/store";
 import {
@@ -108,8 +108,15 @@ function SidebarContent({
 }) {
   const isEmployee = role === "empleado";
   const isAdmin = role === "admin";
-  const modules = auth.getModules();
-  // supervisor ve todo excepto Configuración y Usuarios
+  const [activeModules, setActiveModules] = useState(() => auth.getModules());
+
+  useEffect(() => {
+    const handleUpdate = () => setActiveModules(auth.getModules());
+    window.addEventListener("kore-modules-updated", handleUpdate);
+    return () => window.removeEventListener("kore-modules-updated", handleUpdate);
+  }, []);
+
+  const hasModule = (slug: string) => activeModules.length === 0 || activeModules.includes(slug);
 
   return (
     <div className="flex flex-col h-full">
@@ -151,13 +158,13 @@ function SidebarContent({
           <>
             <SidebarLink to="/app/manager/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
 
-            {(modules.length === 0 || modules.includes("tareas")) && (
+            {hasModule("tareas") && (
               <NavGroup label="Operaciones">
                 <SidebarLink to="/app/manager/tareas" label="Tareas" icon={<ClipboardList className="h-4 w-4" />} onClick={onNav} />
               </NavGroup>
             )}
 
-            {(modules.length === 0 || modules.includes("asistencia")) && (
+            {hasModule("asistencia") && (
               <NavGroup label="Equipo">
                 <SidebarLink to="/app/manager/asistencia" label="Asistencia" icon={<CalendarCheck className="h-4 w-4" />} onClick={onNav} />
                 <SidebarLink to="/app/employee/asistencia" label="Mi Asistencia" icon={<Clock className="h-4 w-4" />} onClick={onNav} />
@@ -168,7 +175,9 @@ function SidebarContent({
             {isAdmin && (
               <NavGroup label="Administración">
                 <SidebarLink to="/app/manager/configuracion" label="Configuración" icon={<Settings className="h-4 w-4" />} onClick={onNav} />
-                <SidebarLink to="/app/manager/nomina" label="Nómina" icon={<Users className="h-4 w-4" />} onClick={onNav} />
+                {hasModule("nomina") && (
+                  <SidebarLink to="/app/manager/nomina" label="Nómina" icon={<Users className="h-4 w-4" />} onClick={onNav} />
+                )}
               </NavGroup>
             )}
 
