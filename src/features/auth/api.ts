@@ -17,6 +17,6 @@ export type RegisterPayload = {
 };
 
 export async function register(payload: RegisterPayload): Promise<{ token: string; user: AuthUser }> {
-  const res = await api.post("/auth/register", payload);
+  const res = await api.post("/register", payload);
   return res.data;
 }
