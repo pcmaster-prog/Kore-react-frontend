@@ -59,7 +59,7 @@ export default function RegisterPage() {
     setErr(null);
     try {
       const payload: RegisterPayload = {
-        empresa_name: empresaName.trim(),
+        empresa_nombre: empresaName.trim(),
         industry,
         employee_range: employeeRange,
         modules,

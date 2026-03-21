@@ -7,7 +7,7 @@ export async function login(email: string, password: string): Promise<{ token: s
 }
 
 export type RegisterPayload = {
-  empresa_name: string;
+  empresa_nombre: string;
   industry: string;
   employee_range: string;
   modules: string[];
