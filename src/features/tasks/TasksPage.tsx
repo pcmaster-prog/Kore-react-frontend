@@ -11,12 +11,13 @@ import {
 import { getTemplate } from "@/features/tasks/catalog/api";
 import type { Task } from "./types";
 import TaskCatalogPanel from "./TaskCatalogPanel";
-import { 
+import { listEmployees } from "./employeeApi";
+import {
   ClipboardList, CheckCircle2, Clock, AlertTriangle, 
-  Search, Filter, Calendar, ChevronRight, Play, 
+  Search, ChevronRight, Play, 
   RotateCcw, Trash2, Eye, MessageSquare, Paperclip,
   Download, Image as ImageIcon, FileText, Check, X,
-  TrendingUp, CalendarDays, Zap
+  TrendingUp, Zap
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -59,9 +60,13 @@ export default function TasksPage() {
   // filtros
   const [status, setStatus] = useState<string>("");
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState<string>(today);
+  const [date] = useState<string>(today);
   const [search, setSearch] = useState<string>("");
   const [overdue, setOverdue] = useState(false);
+  const [empleadoId, setEmpleadoId] = useState<string>("");
+
+  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [showCatalog, setShowCatalog] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -70,14 +75,22 @@ export default function TasksPage() {
   // Estado para bloquear botones por tarea
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const handleNewTask = () => setShowCatalog(s => !s);
+    window.addEventListener("kore-new-task", handleNewTask);
+    listEmployees().then(res => setEmpleados(Array.isArray(res) ? res : (res.data ?? []))).catch(() => {});
+    return () => window.removeEventListener("kore-new-task", handleNewTask);
+  }, []);
+
   const params = useMemo(() => {
     const p: Record<string, string | number | boolean> = { page, _r: reloadKey };
     if (status) p.status = status;
     if (date) p.date = date;
+    if (empleadoId) p.empleado_id = empleadoId;
     if (search.trim()) p.search = search.trim();
     if (overdue) p.overdue = true;
     return p;
-  }, [page, status, date, search, overdue, reloadKey]);
+  }, [page, status, date, search, overdue, empleadoId, reloadKey]);
 
   useEffect(() => {
     let alive = true;
@@ -290,238 +303,297 @@ export default function TasksPage() {
 
       {tab === "tareas" ? (
         <div className="space-y-6 animate-in-fade">
-          {/* Quick Stats / Weekly Performance feel */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-[32px] p-5 border border-neutral-100/50 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center translate-y-[-2px]">
-                <CalendarDays className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Hoy</div>
-                <div className="text-xl font-black text-obsidian tracking-tighter">{(data?.total ?? 0)} <span className="text-xs font-medium text-neutral-400 lowercase italic">Asignadas</span></div>
-              </div>
-            </div>
-            <div className="bg-white rounded-[32px] p-5 border border-neutral-100/50 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center translate-y-[-2px]">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Desempeño</div>
-                <div className="text-xl font-black text-obsidian tracking-tighter">94% <span className="text-xs font-medium text-neutral-400 lowercase italic">Efectividad</span></div>
-              </div>
-            </div>
-            <div className="bg-white rounded-[32px] p-5 border border-neutral-100/50 shadow-sm flex items-center gap-4">
-              <div className="h-10 w-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center translate-y-[-2px]">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Vencidas</div>
-                <div className="text-xl font-black text-obsidian tracking-tighter">{overdue ? "?" : "0"} <span className="text-xs font-medium text-neutral-400 lowercase italic">Urgentes</span></div>
-              </div>
-            </div>
-          </div>
-
-          <TaskCatalogPanel
-            onAssigned={() => {
-              setPage(1);
-              setReloadKey((k) => k + 1);
-            }}
-          />
-
-          {/* Filtros */}
-          <div className="bg-white border border-neutral-100/50 rounded-[32px] p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Filter className="h-4 w-4 text-obsidian" />
-              <span className="text-xs font-black text-obsidian uppercase tracking-widest">Filtros de Búsqueda</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase ml-1">Estado</span>
-                <div className="relative">
-                  <select
-                    className="w-full h-11 rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-obsidian/5 appearance-none"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                  >
-                    <option value="">Todos los Estados</option>
-                    <option value="open">Abierta</option>
-                    <option value="in_progress">En progreso</option>
-                    <option value="completed">Completada</option>
-                  </select>
-                  <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 rotate-90 pointer-events-none" />
-                </div>
+          {/* Top Actions & Filters Row */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-[32px] border border-neutral-100 shadow-sm flex-wrap">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <div className="relative">
+                <select
+                  className="h-11 pl-5 pr-10 rounded-2xl bg-neutral-50/50 border border-neutral-100 text-[11px] font-bold uppercase tracking-widest text-obsidian outline-none appearance-none focus:ring-2 focus:ring-obsidian/10"
+                  value={status} onChange={(e) => setStatus(e.target.value)}
+                >
+                  <option value="">Todos los Estados</option>
+                  <option value="open">Abierta</option>
+                  <option value="in_progress">En progreso</option>
+                  <option value="completed">Completada</option>
+                </select>
+                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 rotate-90 pointer-events-none" />
               </div>
 
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase ml-1">Fecha</span>
-                <div className="relative">
-                  <input
-                    className="w-full h-11 rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-obsidian/5"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </div>
+              <div className="relative">
+                <select
+                  className="h-11 pl-5 pr-10 rounded-2xl bg-neutral-50/50 border border-neutral-100 text-[11px] font-bold uppercase tracking-widest text-obsidian outline-none appearance-none focus:ring-2 focus:ring-obsidian/10 max-w-[200px]"
+                  value={empleadoId} onChange={(e) => setEmpleadoId(e.target.value)}
+                >
+                  <option value="">Todos los Empleados</option>
+                  {empleados.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.full_name ?? emp.name ?? emp.id}</option>
+                  ))}
+                </select>
+                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 rotate-90 pointer-events-none" />
               </div>
 
-              <div className="md:col-span-2 space-y-1.5">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase ml-1">Buscar por título</span>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                  <input
-                    className="w-full h-11 rounded-2xl border border-neutral-100 bg-neutral-50/50 pl-11 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-obsidian/5"
-                    placeholder="Ej. Limpieza, Inventario..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") setPage(1);
-                    }}
-                  />
-                </div>
+              <div className="relative flex items-center bg-neutral-50/50 h-11 rounded-2xl border border-neutral-100 px-4 min-w-[280px] gap-2 focus-within:ring-2 focus-within:ring-obsidian/10">
+                <Search className="h-4 w-4 text-neutral-400" />
+                <input
+                  type="text" placeholder="Buscar tarea..."
+                  className="bg-transparent border-none text-xs font-bold text-obsidian outline-none w-full placeholder:text-neutral-400 placeholder:uppercase placeholder:tracking-widest"
+                  value={search} onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => { if(e.key === "Enter") setPage(1); }}
+                />
               </div>
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-              <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="flex items-center gap-4 border-t md:border-t-0 border-neutral-100 pt-3 md:pt-0 pl-2">
+              <label className="flex items-center gap-2 cursor-pointer group">
                 <div className={cx(
-                  "h-5 w-5 rounded-md border flex items-center justify-center transition-colors",
-                  overdue ? "bg-obsidian border-obsidian" : "border-neutral-200 group-hover:border-neutral-300"
+                  "h-5 w-5 rounded-md flex items-center justify-center transition-colors border shadow-sm",
+                  overdue ? "bg-rose-500 border-rose-500 text-white" : "border-neutral-200 bg-white group-hover:border-neutral-300"
                 )}>
-                  {overdue && <Check className="h-3 w-3 text-white" />}
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={overdue}
-                    onChange={(e) => setOverdue(e.target.checked)}
-                  />
+                  {overdue && <Check className="h-3.5 w-3.5" />}
+                  <input type="checkbox" className="hidden" checked={overdue} onChange={(e) => setOverdue(e.target.checked)} />
                 </div>
-                <span className="text-xs font-bold text-neutral-500 uppercase tracking-tighter group-hover:text-obsidian transition-colors">Ver solo tareas vencidas</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 group-hover:text-obsidian transition-colors">Vencidas</span>
               </label>
 
-              <button
-                className="h-10 px-4 rounded-xl border border-neutral-100 text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-obsidian hover:bg-neutral-50 transition-all"
-                onClick={() => {
-                  setStatus("");
-                  setDate(today);
-                  setSearch("");
-                  setOverdue(false);
-                  setPage(1);
-                }}
-              >
-                Resetear Filtros
-              </button>
+              <div className="h-8 w-px bg-neutral-100 hidden md:block" />
+
+              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100">
+                <span className="text-obsidian">{data?.total ?? 0}</span> TAREAS TOTALES
+              </div>
             </div>
           </div>
 
-          {/* Listado de Tareas - Card Grid */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-2">
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-[0.2em]">
-                {loading ? "Sincronizando..." : err ? "Error de Carga" : `Mostrando ${data?.data?.length ?? 0} tareas`}
+          {/* Catalog Panel Toggle */}
+          {showCatalog && (
+            <div className="animate-in-fade">
+              <TaskCatalogPanel onAssigned={() => { setPage(1); setReloadKey(k => k + 1); setShowCatalog(false); }} />
+            </div>
+          )}
+
+          {/* TABLE VIEW */}
+          <div className="bg-white rounded-[40px] border border-neutral-100 shadow-sm overflow-hidden">
+            <div className="px-8 py-6 border-b border-neutral-50 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-neutral-50 rounded-[14px] flex items-center justify-center text-obsidian border border-neutral-100">
+                  <ClipboardList className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-obsidian tracking-tight">Listado de Tareas</h3>
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Asignaciones en curso</p>
+                </div>
               </div>
             </div>
 
-            {err && (
-              <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-sm text-rose-600 flex items-center gap-3">
-                <AlertTriangle className="h-4 w-4" />
-                {err}
+            {loading ? (
+              <div className="p-16 flex flex-col items-center gap-4 text-neutral-400 bg-neutral-50/50">
+                <div className="h-10 w-10 border-4 border-neutral-200 border-t-obsidian rounded-full animate-spin" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Sincronizando tareas...</span>
+              </div>
+            ) : err ? (
+              <div className="p-8 m-6 rounded-3xl bg-rose-50 border border-rose-100 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                  <AlertTriangle className="h-5 w-5 text-rose-500" />
+                </div>
+                <div>
+                  <div className="text-sm font-black text-rose-700">Error de carga</div>
+                  <div className="text-[11px] font-bold uppercase tracking-widest text-rose-500 mt-1">{err}</div>
+                </div>
+              </div>
+            ) : data?.data?.length === 0 ? (
+              <div className="p-20 text-center bg-neutral-50/30">
+                <div className="h-20 w-20 rounded-[24px] bg-white border border-neutral-100 shadow-sm flex items-center justify-center mx-auto mb-6">
+                  <ClipboardList className="h-8 w-8 text-neutral-300" />
+                </div>
+                <p className="text-xs font-black text-obsidian uppercase tracking-widest mb-2">No hay tareas que mostrar</p>
+                <p className="text-[11px] font-bold text-neutral-400 capitalize tracking-wide max-w-xs mx-auto text-center leading-relaxed">
+                  Modifica los filtros de búsqueda o asigna nuevas tareas desde el catálogo.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-neutral-50/80 border-b border-neutral-50">
+                    <tr>
+                      <th className="px-6 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-widest whitespace-nowrap">Empleado</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-widest min-w-[280px]">Misión / Tarea</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Estado</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-center">Evidencia</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data?.data.map(t => (
+                      <tr key={t.id} className="border-t border-neutral-50 hover:bg-neutral-50/80 transition-colors group">
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-2xl bg-white border border-neutral-100 shadow-sm flex items-center justify-center text-[10px] font-black text-neutral-400 shrink-0">
+                              {"EQ"}
+                            </div>
+                            <div>
+                              <div className="text-xs font-black text-obsidian truncate max-w-[120px]">
+                                {(t as any).assignee_name ?? "Equipo General"}
+                              </div>
+                              <div className="text-[10px] font-bold tracking-wider uppercase text-neutral-400 mt-1 truncate max-w-[120px]">
+                                Multijugador
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex flex-col justify-center">
+                            <div className="text-sm font-black text-obsidian line-clamp-1 mb-1 group-hover:text-gold transition-colors">{t.title}</div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-neutral-400 uppercase">
+                              <span>Asig: {new Date(t.created_at).toLocaleDateString()}</span>
+                              <span className="h-1 w-1 rounded-full bg-neutral-200" />
+                              <span className={cx(t.priority === 'urgent' ? 'text-rose-500' : t.priority === 'high' ? 'text-rose-400' : 'text-neutral-400')}>
+                                Prio: {t.priority ?? "Normal"}
+                              </span>
+                            </div>
+                            {t.description && (
+                              <div className="text-xs font-medium text-neutral-400 mt-2 line-clamp-1 bg-neutral-50 border border-neutral-100 rounded-lg px-2.5 py-1.5 w-fit">
+                                {t.description}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <StatusPill status={t.status} />
+                        </td>
+                        <td className="px-6 py-5 text-center whitespace-nowrap">
+                          {(t as any).has_evidence ? (
+                            <button
+                              onClick={() => {}} // Could wire to evidences modal
+                              className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-white shadow-sm px-3 py-1.5 rounded-xl border border-emerald-100 hover:bg-emerald-50 hover:border-emerald-200 transition-colors mx-auto"
+                            >
+                              <ImageIcon className="h-3.5 w-3.5" /> Ver Evidencia
+                            </button>
+                          ) : (
+                            <span className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-300 bg-neutral-50 px-3 py-1.5 rounded-xl border border-neutral-100 mx-auto">
+                              <X className="h-3 w-3" /> Sin Evidencia
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-5 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                            <button
+                              title="Marcar completada"
+                              disabled={busyId === t.id || t.status === "completed"}
+                              onClick={() => quickSetStatus(t.id, "completed")}
+                              className="h-9 w-9 bg-white border border-neutral-100 shadow-sm rounded-xl flex items-center justify-center text-emerald-500 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-neutral-100"
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </button>
+                            <button
+                              title="Detener / Abierta"
+                              disabled={busyId === t.id || t.status === "open"}
+                              onClick={() => quickSetStatus(t.id, "open")}
+                              className="h-9 w-9 bg-white border border-neutral-100 shadow-sm rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 transition disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-neutral-100"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                            <button
+                              title="Reintentar / Reiniciar"
+                              disabled={busyId === t.id || t.status === "in_progress"}
+                              onClick={() => quickSetStatus(t.id, "in_progress")}
+                              className="h-9 px-3 bg-neutral-100 text-obsidian rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-200 transition-colors disabled:opacity-30"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              Retry
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
-
-            {!err && !loading && data?.data?.length === 0 && (
-              <div className="bg-white border border-neutral-100 rounded-[32px] p-12 text-center">
-                <ClipboardList className="h-12 w-12 text-neutral-100 mx-auto mb-4" />
-                <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">No se encontraron tareas</p>
-                <p className="text-xs text-neutral-400 mt-1">Intenta ajustar los filtros de búsqueda.</p>
+            
+            {/* Minimalist Pagination */}
+            {data && data.last_page > 1 && (
+              <div className="bg-neutral-50/50 border-t border-neutral-50 px-8 py-5 flex items-center justify-between">
+                <button
+                  className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-obsidian disabled:opacity-30 transition"
+                  disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  &larr; Anterior
+                </button>
+                <div className="flex gap-2">
+                  {Array.from({length: data.last_page}).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i + 1)}
+                      className={cx(
+                        "h-7 w-7 rounded-xl flex items-center justify-center text-[11px] font-black transition",
+                        page === i + 1 ? "bg-obsidian text-white shadow-sm shadow-obsidian/20" : "bg-white text-neutral-400 hover:text-obsidian border border-neutral-100"
+                      )}
+                    >{i + 1}</button>
+                  ))}
+                </div>
+                <button
+                  className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-obsidian disabled:opacity-30 transition"
+                  disabled={page >= data.last_page} onClick={() => setPage((p) => Math.min(data.last_page, p + 1))}
+                >
+                  Siguiente &rarr;
+                </button>
               </div>
             )}
+          </div>
 
-            {!err && data?.data?.length ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {data.data.map((t) => (
-                  <div key={t.id} className="bg-white border border-neutral-100/50 rounded-[32px] p-6 shadow-sm hover:shadow-xl hover:shadow-obsidian/5 transition-all group">
-                    <div className="flex items-start justify-between mb-4">
-                      <StatusPill status={t.status} />
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-neutral-50 text-[10px] font-bold text-neutral-400">
-                        <Clock className="h-3 w-3" />
-                        {t.meta?.catalog_date ?? "Sin fecha"}
-                      </div>
-                    </div>
-                    
-                    <h3 className="text-lg font-black text-obsidian tracking-tight leading-tight mb-2 group-hover:text-gold transition-colors">
-                      {t.title}
-                    </h3>
-                    
-                    {t.description && (
-                      <p className="text-xs text-neutral-400 line-clamp-2 mb-4 leading-relaxed italic">
-                        "{t.description}"
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-4 text-[10px] font-bold text-neutral-400 uppercase tracking-wide mb-6">
-                      <div className="flex items-center gap-1">
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                        Prioridad {t.priority ?? "Normal"}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Due: {t.due_at ? new Date(t.due_at).toLocaleDateString() : "-"}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-4 border-t border-neutral-50">
-                      <button
-                        className="flex-1 h-10 rounded-xl bg-obsidian text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gold transition-all disabled:opacity-50"
-                        disabled={busyId === t.id || t.status === "in_progress"}
-                        onClick={() => quickSetStatus(t.id, "in_progress")}
-                      >
-                        {busyId === t.id ? <Clock className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-                        Iniciar
-                      </button>
-                      <button
-                        className="h-10 px-4 rounded-xl border border-neutral-100 bg-white text-obsidian text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-50 transition-all disabled:opacity-50"
-                        disabled={busyId === t.id || t.status === "completed"}
-                        onClick={() => quickSetStatus(t.id, "completed")}
-                      >
-                        {busyId === t.id ? <Clock className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                        Terminar
-                      </button>
-                      <button
-                        className="w-10 h-10 rounded-xl border border-neutral-100 bg-white text-neutral-400 flex items-center justify-center hover:text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-50"
-                        disabled={busyId === t.id || t.status === "open"}
-                        onClick={() => quickSetStatus(t.id, "open")}
-                        title="Resetear"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                      </button>
+          {/* BOTTOM METRICS (Rendimiento Semanal / Resumen Turno) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-10">
+            {/* Left Box */}
+            <div className="bg-white rounded-[40px] border border-neutral-100 shadow-sm p-8 flex flex-col justify-between relative overflow-hidden min-h-[280px]">
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <h4 className="text-2xl font-black text-obsidian tracking-tight mb-2">Rendimiento<br/>Semanal</h4>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 max-w-[200px] leading-relaxed">
+                    Tu equipo ha completado <span className="text-obsidian">{data?.total ?? 0} tareas</span> en los últimos 7 días.
+                  </p>
+                </div>
+                <div className="h-12 w-12 rounded-[22px] bg-neutral-50 border border-neutral-100 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-neutral-300" />
+                </div>
+              </div>
+              
+              {/* Fake Bar Chart */}
+              <div className="mt-8 flex items-end justify-between gap-1 h-24 relative z-10 pt-4 px-2 select-none">
+                {[60, 40, 80, 50, 100, 70, 30].map((h, i) => (
+                  <div key={i} className="flex-1 max-w-[32px] rounded-t-[10px] bg-neutral-100 relative group transition-colors hover:bg-neutral-200 cursor-default" style={{ height: `${Math.max(20, h)}%` }}>
+                    <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-obsidian text-white text-[10px] font-bold px-2.5 py-1 rounded-lg transition-opacity pointer-events-none">
+                      {Math.floor(h/5)}th
                     </div>
                   </div>
                 ))}
               </div>
-            ) : null}
+            </div>
 
-            {/* Paginación */}
-            {data && data.last_page > 1 && (
-              <div className="flex items-center justify-center gap-4 mt-8 pb-4">
-                <button
-                  className="h-10 px-6 rounded-2xl border border-neutral-100 bg-white text-xs font-bold text-obsidian hover:bg-neutral-50 disabled:opacity-30 transition-all"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  Anterior
-                </button>
-                <span className="text-xs font-black text-neutral-400 uppercase tracking-widest">
-                  {page} / {data.last_page}
-                </span>
-                <button
-                  className="h-10 px-6 rounded-2xl border border-neutral-100 bg-white text-xs font-bold text-obsidian hover:bg-neutral-50 disabled:opacity-30 transition-all"
-                  disabled={page >= data.last_page}
-                  onClick={() => setPage((p) => Math.min(data.last_page, p + 1))}
-                >
-                  Siguiente
+            {/* Right Box (Dark) */}
+            <div className="bg-obsidian rounded-[40px] p-8 text-white relative overflow-hidden flex flex-col justify-between min-h-[280px] shadow-lg shadow-obsidian/10">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
+                <div className="absolute bottom-[-20%] right-[-10%] h-48 w-48 rounded-full bg-gold/10 blur-[40px]" />
+              </div>
+
+              <div className="relative z-10 space-y-5">
+                <div className="h-14 w-14 rounded-[24px] bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-sm shadow-inner">
+                  <Play className="h-6 w-6 fill-gold text-gold" />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black tracking-tight mb-3">Resumen de Turno</h4>
+                  <p className="text-sm font-medium text-white/50 leading-relaxed max-w-[85%]">
+                    Has gestionado <span className="text-white font-bold">{data?.total ?? 0} tareas</span> el día de hoy. Tu equipo mantiene un <span className="text-emerald-400 font-bold tracking-wide">94% de efectividad</span> en las entregas pautadas.
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative z-10 mt-8">
+                <button className="h-12 px-6 rounded-[20px] bg-white text-obsidian text-[11px] font-black uppercase tracking-widest hover:bg-neutral-100 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-black/20 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Generar Reporte
                 </button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       ) : (

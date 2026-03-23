@@ -1,7 +1,7 @@
 // src/features/tasks/TareasManagerPage.tsx
 // Página contenedora con tabs: Tareas | Plantillas | Rutinas
 import { useState } from "react";
-import { ClipboardList, Layers, RefreshCw } from "lucide-react";
+import { ClipboardList, Layers, RefreshCw, Download, Plus } from "lucide-react";
 import TasksPage from "./TasksPage";
 import TemplatesPage from "./catalog/TemplatesPage";
 import { useNavigate } from "react-router-dom";
@@ -42,23 +42,42 @@ export default function TareasManagerPage() {
         </div>
       </div>
 
-      {/* Tabs - Organic Segmented Style */}
-      <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-fit">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={cx(
-              "flex items-center gap-2 px-6 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300",
-              tab === t.key
-                ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
-                : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50"
-            )}
-          >
-            {t.icon}
-            {t.label}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Tabs - Organic Segmented Style */}
+        <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-fit">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cx(
+                "flex items-center gap-2 px-6 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300",
+                tab === t.key
+                  ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
+                  : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50"
+              )}
+            >
+              {t.icon}
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Global Actions */}
+        <div className="flex items-center gap-3">
+          <button className="h-11 px-5 rounded-2xl border border-neutral-200 bg-white text-sm font-bold text-obsidian shadow-sm hover:bg-neutral-50 transition-all flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Exportar
           </button>
-        ))}
+          {tab === "tareas" && (
+            <button 
+              className="h-11 px-5 rounded-2xl bg-obsidian text-sm font-bold text-white shadow-sm hover:bg-gold transition-all flex items-center gap-2"
+              onClick={() => window.dispatchEvent(new CustomEvent("kore-new-task"))}
+            >
+              <Plus className="h-4 w-4" />
+              Nueva Tarea
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content */}

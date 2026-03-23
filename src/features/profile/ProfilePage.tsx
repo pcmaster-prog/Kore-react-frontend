@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/http";
 import {
   User, Mail, Phone, MapPin, Briefcase, Shield,
-  Calendar, Hash, DollarSign, CheckCircle2, AlertTriangle,
+  Calendar, Hash, CheckCircle2, AlertTriangle,
   Pencil, Save, X, Loader2,
 } from "lucide-react";
 
