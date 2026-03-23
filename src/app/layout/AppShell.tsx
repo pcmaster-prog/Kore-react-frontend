@@ -5,7 +5,7 @@ import { auth } from "@/features/auth/store";
 import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
   CalendarCheck, User, Users,
-  Settings, ChevronRight, Bell, Search
+  Settings, ChevronRight, Bell
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -212,14 +212,7 @@ export default function AppShell() {
             >
               <Menu className="h-5 w-5 text-neutral-800" />
             </button>
-            <div className="flex items-center bg-white h-10 rounded-2xl border border-neutral-200 shadow-sm px-4 min-w-[300px] gap-3 group focus-within:ring-2 focus-within:ring-obsidian/10 transition-all">
-              <Search className="h-4 w-4 text-neutral-400 group-focus-within:text-obsidian" />
-              <input 
-                type="text" 
-                placeholder="Buscar procesos, empleados o reportes..." 
-                className="bg-transparent border-none text-[13px] text-neutral-800 outline-none w-full placeholder:text-neutral-400"
-              />
-            </div>
+            <Breadcrumbs />
           </div>
 
           <div className="flex items-center gap-4 lg:gap-6">
@@ -227,7 +220,10 @@ export default function AppShell() {
                <Bell className="h-4.5 w-4.5 text-neutral-700" />
                <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-rose-500 border-2 border-white" />
              </button>
-             <button className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-neutral-100 shadow-sm hover:bg-neutral-50 transition-colors">
+             <button
+               onClick={() => nav(role === 'admin' ? '/app/manager/configuracion' : '/app/perfil')}
+               className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-neutral-100 shadow-sm hover:bg-neutral-50 transition-colors"
+             >
                <Settings className="h-4.5 w-4.5 text-neutral-700" />
              </button>
              
@@ -235,7 +231,7 @@ export default function AppShell() {
 
              <div className="hidden sm:flex items-center gap-3">
                <div className="text-right">
-                 <div className="text-[13px] font-bold text-neutral-900 leading-none">{user?.name ?? "Ricardo Admin"}</div>
+                 <div className="text-[13px] font-bold text-neutral-900 leading-none">{user?.name ?? "Usuario"}</div>
                  <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-1.5">{role === 'admin' ? 'Operations Manager' : 'Staff'}</div>
                </div>
                <div className="h-10 w-10 rounded-xl bg-neutral-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
@@ -247,9 +243,6 @@ export default function AppShell() {
 
         {/* Dynamic Route Content */}
         <main className="flex-1 p-6 lg:p-10 pt-4 overflow-y-auto">
-          <div className="mb-8">
-            <Breadcrumbs />
-          </div>
           {/* Internal main-card container effect */}
           <div className="min-h-[calc(100vh-160px)]">
              <Outlet />
