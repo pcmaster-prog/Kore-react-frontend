@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+@theme {
+  --color-obsidian: #313852;
+  --color-bone: #F7F4EB;
+  --color-bone-darker: #ECE8D9;
+  --color-gold: #453713;
+  --color-gold-light: #D9CDB0;
+}
+
+@layer base {
+  body {
+    @apply bg-bone text-neutral-800;
+  }
+}
+
+:root {
+  --obsidian: #313852;
+  --bone: #F7F4EB;
+  --bone-darker: #ECE8D9;
+  --gold: #453713;
+  --radius-organic: 32px;
+}

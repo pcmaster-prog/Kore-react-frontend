@@ -28,26 +28,31 @@ export default function TareasManagerPage() {
   const [tab, setTab] = useState<TabKey>("tareas");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 animate-in-up">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Tareas</h1>
-        <p className="text-sm text-neutral-500 mt-0.5">
-          Gestiona tareas, plantillas y rutinas del equipo.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian/5 text-[10px] font-bold tracking-widest uppercase text-obsidian/40 mb-2">
+            Operations Module
+          </div>
+          <h1 className="text-3xl font-black text-obsidian tracking-tight">Gestión de Tareas</h1>
+          <p className="text-sm text-neutral-400 mt-1 max-w-lg">
+            Supervisa la ejecución, configura plantillas y programa rutinas automáticas para tu equipo.
+          </p>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-2xl border bg-neutral-50 p-1 overflow-x-auto">
+      {/* Tabs - Organic Segmented Style */}
+      <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-fit">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={cx(
-              "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition whitespace-nowrap",
+              "flex items-center gap-2 px-6 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300",
               tab === t.key
-                ? "bg-blue-600 text-white shadow"
-                : "text-neutral-600 hover:bg-white hover:text-neutral-900"
+                ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
+                : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50"
             )}
           >
             {t.icon}
@@ -56,8 +61,8 @@ export default function TareasManagerPage() {
         ))}
       </div>
 
-      {/* Contenido */}
-      <div>
+      {/* Content */}
+      <div className="animate-in-fade">
         {tab === "tareas"     && <TasksPage />}
         {tab === "plantillas" && <TemplatesPage />}
         {tab === "rutinas"    && <RoutinesWrapper />}

@@ -5,6 +5,8 @@ import {
   CheckCircle2, ChevronLeft, ChevronRight,
   Download, FileSpreadsheet, Loader2,
   AlertTriangle, RefreshCw, Clock, CalendarDays,
+  DollarSign, Users, TrendingDown, TrendingUp,
+  Pencil, Check,
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -66,7 +68,7 @@ function weekLabel(start: string, end: string): string {
 
 function sundayOfCurrentWeek(): string {
   const d = new Date();
-  d.setDate(d.getDate() - d.getDay()); // retrocede al domingo
+  d.setDate(d.getDate() - d.getDay());
   return d.toISOString().slice(0, 10);
 }
 
@@ -75,10 +77,10 @@ function initials(name: string): string {
 }
 
 const AVATAR_COLORS = [
-  "bg-blue-200 text-blue-800", "bg-emerald-200 text-emerald-800",
-  "bg-violet-200 text-violet-800", "bg-amber-200 text-amber-800",
-  "bg-rose-200 text-rose-800", "bg-teal-200 text-teal-800",
-  "bg-indigo-200 text-indigo-800", "bg-orange-200 text-orange-800",
+  "bg-blue-100 text-blue-700", "bg-emerald-100 text-emerald-700",
+  "bg-violet-100 text-violet-700", "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-700", "bg-teal-100 text-teal-700",
+  "bg-indigo-100 text-indigo-700", "bg-orange-100 text-orange-700",
 ];
 function avatarColor(name: string) {
   let h = 0;
@@ -124,129 +126,135 @@ function EntryRow({
   return (
     <>
       <tr className={cx(
-        "border-t transition-colors group",
-        dirty ? "bg-amber-50/40" : "hover:bg-neutral-50/50"
+        "border-t border-neutral-50 transition-colors group",
+        dirty ? "bg-amber-50/30" : "hover:bg-neutral-50/50"
       )}>
         {/* Empleado */}
-        <td className="px-4 py-3">
+        <td className="px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className={cx("h-9 w-9 rounded-2xl flex items-center justify-center text-xs font-bold shrink-0", avatarColor(entry.empleado_name))}>
+            <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center text-xs font-bold shrink-0", avatarColor(entry.empleado_name))}>
               {initials(entry.empleado_name)}
             </div>
             <div>
-              <div className="text-sm font-medium text-neutral-900">{entry.empleado_name}</div>
-              {entry.empleado_role && <div className="text-xs text-neutral-400">{entry.empleado_role}</div>}
+              <div className="text-sm font-bold text-obsidian">{entry.empleado_name}</div>
+              {entry.empleado_role && <div className="text-[10px] text-neutral-400 uppercase tracking-wider mt-0.5">{entry.empleado_role}</div>}
             </div>
           </div>
         </td>
 
         {/* Horas/días */}
-        <td className="px-4 py-3">
-          <div className="text-sm font-medium">{fmtUnits(entry.payment_type, entry.units)}</div>
+        <td className="px-5 py-4">
+          <div className="text-sm font-semibold text-obsidian">{fmtUnits(entry.payment_type, entry.units)}</div>
           {entry.rest_days_paid > 0 && (
-            <div className="text-xs text-emerald-600 mt-0.5">+{entry.rest_days_paid} descanso pagado</div>
+            <div className="text-[10px] text-emerald-600 font-medium mt-0.5">+{entry.rest_days_paid} descanso pagado</div>
           )}
         </td>
 
         {/* Tipo */}
-        <td className="px-4 py-3">
+        <td className="px-5 py-4">
           <span className={cx(
-            "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium",
+            "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
             entry.payment_type === "hourly"
-              ? "bg-blue-50 text-blue-700 border-blue-200"
-              : "bg-violet-50 text-violet-700 border-violet-200"
+              ? "bg-blue-50 text-blue-600 border-blue-100"
+              : "bg-violet-50 text-violet-600 border-violet-100"
           )}>
             {entry.payment_type === "hourly"
-              ? <><Clock className="h-3 w-3" /> Por hora</>
-              : <><CalendarDays className="h-3 w-3" /> Por día</>}
+              ? <><Clock className="h-3 w-3" />Por hora</>
+              : <><CalendarDays className="h-3 w-3" />Por día</>}
           </span>
         </td>
 
         {/* Tarifa */}
-        <td className="px-4 py-3">
-          <div className="text-sm font-medium">{fmt(entry.rate)}</div>
-          <div className="text-xs text-neutral-400">{entry.payment_type === "hourly" ? "/hora" : "/día"}</div>
+        <td className="px-5 py-4">
+          <div className="text-sm font-semibold text-obsidian">{fmt(entry.rate)}</div>
+          <div className="text-[10px] text-neutral-400">{entry.payment_type === "hourly" ? "/hora" : "/día"}</div>
         </td>
 
         {/* Subtotal */}
-        <td className="px-4 py-3">
-          <div className="text-sm font-semibold">{fmt(entry.subtotal)}</div>
+        <td className="px-5 py-4">
+          <div className="text-sm font-bold text-obsidian">{fmt(entry.subtotal)}</div>
         </td>
 
         {/* Ajuste */}
-        <td className="px-4 py-3">
+        <td className="px-5 py-4">
           {approved ? (
-            <div className={cx("text-sm font-medium", (entry.adjustment_amount ?? 0) < 0 ? "text-rose-600" : "text-neutral-700")}>
-              {(entry.adjustment_amount ?? 0) !== 0 ? fmt(entry.adjustment_amount) : <span className="text-neutral-400">—</span>}
+            <div className={cx("text-sm font-semibold", (entry.adjustment_amount ?? 0) < 0 ? "text-rose-500" : "text-neutral-500")}>
+              {(entry.adjustment_amount ?? 0) !== 0 ? fmt(entry.adjustment_amount) : <span className="text-neutral-300">—</span>}
             </div>
           ) : (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <input
                 type="number"
                 step="0.01"
                 value={adj}
                 onChange={(e) => { setAdj(e.target.value); setDirty(true); }}
                 className={cx(
-                  "w-24 rounded-xl border px-2.5 py-1.5 text-sm outline-none transition",
-                  "focus:border-neutral-400 focus:ring-1 focus:ring-neutral-200",
-                  parseFloat(adj) < 0 ? "text-rose-600 border-rose-200 bg-rose-50" : "border-neutral-200 bg-white"
+                  "w-24 rounded-xl border px-2.5 py-1.5 text-sm font-medium outline-none transition",
+                  "focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300",
+                  parseFloat(adj) < 0 ? "text-rose-600 border-rose-200 bg-rose-50" : "border-neutral-200 bg-white text-obsidian"
                 )}
                 placeholder="0"
               />
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="p-1.5 rounded-lg hover:bg-neutral-100 transition text-neutral-400"
+                className={cx(
+                  "h-7 w-7 rounded-lg flex items-center justify-center transition",
+                  expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
+                )}
                 title="Agregar motivo"
               >
-                ✏️
+                <Pencil className="h-3 w-3" />
               </button>
             </div>
           )}
         </td>
 
         {/* Bono */}
-        <td className="px-4 py-3">
+        <td className="px-5 py-4">
           {approved ? (
-            <div className="text-sm font-medium text-emerald-700">
-              {(entry.bonus_amount ?? 0) > 0 ? fmt(entry.bonus_amount) : <span className="text-neutral-400">—</span>}
+            <div className="text-sm font-semibold text-emerald-600">
+              {(entry.bonus_amount ?? 0) > 0 ? fmt(entry.bonus_amount) : <span className="text-neutral-300">—</span>}
             </div>
           ) : (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={bonus}
                 onChange={(e) => { setBonus(e.target.value); setDirty(true); }}
-                className="w-24 rounded-xl border border-neutral-200 bg-white px-2.5 py-1.5 text-sm outline-none transition focus:border-neutral-400 focus:ring-1 focus:ring-neutral-200"
+                className="w-24 rounded-xl border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium text-obsidian outline-none transition focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300"
                 placeholder="0"
               />
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="p-1.5 rounded-lg hover:bg-neutral-100 transition text-neutral-400"
+                className={cx(
+                  "h-7 w-7 rounded-lg flex items-center justify-center transition",
+                  expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
+                )}
                 title="Agregar motivo"
               >
-                ✏️
+                <Pencil className="h-3 w-3" />
               </button>
             </div>
           )}
         </td>
 
         {/* Total */}
-        <td className="px-4 py-3">
-          <div className="text-sm font-bold text-neutral-900">{fmt(computedTotal)}</div>
+        <td className="px-5 py-4">
+          <div className="text-sm font-black text-obsidian">{fmt(computedTotal)}</div>
         </td>
 
         {/* Guardar */}
         {!approved && (
-          <td className="px-4 py-3">
+          <td className="px-5 py-4">
             {dirty && (
               <button
                 onClick={save}
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-obsidian px-3 py-1.5 text-[11px] font-bold text-white hover:bg-gold transition disabled:opacity-50"
               >
-                {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : "Guardar"}
+                {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Check className="h-3 w-3" />Guardar</>}
               </button>
             )}
           </td>
@@ -255,27 +263,27 @@ function EntryRow({
 
       {/* Fila de motivos expandida */}
       {expanded && !approved && (
-        <tr className="bg-amber-50/30">
-          <td colSpan={9} className="px-4 pb-3 pt-0">
-            <div className="flex items-center gap-4 ml-12">
+        <tr className="bg-amber-50/20">
+          <td colSpan={9} className="px-5 pb-4 pt-0">
+            <div className="flex items-center gap-4 ml-14 mt-2">
               <div className="flex-1">
-                <label className="text-xs text-neutral-500 mb-1 block">Motivo del ajuste</label>
+                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5 block">Motivo del ajuste</label>
                 <input
                   type="text"
                   value={adjNote}
                   onChange={(e) => { setAdjNote(e.target.value); setDirty(true); }}
                   placeholder="Ej. Descuento por falta, error en pago anterior..."
-                  className="w-full rounded-xl border border-neutral-200 px-3 py-1.5 text-sm outline-none focus:border-neutral-400"
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs text-neutral-500 mb-1 block">Motivo del bono</label>
+                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5 block">Motivo del bono</label>
                 <input
                   type="text"
                   value={bonusNote}
                   onChange={(e) => { setBonusNote(e.target.value); setDirty(true); }}
                   placeholder="Ej. Bono por puntualidad, incentivo especial..."
-                  className="w-full rounded-xl border border-neutral-200 px-3 py-1.5 text-sm outline-none focus:border-neutral-400"
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
                 />
               </div>
             </div>
@@ -295,7 +303,6 @@ export default function NominaPage() {
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
-  // La semana actualmente visible: guarda la fecha del domingo
   const [weekDate, setWeekDate] = useState<string>(sundayOfCurrentWeek());
 
   function showToast(type: "ok" | "err", msg: string) {
@@ -303,7 +310,6 @@ export default function NominaPage() {
     setTimeout(() => setToast(null), 3500);
   }
 
-  // Calcula domingo/sábado para la semana actual
   const weekStart = weekDate;
   const weekEnd   = (() => {
     const d = new Date(weekDate + "T12:00:00");
@@ -323,13 +329,11 @@ export default function NominaPage() {
     setWeekDate(d.toISOString().slice(0, 10));
   }
 
-  // Carga el periodo de la semana (si existe)
   const loadPeriod = useCallback(async () => {
     setLoading(true);
     setErr(null);
     setPeriod(null);
     try {
-      // Busca en la lista de periodos el que corresponde a esta semana
       const res = await api.get("/nomina/periodos", { params: { week_start: weekStart } });
       const list = res.data?.data ?? res.data ?? [];
       const found = Array.isArray(list)
@@ -337,7 +341,6 @@ export default function NominaPage() {
         : null;
 
       if (found) {
-        // Carga detalle con entradas
         const detail = await api.get(`/nomina/periodos/${found.id}`);
         setPeriod(detail.data?.period ?? detail.data);
       }
@@ -401,7 +404,6 @@ export default function NominaPage() {
     }
   }
 
-  // Export como JSON para imprimir (PDF del navegador)
   function exportPDF() {
     if (!period) return;
     const w = window.open("", "_blank");
@@ -489,104 +491,129 @@ export default function NominaPage() {
   const approved  = period?.status === "approved";
   const totalEmp  = period?.entries.length ?? 0;
   const avgTotal  = totalEmp > 0 ? (period?.total_amount ?? 0) / totalEmp : 0;
+  const draftCount = period?.entries.filter(e => (e.adjustment_amount ?? 0) < 0).length ?? 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="relative rounded-3xl bg-neutral-900 overflow-hidden px-6 py-6 text-white">
+      {/* ── Header Hero ─────────────────────────────────────────────────────── */}
+      <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-8 text-white">
+        {/* Organic blobs */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/[0.03]" />
-          <div className="absolute top-6 right-24 h-24 w-24 rounded-full bg-white/[0.04]" />
+          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
+          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
+          <div className="absolute bottom-0 left-1/3 h-20 w-40 rounded-full bg-gold/10" />
         </div>
+
         <div className="relative flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Nómina Semanal</h1>
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Recursos Humanos</p>
+            <h1 className="text-3xl font-black tracking-tight">Nómina Semanal</h1>
             <p className="text-white/50 text-sm mt-1">Genera, revisa y aprueba el pago semanal.</p>
           </div>
-          {period && (
-            <span className={cx(
-              "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium",
-              approved
-                ? "bg-emerald-500/15 border-emerald-400/30 text-emerald-300"
-                : "bg-amber-500/15 border-amber-400/30 text-amber-300"
-            )}>
-              {approved ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-              {approved ? "Aprobada" : "Borrador"}
-            </span>
-          )}
+
+          <div className="flex items-center gap-3">
+            {period && (
+              <span className={cx(
+                "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-bold uppercase tracking-widest",
+                approved
+                  ? "bg-emerald-500/15 border-emerald-400/30 text-emerald-300"
+                  : "bg-amber-500/15 border-amber-400/30 text-amber-300"
+              )}>
+                {approved ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                {approved ? "Aprobada" : "Borrador"}
+              </span>
+            )}
+
+            {/* Week navigator inline in header */}
+            <div className="flex items-center gap-2 bg-white/10 rounded-2xl p-1">
+              <button
+                onClick={prevWeek}
+                className="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
+              >
+                <ChevronLeft className="h-4 w-4 text-white" />
+              </button>
+              <span className="px-3 text-sm font-semibold text-white whitespace-nowrap">
+                {weekLabel(weekStart, weekEnd)}
+              </span>
+              <button
+                onClick={nextWeek}
+                className="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
+              >
+                <ChevronRight className="h-4 w-4 text-white" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Toast */}
       {toast && (
         <div className={cx(
-          "rounded-2xl border px-4 py-3 text-sm font-medium",
-          toast.type === "ok" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-rose-50 border-rose-200 text-rose-800"
+          "rounded-2xl border px-5 py-3 text-sm font-bold flex items-center gap-3",
+          toast.type === "ok"
+            ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+            : "bg-rose-50 border-rose-100 text-rose-700"
         )}>
-          {toast.type === "ok" ? "✅" : "❌"} {toast.msg}
+          {toast.type === "ok"
+            ? <CheckCircle2 className="h-4 w-4" />
+            : <AlertTriangle className="h-4 w-4" />}
+          {toast.msg}
         </div>
       )}
 
-      {/* ── Selector de semana ──────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <button onClick={prevWeek} className="h-10 w-10 rounded-2xl border bg-white hover:bg-neutral-50 flex items-center justify-center transition">
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <div className="flex-1 rounded-2xl border bg-white px-5 py-2.5 text-center">
-          <span className="font-semibold text-sm">{weekLabel(weekStart, weekEnd)}</span>
-          <span className="text-xs text-neutral-400 ml-2">Dom → Sáb</span>
-        </div>
-        <button onClick={nextWeek} className="h-10 w-10 rounded-2xl border bg-white hover:bg-neutral-50 flex items-center justify-center transition">
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-
       {err && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div>
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 px-5 py-3 text-sm font-medium text-rose-700 flex items-center gap-3">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          {err}
+        </div>
       )}
 
       {loading ? (
-        <div className="rounded-3xl border bg-white p-16 flex flex-col items-center gap-3 text-neutral-500">
-          <Loader2 className="h-8 w-8 animate-spin text-neutral-300" />
-          <span className="text-sm">Cargando nómina...</span>
+        <div className="rounded-[40px] border bg-white p-20 flex flex-col items-center gap-4 text-neutral-400">
+          <div className="h-12 w-12 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+          <span className="text-xs font-bold uppercase tracking-widest">Cargando nómina...</span>
         </div>
       ) : !period ? (
         /* ── Sin periodo generado ─────────────────────────────────────── */
-        <div className="rounded-3xl border bg-white p-12 flex flex-col items-center gap-4 text-center">
-          <div className="h-16 w-16 rounded-3xl bg-neutral-100 flex items-center justify-center text-3xl">💰</div>
+        <div className="rounded-[40px] border bg-white p-16 flex flex-col items-center gap-6 text-center">
+          <div className="h-20 w-20 rounded-[28px] bg-neutral-50 border border-neutral-100 flex items-center justify-center">
+            <DollarSign className="h-10 w-10 text-neutral-200" />
+          </div>
           <div>
-            <div className="font-semibold text-lg">Sin nómina generada</div>
-            <div className="text-sm text-neutral-500 mt-1">
-              Genera la nómina para la semana {weekLabel(weekStart, weekEnd)}
+            <div className="font-black text-2xl text-obsidian">Sin Nómina Generada</div>
+            <div className="text-sm text-neutral-400 mt-2 max-w-xs">
+              No hay un periodo para la semana <span className="font-bold text-obsidian">{weekLabel(weekStart, weekEnd)}</span>. Genera uno para empezar.
             </div>
           </div>
           <button
             onClick={generate}
             disabled={generating}
-            className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-medium text-white hover:bg-neutral-700 transition disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-2xl bg-obsidian px-8 py-3.5 text-sm font-bold text-white hover:bg-gold transition-all shadow-lg shadow-obsidian/20 disabled:opacity-50"
           >
             {generating
-              ? <><Loader2 className="h-4 w-4 animate-spin" /> Generando...</>
-              : <><RefreshCw className="h-4 w-4" /> Generar Nómina</>}
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Generando...</>
+              : <><RefreshCw className="h-4 w-4" />Generar Nómina</>}
           </button>
         </div>
       ) : (
         /* ── Periodo cargado ──────────────────────────────────────────── */
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
 
-          {/* Tabla de empleados */}
-          <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b flex items-center justify-between">
+          {/* ─ Tabla de empleados ─────────────────────────────────── */}
+          <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+            <div className="px-8 py-6 border-b border-neutral-50 flex items-center justify-between">
               <div>
-                <div className="font-semibold">Detalle por empleado</div>
-                <div className="text-xs text-neutral-500 mt-0.5">{weekLabel(period.week_start, period.week_end)}</div>
+                <h2 className="text-xl font-black text-obsidian tracking-tight">Detalle por Empleado</h2>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                  Semana {weekLabel(period.week_start, period.week_end)} · Dom → Sáb
+                </p>
               </div>
               {!approved && (
                 <button
                   onClick={generate}
                   disabled={generating}
-                  className="inline-flex items-center gap-1.5 rounded-2xl border border-neutral-200 px-3 py-2 text-xs text-neutral-600 hover:bg-neutral-50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-neutral-100 bg-white px-4 py-2 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition"
                 >
                   <RefreshCw className={cx("h-3.5 w-3.5", generating && "animate-spin")} />
                   Recalcular
@@ -596,24 +623,23 @@ export default function NominaPage() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-neutral-50 border-b">
+                <thead className="bg-neutral-50/80 border-b border-neutral-50">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Empleado</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Horas/Días</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Tipo</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Tarifa</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Subtotal</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Ajuste</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Bono</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-neutral-500 uppercase tracking-wide">Total</th>
-                    {!approved && <th className="px-4 py-3" />}
+                    {["Empleado", "Horas/Días", "Tipo", "Tarifa", "Subtotal", "Ajuste", "Bono", "Total", ""].map((h, i) => (
+                      (!approved && i === 8) || approved && i === 8 ? null :
+                      <th key={i} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">
+                        {h}
+                      </th>
+                    ))}
+                    {!approved && <th className="px-5 py-4" />}
                   </tr>
                 </thead>
                 <tbody>
                   {period.entries.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-4 py-8 text-center text-sm text-neutral-500">
-                        Sin empleados en este periodo.
+                      <td colSpan={9} className="px-5 py-16 text-center">
+                        <Users className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
+                        <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">Sin empleados en este periodo</p>
                       </td>
                     </tr>
                   ) : (
@@ -631,61 +657,77 @@ export default function NominaPage() {
             </div>
 
             {/* Footer con total */}
-            <div className="px-5 py-4 border-t bg-neutral-50 flex items-center justify-between">
-              <span className="text-sm text-neutral-600">{period.entries.length} empleado{period.entries.length !== 1 ? "s" : ""}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-neutral-500">Total:</span>
-                <span className="text-lg font-bold text-neutral-900">{fmt(period.total_amount)}</span>
+            <div className="px-8 py-5 border-t border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
+                {period.entries.length} empleado{period.entries.length !== 1 ? "s" : ""}
+              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Total semana</span>
+                <span className="text-2xl font-black text-obsidian">{fmt(period.total_amount)}</span>
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* ─ Panel lateral ──────────────────────────────────────── */}
           <div className="space-y-4">
-            {/* Resumen */}
-            <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b">
-                <div className="text-sm font-semibold">Resumen de Nómina</div>
+
+            {/* Resumen de nómina */}
+            <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+              <div className="px-6 py-5 border-b border-neutral-50">
+                <h3 className="text-sm font-black text-obsidian tracking-tight">Resumen de Nómina</h3>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Totales del periodo</p>
               </div>
-              <div className="p-4 space-y-3">
-                <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
-                  <div className="text-xs text-blue-600 mb-1 font-medium">Total Nómina</div>
-                  <div className="text-3xl font-bold text-blue-700">{fmt(period.total_amount)}</div>
+              <div className="p-6 space-y-4">
+                {/* Total destacado */}
+                <div className="rounded-[28px] bg-obsidian p-5 text-white">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50 mb-2">Total a Pagar</div>
+                  <div className="text-3xl font-black tracking-tight">{fmt(period.total_amount)}</div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl bg-amber-50 border border-amber-100 p-3">
-                    <div className="text-xs text-amber-600 mb-1">Ajustes</div>
-                    <div className="text-xl font-bold text-amber-700">{fmt(period.total_adjustments)}</div>
+
+                {/* Ajustes y bonos */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-rose-50 border border-rose-100 p-4">
+                    <div className="flex items-center gap-1.5 text-rose-500 mb-2">
+                      <TrendingDown className="h-3.5 w-3.5" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Ajustes</span>
+                    </div>
+                    <div className="text-xl font-black text-rose-600">{fmt(period.total_adjustments)}</div>
                   </div>
-                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
-                    <div className="text-xs text-emerald-600 mb-1">Bonos</div>
-                    <div className="text-xl font-bold text-emerald-700">{fmt(period.total_bonuses)}</div>
+                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+                    <div className="flex items-center gap-1.5 text-emerald-600 mb-2">
+                      <TrendingUp className="h-3.5 w-3.5" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Bonos</span>
+                    </div>
+                    <div className="text-xl font-black text-emerald-600">{fmt(period.total_bonuses)}</div>
                   </div>
                 </div>
-                <div className="rounded-2xl border bg-neutral-50 p-3 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-500">Empleados</span>
-                    <span className="font-semibold">{totalEmp}</span>
+
+                {/* Stats */}
+                <div className="rounded-2xl border border-neutral-50 bg-neutral-50/50 p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Empleados</span>
+                    <span className="text-sm font-black text-obsidian">{totalEmp}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-500">Promedio</span>
-                    <span className="font-semibold">{fmt(avgTotal)}</span>
+                  <div className="w-full h-px bg-neutral-100" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Prom. por empleado</span>
+                    <span className="text-sm font-black text-obsidian">{fmt(avgTotal)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Acciones */}
-            <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b">
-                <div className="text-sm font-semibold">Acciones</div>
+            <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+              <div className="px-6 py-5 border-b border-neutral-50">
+                <h3 className="text-sm font-black text-obsidian tracking-tight">Acciones</h3>
               </div>
-              <div className="p-4 space-y-2">
+              <div className="p-6 space-y-3">
                 {!approved && (
                   <button
                     onClick={approve}
                     disabled={approving}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition disabled:opacity-50"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-obsidian px-4 py-3.5 text-xs font-bold text-white uppercase tracking-widest hover:bg-gold transition-all shadow-lg shadow-obsidian/10 disabled:opacity-50"
                   >
                     {approving
                       ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -695,31 +737,39 @@ export default function NominaPage() {
                 )}
                 <button
                   onClick={exportPDF}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-100 bg-white hover:bg-neutral-50 px-4 py-3 text-xs font-bold text-obsidian uppercase tracking-widest transition"
                 >
-                  <Download className="h-4 w-4" /> Exportar PDF
+                  <Download className="h-4 w-4" />Exportar PDF
                 </button>
                 <button
                   onClick={exportCSV}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white hover:bg-neutral-50 px-4 py-3 text-sm font-medium text-neutral-700 transition"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-100 bg-white hover:bg-neutral-50 px-4 py-3 text-xs font-bold text-obsidian uppercase tracking-widest transition"
                 >
-                  <FileSpreadsheet className="h-4 w-4" /> Exportar CSV
+                  <FileSpreadsheet className="h-4 w-4" />Exportar CSV
                 </button>
               </div>
             </div>
 
-            {/* Nota estado */}
-            <div className={cx(
-              "rounded-3xl border p-4 text-xs",
-              approved
-                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                : "bg-amber-50 border-amber-200 text-amber-700"
-            )}>
-              {approved
-                ? <>✅ Nómina cerrada. No puede modificarse.<br />Aprobada el {new Date(period.approved_at!).toLocaleDateString("es-MX", { day:"numeric", month:"long", year:"numeric" })}.</>
-                : <>⚠️ En borrador. Puedes editar ajustes y bonos. Una vez aprobada, no podrá modificarse.</>
-              }
-            </div>
+            {/* Estado / nota */}
+            {approved ? (
+              <div className="rounded-[28px] border border-emerald-100 bg-emerald-50 p-5 text-xs text-emerald-700 flex items-start gap-3">
+                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-bold mb-1">Nómina Cerrada</div>
+                  No puede modificarse.<br />
+                  Aprobada el {new Date(period.approved_at!).toLocaleDateString("es-MX", { day:"numeric", month:"long", year:"numeric" })}.
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-[28px] border border-amber-100 bg-amber-50 p-5 text-xs text-amber-700 flex items-start gap-3">
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-bold mb-1">En Borrador</div>
+                  {draftCount > 0 && <div className="mb-1">Hay <strong>{draftCount}</strong> registros con ajustes negativos.</div>}
+                  Puedes editar ajustes y bonos. Una vez aprobada, no podrá modificarse.
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

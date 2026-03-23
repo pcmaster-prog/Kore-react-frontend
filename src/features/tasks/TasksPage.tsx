@@ -8,35 +8,43 @@ import {
   rejectAssignment,
   listTaskEvidences,
 } from "./api";
-// ✅ 1. Importar getTemplate
 import { getTemplate } from "@/features/tasks/catalog/api";
 import type { Task } from "./types";
 import TaskCatalogPanel from "./TaskCatalogPanel";
+import { 
+  ClipboardList, CheckCircle2, Clock, AlertTriangle, 
+  Search, Filter, Calendar, ChevronRight, Play, 
+  RotateCcw, Trash2, Eye, MessageSquare, Paperclip,
+  Download, Image as ImageIcon, FileText, Check, X,
+  TrendingUp, CalendarDays, Zap
+} from "lucide-react";
+
+function cx(...s: Array<string | false | null | undefined>) {
+  return s.filter(Boolean).join(" ");
+}
 
 // 🔥 2.1 StatusPill mejorado
 function StatusPill({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    open: { label: "Open", cls: "bg-slate-50 text-slate-700 border-slate-200" },
-    in_progress: { label: "In progress", cls: "bg-amber-50 text-amber-800 border-amber-200" },
-    completed: { label: "Completed", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-
-    assigned: { label: "Assigned", cls: "bg-slate-50 text-slate-700 border-slate-200" },
-    done_pending: { label: "En revisión", cls: "bg-indigo-50 text-indigo-800 border-indigo-200" },
-    approved: { label: "Aprobada", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-    rejected: { label: "Rechazada", cls: "bg-rose-50 text-rose-800 border-rose-200" },
+  const map: Record<string, { label: string; cls: string; dot: string }> = {
+    open: { label: "Abierta", cls: "bg-blue-50 text-blue-700 border-blue-100", dot: "bg-blue-400" },
+    in_progress: { label: "En progreso", cls: "bg-amber-50 text-amber-700 border-amber-100", dot: "bg-amber-400" },
+    completed: { label: "Completada", cls: "bg-emerald-50 text-emerald-700 border-emerald-100", dot: "bg-emerald-400" },
+    assigned: { label: "Asignada", cls: "bg-neutral-50 text-neutral-600 border-neutral-100", dot: "bg-neutral-400" },
+    done_pending: { label: "En revisión", cls: "bg-indigo-50 text-indigo-700 border-indigo-100", dot: "bg-indigo-400" },
+    approved: { label: "Aprobada", cls: "bg-emerald-50 text-emerald-700 border-emerald-100", dot: "bg-emerald-400" },
+    rejected: { label: "Rechazada", cls: "bg-rose-50 text-rose-700 border-rose-100", dot: "bg-rose-400" },
   };
 
-  const x = map[status] ?? { label: status, cls: "bg-neutral-50 text-neutral-700 border-neutral-200" };
+  const x = map[status] ?? { label: status, cls: "bg-neutral-50 text-neutral-600 border-neutral-100", dot: "bg-neutral-300" };
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${x.cls}`}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60" />
+    <span className={cx("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", x.cls)}>
+      <span className={cx("h-1.5 w-1.5 rounded-full", x.dot)} />
       {x.label}
     </span>
   );
 }
 
-// ✅ 1) isImage corregido: maneja null, mayúsculas, espacios
 const isImage = (mime?: string | null) =>
   String(mime ?? "").toLowerCase().startsWith("image/");
 
@@ -253,47 +261,66 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6">
-      {/* 🔥 2.3 Header tipo toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Tareas</h1>
-          <p className="text-sm text-neutral-500">
-            {tab === "tareas"
-              ? "Gestiona tareas, catálogo y asignaciones."
-              : "Revisa evidencias y aprueba entregas."}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="rounded-2xl border bg-white px-3 py-2 text-sm text-neutral-600 shadow-sm">
-            {tab === "tareas" ? (data?.total ?? 0) : (apData?.total ?? 0)}{" "}
-            <span className="text-neutral-400">items</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 🔥 2.2 Tabs tipo segmented */}
-      <div className="inline-flex rounded-2xl border bg-white p-1 shadow-sm">
+      {/* Internal Tabs - Segmented Style */}
+      <div className="flex p-1 bg-neutral-100/50 border border-neutral-100 rounded-2xl w-fit">
         <button
-          className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-            tab === "tareas" ? "bg-neutral-900 text-white shadow" : "text-neutral-700 hover:bg-neutral-50"
-          }`}
+          className={cx(
+            "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all",
+            tab === "tareas" ? "bg-white text-obsidian shadow-sm" : "text-neutral-400 hover:text-neutral-600"
+          )}
           onClick={() => setTab("tareas")}
         >
-          Tareas
+          <Zap className="h-3.5 w-3.5" />
+          Listado de Tareas
         </button>
         <button
-          className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-            tab === "aprobaciones" ? "bg-neutral-900 text-white shadow" : "text-neutral-700 hover:bg-neutral-50"
-          }`}
+          className={cx(
+            "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all",
+            tab === "aprobaciones" ? "bg-white text-obsidian shadow-sm" : "text-neutral-400 hover:text-neutral-600"
+          )}
           onClick={() => setTab("aprobaciones")}
         >
-          Aprobaciones
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Aprobaciones Pendientes
+          {apData?.total ? (
+            <span className="ml-1 px-1.5 py-0.5 rounded-md bg-rose-500 text-white text-[10px]">{apData.total}</span>
+          ) : null}
         </button>
       </div>
 
       {tab === "tareas" ? (
-        <>
+        <div className="space-y-6 animate-in-fade">
+          {/* Quick Stats / Weekly Performance feel */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white rounded-[32px] p-5 border border-neutral-100/50 shadow-sm flex items-center gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center translate-y-[-2px]">
+                <CalendarDays className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Hoy</div>
+                <div className="text-xl font-black text-obsidian tracking-tighter">{(data?.total ?? 0)} <span className="text-xs font-medium text-neutral-400 lowercase italic">Asignadas</span></div>
+              </div>
+            </div>
+            <div className="bg-white rounded-[32px] p-5 border border-neutral-100/50 shadow-sm flex items-center gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center translate-y-[-2px]">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Desempeño</div>
+                <div className="text-xl font-black text-obsidian tracking-tighter">94% <span className="text-xs font-medium text-neutral-400 lowercase italic">Efectividad</span></div>
+              </div>
+            </div>
+            <div className="bg-white rounded-[32px] p-5 border border-neutral-100/50 shadow-sm flex items-center gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center translate-y-[-2px]">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Vencidas</div>
+                <div className="text-xl font-black text-obsidian tracking-tighter">{overdue ? "?" : "0"} <span className="text-xs font-medium text-neutral-400 lowercase italic">Urgentes</span></div>
+              </div>
+            </div>
+          </div>
+
           <TaskCatalogPanel
             onAssigned={() => {
               setPage(1);
@@ -301,59 +328,78 @@ export default function TasksPage() {
             }}
           />
 
-          {/* 🔥 2.4 Filtros premium */}
-          <div className="bg-white border rounded-2xl p-4 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <label className="block">
-                <span className="text-xs text-neutral-500">Status</span>
-                <select
-                  className="mt-1 w-full rounded-xl border bg-white p-2 focus:outline-none focus:ring-2 focus:ring-neutral-200"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  <option value="open">Open</option>
-                  <option value="in_progress">In progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </label>
+          {/* Filtros */}
+          <div className="bg-white border border-neutral-100/50 rounded-[32px] p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="h-4 w-4 text-obsidian" />
+              <span className="text-xs font-black text-obsidian uppercase tracking-widest">Filtros de Búsqueda</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase ml-1">Estado</span>
+                <div className="relative">
+                  <select
+                    className="w-full h-11 rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-obsidian/5 appearance-none"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
+                    <option value="">Todos los Estados</option>
+                    <option value="open">Abierta</option>
+                    <option value="in_progress">En progreso</option>
+                    <option value="completed">Completada</option>
+                  </select>
+                  <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 rotate-90 pointer-events-none" />
+                </div>
+              </div>
 
-              <label className="block">
-                <span className="text-xs text-neutral-500">Fecha (catálogo)</span>
-                <input
-                  className="mt-1 w-full rounded-xl border bg-white p-2 focus:outline-none focus:ring-2 focus:ring-neutral-200"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </label>
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase ml-1">Fecha</span>
+                <div className="relative">
+                  <input
+                    className="w-full h-11 rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-obsidian/5"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+              </div>
 
-              <label className="block md:col-span-2">
-                <span className="text-xs text-neutral-500">Buscar (título)</span>
-                <input
-                  className="mt-1 w-full rounded-xl border bg-white p-2 focus:outline-none focus:ring-2 focus:ring-neutral-200"
-                  placeholder="Ej. Limpieza mostrador"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") setPage(1);
-                  }}
-                />
-              </label>
-
-              <label className="flex items-center gap-2 mt-2">
-                <input
-                  type="checkbox"
-                  checked={overdue}
-                  onChange={(e) => setOverdue(e.target.checked)}
-                />
-                <span className="text-sm">Solo vencidas</span>
-              </label>
+              <div className="md:col-span-2 space-y-1.5">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase ml-1">Buscar por título</span>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                  <input
+                    className="w-full h-11 rounded-2xl border border-neutral-100 bg-neutral-50/50 pl-11 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-obsidian/5"
+                    placeholder="Ej. Limpieza, Inventario..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setPage(1);
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className={cx(
+                  "h-5 w-5 rounded-md border flex items-center justify-center transition-colors",
+                  overdue ? "bg-obsidian border-obsidian" : "border-neutral-200 group-hover:border-neutral-300"
+                )}>
+                  {overdue && <Check className="h-3 w-3 text-white" />}
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={overdue}
+                    onChange={(e) => setOverdue(e.target.checked)}
+                  />
+                </div>
+                <span className="text-xs font-bold text-neutral-500 uppercase tracking-tighter group-hover:text-obsidian transition-colors">Ver solo tareas vencidas</span>
+              </label>
+
               <button
-                className="rounded-xl border px-3 py-2 text-sm hover:bg-neutral-100"
+                className="h-10 px-4 rounded-xl border border-neutral-100 text-[11px] font-bold uppercase tracking-widest text-neutral-400 hover:text-obsidian hover:bg-neutral-50 transition-all"
                 onClick={() => {
                   setStatus("");
                   setDate(today);
@@ -362,102 +408,113 @@ export default function TasksPage() {
                   setPage(1);
                 }}
               >
-                Limpiar filtros
+                Resetear Filtros
               </button>
             </div>
           </div>
 
-          {/* tabla */}
-          <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-            <div className="p-4 border-b flex items-center justify-between">
-              <div className="text-sm text-neutral-600">
-                {loading ? "Cargando..." : err ? "Error" : "Resultados"}
+          {/* Listado de Tareas - Card Grid */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-[0.2em]">
+                {loading ? "Sincronizando..." : err ? "Error de Carga" : `Mostrando ${data?.data?.length ?? 0} tareas`}
               </div>
             </div>
 
-            {err && <div className="p-4 text-sm text-red-600">{err}</div>}
+            {err && (
+              <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-sm text-rose-600 flex items-center gap-3">
+                <AlertTriangle className="h-4 w-4" />
+                {err}
+              </div>
+            )}
 
             {!err && !loading && data?.data?.length === 0 && (
-              <div className="p-6 text-sm text-neutral-500">No hay tareas con esos filtros.</div>
+              <div className="bg-white border border-neutral-100 rounded-[32px] p-12 text-center">
+                <ClipboardList className="h-12 w-12 text-neutral-100 mx-auto mb-4" />
+                <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">No se encontraron tareas</p>
+                <p className="text-xs text-neutral-400 mt-1">Intenta ajustar los filtros de búsqueda.</p>
+              </div>
             )}
 
             {!err && data?.data?.length ? (
-              <div className="w-full overflow-auto">
-                <table className="w-full text-sm">
-                  {/* 🔥 2.5 Encabezado sticky */}
-                  <thead className="bg-neutral-50 text-neutral-600 sticky top-0 z-10">
-                    <tr>
-                      <th className="text-left p-3">Título</th>
-                      <th className="text-left p-3">Status</th>
-                      <th className="text-left p-3">Prioridad</th>
-                      <th className="text-left p-3">Fecha catálogo</th>
-                      <th className="text-left p-3">Due</th>
-                      <th className="text-left p-3">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.data.map((t) => (
-                      <tr key={t.id} className="border-t hover:bg-neutral-50/60 transition">
-                        <td className="p-3">
-                          <div className="font-medium">{t.title}</div>
-                          {t.description ? (
-                            <div className="text-xs text-neutral-500 line-clamp-1">{t.description}</div>
-                          ) : null}
-                        </td>
-                        <td className="p-3"><StatusPill status={t.status} /></td>
-                        <td className="p-3">{t.priority ?? "-"}</td>
-                        <td className="p-3">{t.meta?.catalog_date ?? "-"}</td>
-                        <td className="p-3">{t.due_at ? new Date(t.due_at).toLocaleString() : "-"}</td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <button
-                              className="rounded-xl border bg-white px-3 py-2 text-xs font-medium hover:bg-neutral-50 disabled:opacity-50"
-                              disabled={busyId === t.id || t.status === "in_progress"}
-                              onClick={() => quickSetStatus(t.id, "in_progress")}
-                            >
-                              {busyId === t.id ? "..." : "▶ Iniciar"}
-                            </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.data.map((t) => (
+                  <div key={t.id} className="bg-white border border-neutral-100/50 rounded-[32px] p-6 shadow-sm hover:shadow-xl hover:shadow-obsidian/5 transition-all group">
+                    <div className="flex items-start justify-between mb-4">
+                      <StatusPill status={t.status} />
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-neutral-50 text-[10px] font-bold text-neutral-400">
+                        <Clock className="h-3 w-3" />
+                        {t.meta?.catalog_date ?? "Sin fecha"}
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-lg font-black text-obsidian tracking-tight leading-tight mb-2 group-hover:text-gold transition-colors">
+                      {t.title}
+                    </h3>
+                    
+                    {t.description && (
+                      <p className="text-xs text-neutral-400 line-clamp-2 mb-4 leading-relaxed italic">
+                        "{t.description}"
+                      </p>
+                    )}
 
-                            <button
-                              className="rounded-xl border bg-white px-3 py-2 text-xs font-medium hover:bg-neutral-50 disabled:opacity-50"
-                              disabled={busyId === t.id || t.status === "completed"}
-                              onClick={() => quickSetStatus(t.id, "completed")}
-                            >
-                              {busyId === t.id ? "..." : "✅ Completar"}
-                            </button>
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-neutral-400 uppercase tracking-wide mb-6">
+                      <div className="flex items-center gap-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                        Prioridad {t.priority ?? "Normal"}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Due: {t.due_at ? new Date(t.due_at).toLocaleDateString() : "-"}
+                      </div>
+                    </div>
 
-                            <button
-                              className="rounded-xl border bg-white px-3 py-2 text-xs font-medium hover:bg-neutral-50 disabled:opacity-50"
-                              disabled={busyId === t.id || t.status === "open"}
-                              onClick={() => quickSetStatus(t.id, "open")}
-                              title="Reabrir"
-                            >
-                              {busyId === t.id ? "..." : "↩ Open"}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    <div className="flex items-center gap-2 pt-4 border-t border-neutral-50">
+                      <button
+                        className="flex-1 h-10 rounded-xl bg-obsidian text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gold transition-all disabled:opacity-50"
+                        disabled={busyId === t.id || t.status === "in_progress"}
+                        onClick={() => quickSetStatus(t.id, "in_progress")}
+                      >
+                        {busyId === t.id ? <Clock className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                        Iniciar
+                      </button>
+                      <button
+                        className="h-10 px-4 rounded-xl border border-neutral-100 bg-white text-obsidian text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-neutral-50 transition-all disabled:opacity-50"
+                        disabled={busyId === t.id || t.status === "completed"}
+                        onClick={() => quickSetStatus(t.id, "completed")}
+                      >
+                        {busyId === t.id ? <Clock className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                        Terminar
+                      </button>
+                      <button
+                        className="w-10 h-10 rounded-xl border border-neutral-100 bg-white text-neutral-400 flex items-center justify-center hover:text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-50"
+                        disabled={busyId === t.id || t.status === "open"}
+                        onClick={() => quickSetStatus(t.id, "open")}
+                        title="Resetear"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : null}
 
-            {/* paginación */}
+            {/* Paginación */}
             {data && data.last_page > 1 && (
-              <div className="p-4 border-t flex items-center justify-between">
+              <div className="flex items-center justify-center gap-4 mt-8 pb-4">
                 <button
-                  className="rounded-xl border px-3 py-2 text-sm disabled:opacity-50"
+                  className="h-10 px-6 rounded-2xl border border-neutral-100 bg-white text-xs font-bold text-obsidian hover:bg-neutral-50 disabled:opacity-30 transition-all"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   Anterior
                 </button>
-                <div className="text-sm text-neutral-600">
-                  Página {page} de {data.last_page}
-                </div>
+                <span className="text-xs font-black text-neutral-400 uppercase tracking-widest">
+                  {page} / {data.last_page}
+                </span>
                 <button
-                  className="rounded-xl border px-3 py-2 text-sm disabled:opacity-50"
+                  className="h-10 px-6 rounded-2xl border border-neutral-100 bg-white text-xs font-bold text-obsidian hover:bg-neutral-50 disabled:opacity-30 transition-all"
                   disabled={page >= data.last_page}
                   onClick={() => setPage((p) => Math.min(data.last_page, p + 1))}
                 >
@@ -466,124 +523,104 @@ export default function TasksPage() {
               </div>
             )}
           </div>
-        </>
+        </div>
       ) : (
         // Panel de Aprobaciones
-        <div className="rounded-3xl border bg-white overflow-hidden">
-          <div className="p-4 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <div className="text-sm text-neutral-600">
-                {apLoading ? "Cargando aprobaciones..." : apErr ? "Error" : "Pendientes de aprobación"}
+        <div className="space-y-6 animate-in-fade">
+          <div className="bg-white border border-neutral-100/50 rounded-[32px] p-6 shadow-sm flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-[20px] bg-amber-50 text-amber-500 flex items-center justify-center">
+                <Clock className="h-6 w-6" />
               </div>
-              <div className="text-xs text-neutral-500 mt-1">
-                Revisa evidencia y valida que esté bien antes de aprobar.
+              <div>
+                <h2 className="text-xl font-black text-obsidian tracking-tight">Control de Calidad</h2>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{apData?.total ?? 0} entregas por validar</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <div className="rounded-2xl border bg-white px-3 py-2 text-sm">
-                <span className="text-neutral-500">Total:</span>{" "}
-                <span className="font-semibold">{apData?.total ?? 0}</span>
-              </div>
-
-              <button
-                className="rounded-2xl border px-3 py-2 text-sm hover:bg-neutral-50"
-                onClick={() => setApPage(1)}
-              >
-                ↻ Refrescar
-              </button>
-            </div>
+            <button
+              className="h-11 px-6 rounded-2xl bg-obsidian text-white text-[11px] font-bold uppercase tracking-widest hover:bg-gold transition-all shadow-lg shadow-obsidian/10"
+              onClick={() => setApPage(1)}
+            >
+              Recargar Lista
+            </button>
           </div>
 
-          {apErr ? (
-            <div className="p-4">
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-                {apErr}
-              </div>
+          {apErr && (
+            <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-sm text-rose-700 flex items-center gap-3 animate-in-shake">
+              <AlertTriangle className="h-4 w-4" />
+              {apErr}
             </div>
-          ) : null}
+          )}
 
           {!apErr && !apLoading && (apData?.data?.length ?? 0) === 0 ? (
-            <div className="p-8 text-sm text-neutral-500">
-              No hay tareas por aprobar. (Momento perfecto para un café ☕)
+            <div className="bg-white border border-neutral-100/50 rounded-[40px] p-20 text-center">
+              <div className="inline-flex h-20 w-20 rounded-full bg-emerald-50 text-emerald-500 items-center justify-center mb-6">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
+              <h3 className="text-2xl font-black text-obsidian mb-2 tracking-tight">¡Todo al día!</h3>
+              <p className="text-sm text-neutral-400 max-w-xs mx-auto">No hay evidencias pendientes de revisión en este momento.</p>
             </div>
           ) : null}
 
           {!apErr && apData?.data?.length ? (
-            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {apData.data.map((a: any) => {
-                const when = a.done_at ? new Date(a.done_at).toLocaleString() : null;
+                const when = a.done_at ? new Date(a.done_at).toLocaleTimeString("es-MX", { hour: '2-digit', minute: '2-digit' }) : null;
+                const dateMark = a.done_at ? new Date(a.done_at).toLocaleDateString("es-MX", { month: 'short', day: 'numeric' }) : null;
 
                 return (
-                  <div key={a.id} className="rounded-3xl border bg-white p-4 hover:shadow-sm transition">
-                    <div className="flex items-start justify-between gap-3">
+                  <div key={a.id} className="bg-white border border-neutral-100/50 rounded-[40px] p-8 shadow-sm hover:shadow-xl hover:shadow-obsidian/5 transition-all group border-l-4 border-l-amber-400">
+                    <div className="flex items-start justify-between gap-4 mb-6">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <div className="font-semibold truncate">
-                            {a.task?.title ?? a.task_id}
-                          </div>
-                          <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs bg-amber-50 text-amber-900 border-amber-200">
-                            En revisión
-                          </span>
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-obsidian text-[10px] font-bold text-white uppercase tracking-widest mb-3">
+                          <Zap className="h-3 w-3 text-gold-light" />
+                          Revisión Pendiente
                         </div>
-
-                        <div className="text-xs text-neutral-500 mt-2">
-                          Empleado:{" "}
-                          <span className="font-medium text-neutral-700">
-                            {a.empleado?.full_name ?? a.empleado?.nombre ?? a.empleado_id}
-                          </span>
-                          {when ? <span className="text-neutral-400"> · Entregada: {when}</span> : null}
+                        <h3 className="text-xl font-black text-obsidian tracking-tight truncate">
+                          {a.task?.title ?? a.task_id}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-neutral-400">
+                          <span className="font-bold text-obsidian">@{a.empleado?.full_name?.split(' ')[0] ?? "Staff"}</span>
+                          <span>·</span>
+                          <span className="text-xs">{dateMark} a las {when}</span>
                         </div>
-
-                        {a.note ? (
-                          <div className="mt-3 rounded-2xl border bg-neutral-50 p-3 text-sm text-neutral-700">
-                            <div className="text-xs text-neutral-500 mb-1">Nota del empleado</div>
-                            <div className="whitespace-pre-wrap">{a.note}</div>
-                          </div>
-                        ) : (
-                          <div className="mt-3 text-sm text-neutral-400">Sin nota del empleado.</div>
-                        )}
                       </div>
-
+                      
                       <button
-                        className="rounded-2xl border px-3 py-2 text-sm hover:bg-neutral-50"
+                        className="h-12 w-12 rounded-2xl bg-neutral-50 text-neutral-400 flex items-center justify-center hover:bg-obsidian hover:text-white transition-all group-hover:scale-110"
                         onClick={() => openEvidences(a.id, a.task_id)}
                       >
-                        📎 Evidencias
+                        <Paperclip className="h-5 w-5" />
                       </button>
                     </div>
 
-                    <div className="mt-4 flex flex-col md:flex-row gap-2">
+                    <div className="bg-neutral-50/50 rounded-[28px] p-5 mb-8 border border-neutral-100/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageSquare className="h-3.5 w-3.5 text-neutral-300" />
+                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Feedback del Empleado</span>
+                      </div>
+                      <p className={cx("text-sm text-obsidian/70 leading-relaxed font-medium italic", !a.note && "text-neutral-300")}>
+                        {a.note ? `"${a.note}"` : "Sin comentarios adicionales."}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
                       <button
-                        className="rounded-2xl bg-neutral-900 text-white px-3 py-2 text-sm hover:bg-neutral-800 disabled:opacity-50"
+                        className="h-12 rounded-2xl bg-emerald-500 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
                         disabled={actionBusy === a.id}
                         onClick={() => doApprove(a.id)}
                       >
-                        {actionBusy === a.id ? "Aprobando..." : "✅ Aprobar"}
+                        {actionBusy === a.id ? <Clock className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        Aprobar Entrega
                       </button>
-
                       <button
-                        className="rounded-2xl border px-3 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50"
-                        disabled={actionBusy === a.id}
-                        onClick={() => {
-                          openEvidences(a.id, a.task_id);
-                          setRejectNote("");
-                        }}
-                      >
-                        👀 Revisar antes
-                      </button>
-
-                      <button
-                        className="rounded-2xl border px-3 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50"
+                        className="h-12 rounded-2xl bg-white border border-neutral-100 text-obsidian text-[11px] font-bold uppercase tracking-widest hover:bg-neutral-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         disabled={actionBusy === a.id}
                         onClick={() => openEvidences(a.id, a.task_id)}
                       >
-                        ✍️ Rechazar (ver evidencias)
+                        <Eye className="h-4 w-4" />
+                        Revisar Evidencia
                       </button>
-                    </div>
-
-                    <div className="mt-3 text-xs text-neutral-400">
-                      Tip: Revisa evidencia y que el trabajo esté OK antes de aprobar (cero "operación con fe").
                     </div>
                   </div>
                 );
@@ -591,205 +628,186 @@ export default function TasksPage() {
             </div>
           ) : null}
 
-          {apData && apData.last_page > 1 ? (
-            <div className="p-4 border-t flex items-center justify-between">
+          {apData && apData.last_page > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-8 pb-4">
               <button
-                className="rounded-2xl border px-3 py-2 text-sm disabled:opacity-50 hover:bg-neutral-50"
+                className="h-10 px-6 rounded-2xl border border-neutral-100 bg-white text-xs font-bold text-obsidian hover:bg-neutral-50 disabled:opacity-30 transition-all"
                 disabled={apPage <= 1}
                 onClick={() => setApPage((p) => Math.max(1, p - 1))}
               >
                 Anterior
               </button>
-              <div className="text-sm text-neutral-600">
-                Página {apPage} de {apData.last_page}
-              </div>
+              <span className="text-xs font-black text-neutral-400 uppercase tracking-widest">
+                {apPage} / {apData.last_page}
+              </span>
               <button
-                className="rounded-2xl border px-3 py-2 text-sm disabled:opacity-50 hover:bg-neutral-50"
+                className="h-10 px-6 rounded-2xl border border-neutral-100 bg-white text-xs font-bold text-obsidian hover:bg-neutral-50 disabled:opacity-30 transition-all"
                 disabled={apPage >= apData.last_page}
                 onClick={() => setApPage((p) => Math.min(apData.last_page, p + 1))}
               >
                 Siguiente
               </button>
             </div>
-          ) : null}
-        </div>
-      )}
+          )}
 
-      {/* Modal de evidencias */}
-      {evOpen ? (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-2xl bg-white rounded-2xl border overflow-hidden shadow-xl">
-            <div className="p-4 border-b flex items-center justify-between">
-              <div className="font-medium">Evidencias</div>
-              <button
-                className="rounded-xl border bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50"
-                onClick={() => {
-                  setEvOpen(false);
-                  setEvList(null);
-                  setEvErr(null);
-                  setEvChecklist(null);
-                  setRejectNote("");
-                }}
-              >
-                Cerrar
-              </button>
-            </div>
+          {/* Modal de evidencias */}
+          {evOpen ? (
+            <div className="fixed inset-0 bg-obsidian/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in-fade">
+              <div className="w-full max-w-2xl bg-white rounded-[40px] border border-neutral-100 overflow-hidden shadow-2xl animate-in-up">
+                <div className="p-8 border-b border-neutral-50 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black text-obsidian tracking-tight">Evidencias de Entrega</h2>
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Revisión de material cargado</p>
+                  </div>
+                  <button
+                    className="h-10 w-10 rounded-2xl border border-neutral-100 bg-white text-neutral-400 flex items-center justify-center hover:bg-neutral-50 hover:text-obsidian transition-all"
+                    onClick={() => {
+                      setEvOpen(false);
+                      setEvList(null);
+                      setEvErr(null);
+                      setEvChecklist(null);
+                      setRejectNote("");
+                    }}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
 
-            <div className="p-4">
-              {evLoading ? <div className="text-sm text-neutral-600">Cargando...</div> : null}
-              {evErr ? <div className="text-sm text-red-600">{evErr}</div> : null}
+                <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  {evLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 gap-3 text-neutral-400">
+                      <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+                      <span className="text-xs font-bold uppercase tracking-widest">Cargando material...</span>
+                    </div>
+                  ) : null}
 
-              {!evLoading && !evErr && (evList?.length ?? 0) === 0 ? (
-                <div className="text-sm text-neutral-500">No hay evidencias ligadas a esta asignación.</div>
-              ) : null}
+                  {evErr && (
+                    <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-sm text-rose-600 flex items-center gap-3">
+                      <AlertTriangle className="h-4 w-4" />
+                      {evErr}
+                    </div>
+                  )}
 
-              {!evLoading && !evErr && evList?.length ? (
-                <div className="space-y-3">
-                  {evList.map((e: any) => (
-                    <div key={e.id} className="flex items-start gap-3 border rounded-xl p-3">
-                      {e.url ? (
-                        <div className="flex items-center gap-2">
-                          <a
-                            className="text-sm text-blue-600 hover:underline"
-                            href={e.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={(ev) => ev.stopPropagation()}
-                          >
-                            Abrir
-                          </a>
+                  {!evLoading && !evErr && (evList?.length ?? 0) === 0 ? (
+                    <div className="text-center py-12">
+                      <Paperclip className="h-12 w-12 text-neutral-100 mx-auto mb-4" />
+                      <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">Sin evidencias adjuntas</p>
+                    </div>
+                  ) : null}
 
+                  {!evLoading && !evErr && evList?.length ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {evList.map((e: any) => (
+                        <div key={e.id} className="group relative border border-neutral-100 rounded-[28px] overflow-hidden bg-neutral-50 transition-all hover:bg-white hover:shadow-lg hover:shadow-obsidian/5">
                           {isImage(e.mime) ? (
-                            <a
-                              href={e.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block"
-                              onClick={(ev) => ev.stopPropagation()}
-                            >
+                            <div className="aspect-square w-full overflow-hidden bg-neutral-200">
                               <img
                                 src={e.url}
-                                alt={e.original_name ?? "evidence"}
-                                className="h-14 w-14 rounded-xl border object-cover"
+                                className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                                alt="Evidencia"
                                 onError={(ev) => {
                                   (ev.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%23999' font-size='12'%3E📷%3C/text%3E%3C/svg%3E";
-                                  (ev.target as HTMLImageElement).alt = "Imagen no disponible";
                                 }}
                               />
-                            </a>
-                          ) : String(e.mime ?? "").includes("pdf") ? (
+                            </div>
+                          ) : (
+                            <div className="aspect-square w-full flex flex-col items-center justify-center gap-2 bg-neutral-100 text-neutral-400">
+                              <FileText className="h-8 w-8" />
+                              <span className="text-[10px] font-bold uppercase tracking-widest">Documento</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-obsidian/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                             <a
                               href={e.url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-xs rounded-xl border px-2 py-1 hover:bg-neutral-50"
+                              className="h-10 w-10 rounded-xl bg-white text-obsidian flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                             >
-                              Ver PDF
+                              <Download className="h-5 w-5" />
                             </a>
-                          ) : null}
+                          </div>
                         </div>
-                      ) : (
-                        <span className="text-xs text-neutral-400">Sin URL</span>
-                      )}
+                      ))}
+                    </div>
+                  ) : null}
 
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate">{e.original_name ?? e.id}</div>
-                        <div className="text-xs text-neutral-500">
-                          {e.mime ?? "-"} ·{" "}
-                          {e.created_at ? new Date(e.created_at).toLocaleString() : ""}
-                        </div>
+                  {evChecklist?.state && Object.keys(evChecklist.state).length > 0 ? (
+                    <div className="mt-8 pt-8 border-t border-neutral-50">
+                      <h4 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-4">Checklist del Empleado</h4>
+                      <div className="space-y-3">
+                        {Object.entries(evChecklist.state).map(([itemId, val]: [string, any]) => {
+                          const defItem = evChecklist.def?.find((d: any) => d.id === itemId);
+                          const label = defItem?.label ?? itemId;
+                          const required = defItem?.required ?? false;
+
+                          return (
+                            <div
+                              key={itemId}
+                              className={cx(
+                                "flex items-center gap-4 rounded-2xl border p-4 transition-all",
+                                val.done ? "bg-emerald-50/50 border-emerald-100" : "bg-neutral-50/50 border-neutral-100"
+                              )}
+                            >
+                              <div className={cx(
+                                "h-6 w-6 rounded-lg flex items-center justify-center shrink-0",
+                                val.done ? "bg-emerald-500 text-white" : "bg-neutral-200 text-neutral-400 shadow-inner"
+                              )}>
+                                <Check className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-bold text-obsidian truncate">
+                                  {label}
+                                  {required && <span className="ml-2 text-[8px] px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-500 border border-rose-100 uppercase tracking-wider">Required</span>}
+                                </div>
+                                {val.at && (
+                                  <div className="text-[10px] text-neutral-400 mt-0.5">
+                                    Completado el {new Date(val.at).toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  ))}
+                  ) : null}
                 </div>
-              ) : null}
 
-              {/* ✅ 3. Render del checklist con labels, required/optional y timestamp */}
-              {evChecklist?.state && Object.keys(evChecklist.state).length > 0 ? (
-                <div className="mt-4 border-t pt-4">
-                  <div className="text-sm font-medium mb-2">Checklist del empleado</div>
-                  <div className="space-y-2">
-                    {Object.entries(evChecklist.state).map(([itemId, val]: [string, any]) => {
-                      // ✅ Busca la definición en el template para obtener label y required
-                      const defItem = evChecklist.def?.find((d: any) => d.id === itemId);
-                      const label = defItem?.label ?? itemId; // fallback al ID si no hay label
-                      const required = defItem?.required ?? false;
-
-                      return (
-                        <div
-                          key={itemId}
-                          className={`flex items-center gap-3 rounded-xl border p-3 ${
-                            val.done
-                              ? "bg-emerald-50 border-emerald-200"
-                              : "bg-neutral-50 border-neutral-200"
-                          }`}
-                        >
-                          <span className="text-lg">{val.done ? "✅" : "⬜"}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium truncate">
-                              {label}
-                              {required ? (
-                                <span className="ml-2 text-xs text-rose-500">(requerido)</span>
-                              ) : (
-                                <span className="ml-2 text-xs text-neutral-400">(opcional)</span>
-                              )}
-                            </div>
-                            {val.at ? (
-                              <div className="text-xs text-neutral-500">
-                                {new Date(val.at).toLocaleString()}
-                              </div>
-                            ) : null}
-                          </div>
-                          <span className={`text-xs rounded-full px-2 py-1 border flex-shrink-0 ${
-                            val.done
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                              : "bg-neutral-100 text-neutral-600 border-neutral-300"
-                          }`}>
-                            {val.done ? "Hecho" : "Pendiente"}
-                          </span>
-                        </div>
-                      );
-                    })}
+                <div className="p-8 bg-neutral-50 border-t border-neutral-100 space-y-6">
+                  <div>
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2 block ml-1">Nota de resolución</label>
+                    <textarea
+                      className="w-full h-24 rounded-2xl border border-neutral-200 bg-white p-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-obsidian/5 placeholder:text-neutral-300 resize-none"
+                      placeholder="Escribe un comentario si vas a rechazar la tarea..."
+                      value={rejectNote}
+                      onChange={(e) => setRejectNote(e.target.value)}
+                    />
                   </div>
-                </div>
-              ) : null}
 
-              {/* 🔥 Decisión dentro del modal */}
-              <div className="mt-4 border-t pt-4">
-                <div className="text-sm font-medium">Decisión</div>
-                <div className="text-xs text-neutral-500 mt-1">
-                  Aprueba si la evidencia es correcta. Rechaza con motivo si falta algo.
-                </div>
-
-                <div className="mt-3 flex flex-col md:flex-row gap-2">
-                  <button
-                    className="rounded-2xl bg-neutral-900 text-white px-3 py-2 text-sm hover:bg-neutral-800 disabled:opacity-50"
-                    disabled={!evAssignmentId || actionBusy === evAssignmentId}
-                    onClick={() => evAssignmentId && doApprove(evAssignmentId)}
-                  >
-                    {evAssignmentId && actionBusy === evAssignmentId ? "Aprobando..." : "✅ Aprobar"}
-                  </button>
-
-                  <input
-                    className="rounded-2xl border px-3 py-2 text-sm w-full"
-                    placeholder="Motivo del rechazo..."
-                    value={rejectNote}
-                    onChange={(e) => setRejectNote(e.target.value)}
-                  />
-
-                  <button
-                    className="rounded-2xl border px-3 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50"
-                    disabled={!evAssignmentId || actionBusy === evAssignmentId}
-                    onClick={() => evAssignmentId && doReject(evAssignmentId)}
-                  >
-                    {evAssignmentId && actionBusy === evAssignmentId ? "Rechazando..." : "❌ Rechazar"}
-                  </button>
+                  <div className="flex gap-4">
+                    <button
+                      className="flex-1 h-14 rounded-2xl bg-obsidian text-white text-[11px] font-bold uppercase tracking-widest hover:bg-gold transition-all shadow-lg shadow-obsidian/10 disabled:opacity-50 flex items-center justify-center gap-2"
+                      disabled={!evAssignmentId || actionBusy === evAssignmentId}
+                      onClick={() => evAssignmentId && doApprove(evAssignmentId)}
+                    >
+                      <CheckCircle2 className="h-5 w-5" />
+                      Aprobar Entrega
+                    </button>
+                    <button
+                      className="flex-1 h-14 rounded-2xl bg-white border border-rose-100 text-rose-500 text-[11px] font-bold uppercase tracking-widest hover:bg-rose-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      disabled={!evAssignmentId || actionBusy === evAssignmentId}
+                      onClick={() => evAssignmentId && doReject(evAssignmentId)}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                      Rechazar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ) : null}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

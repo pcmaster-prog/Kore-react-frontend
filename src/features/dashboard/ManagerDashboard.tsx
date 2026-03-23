@@ -6,7 +6,8 @@ import {
   AlertTriangle, CheckCircle2, Clock,
   ClipboardList, Users,
   CalendarCheck, Activity,
-  Zap, ChevronRight,
+  Zap, ChevronRight, ArrowUpRight, ArrowDownRight,
+  TrendingUp, Download, Filter, UserPlus, ShoppingBag
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -46,210 +47,38 @@ function readableAction(action: string, meta?: any): string {
   }
 }
 
-function actionIcon(action: string): { icon: string; color: string } {
-  if (action.startsWith("attendance.check_in"))  return { icon: "🟢", color: "bg-emerald-100" };
-  if (action.startsWith("attendance.check_out")) return { icon: "🔴", color: "bg-neutral-100" };
-  if (action.includes("completed"))              return { icon: "✅", color: "bg-emerald-100" };
-  if (action.includes("evidence"))               return { icon: "📎", color: "bg-violet-100" };
-  if (action.includes("bulk_created"))           return { icon: "📋", color: "bg-blue-100" };
-  if (action.includes("reused"))                 return { icon: "🔄", color: "bg-indigo-100" };
-  return { icon: "⚙️", color: "bg-neutral-100" };
+function actionIcon(action: string): React.ReactNode {
+  if (action.startsWith("attendance.check_in"))  return <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><ArrowUpRight className="h-4 w-4" /></div>;
+  if (action.startsWith("attendance.check_out")) return <div className="h-9 w-9 rounded-xl bg-neutral-50 text-neutral-400 flex items-center justify-center"><ArrowDownRight className="h-4 w-4" /></div>;
+  if (action.includes("completed"))              return <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><CheckCircle2 className="h-4 w-4" /></div>;
+  if (action.includes("evidence"))               return <div className="h-9 w-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><Activity className="h-4 w-4" /></div>;
+  if (action.includes("bulk_created"))           return <div className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><ClipboardList className="h-4 w-4" /></div>;
+  if (action.includes("reused"))                 return <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Zap className="h-4 w-4" /></div>;
+  return <div className="h-9 w-9 rounded-xl bg-neutral-50 text-neutral-400 flex items-center justify-center"><Activity className="h-4 w-4" /></div>;
 }
 
-// ─── Skeleton ──────────────────────────────────────────────────────────────────
-function Skeleton() {
+// ─── Stat Card ──────────────────────────────────────────────────────────────
+function StatCard({ label, value, trend, trendType, icon: Icon, colorClass, sub }: any) {
   return (
-    <div className="space-y-5 animate-pulse">
-      <div className="h-32 rounded-3xl bg-neutral-900/5" />
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {[...Array(5)].map((_,i) => <div key={i} className="h-28 rounded-3xl bg-neutral-100" />)}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="h-52 rounded-3xl bg-neutral-100" />
-        <div className="h-52 rounded-3xl bg-neutral-100" />
-      </div>
-    </div>
-  );
-}
-
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
-function KpiCard({
-  label, value, sub, icon, accent = false, warn = false, dark = false,
-}: {
-  label: string; value: number | string; sub?: string;
-  icon: React.ReactNode; accent?: boolean; warn?: boolean; dark?: boolean;
-}) {
-  return (
-    <div className={cx(
-      "relative rounded-3xl border p-5 overflow-hidden transition group",
-      dark  ? "bg-neutral-900 border-neutral-800 text-white"
-           : warn  ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200"
-           : accent ? "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200"
-           : "bg-white border-neutral-200 hover:border-neutral-300 hover:shadow-sm"
-    )}>
-      {/* Decorative circle */}
-      <div className={cx(
-        "absolute -top-4 -right-4 h-20 w-20 rounded-full opacity-10",
-        dark ? "bg-white" : warn ? "bg-amber-400" : accent ? "bg-emerald-400" : "bg-neutral-900"
-      )} />
-      <div className="relative">
-        <div className={cx(
-          "inline-flex items-center justify-center h-8 w-8 rounded-xl mb-3",
-          dark ? "bg-white/10 text-white" : warn ? "bg-amber-100 text-amber-600" : accent ? "bg-emerald-100 text-emerald-600" : "bg-neutral-100 text-neutral-500"
-        )}>
-          {icon}
+    <div className="bg-white rounded-[32px] p-6 shadow-sm border border-neutral-100/50 flex flex-col justify-between group hover:shadow-xl hover:shadow-obsidian/5 transition-all duration-500">
+      <div className="flex items-start justify-between mb-4">
+        <div className={cx("h-12 w-12 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-inner", colorClass)}>
+          <Icon className="h-6 w-6" />
         </div>
-        <div className={cx(
-          "text-3xl font-bold tracking-tight",
-          dark ? "text-white" : warn ? "text-amber-700" : accent ? "text-emerald-700" : "text-neutral-900"
-        )}>
-          {value}
-        </div>
-        <div className={cx(
-          "text-xs font-medium mt-1",
-          dark ? "text-white/60" : warn ? "text-amber-600" : accent ? "text-emerald-600" : "text-neutral-500"
-        )}>
-          {label}
-        </div>
-        {sub && (
+        {trend && (
           <div className={cx(
-            "text-xs mt-0.5",
-            dark ? "text-white/40" : "text-neutral-400"
+            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-tight",
+            trendType === 'up' ? "bg-emerald-50 text-emerald-600" : trendType === 'down' ? "bg-rose-50 text-rose-600" : "bg-neutral-50 text-neutral-500"
           )}>
-            {sub}
+            {trendType === 'up' ? <ArrowUpRight className="h-2.5 w-2.5" /> : trendType === 'down' ? <ArrowDownRight className="h-2.5 w-2.5" /> : null}
+            {trend}
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ─── Attendance Block ─────────────────────────────────────────────────────────
-function AttendanceBlock({ snap }: { snap: AttendanceSnap }) {
-  const total = snap.employees_total || 1;
-  const pct = Math.round((snap.checked_in / total) * 100);
-  const dateStr = new Date(snap.date + "T12:00:00").toLocaleDateString("es-MX", {
-    weekday: "long", day: "numeric", month: "long",
-  });
-
-  const segments = [
-    { label: "En turno",    val: snap.open,   color: "bg-emerald-400", light: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    { label: "Cerrados",    val: snap.closed, color: "bg-neutral-300", light: "bg-neutral-50 text-neutral-600 border-neutral-200" },
-    { label: "Sin entrada", val: snap.out,    color: "bg-rose-300",    light: "bg-rose-50 text-rose-700 border-rose-200" },
-  ];
-
-  return (
-    <div className="rounded-3xl border bg-white shadow-sm overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b bg-gradient-to-br from-neutral-50 to-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-              <CalendarCheck className="h-4 w-4 text-neutral-400" />
-              Asistencia hoy
-            </div>
-            <div className="text-xs text-neutral-500 mt-1 capitalize">{dateStr}</div>
-          </div>
-          <div className={cx(
-            "flex flex-col items-end",
-          )}>
-            <span className="text-3xl font-bold text-neutral-900">{snap.checked_in}</span>
-            <span className="text-xs text-neutral-400">de {snap.employees_total}</span>
-          </div>
-        </div>
-
-        {/* Barra segmentada */}
-        <div className="mt-4 h-3 w-full rounded-full bg-neutral-100 overflow-hidden flex gap-0.5">
-          {segments.map((s) => (
-            <div
-              key={s.label}
-              className={cx("h-full rounded-full transition-all", s.color)}
-              style={{ width: `${Math.round((s.val / total) * 100)}%` }}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between mt-1.5">
-          <span className="text-xs text-neutral-400">{pct}% presentes</span>
-          <span className={cx(
-            "text-xs font-medium",
-            pct >= 80 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-rose-600"
-          )}>
-            {pct >= 80 ? "✓ Buena asistencia" : pct >= 50 ? "⚠ Asistencia parcial" : "↓ Baja asistencia"}
-          </span>
-        </div>
-      </div>
-
-      {/* Mini stats */}
-      <div className="grid grid-cols-3 divide-x flex-1">
-        {segments.map((s) => (
-          <div key={s.label} className="flex flex-col items-center justify-center py-4 gap-1">
-            <span className="text-2xl font-bold text-neutral-800">{s.val}</span>
-            <span className="text-xs text-neutral-500">{s.label}</span>
-            <span className={cx("h-1.5 w-6 rounded-full", s.color)} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Tareas hoy ───────────────────────────────────────────────────────────────
-function TareasHoy({ t }: { t: { open?: number; in_progress?: number; completed?: number } }) {
-  const open = t.open ?? 0;
-  const inProg = t.in_progress ?? 0;
-  const done = t.completed ?? 0;
-  const total = open + inProg + done || 1;
-  const donePct = Math.round((done / total) * 100);
-
-  const bars = [
-    { label: "Completadas", val: done,   color: "bg-emerald-500", text: "text-emerald-600" },
-    { label: "En progreso", val: inProg, color: "bg-amber-400",   text: "text-amber-600"   },
-    { label: "Sin iniciar", val: open,   color: "bg-neutral-200", text: "text-neutral-500"  },
-  ];
-
-  return (
-    <div className="rounded-3xl border bg-white shadow-sm overflow-hidden flex flex-col">
-      <div className="px-5 pt-5 pb-4 border-b bg-gradient-to-br from-neutral-50 to-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-              <ClipboardList className="h-4 w-4 text-neutral-400" />
-              Tareas de hoy
-            </div>
-            <div className="text-xs text-neutral-500 mt-1">Progreso del día actual</div>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-3xl font-bold text-neutral-900">{donePct}%</span>
-            <span className="text-xs text-neutral-400">completado</span>
-          </div>
-        </div>
-
-        {/* Barra de progreso */}
-        <div className="mt-4 h-3 w-full rounded-full bg-neutral-100 overflow-hidden flex gap-0.5">
-          {bars.map((b) => (
-            <div
-              key={b.label}
-              className={cx("h-full transition-all", b.color)}
-              style={{ width: `${Math.round((b.val / total) * 100)}%` }}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between mt-1.5">
-          <span className="text-xs text-neutral-400">{done + inProg + open} tareas en total</span>
-          <span className={cx("text-xs font-medium", donePct >= 80 ? "text-emerald-600" : donePct >= 40 ? "text-amber-600" : "text-neutral-500")}>
-            {donePct >= 80 ? "✓ Gran avance" : donePct >= 40 ? "↗ Buen ritmo" : "→ En marcha"}
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 divide-x flex-1">
-        {bars.map((b) => (
-          <div key={b.label} className="flex flex-col items-center justify-center py-4 gap-1">
-            <span className="text-2xl font-bold text-neutral-800">{b.val}</span>
-            <span className="text-xs text-neutral-500">{b.label}</span>
-            <span className={cx("h-1.5 w-6 rounded-full", b.color)} />
-          </div>
-        ))}
+      <div>
+        <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-[0.15em] mb-1">{label}</div>
+        <div className="text-2xl font-black text-obsidian tracking-tighter leading-tight">{value}</div>
+        {sub && <div className="text-[10px] font-medium text-neutral-400 mt-1">{sub}</div>}
       </div>
     </div>
   );
@@ -286,171 +115,183 @@ export default function ManagerDashboard() {
   const t = data?.today ?? {};
   const overdue = k.overdue ?? 0;
 
-  const health = useMemo(() => {
-    if (overdue >= 10) return { label: "Riesgo alto",       ok: false, cls: "bg-rose-100 text-rose-700 border-rose-200" };
-    if (overdue >= 1)  return { label: "Bajo observación",  ok: false, cls: "bg-amber-100 text-amber-700 border-amber-200" };
-    return               { label: "Operación estable",      ok: true,  cls: "bg-emerald-100 text-emerald-700 border-emerald-200" };
-  }, [overdue]);
-
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
   const todayFull = new Date().toLocaleDateString("es-MX", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    weekday: "long", day: "numeric", month: "long"
   });
 
-  if (loading) return <Skeleton />;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center p-20 space-y-4 animate-in-fade">
+      <div className="h-12 w-12 border-4 border-obsidian/10 border-t-obsidian rounded-full animate-spin" />
+      <div className="text-[11px] font-bold text-obsidian/40 uppercase tracking-widest animate-pulse">Cargando Insights...</div>
+    </div>
+  );
 
   if (err) return (
-    <div className="rounded-3xl border bg-white p-6">
-      <div className="font-semibold text-lg">Dashboard</div>
-      <div className="mt-2 text-sm text-rose-600">{err}</div>
+    <div className="rounded-[32px] bg-white border border-rose-100 p-8 text-center max-w-md mx-auto mt-10">
+      <div className="h-16 w-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <AlertTriangle className="h-8 w-8" />
+      </div>
+      <h2 className="text-xl font-black text-obsidian mb-2">Error de Conexión</h2>
+      <p className="text-sm text-neutral-500 mb-6">{err}</p>
+      <button onClick={() => window.location.reload()} className="h-11 px-6 bg-obsidian text-white rounded-xl font-bold text-sm">Reintentar</button>
     </div>
   );
 
   return (
-    <div className="space-y-5">
-
-      {/* ── Hero header ──────────────────────────────────────────────────── */}
-      <div className="relative rounded-3xl bg-neutral-900 overflow-hidden px-6 py-6 text-white">
-        {/* Decoración de fondo */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
-          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
-          <div className="absolute -bottom-8 left-1/3 h-40 w-40 rounded-full bg-white/[0.02]" />
-        </div>
-
-        <div className="relative flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-white/50 text-sm font-medium capitalize">{todayFull}</p>
-            <h1 className="text-2xl font-bold mt-0.5 tracking-tight">{greeting} 👋</h1>
-            <p className="text-white/50 text-sm mt-1">Panorama operativo del día.</p>
+    <div className="space-y-8 animate-in-up">
+      {/* Header Section */}
+      <div className="relative overflow-hidden bg-obsidian rounded-[40px] p-8 lg:p-12 text-white shadow-2xl shadow-obsidian/20">
+        <div className="relative z-10 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">
+            <TrendingUp className="h-3 w-3 text-gold-light" />
+            Control Operativo · {todayFull}
           </div>
+          <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-4 leading-[1.1]">
+            Todo en orden, <span className="text-gold-light italic">Ricardo</span>. 
+            <br />La operación fluye.
+          </h1>
+          <p className="text-white/60 text-lg font-medium leading-relaxed max-w-lg mb-8">
+            Tienes <span className="text-white font-bold">{pending} aprobaciones</span> pendientes y el cumplimiento de tareas hoy está al <span className="text-white font-bold">{Math.round(((t.completed ?? 0) / ((t.open ?? 0) + (t.in_progress ?? 0) + (t.completed ?? 0) || 1)) * 100)}%</span>.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <button className="px-6 h-12 rounded-2xl bg-white text-obsidian font-bold text-sm shadow-xl shadow-black/10 hover:bg-gold-light hover:text-white transition-all transform hover:-translate-y-1">
+              Ver Reportes
+            </button>
+            <button className="px-6 h-12 rounded-2xl bg-white/10 border border-white/20 text-white font-bold text-sm backdrop-blur-md hover:bg-white/20 transition-all">
+              Nueva Tarea
+            </button>
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-gold/10 rounded-full blur-[100px]" />
+      </div>
 
-          <div className="flex items-center gap-3">
-            {pending > 0 && (
-              <div className="flex items-center gap-2 rounded-2xl bg-amber-400/20 border border-amber-400/30 px-4 py-2.5">
-                <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                <span className="text-amber-300 text-sm font-medium">{pending} por revisar</span>
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          label="Abiertas" 
+          value={k.open ?? 0} 
+          trend="Estable" trendType="none"
+          icon={ClipboardList} colorClass="bg-blue-50 text-blue-600"
+          sub="Tareas pendientes"
+        />
+        <StatCard 
+          label="En Proceso" 
+          value={k.in_progress ?? 0} 
+          trend="+2" trendType="up"
+          icon={Clock} colorClass="bg-amber-50 text-amber-600"
+          sub="Ejecutándose ahora"
+        />
+        <StatCard 
+          label="Completadas" 
+          value={k.completed ?? 0} 
+          trend="+12%" trendType="up"
+          icon={CheckCircle2} colorClass="bg-emerald-50 text-emerald-600"
+          sub="Total este mes"
+        />
+        <StatCard 
+          label="Vencidas" 
+          value={overdue} 
+          trend="-3" trendType="down"
+          icon={AlertTriangle} colorClass="bg-rose-50 text-rose-600"
+          sub="Urgente atención"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Activity */}
+        <div className="lg:col-span-2 bg-white rounded-[40px] p-8 lg:p-10 shadow-sm border border-neutral-100/50">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-black text-obsidian tracking-tight">Actividad del Turno</h2>
+              <p className="text-[11px] font-bold text-neutral-400 mt-1 uppercase tracking-widest">Tiempo Real</p>
+            </div>
+            <div className="flex gap-2">
+              <button className="h-10 w-10 rounded-xl bg-neutral-50 flex items-center justify-center text-neutral-500 hover:bg-neutral-100 transition-colors">
+                <Filter className="h-4 w-4" />
+              </button>
+              <button className="h-10 w-10 rounded-xl bg-obsidian text-white flex items-center justify-center shadow-lg shadow-obsidian/20 hover:scale-105 transition-transform">
+                <Download className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="divide-y divide-neutral-50">
+            {data?.activity?.length ? (
+              data.activity.slice(0, 6).map((a) => (
+                <div key={a.id} className="flex items-center gap-4 py-4 group cursor-pointer">
+                  {actionIcon(a.action)}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-obsidian truncate group-hover:text-gold transition-colors">
+                      {readableAction(a.action, a.meta)}
+                    </div>
+                    <div className="text-[11px] font-medium text-neutral-400 mt-0.5">
+                      {new Date(a.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-neutral-400 transition-colors" />
+                </div>
+              ))
+            ) : (
+              <div className="py-12 text-center">
+                <Zap className="h-8 w-8 text-neutral-100 mx-auto mb-2" />
+                <p className="text-xs font-bold text-neutral-300 uppercase tracking-widest">Sin actividad reciente</p>
               </div>
             )}
-            <div className={cx(
-              "flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium",
-              health.ok
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
-                : "bg-amber-500/15 border-amber-500/30 text-amber-300"
-            )}>
-              {health.ok
-                ? <CheckCircle2 className="h-4 w-4" />
-                : <AlertTriangle className="h-4 w-4" />}
-              {health.label}
-            </div>
           </div>
-        </div>
-      </div>
-
-      {/* ── KPI Cards ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <KpiCard
-          label="Sin iniciar"
-          value={k.open ?? 0}
-          sub="Tareas abiertas"
-          icon={<ClipboardList className="h-4 w-4" />}
-        />
-        <KpiCard
-          label="En progreso"
-          value={k.in_progress ?? 0}
-          sub="En ejecución"
-          icon={<Clock className="h-4 w-4" />}
-        />
-        <KpiCard
-          label="Completadas"
-          value={k.completed ?? 0}
-          sub="Total cerradas"
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          accent
-        />
-        <KpiCard
-          label="Vencidas"
-          value={overdue}
-          sub="Requieren atención"
-          icon={<AlertTriangle className="h-4 w-4" />}
-          warn={overdue > 0}
-        />
-        <KpiCard
-          label="Por revisar"
-          value={pending}
-          sub="Aprobaciones"
-          icon={<Users className="h-4 w-4" />}
-          dark
-        />
-      </div>
-
-      {/* ── Tareas hoy + Asistencia ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <TareasHoy t={t} />
-        {data?.attendance
-          ? <AttendanceBlock snap={data.attendance} />
-          : (
-            <div className="rounded-3xl border border-dashed bg-neutral-50 p-6 flex flex-col items-center justify-center text-center gap-2">
-              <CalendarCheck className="h-8 w-8 text-neutral-300" />
-              <div className="text-sm text-neutral-500">Sin datos de asistencia para hoy</div>
-            </div>
-          )}
-      </div>
-
-      {/* ── Actividad reciente ────────────────────────────────────────────── */}
-      <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-neutral-900 text-white flex items-center justify-center">
-              <Activity className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">Actividad reciente</div>
-              <div className="text-xs text-neutral-500">Últimos movimientos del sistema</div>
-            </div>
-          </div>
-          <span className="text-xs text-neutral-400 inline-flex items-center gap-1 hover:text-neutral-700 cursor-pointer transition">
-            Ver todo <ChevronRight className="h-3 w-3" />
-          </span>
+          <button className="w-full mt-8 h-14 rounded-2xl bg-neutral-50 text-obsidian font-bold text-sm tracking-tight hover:bg-neutral-100 transition-all">
+            Ver Todo el Registro
+          </button>
         </div>
 
-        <div className="divide-y">
-          {data?.activity?.length ? (
-            data.activity.slice(0, 6).map((a, i) => {
-              const { icon, color } = actionIcon(a.action);
-              const label = readableAction(a.action, a.meta);
-              const time = new Date(a.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-              return (
-                <div
-                  key={a.id}
-                  className="flex items-center gap-3 px-5 py-3.5 hover:bg-neutral-50/60 transition group"
-                  style={{ animationDelay: `${i * 40}ms` }}
-                >
-                  <div className={cx("h-9 w-9 rounded-xl flex items-center justify-center text-base shrink-0", color)}>
-                    {icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-neutral-800 truncate font-medium">{label}</div>
-                  </div>
-                  <div className="text-xs text-neutral-400 shrink-0 tabular-nums">{time}</div>
-                  <ChevronRight className="h-3.5 w-3.5 text-neutral-200 group-hover:text-neutral-400 transition shrink-0" />
+        {/* Side Widgets */}
+        <div className="space-y-6">
+          {/* Attendance Widget */}
+          {data?.attendance && (
+            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
+              <h3 className="text-lg font-black text-obsidian tracking-tight mb-6">Asistencia Hoy</h3>
+              <div className="flex items-end justify-between mb-4">
+                <div className="text-4xl font-black text-obsidian">{data.attendance.checked_in}</div>
+                <div className="text-xs font-bold text-neutral-400 uppercase pb-1">de {data.attendance.employees_total} Staff</div>
+              </div>
+              <div className="h-2 w-full rounded-full bg-neutral-100 overflow-hidden flex gap-0.5 mb-6">
+                <div className="h-full bg-emerald-400" style={{ width: `${(data.attendance.open / data.attendance.employees_total) * 100}%` }} />
+                <div className="h-full bg-neutral-300" style={{ width: `${(data.attendance.closed / data.attendance.employees_total) * 100}%` }} />
+                <div className="h-full bg-rose-300" style={{ width: `${(data.attendance.out / data.attendance.employees_total) * 100}%` }} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center">
+                  <div className="text-sm font-bold text-emerald-600">{data.attendance.open}</div>
+                  <div className="text-[10px] font-medium text-neutral-400 uppercase">Turno</div>
                 </div>
-              );
-            })
-          ) : (
-            <div className="flex flex-col items-center py-10 gap-2 text-neutral-400">
-              <Zap className="h-6 w-6" />
-              <span className="text-sm">Sin actividad registrada aún</span>
+                <div className="text-center">
+                  <div className="text-sm font-bold text-neutral-400">{data.attendance.closed}</div>
+                  <div className="text-[10px] font-medium text-neutral-400 uppercase">Fuera</div>
+                </div>
+                 <div className="text-center">
+                  <div className="text-sm font-bold text-rose-400">{data.attendance.out}</div>
+                  <div className="text-[10px] font-medium text-neutral-400 uppercase">Sin-E</div>
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {(data?.activity?.length ?? 0) > 0 && (
-          <div className="px-5 py-3 border-t bg-neutral-50/50 text-xs text-neutral-400 text-center">
-            Ver historial completo en <span className="font-medium text-neutral-600">Configuración → Actividad</span>
+          {/* Quick Actions / Support */}
+          <div className="bg-gradient-to-br from-gold/10 to-gold-light/5 rounded-[40px] p-8 border border-gold/5 relative overflow-hidden group hover:border-gold/20 transition-all duration-500">
+             <div className="relative z-10">
+               <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-gold shadow-sm mb-6 group-hover:rotate-6 transition-transform">
+                 <ShoppingBag className="h-6 w-6" />
+               </div>
+               <h4 className="text-base font-black text-obsidian tracking-tight mb-2">Ayuda Corporativa</h4>
+               <p className="text-[12px] font-medium text-obsidian/50 leading-relaxed mb-6">
+                 ¿Necesitas soporte con reportes o facturación?
+               </p>
+               <button className="text-[13px] font-black text-gold hover:text-obsidian transition-colors inline-flex items-center gap-2">
+                 Contáctanos <ArrowUpRight className="h-4 w-4" />
+               </button>
+             </div>
+             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gold/5 rounded-full blur-2xl transition-colors" />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
