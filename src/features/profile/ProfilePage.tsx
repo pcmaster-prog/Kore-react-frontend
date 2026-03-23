@@ -122,6 +122,26 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    try {
+      const res = await api.post('/mi-perfil/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const newUrl = res.data?.avatar_url ?? res.data;
+      setProfile(prev => prev ? { ...prev, avatar_url: newUrl } : prev);
+      showToast("ok", "Foto actualizada");
+    } catch (e: any) {
+      showToast("err", "No se pudo subir la foto");
+    }
+  }
+
+
   const roleLabel =
     profile?.role === "admin" ? "Administrador"
     : profile?.role === "supervisor" ? "Supervisor"
@@ -175,10 +195,22 @@ export default function ProfilePage() {
         <div className="space-y-4">
           {/* Foto + nombre */}
           <div className="rounded-3xl bg-blue-600 p-6 text-white text-center shadow-sm">
-            <div className="flex justify-center mb-3">
-              <Avatar name={profile.full_name} url={profile.avatar_url} size="lg" />
+            <div className="relative flex justify-center mb-3">
+              <div className="relative">
+                <Avatar name={profile.full_name} url={profile.avatar_url} size="lg" />
+                <label className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-white text-neutral-700 flex items-center justify-center cursor-pointer shadow hover:bg-neutral-100 transition border border-neutral-200">
+                  📷
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                </label>
+              </div>
             </div>
             <div className="font-semibold text-lg">{profile.full_name}</div>
+
             <div className="text-sm text-white/70 mt-0.5">{roleLabel}</div>
             <div className="mt-2 flex justify-center">
               <AttendanceBadge status={profile.attendance_status} />
