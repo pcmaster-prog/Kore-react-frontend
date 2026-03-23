@@ -1,13 +1,13 @@
 // src/features/dashboard/ManagerDashboard.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/http";
 import { listPendingApprovals } from "@/features/tasks/api";
 import {
   AlertTriangle, CheckCircle2, Clock,
-  ClipboardList, Users,
-  CalendarCheck, Activity,
+  ClipboardList,
+  Activity,
   Zap, ChevronRight, ArrowUpRight, ArrowDownRight,
-  TrendingUp, Download, Filter, UserPlus, ShoppingBag
+  TrendingUp, Download, Filter, ShoppingBag
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {

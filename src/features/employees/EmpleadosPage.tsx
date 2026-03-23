@@ -10,6 +10,10 @@ import {
   type CreateUserPayload,
   type UpdateUserPayload,
 } from "./api";
+import {
+  Users, UserPlus, CheckCircle2, AlertTriangle,
+  Search, Pencil, UserX, UserCheck, Trash2,
+} from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -28,7 +32,7 @@ function Avatar({ name }: { name: string }) {
   ];
   const color = colors[name.charCodeAt(0) % colors.length];
   return (
-    <div className={cx("h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold shrink-0", color)}>
+    <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center text-xs font-bold shrink-0", color)}>
       {initials}
     </div>
   );
@@ -38,14 +42,14 @@ function Avatar({ name }: { name: string }) {
 function RoleBadge({ role }: { role: string }) {
   const conf =
     role === "admin"
-      ? "bg-violet-50 text-violet-700 border-violet-200"
+      ? "bg-violet-50 text-violet-600 border-violet-100"
       : role === "supervisor"
-      ? "bg-blue-50 text-blue-700 border-blue-200"
-      : "bg-neutral-50 text-neutral-600 border-neutral-200";
+      ? "bg-blue-50 text-blue-600 border-blue-100"
+      : "bg-neutral-50 text-neutral-500 border-neutral-100";
   const label =
     role === "admin" ? "Admin" : role === "supervisor" ? "Supervisor" : "Empleado";
   return (
-    <span className={cx("inline-flex rounded-full border px-2.5 py-1 text-xs font-medium", conf)}>
+    <span className={cx("inline-flex rounded-xl border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", conf)}>
       {label}
     </span>
   );
@@ -589,58 +593,74 @@ export default function EmpleadosPage() {
   return (
     <>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Usuarios</h1>
-            <p className="text-sm text-neutral-500 mt-0.5">
-              Gestiona las cuentas de acceso y perfiles del equipo.
-            </p>
+        {/* ── Hero Header ─────────────────────────────────────────────── */}
+        <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-8 text-white">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
+            <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
+            <div className="absolute bottom-0 left-1/2 h-16 w-48 rounded-full bg-gold/10" />
           </div>
-          <button
-            onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 transition shadow-sm"
-          >
-            + Nuevo usuario
-          </button>
+          <div className="relative flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Recursos Humanos</p>
+              <h1 className="text-3xl font-black tracking-tight">Equipo</h1>
+              <p className="text-white/50 text-sm mt-1">Gestiona las cuentas de acceso y perfiles del equipo.</p>
+            </div>
+            <button
+              onClick={openCreate}
+              className="inline-flex items-center gap-2 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 px-5 py-3 text-sm font-bold text-white transition"
+            >
+              <UserPlus className="h-4 w-4" />
+              Nuevo Usuario
+            </button>
+          </div>
         </div>
 
         {/* Toast */}
         {toast && (
           <div className={cx(
-            "rounded-2xl border px-4 py-3 text-sm font-medium",
+            "rounded-2xl border px-5 py-3 text-sm font-bold flex items-center gap-3",
             toast.type === "ok"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-rose-50 border-rose-200 text-rose-800"
+              ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+              : "bg-rose-50 border-rose-100 text-rose-700"
           )}>
-            {toast.type === "ok" ? "✅" : "❌"} {toast.msg}
+            {toast.type === "ok"
+              ? <CheckCircle2 className="h-4 w-4" />
+              : <AlertTriangle className="h-4 w-4" />}
+            {toast.msg}
           </div>
         )}
 
         {/* KPIs */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Total", val: total, cls: "bg-white" },
-            { label: "Activos", val: active, cls: "bg-emerald-50 border-emerald-100", num: "text-emerald-700" },
-            { label: "Inactivos", val: inactive, cls: "bg-neutral-50", num: inactive > 0 ? "text-rose-600" : "text-neutral-400" },
+            { label: "Total Equipo", val: total, icon: Users, iconBg: "bg-neutral-100 text-neutral-500" },
+            { label: "Activos", val: active, icon: CheckCircle2, iconBg: "bg-emerald-100 text-emerald-600", numCls: "text-emerald-600" },
+            { label: "Inactivos", val: inactive, icon: UserX, iconBg: "bg-rose-50 text-rose-400", numCls: inactive > 0 ? "text-rose-500" : "text-neutral-300" },
           ].map((k) => (
-            <div key={k.label} className={cx("rounded-3xl border p-4 text-center shadow-sm", k.cls)}>
-              <div className="text-xs text-neutral-500">{k.label}</div>
-              <div className={cx("text-3xl font-bold mt-1", k.num ?? "text-neutral-800")}>{k.val}</div>
+            <div key={k.label} className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm">
+              <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center mb-4", k.iconBg)}>
+                <k.icon className="h-5 w-5" />
+              </div>
+              <div className={cx("text-3xl font-black tracking-tight", k.numCls ?? "text-obsidian")}>{k.val}</div>
+              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">{k.label}</div>
             </div>
           ))}
         </div>
 
         {/* Filtros */}
-        <div className="flex flex-col md:flex-row gap-2">
-          <input
-            className="flex-1 rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-            placeholder="Buscar por nombre, email o puesto..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+            <input
+              className="w-full rounded-2xl border border-neutral-100 bg-white pl-11 pr-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 placeholder:text-neutral-300"
+              placeholder="Buscar por nombre, email o puesto..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <select
-            className="rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
+            className="rounded-2xl border border-neutral-100 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 text-neutral-600"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
           >
@@ -653,92 +673,102 @@ export default function EmpleadosPage() {
 
         {/* Error */}
         {err && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{err}</div>
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-medium text-rose-700 flex items-center gap-3">
+            <AlertTriangle className="h-4 w-4 shrink-0" />{err}
+          </div>
         )}
 
         {/* Tabla */}
-        <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
+        <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center text-sm text-neutral-500">Cargando usuarios...</div>
+            <div className="p-16 flex flex-col items-center gap-3 text-neutral-400">
+              <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+              <span className="text-xs font-bold uppercase tracking-widest">Cargando equipo...</span>
+            </div>
           ) : users.length === 0 ? (
-            <div className="p-8 text-center text-sm text-neutral-500">
-              {search || roleFilter ? "Sin resultados para ese filtro." : "Sin usuarios aún. Crea el primero."}
+            <div className="p-16 flex flex-col items-center gap-4 text-center">
+              <Users className="h-12 w-12 text-neutral-100" />
+              <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                {search || roleFilter ? "Sin resultados para ese filtro" : "Sin usuarios. Crea el primero."}
+              </p>
             </div>
           ) : (
             <div className="overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-neutral-50 text-neutral-500 text-xs uppercase tracking-wide">
+                <thead className="bg-neutral-50/80 border-b border-neutral-50">
                   <tr>
-                    <th className="text-left p-3 pl-5">Usuario</th>
-                    <th className="text-left p-3">Rol</th>
-                    <th className="text-left p-3">Puesto</th>
-                    <th className="text-left p-3">No. empleado</th>
-                    <th className="text-left p-3">Estado</th>
-                    <th className="text-left p-3">Acciones</th>
+                    {["Usuario", "Rol", "Puesto", "No. Empleado", "Estado", "Acciones"].map((h) => (
+                      <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.id} className={cx(
-                      "border-t transition",
-                      !user.is_active ? "opacity-50" : "hover:bg-neutral-50/60"
+                      "border-t border-neutral-50 transition",
+                      !user.is_active ? "opacity-40" : "hover:bg-neutral-50/50"
                     )}>
-                      <td className="p-3 pl-5">
+                      <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar name={user.name} />
                           <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-xs text-neutral-500">{user.email}</div>
+                            <div className="text-sm font-bold text-obsidian">{user.name}</div>
+                            <div className="text-[10px] text-neutral-400 mt-0.5">{user.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3">
+                      <td className="px-5 py-4">
                         <RoleBadge role={user.role} />
                       </td>
-                      <td className="p-3 text-neutral-600">
-                        {user.position_title ?? <span className="text-neutral-400">—</span>}
+                      <td className="px-5 py-4 text-sm font-medium text-neutral-500">
+                        {user.position_title ?? <span className="text-neutral-200">—</span>}
                       </td>
-                      <td className="p-3 font-mono text-xs text-neutral-600">
-                        {user.employee_code ?? <span className="text-neutral-400">—</span>}
+                      <td className="px-5 py-4 font-mono text-xs font-bold text-neutral-400">
+                        {user.employee_code ?? <span className="text-neutral-200">—</span>}
                       </td>
-                      <td className="p-3">
+                      <td className="px-5 py-4">
                         <span className={cx(
-                          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                          "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
                           user.is_active
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-neutral-50 text-neutral-500 border-neutral-200"
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                            : "bg-neutral-50 text-neutral-400 border-neutral-100"
                         )}>
                           <span className={cx(
                             "h-1.5 w-1.5 rounded-full",
-                            user.is_active ? "bg-emerald-500" : "bg-neutral-400"
+                            user.is_active ? "bg-emerald-500" : "bg-neutral-300"
                           )} />
                           {user.is_active ? "Activo" : "Inactivo"}
                         </span>
                       </td>
-                      <td className="p-3">
+                      <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openEdit(user)}
-                            className="rounded-xl border border-neutral-200 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 transition"
+                            className="h-8 w-8 rounded-xl border border-neutral-100 flex items-center justify-center text-neutral-400 hover:bg-neutral-50 hover:text-obsidian transition"
+                            title="Editar"
                           >
-                            Editar
+                            <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => setToggleTarget(user)}
                             className={cx(
-                              "rounded-xl border px-3 py-1.5 text-xs font-medium transition",
+                              "h-8 w-8 rounded-xl border flex items-center justify-center transition",
                               user.is_active
-                                ? "border-rose-200 text-rose-600 hover:bg-rose-50"
-                                : "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                                ? "border-rose-100 text-rose-400 hover:bg-rose-50"
+                                : "border-emerald-100 text-emerald-500 hover:bg-emerald-50"
                             )}
+                            title={user.is_active ? "Desactivar" : "Activar"}
                           >
-                            {user.is_active ? "Desactivar" : "Activar"}
+                            {user.is_active
+                              ? <UserX className="h-3.5 w-3.5" />
+                              : <UserCheck className="h-3.5 w-3.5" />}
                           </button>
                           <button
                             onClick={() => setDeleteTarget(user)}
-                            className="rounded-xl border border-red-200 text-red-600 px-3 py-1.5 text-xs font-medium hover:bg-red-50 transition"
+                            className="h-8 w-8 rounded-xl border border-rose-100 text-rose-400 flex items-center justify-center hover:bg-rose-50 transition"
+                            title="Eliminar"
                           >
-                            Eliminar
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
