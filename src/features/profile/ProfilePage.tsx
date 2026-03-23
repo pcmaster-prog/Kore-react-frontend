@@ -122,6 +122,7 @@ export default function ProfilePage() {
     }
   }
 
+/*
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -140,6 +141,7 @@ export default function ProfilePage() {
       showToast("err", "No se pudo subir la foto");
     }
   }
+*/
 
 
   const roleLabel =
