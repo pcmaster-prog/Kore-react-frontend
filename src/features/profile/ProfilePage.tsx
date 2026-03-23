@@ -198,6 +198,7 @@ export default function ProfilePage() {
             <div className="relative flex justify-center mb-3">
               <div className="relative">
                 <Avatar name={profile.full_name} url={profile.avatar_url} size="lg" />
+                {/* Botón de foto temporalmente desactivado
                 <label className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-white text-neutral-700 flex items-center justify-center cursor-pointer shadow hover:bg-neutral-100 transition border border-neutral-200">
                   📷
                   <input
@@ -207,6 +208,7 @@ export default function ProfilePage() {
                     onChange={handleAvatarUpload}
                   />
                 </label>
+                */}
               </div>
             </div>
             <div className="font-semibold text-lg">{profile.full_name}</div>
