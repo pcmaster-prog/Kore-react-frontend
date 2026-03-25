@@ -72,7 +72,7 @@ export default function GondolaRellenoPage() {
   }
 
   const totalLlenados = Object.values(cantidades).filter((v) => v > 0).length;
-  const totalItems = orden?.items.length ?? 0;
+  const totalItems = orden?.items?.length ?? 0;
   const canSubmit = totalLlenados > 0;
 
   async function handleCompletar() {
@@ -196,7 +196,7 @@ export default function GondolaRellenoPage() {
 
       {/* Lista de productos — scrollable */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-48">
-        {orden.items.map((item) => {
+        {(orden.items || []).map((item) => {
           const cant = cantidades[item.id] ?? 0;
           const filled = cant > 0;
           return (

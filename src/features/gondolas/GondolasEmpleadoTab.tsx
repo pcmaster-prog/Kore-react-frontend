@@ -158,7 +158,7 @@ function OrdenCard({
             {orden.gondola.nombre}
           </div>
           <div className="text-xs text-neutral-400 font-medium mt-1">
-            {orden.items.length} productos · Asignada{" "}
+            {orden.items?.length ?? 0} productos · Asignada{" "}
             {tiempoRelativo(orden.created_at)}
           </div>
         </div>

@@ -137,7 +137,7 @@ export default function OrdenDetailModal({ orden, onClose, onUpdated }: Props) {
                 Cantidades registradas
               </div>
               <div className="rounded-2xl border border-neutral-100 overflow-hidden">
-                {orden.items.length === 0 ? (
+                {(orden.items?.length ?? 0) === 0 ? (
                   <div className="p-8 text-center text-sm text-neutral-400 font-medium">
                     Sin productos
                   </div>
@@ -163,7 +163,7 @@ export default function OrdenDetailModal({ orden, onClose, onUpdated }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {orden.items.map((item, i) => (
+                      {(orden.items || []).map((item, i) => (
                         <tr
                           key={item.id}
                           className={cx(

@@ -73,11 +73,14 @@ export const listOrdenes = (params?: {
 }) =>
   api.get("/gondola-ordenes", { params }).then((r) => {
     const list = Array.isArray(r.data) ? r.data : r.data?.data;
-    return (list || []) as GondolaOrden[];
+    return (list || []).map((o: any) => ({ ...o, items: o.items || [] })) as GondolaOrden[];
   });
 
 export const getOrden = (id: string) =>
-  api.get(`/gondola-ordenes/${id}`).then((r) => r.data as GondolaOrden);
+  api.get(`/gondola-ordenes/${id}`).then((r) => {
+    const o = r.data;
+    return { ...o, items: o.items || [] } as GondolaOrden;
+  });
 
 export const createOrden = (data: {
   gondola_id: string;
@@ -88,7 +91,10 @@ export const createOrden = (data: {
 export const iniciarOrden = (id: string) =>
   api
     .post(`/gondola-ordenes/${id}/iniciar`)
-    .then((r) => r.data as GondolaOrden);
+    .then((r) => {
+      const o = r.data;
+      return { ...o, items: o.items || [] } as GondolaOrden;
+    });
 
 export const completarOrden = (
   id: string,
@@ -106,7 +112,10 @@ export const completarOrden = (
     .post(`/gondola-ordenes/${id}/completar`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     })
-    .then((r) => r.data as GondolaOrden);
+    .then((r) => {
+      const o = r.data;
+      return { ...o, items: o.items || [] } as GondolaOrden;
+    });
 };
 
 export const aprobarOrden = (id: string) =>
@@ -122,5 +131,5 @@ export const rechazarOrden = (id: string, notas_rechazo: string) =>
 export const misOrdenesGondola = () =>
   api.get("/mis-ordenes-gondola").then((r) => {
     const list = Array.isArray(r.data) ? r.data : r.data?.data;
-    return (list || []) as GondolaOrden[];
+    return (list || []).map((o: any) => ({ ...o, items: o.items || [] })) as GondolaOrden[];
   });
