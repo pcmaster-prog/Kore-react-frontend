@@ -93,16 +93,16 @@ export default function LoginPage() {
         {/* Hero Copy */}
         <div className="relative z-10 max-w-xl">
           <h1 className="text-[3rem] font-black text-white tracking-tight leading-[1.1] mb-6">
-            Gestión inteligente<br/>para equipos de<br/>alto impacto.
+            Panel de Control DecorArte
           </h1>
           <p className="text-lg text-white/50 font-medium leading-relaxed max-w-md">
-            Entornos centralizados, evidencias inmutables y operaciones precisas. Todo en un solo lugar.
+            Gestion de RH y Operaciones precisas. <br /> Todo en un solo lugar.
           </p>
         </div>
 
         {/* Footer */}
         <div className="relative z-10 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
-          © {new Date().getFullYear()} Kore · Operaciones sin drama
+          © {new Date().getFullYear()} Kore-DecorArte
         </div>
       </div>
 
