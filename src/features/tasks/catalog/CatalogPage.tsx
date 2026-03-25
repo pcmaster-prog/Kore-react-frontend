@@ -14,7 +14,10 @@ export default function CatalogPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set()); // template_id
   const [bulkOpen, setBulkOpen] = useState(false);
 
-  const templateIds = useMemo(() => catalog.map((c) => c.template.id), [catalog]);
+  const templateIds = useMemo(
+    () => catalog.map((c) => c.template.id),
+    [catalog],
+  );
 
   async function load() {
     setLoading(true);
@@ -52,7 +55,11 @@ export default function CatalogPage() {
     setSelected(new Set());
   }
 
-  async function handleBulk(payload: { empleado_ids: string[]; due_at?: string | null; allow_duplicate?: boolean }) {
+  async function handleBulk(payload: {
+    empleado_ids: string[];
+    due_at?: string | null;
+    allow_duplicate?: boolean;
+  }) {
     const template_ids = Array.from(selected);
     const out = await bulkCreateFromCatalog({
       date,
@@ -70,28 +77,52 @@ export default function CatalogPage() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="text-xl font-semibold">Catálogo del día</div>
-          <div className="text-sm text-black/60">Selecciona tareas sugeridas por rutinas y asigna en bulk. Aquí es donde tu SaaS se ve caro 😄</div>
+          <div className="text-sm text-black/60">
+            Selecciona tareas sugeridas por rutinas y asigna en bulk. Aquí es
+            donde tu SaaS se ve caro 😄
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-[170px]" />
-          <Button onClick={() => setBulkOpen(true)} disabled={selected.size === 0}>
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-[170px]"
+          />
+          <Button
+            onClick={() => setBulkOpen(true)}
+            disabled={selected.size === 0}
+          >
             Crear tareas ({selected.size})
           </Button>
         </div>
       </div>
 
-      {err ? <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</div> : null}
+      {err ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {err}
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border bg-white p-4">
         <div className="text-sm text-black/60">
-          Seleccionadas: <span className="font-medium">{selected.size}</span> / {catalog.length}
+          Seleccionadas: <span className="font-medium">{selected.size}</span> /{" "}
+          {catalog.length}
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={selectAll} disabled={catalog.length === 0}>
+          <Button
+            variant="secondary"
+            onClick={selectAll}
+            disabled={catalog.length === 0}
+          >
             Seleccionar todo
           </Button>
-          <Button variant="secondary" onClick={clearAll} disabled={selected.size === 0}>
+          <Button
+            variant="secondary"
+            onClick={clearAll}
+            disabled={selected.size === 0}
+          >
             Limpiar
           </Button>
         </div>
@@ -109,7 +140,8 @@ export default function CatalogPage() {
           <div className="p-4 text-sm text-black/60">Cargando...</div>
         ) : catalog.length === 0 ? (
           <div className="p-4 text-sm text-black/60">
-            No hay catálogo para este día. Probablemente no hay rutinas activas aplicables o no tienen items.
+            No hay catálogo para este día. Probablemente no hay rutinas activas
+            aplicables o no tienen items.
           </div>
         ) : (
           catalog
@@ -126,18 +158,31 @@ export default function CatalogPage() {
                   className="grid w-full grid-cols-12 items-center border-b px-4 py-3 text-left text-sm hover:bg-black/[0.02] last:border-b-0"
                 >
                   <div className="col-span-1">
-                    <span className={["inline-flex h-5 w-5 items-center justify-center rounded-md border text-xs", on ? "bg-black text-white" : ""].join(" ")}>
+                    <span
+                      className={[
+                        "inline-flex h-5 w-5 items-center justify-center rounded-md border text-xs",
+                        on ? "bg-black text-white" : "",
+                      ].join(" ")}
+                    >
                       ✓
                     </span>
                   </div>
                   <div className="col-span-7">
                     <div className="font-medium">{c.template.title}</div>
-                    {c.template.description ? <div className="mt-0.5 line-clamp-1 text-xs text-black/60">{c.template.description}</div> : null}
+                    {c.template.description ? (
+                      <div className="mt-0.5 line-clamp-1 text-xs text-black/60">
+                        {c.template.description}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="col-span-2">
                     <Pill>{c.template.priority}</Pill>
                   </div>
-                  <div className="col-span-2">{c.template.estimated_minutes ?? <span className="text-black/40">—</span>}</div>
+                  <div className="col-span-2">
+                    {c.template.estimated_minutes ?? (
+                      <span className="text-black/40">—</span>
+                    )}
+                  </div>
                 </button>
               );
             })

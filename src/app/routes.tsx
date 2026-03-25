@@ -31,6 +31,8 @@ import ConfiguracionPage from "@/features/configuracion/ConfiguracionPage";
 //Nomina
 import NominaPage from "@/features/nomina/NominaPage";
 
+// Góndolas
+import GondolaRellenoPage from "@/features/gondolas/GondolaRellenoPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -44,9 +46,11 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <Navigate to="/app/manager/dashboard" replace /> },
+      {
+        index: true,
+        element: <Navigate to="/app/manager/dashboard" replace />,
+      },
 
-      
       {
         path: "manager/dashboard",
         element: (
@@ -82,22 +86,29 @@ export const router = createBrowserRouter([
       },
       {
         path: "manager/usuarios",
-        element: <RequireRole allow={["admin"]}><EmpleadosPage /></RequireRole>,
+        element: (
+          <RequireRole allow={["admin"]}>
+            <EmpleadosPage />
+          </RequireRole>
+        ),
       },
       // Solo admin:
       {
         path: "manager/configuracion",
-        element: <RequireRole allow={["admin"]}><ConfiguracionPage /></RequireRole>,
+        element: (
+          <RequireRole allow={["admin"]}>
+            <ConfiguracionPage />
+          </RequireRole>
+        ),
       },
       {
         path: "manager/nomina",
-         element: (
-        <RequireRole allow={["admin"]}>
-      <NominaPage />
-        </RequireRole>
-                                                   ),
-                    },
-
+        element: (
+          <RequireRole allow={["admin"]}>
+            <NominaPage />
+          </RequireRole>
+        ),
+      },
 
       // ── Employee ──────────────────────────────────────────────────────────────
       {
@@ -121,6 +132,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <EmployeeAttendancePage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "employee/gondola-relleno/:ordenId",
+        element: (
+          <RequireAuth>
+            <GondolaRellenoPage />
           </RequireAuth>
         ),
       },

@@ -47,7 +47,9 @@ export default function RoutineModal({
     setName(initial?.name ?? "");
     setDescription(initial?.description ?? "");
     setRecurrence((initial?.recurrence as any) ?? "daily");
-    setWeekdays(Array.isArray(initial?.weekdays) ? (initial!.weekdays as number[]) : []);
+    setWeekdays(
+      Array.isArray(initial?.weekdays) ? (initial!.weekdays as number[]) : [],
+    );
     setStartDate(initial?.start_date ?? "");
     setEndDate(initial?.end_date ?? "");
     setIsActive(initial?.is_active ?? true);
@@ -60,7 +62,9 @@ export default function RoutineModal({
   }, [name, recurrence, weekdays]);
 
   function toggleDay(n: number) {
-    setWeekdays((prev) => (prev.includes(n) ? prev.filter((x) => x !== n) : [...prev, n]));
+    setWeekdays((prev) =>
+      prev.includes(n) ? prev.filter((x) => x !== n) : [...prev, n],
+    );
   }
 
   async function handleSave() {
@@ -72,7 +76,8 @@ export default function RoutineModal({
         name: name.trim(),
         description: description.trim() ? description.trim() : null,
         recurrence,
-        weekdays: recurrence === "weekly" ? weekdays.sort((a, b) => a - b) : null,
+        weekdays:
+          recurrence === "weekly" ? weekdays.sort((a, b) => a - b) : null,
         start_date: startDate || null,
         end_date: endDate || null,
         is_active: isActive,
@@ -103,31 +108,64 @@ export default function RoutineModal({
       }
     >
       <div className="space-y-4">
-        {err ? <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div> : null}
+        {err ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {err}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Nombre *</div>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Apertura" className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" />
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              Nombre *
+            </div>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej. Apertura"
+              className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
+            />
           </div>
 
           <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Recurrencia</div>
-            <Select value={recurrence} onChange={(v) => setRecurrence(v as any)} options={REC_OPTIONS} />
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              Recurrencia
+            </div>
+            <Select
+              value={recurrence}
+              onChange={(v) => setRecurrence(v as any)}
+              options={REC_OPTIONS}
+            />
           </div>
 
           <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Inicio (Opcional)</div>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" />
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              Inicio (Opcional)
+            </div>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
+            />
           </div>
 
           <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Fin (Opcional)</div>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" />
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              Fin (Opcional)
+            </div>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
+            />
           </div>
 
           <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Activa</div>
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              Activa
+            </div>
             <select
               value={isActive ? "1" : "0"}
               onChange={(e) => setIsActive(e.target.value === "1")}
@@ -141,7 +179,9 @@ export default function RoutineModal({
 
         {recurrence === "weekly" ? (
           <div className="pt-2">
-            <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">Días *</div>
+            <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              Días *
+            </div>
             <div className="flex flex-wrap gap-2">
               {WEEK.map((d) => {
                 const on = weekdays.includes(d.n);
@@ -152,7 +192,9 @@ export default function RoutineModal({
                     onClick={() => toggleDay(d.n)}
                     className={[
                       "h-10 w-10 flex items-center justify-center rounded-xl text-[11px] font-black transition-all shadow-sm",
-                      on ? "bg-obsidian text-white border-transparent" : "bg-white border border-neutral-200 text-neutral-400 hover:text-obsidian hover:bg-neutral-50 hover:border-neutral-300",
+                      on
+                        ? "bg-obsidian text-white border-transparent"
+                        : "bg-white border border-neutral-200 text-neutral-400 hover:text-obsidian hover:bg-neutral-50 hover:border-neutral-300",
                     ].join(" ")}
                   >
                     {d.label}
@@ -160,13 +202,23 @@ export default function RoutineModal({
                 );
               })}
             </div>
-            <div className="mt-2 text-[10px] text-neutral-400 font-medium">Tip: El Domingo es D.</div>
+            <div className="mt-2 text-[10px] text-neutral-400 font-medium">
+              Tip: El Domingo es D.
+            </div>
           </div>
         ) : null}
 
         <div className="pt-2">
-          <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Descripción</div>
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" placeholder="Escribe un breve objetivo para esta rutina..." />
+          <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
+            Descripción
+          </div>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
+            placeholder="Escribe un breve objetivo para esta rutina..."
+          />
         </div>
       </div>
     </Modal>

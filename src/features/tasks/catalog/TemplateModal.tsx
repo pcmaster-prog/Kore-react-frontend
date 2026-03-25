@@ -12,8 +12,8 @@ const PRIORITY_OPTIONS = [
 
 // ─── Tipos internos del checklist ────────────────────────────────────────────
 type ChecklistItemDraft = {
-  id: string;       // item_1, item_2, etc. (se genera automático)
-  label: string;    // lo que escribe el admin
+  id: string; // item_1, item_2, etc. (se genera automático)
+  label: string; // lo que escribe el admin
   required: boolean;
 };
 
@@ -52,8 +52,8 @@ function ChecklistBuilder({
   function toggleRequired(index: number) {
     onChange(
       items.map((it, i) =>
-        i === index ? { ...it, required: !it.required } : it
-      )
+        i === index ? { ...it, required: !it.required } : it,
+      ),
     );
   }
 
@@ -87,7 +87,11 @@ function ChecklistBuilder({
             <div className="flex flex-col gap-0.5 shrink-0 px-1">
               <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveUp(i); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  moveUp(i);
+                }}
                 disabled={i === 0}
                 className="rounded px-1 text-xs text-neutral-300 hover:text-obsidian disabled:opacity-30"
               >
@@ -95,7 +99,11 @@ function ChecklistBuilder({
               </button>
               <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveDown(i); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  moveDown(i);
+                }}
                 disabled={i === items.length - 1}
                 className="rounded px-1 text-xs text-neutral-300 hover:text-obsidian disabled:opacity-30"
               >
@@ -119,7 +127,10 @@ function ChecklistBuilder({
             {/* Toggle requerido */}
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); toggleRequired(i); }}
+              onClick={(e) => {
+                e.preventDefault();
+                toggleRequired(i);
+              }}
               className={[
                 "shrink-0 rounded-[10px] border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all",
                 it.required
@@ -133,7 +144,10 @@ function ChecklistBuilder({
             {/* Eliminar */}
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); removeItem(i); }}
+              onClick={(e) => {
+                e.preventDefault();
+                removeItem(i);
+              }}
               className="shrink-0 h-8 w-8 rounded-xl border border-neutral-200 flex items-center justify-center text-rose-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors"
             >
               ✕
@@ -144,7 +158,10 @@ function ChecklistBuilder({
 
       <button
         type="button"
-        onClick={(e) => { e.preventDefault(); addItem(); }}
+        onClick={(e) => {
+          e.preventDefault();
+          addItem();
+        }}
         className="w-full mt-3 rounded-2xl border-2 border-dashed border-neutral-200 bg-white px-4 py-4 text-sm font-bold text-neutral-500 hover:bg-neutral-50 hover:border-neutral-300 hover:text-obsidian transition-all"
       >
         + Añadir Evento
@@ -185,8 +202,11 @@ export default function TemplateModal({
   const [err, setErr] = useState<string | null>(null);
 
   // ── Instrucciones ──
-  const [instructionMode, setInstructionMode] = useState<InstructionMode>("none");
-  const [checklistItems, setChecklistItems] = useState<ChecklistItemDraft[]>([]);
+  const [instructionMode, setInstructionMode] =
+    useState<InstructionMode>("none");
+  const [checklistItems, setChecklistItems] = useState<ChecklistItemDraft[]>(
+    [],
+  );
   const [textInstructions, setTextInstructions] = useState("");
 
   // ── Parseo inicial al abrir ──
@@ -196,7 +216,9 @@ export default function TemplateModal({
     setTitle(initial?.title ?? "");
     setDescription(initial?.description ?? "");
     setPriority((initial?.priority as any) ?? "medium");
-    setEstimated(initial?.estimated_minutes ? String(initial.estimated_minutes) : "");
+    setEstimated(
+      initial?.estimated_minutes ? String(initial.estimated_minutes) : "",
+    );
     setTags(initial?.tags ? JSON.stringify(initial.tags) : "");
     setIsActive(initial?.is_active ?? true);
 
@@ -218,14 +240,14 @@ export default function TemplateModal({
           id: it.id ?? makeItemId(i),
           label: it.label ?? "",
           required: it.required ?? false,
-        }))
+        })),
       );
       setTextInstructions("");
     } else {
       setInstructionMode("text");
       setChecklistItems([]);
       setTextInstructions(
-        typeof ins === "string" ? ins : JSON.stringify(ins, null, 2)
+        typeof ins === "string" ? ins : JSON.stringify(ins, null, 2),
       );
     }
   }, [open, initial]);
@@ -322,7 +344,9 @@ export default function TemplateModal({
         {/* ── Campos base ── */}
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">Título *</div>
+            <div className="mb-1 text-xs font-medium text-black/60">
+              Título *
+            </div>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -331,7 +355,9 @@ export default function TemplateModal({
           </div>
 
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">Prioridad</div>
+            <div className="mb-1 text-xs font-medium text-black/60">
+              Prioridad
+            </div>
             <Select
               value={priority}
               onChange={(v) => setPriority(v as any)}
@@ -364,7 +390,9 @@ export default function TemplateModal({
         </div>
 
         <div>
-          <div className="mb-1 text-xs font-medium text-black/60">Descripción</div>
+          <div className="mb-1 text-xs font-medium text-black/60">
+            Descripción
+          </div>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -402,7 +430,10 @@ export default function TemplateModal({
               <button
                 key={opt.value}
                 type="button"
-                onClick={(e) => { e.preventDefault(); setInstructionMode(opt.value); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setInstructionMode(opt.value);
+                }}
                 className={[
                   "flex-1 rounded-xl px-3 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all",
                   instructionMode === opt.value
@@ -418,7 +449,8 @@ export default function TemplateModal({
           {/* Modo: ninguna */}
           {instructionMode === "none" && (
             <div className="rounded-2xl bg-neutral-50 border border-neutral-100 p-6 text-center text-xs font-bold text-neutral-500">
-              📌 Tarea simplificada: El empleado solo verá el título y la descripción general.
+              📌 Tarea simplificada: El empleado solo verá el título y la
+              descripción general.
             </div>
           )}
 
@@ -433,7 +465,8 @@ export default function TemplateModal({
               {/* Validación */}
               {checklistItems.some((it) => !it.label.trim()) && (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[11px] font-bold text-rose-700 mt-2 flex items-center gap-2">
-                  <span className="text-sm">⚠️</span> Todos los eventos deben tener un nombre antes de guardar.
+                  <span className="text-sm">⚠️</span> Todos los eventos deben
+                  tener un nombre antes de guardar.
                 </div>
               )}
             </div>
@@ -450,8 +483,6 @@ export default function TemplateModal({
             />
           )}
         </div>
-
-       
       </div>
     </Modal>
   );

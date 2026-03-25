@@ -25,14 +25,18 @@ export default function AddTemplatesToRoutineModal({
 
   const selectable = useMemo(
     () => items.filter((t) => !alreadyTemplateIds.has(t.id)),
-    [items, alreadyTemplateIds]
+    [items, alreadyTemplateIds],
   );
 
   async function load() {
     setLoading(true);
     setErr(null);
     try {
-      const res = await listTemplates({ active: true, search: search.trim() || undefined, page: 1 });
+      const res = await listTemplates({
+        active: true,
+        search: search.trim() || undefined,
+        page: 1,
+      });
       setItems(res.data ?? []);
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "No pude cargar templates");
@@ -92,7 +96,10 @@ export default function AddTemplatesToRoutineModal({
             <Button variant="secondary" onClick={onClose} disabled={saving}>
               Cancelar
             </Button>
-            <Button onClick={handleConfirm} disabled={saving || selected.size === 0}>
+            <Button
+              onClick={handleConfirm}
+              disabled={saving || selected.size === 0}
+            >
               {saving ? "Agregando..." : "Agregar"}
             </Button>
           </div>
@@ -101,19 +108,28 @@ export default function AddTemplatesToRoutineModal({
     >
       <div className="space-y-3">
         {err ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {err}
+          </div>
         ) : null}
 
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar templates..." />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar templates..."
+        />
 
         <div className="rounded-2xl border">
-          <div className="border-b bg-black/[0.02] px-4 py-3 text-xs font-semibold text-black/60">Disponibles</div>
+          <div className="border-b bg-black/[0.02] px-4 py-3 text-xs font-semibold text-black/60">
+            Disponibles
+          </div>
 
           {loading ? (
             <div className="p-4 text-sm text-black/60">Cargando...</div>
           ) : selectable.length === 0 ? (
             <div className="p-4 text-sm text-black/60">
-              No hay templates disponibles (o ya todos están en la rutina). Eso es eficiencia… o ya te quedaste sin backlog 😄
+              No hay templates disponibles (o ya todos están en la rutina). Eso
+              es eficiencia… o ya te quedaste sin backlog 😄
             </div>
           ) : (
             selectable.map((t) => {
@@ -130,10 +146,16 @@ export default function AddTemplatesToRoutineModal({
                 >
                   <div>
                     <div className="font-medium">{t.title}</div>
-                    {t.description ? <div className="mt-0.5 line-clamp-1 text-xs text-black/60">{t.description}</div> : null}
+                    {t.description ? (
+                      <div className="mt-0.5 line-clamp-1 text-xs text-black/60">
+                        {t.description}
+                      </div>
+                    ) : null}
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Pill>{t.priority}</Pill>
-                      {t.estimated_minutes ? <Pill>{t.estimated_minutes} min</Pill> : null}
+                      {t.estimated_minutes ? (
+                        <Pill>{t.estimated_minutes} min</Pill>
+                      ) : null}
                     </div>
                   </div>
                   <div className="pt-1">

@@ -15,7 +15,11 @@ export default function BulkAssignModal({
   date: string;
   templateCount: number;
   onClose: () => void;
-  onConfirm: (payload: { empleado_ids: string[]; due_at?: string | null; allow_duplicate?: boolean }) => Promise<void>;
+  onConfirm: (payload: {
+    empleado_ids: string[];
+    due_at?: string | null;
+    allow_duplicate?: boolean;
+  }) => Promise<void>;
 }) {
   const [dueAt, setDueAt] = useState("");
   const [allowDup, setAllowDup] = useState(false);
@@ -53,7 +57,9 @@ export default function BulkAssignModal({
   const filtered = useMemo(() => {
     const s = filter.trim().toLowerCase();
     if (!s) return emps;
-    return emps.filter((e) => (e.name ?? e.full_name ?? "").toLowerCase().includes(s));
+    return emps.filter((e) =>
+      (e.name ?? e.full_name ?? "").toLowerCase().includes(s),
+    );
   }, [emps, filter]);
 
   function toggleEmp(id: string) {
@@ -97,7 +103,10 @@ export default function BulkAssignModal({
             <Button variant="secondary" onClick={onClose} disabled={saving}>
               Cancelar
             </Button>
-            <Button onClick={handleConfirm} disabled={saving || selected.size === 0}>
+            <Button
+              onClick={handleConfirm}
+              disabled={saving || selected.size === 0}
+            >
               {saving ? "Creando..." : "Crear"}
             </Button>
           </div>
@@ -105,16 +114,28 @@ export default function BulkAssignModal({
       }
     >
       <div className="space-y-4">
-        {err ? <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div> : null}
+        {err ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {err}
+          </div>
+        ) : null}
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="md:col-span-2">
-            <div className="mb-1 text-xs font-medium text-black/60">Due at (opcional)</div>
-            <Input type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+            <div className="mb-1 text-xs font-medium text-black/60">
+              Due at (opcional)
+            </div>
+            <Input
+              type="datetime-local"
+              value={dueAt}
+              onChange={(e) => setDueAt(e.target.value)}
+            />
           </div>
           <div className="flex items-end justify-between rounded-2xl border px-3 py-2">
             <div>
-              <div className="text-xs font-medium text-black/60">Permitir duplicados</div>
+              <div className="text-xs font-medium text-black/60">
+                Permitir duplicados
+              </div>
               <div className="text-xs text-black/40">Si OFF: idempotente</div>
             </div>
             <Toggle checked={allowDup} onChange={setAllowDup} />
@@ -125,7 +146,11 @@ export default function BulkAssignModal({
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="text-sm font-semibold">Empleados</div>
             <div className="w-[min(320px,60vw)]">
-              <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Buscar empleado..." />
+              <Input
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Buscar empleado..."
+              />
             </div>
           </div>
 
@@ -146,7 +171,12 @@ export default function BulkAssignModal({
                     className="flex w-full items-center justify-between gap-3 border-b px-3 py-2 text-left text-sm hover:bg-black/[0.02] last:border-b-0"
                   >
                     <div className="font-medium">{label}</div>
-                    <span className={["inline-flex h-5 w-5 items-center justify-center rounded-md border text-xs", on ? "bg-black text-white" : ""].join(" ")}>
+                    <span
+                      className={[
+                        "inline-flex h-5 w-5 items-center justify-center rounded-md border text-xs",
+                        on ? "bg-black text-white" : "",
+                      ].join(" ")}
+                    >
                       ✓
                     </span>
                   </button>
