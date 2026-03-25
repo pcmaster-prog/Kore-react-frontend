@@ -1,12 +1,13 @@
 // src/features/gondolas/GondolaDetailModal.tsx
 import { useEffect, useRef, useState } from "react";
-import { X, Plus, Package, Edit2, Check, Camera } from "lucide-react";
+import { X, Plus, Package, Edit2, Check, Camera, Trash2 } from "lucide-react";
 import {
   getGondola,
   addProducto,
   updateProducto,
   uploadFotoProducto,
   listOrdenes,
+  deleteGondola,
 } from "./api";
 import type { Gondola, GondolaProducto, GondolaOrden } from "./types";
 import { STATUS_CONFIG, UNIDADES, tiempoRelativo } from "./utils";
@@ -51,6 +52,26 @@ export default function GondolaDetailModal({
 
   const fotoInputRef = useRef<HTMLInputElement | null>(null);
   const [fotoTargetId, setFotoTargetId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
+  async function handleDelete() {
+    if (
+      !window.confirm(
+        "¿Estás seguro de que deseas eliminar esta góndola? Esta acción no se puede deshacer y borrará también todos sus productos.",
+      )
+    ) {
+      return;
+    }
+    setDeleteBusy(true);
+    try {
+      await deleteGondola(gondola.id);
+      onClose();
+      onRefreshList();
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? "Error al eliminar góndola");
+      setDeleteBusy(false);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -159,12 +180,27 @@ export default function GondolaDetailModal({
                 </div>
               )}
             </div>
-            <button
-              onClick={onClose}
-              className="h-9 w-9 rounded-xl bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors"
-            >
-              <X className="h-4 w-4 text-neutral-500" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDelete}
+                disabled={deleteBusy}
+                className="h-9 w-9 rounded-xl text-rose-500 bg-rose-50 hover:bg-rose-100 flex items-center justify-center transition-colors disabled:opacity-50"
+                title="Eliminar Góndola"
+              >
+                {deleteBusy ? (
+                  <div className="h-4 w-4 border-2 border-rose-200 border-t-rose-500 rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+              </button>
+              <button
+                onClick={onClose}
+                className="h-9 w-9 rounded-xl bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors"
+                title="Cerrar"
+              >
+                <X className="h-4 w-4 text-neutral-500" />
+              </button>
+            </div>
           </div>
 
           {/* Inner tabs */}
