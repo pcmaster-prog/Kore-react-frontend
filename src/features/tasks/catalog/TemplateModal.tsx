@@ -4,10 +4,10 @@ import { Button, Input, Modal, Select, Textarea } from "./ui";
 import type { Template } from "./api";
 
 const PRIORITY_OPTIONS = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
+  { value: "low", label: "Baja" },
+  { value: "medium", label: "Media" },
+  { value: "high", label: "Alta" },
+  { value: "urgent", label: "Urgente" },
 ];
 
 // ─── Tipos internos del checklist ────────────────────────────────────────────
@@ -74,46 +74,44 @@ function ChecklistBuilder({
   return (
     <div className="space-y-2">
       {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-center text-sm text-neutral-500">
-          Sin items todavía. Agrega el primero 👇
+        <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center text-sm font-medium text-neutral-500">
+          Sin instrucciones detalladas todavía. Agrega el primer punto 👇
         </div>
       ) : (
         items.map((it, i) => (
           <div
             key={it.id}
-            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white p-2 shadow-sm"
+            className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-2.5 shadow-sm hover:shadow-md transition-shadow"
           >
             {/* Orden */}
-            <div className="flex flex-col gap-0.5 shrink-0">
+            <div className="flex flex-col gap-0.5 shrink-0 px-1">
               <button
                 type="button"
-                onClick={() => moveUp(i)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveUp(i); }}
                 disabled={i === 0}
-                className="rounded px-1 text-xs text-neutral-400 hover:text-neutral-700 disabled:opacity-30"
-                title="Subir"
+                className="rounded px-1 text-xs text-neutral-300 hover:text-obsidian disabled:opacity-30"
               >
                 ▲
               </button>
               <button
                 type="button"
-                onClick={() => moveDown(i)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveDown(i); }}
                 disabled={i === items.length - 1}
-                className="rounded px-1 text-xs text-neutral-400 hover:text-neutral-700 disabled:opacity-30"
-                title="Bajar"
+                className="rounded px-1 text-xs text-neutral-300 hover:text-obsidian disabled:opacity-30"
               >
                 ▼
               </button>
             </div>
 
             {/* Número */}
-            <span className="shrink-0 w-5 text-center text-xs font-semibold text-neutral-400">
+            <span className="shrink-0 w-6 text-center text-[11px] font-black uppercase text-neutral-400">
               {i + 1}
             </span>
 
             {/* Label */}
             <input
-              className="flex-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-black/10 min-w-0"
-              placeholder={`Ej. Puertas cerradas`}
+              className="flex-1 rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/5 bg-neutral-50 focus:bg-white transition-colors min-w-0 font-medium"
+              placeholder={`Ej. Limpiar área de trabajo`}
               value={it.label}
               onChange={(e) => updateLabel(i, e.target.value)}
             />
@@ -121,14 +119,13 @@ function ChecklistBuilder({
             {/* Toggle requerido */}
             <button
               type="button"
-              onClick={() => toggleRequired(i)}
+              onClick={(e) => { e.preventDefault(); toggleRequired(i); }}
               className={[
-                "shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition",
+                "shrink-0 rounded-[10px] border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all",
                 it.required
-                  ? "bg-rose-50 text-rose-700 border-rose-200"
-                  : "bg-neutral-50 text-neutral-500 border-neutral-200",
+                  ? "bg-rose-50 text-rose-700 border-rose-200 shadow-sm"
+                  : "bg-white text-neutral-400 border-neutral-200 hover:bg-neutral-50",
               ].join(" ")}
-              title="Click para cambiar si es requerido u opcional"
             >
               {it.required ? "Requerido" : "Opcional"}
             </button>
@@ -136,9 +133,8 @@ function ChecklistBuilder({
             {/* Eliminar */}
             <button
               type="button"
-              onClick={() => removeItem(i)}
-              className="shrink-0 rounded-lg border border-neutral-200 px-2 py-1.5 text-xs text-rose-600 hover:bg-rose-50 transition"
-              title="Eliminar item"
+              onClick={(e) => { e.preventDefault(); removeItem(i); }}
+              className="shrink-0 h-8 w-8 rounded-xl border border-neutral-200 flex items-center justify-center text-rose-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors"
             >
               ✕
             </button>
@@ -148,15 +144,15 @@ function ChecklistBuilder({
 
       <button
         type="button"
-        onClick={addItem}
-        className="w-full rounded-xl border border-dashed border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:border-neutral-400 transition"
+        onClick={(e) => { e.preventDefault(); addItem(); }}
+        className="w-full mt-3 rounded-2xl border-2 border-dashed border-neutral-200 bg-white px-4 py-4 text-sm font-bold text-neutral-500 hover:bg-neutral-50 hover:border-neutral-300 hover:text-obsidian transition-all"
       >
-        + Agregar item
+        + Añadir Evento
       </button>
 
       {items.length > 0 && (
-        <div className="text-xs text-neutral-400 pt-1">
-          {items.filter((it) => it.required).length} requeridos ·{" "}
+        <div className="text-[10px] uppercase font-black tracking-widest text-neutral-400 pt-3 text-center">
+          {items.filter((it) => it.required).length} obligatorios ·{" "}
           {items.filter((it) => !it.required).length} opcionales ·{" "}
           {items.length} total
         </div>
@@ -389,13 +385,13 @@ export default function TemplateModal({
         </div>
 
         {/* ── Instrucciones / Checklist ── */}
-        <div>
-          <div className="mb-2 text-xs font-medium text-black/60">
-            Instrucciones
+        <div className="mt-6 border-t border-neutral-100 pt-5">
+          <div className="mb-3 text-xs font-black text-obsidian uppercase tracking-widest">
+            Detalle Operativo
           </div>
 
           {/* Selector de modo */}
-          <div className="inline-flex rounded-xl border bg-neutral-50 p-1 gap-1 mb-3">
+          <div className="inline-flex rounded-2xl border border-neutral-200 bg-neutral-100/50 p-1.5 gap-1 mb-4 w-full">
             {(
               [
                 { value: "none", label: "Ninguna" },
@@ -406,12 +402,12 @@ export default function TemplateModal({
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => setInstructionMode(opt.value)}
+                onClick={(e) => { e.preventDefault(); setInstructionMode(opt.value); }}
                 className={[
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition",
+                  "flex-1 rounded-xl px-3 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all",
                   instructionMode === opt.value
-                    ? "bg-white shadow text-neutral-900 border"
-                    : "text-neutral-500 hover:text-neutral-800",
+                    ? "bg-white shadow-sm text-obsidian border border-neutral-200"
+                    : "text-neutral-500 hover:text-obsidian hover:bg-neutral-50",
                 ].join(" ")}
               >
                 {opt.label}
@@ -421,8 +417,8 @@ export default function TemplateModal({
 
           {/* Modo: ninguna */}
           {instructionMode === "none" && (
-            <div className="text-xs text-neutral-400">
-              Sin instrucciones adicionales. El empleado solo verá el título y descripción.
+            <div className="rounded-2xl bg-neutral-50 border border-neutral-100 p-6 text-center text-xs font-bold text-neutral-500">
+              📌 Tarea simplificada: El empleado solo verá el título y la descripción general.
             </div>
           )}
 
@@ -436,8 +432,8 @@ export default function TemplateModal({
 
               {/* Validación */}
               {checklistItems.some((it) => !it.label.trim()) && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                  ⚠️ Todos los items deben tener un label antes de guardar.
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[11px] font-bold text-rose-700 mt-2 flex items-center gap-2">
+                  <span className="text-sm">⚠️</span> Todos los eventos deben tener un nombre antes de guardar.
                 </div>
               )}
             </div>
@@ -448,8 +444,9 @@ export default function TemplateModal({
             <Textarea
               value={textInstructions}
               onChange={(e) => setTextInstructions(e.target.value)}
-              rows={5}
-              placeholder="Escribe las instrucciones en texto plano, o pega un JSON si lo necesitas."
+              rows={6}
+              className="bg-neutral-50 font-mono text-xs"
+              placeholder="Escribe las instrucciones detalladas en texto plano, o inserta un JSON estructurado..."
             />
           )}
         </div>

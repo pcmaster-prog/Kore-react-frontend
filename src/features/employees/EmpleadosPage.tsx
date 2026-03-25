@@ -1,5 +1,5 @@
 // src/features/employees/EmpleadosPage.tsx
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   listUsers,
   createUser,
@@ -12,7 +12,7 @@ import {
 } from "./api";
 import {
   Users, UserPlus, CheckCircle2, AlertTriangle,
-  Search, Pencil, UserX, UserCheck, Trash2,
+  Search, Pencil, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -60,12 +60,14 @@ function UserModal({
   open,
   mode,
   initial,
+  suggestedCode,
   onClose,
   onSaved,
 }: {
   open: boolean;
   mode: "create" | "edit";
   initial?: UserItem | null;
+  suggestedCode?: string;
   onClose: () => void;
   onSaved: (item: UserItem) => void;
 }) {
@@ -103,13 +105,13 @@ function UserModal({
       setEmail("");
       setRole("empleado");
       setPosition("");
-      setEmployeeCode("");
-      setHiredAt("");
+      setEmployeeCode(suggestedCode ?? "");
+      setHiredAt(new Date().toISOString().slice(0, 10));
       setPaymentType("hourly");
       setHourlyRate("");
       setDailyRate("");
     }
-  }, [open, initial]);
+  }, [open, initial, suggestedCode]);
 
   const canSave =
     name.trim().length > 0 &&
@@ -162,221 +164,216 @@ function UserModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-3xl border bg-white shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in-fade">
+      <div className="absolute inset-0 bg-obsidian/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-4xl rounded-[40px] border border-neutral-100 bg-white shadow-2xl overflow-hidden animate-in-up flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <div>
-            <div className="font-semibold text-lg">
-              {mode === "create" ? "Nuevo Usuario" : "Editar Usuario"}
+        <div className="flex items-center justify-between px-8 py-6 border-b border-neutral-100 bg-neutral-50/50">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm">
+              <UserPlus className="h-6 w-6 text-obsidian" />
             </div>
-            <div className="text-xs text-neutral-500 mt-0.5">
-              {mode === "create"
-                ? "Crea la cuenta de acceso y el perfil del empleado"
-                : "Modifica los datos del usuario"}
+            <div>
+              <div className="font-black text-2xl text-obsidian tracking-tight">
+                {mode === "create" ? "Nuevo Usuario" : "Editar Usuario"}
+              </div>
+              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                {mode === "create" ? "Configuración de perfil y acceso" : "Modifica los datos del usuario"}
+              </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl border border-neutral-200 px-3 py-1.5 text-sm hover:bg-neutral-50 transition"
+            className="h-10 w-10 rounded-2xl border border-neutral-200 bg-white flex items-center justify-center text-neutral-400 hover:bg-neutral-50 hover:text-obsidian transition-colors"
           >
             ✕
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-white">
           {err && (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700 flex items-center gap-3 mb-6">
+              <AlertTriangle className="h-5 w-5" />
               {err}
             </div>
           )}
 
-          {/* Sección cuenta */}
-          <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-            Cuenta de acceso
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <div className="text-xs text-neutral-500 mb-1">Nombre completo *</div>
-              <input
-                className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                placeholder="Ej. Juan Pérez"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-
-            <div className="col-span-2 md:col-span-1">
-              <div className="text-xs text-neutral-500 mb-1">Correo electrónico *</div>
-              <input
-                type="email"
-                className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                placeholder="juan@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div className="col-span-2 md:col-span-1">
-              <div className="text-xs text-neutral-500 mb-1">Rol *</div>
-              <select
-                className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10 bg-white"
-                value={role}
-                onChange={(e) => setRole(e.target.value as any)}
-              >
-                <option value="empleado">Empleado</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            <div className="col-span-2">
-              <div className="text-xs text-neutral-500 mb-1">
-                Contraseña {mode === "edit" ? "(dejar vacío para no cambiar)" : "*"}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Columna Izquierda: Acceso */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
+                <Shield className="h-5 w-5 text-neutral-400" />
+                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Cuenta de Acceso</h3>
               </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10 pr-10"
-                  placeholder={mode === "create" ? "Mínimo 6 caracteres" : "Nueva contraseña (opcional)"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 text-xs"
-                >
-                  {showPassword ? "Ocultar" : "Ver"}
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* Sección empleado */}
-          <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide pt-2">
-            Datos del empleado
-          </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Nombre completo *</label>
+                  <input
+                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    placeholder="Ej. Juan Pérez"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="text-xs text-neutral-500 mb-1">Número de empleado</div>
-              <input
-                className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                placeholder="Ej. EMP-001"
-                value={employeeCode}
-                onChange={(e) => setEmployeeCode(e.target.value)}
-              />
-            </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Correo electrónico *</label>
+                  <input
+                    type="email"
+                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    placeholder="juan@empresa.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
 
-            <div>
-              <div className="text-xs text-neutral-500 mb-1">Fecha de ingreso</div>
-              <input
-                type="date"
-                className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                value={hiredAt}
-                onChange={(e) => setHiredAt(e.target.value)}
-              />
-            </div>
-
-            <div className="col-span-2">
-              <div className="text-xs text-neutral-500 mb-1">Puesto</div>
-              <input
-                className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                placeholder="Ej. Auxiliar de almacén"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Sección nómina */}
-          <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide pt-2">
-            Configuración de Nómina
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <div className="text-xs text-neutral-500 mb-1">Tipo de pago</div>
-              <div className="grid grid-cols-2 gap-2">
-                {(["hourly", "daily"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setPaymentType(t)}
-                    className={cx(
-                      "rounded-xl border px-4 py-2.5 text-sm font-medium transition text-left",
-                      paymentType === t
-                        ? "bg-neutral-900 text-white border-neutral-900"
-                        : "bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50"
-                    )}
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Rol del sistema *</label>
+                  <select
+                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all appearance-none"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as any)}
                   >
-                    <div className="font-semibold">{t === "hourly" ? "⏱ Por hora" : "📅 Por día"}</div>
-                    <div className={cx("text-xs mt-0.5", paymentType === t ? "text-white/60" : "text-neutral-400")}>
-                      {t === "hourly" ? "Tarifa × horas trabajadas" : "Tarifa × días asistidos"}
-                    </div>
-                  </button>
-                ))}
+                    <option value="empleado">Empleado (Acceso básico)</option>
+                    <option value="supervisor">Supervisor (Gestión de equipo)</option>
+                    <option value="admin">Admin (Acceso total)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">
+                    Contraseña {mode === "edit" ? "(dejar vacío para no cambiar)" : "*"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 pr-12 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                      placeholder={mode === "create" ? "Mínimo 6 caracteres" : "Nueva contraseña (opcional)"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-obsidian text-xs font-bold transition-colors"
+                    >
+                      {showPassword ? "Ocultar" : "Ver"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {paymentType === "hourly" ? (
-              <div className="col-span-2">
-                <div className="text-xs text-neutral-500 mb-1">Tarifa por hora ($)</div>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">$</span>
+            {/* Columna Derecha: Laboral & Nómina */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
+                <Briefcase className="h-5 w-5 text-neutral-400" />
+                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Datos Laborales</h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Nº Empleado</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className="w-full rounded-xl border border-neutral-200 pl-7 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                    placeholder="0.00"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
+                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-bold font-mono text-neutral-600 outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    placeholder="Ej. EMP-001"
+                    value={employeeCode}
+                    onChange={(e) => setEmployeeCode(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Puesto</label>
+                  <input
+                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    placeholder="Ej. Cajero"
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Fecha de ingreso</label>
+                  <input
+                    type="date"
+                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all text-neutral-600"
+                    value={hiredAt}
+                    onChange={(e) => setHiredAt(e.target.value)}
                   />
                 </div>
               </div>
-            ) : (
-              <div className="col-span-2">
-                <div className="text-xs text-neutral-500 mb-1">Tarifa por día ($)</div>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">$</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className="w-full rounded-xl border border-neutral-200 pl-7 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-                    placeholder="0.00"
-                    value={dailyRate}
-                    onChange={(e) => setDailyRate(e.target.value)}
-                  />
-                </div>
-                <div className="mt-1.5 rounded-xl bg-blue-50 border border-blue-100 px-3 py-2 text-xs text-blue-700">
-                  💡 Los empleados por día tienen 1 día de descanso pagado por semana
-                </div>
+
+              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100 pt-2">
+                <DollarSign className="h-5 w-5 text-neutral-400" />
+                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Nómina</h3>
               </div>
-            )}
+
+              <div className="space-y-4">
+                <div className="flex rounded-2xl bg-neutral-100/50 p-1 border border-neutral-100">
+                  <button
+                    onClick={() => setPaymentType("hourly")}
+                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "hourly" ? "bg-white text-obsidian shadow-sm" : "text-neutral-400 hover:text-neutral-600")}
+                  >
+                    Por Hora
+                  </button>
+                  <button
+                    onClick={() => setPaymentType("daily")}
+                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "daily" ? "bg-white text-obsidian shadow-sm" : "text-neutral-400 hover:text-neutral-600")}
+                  >
+                    Por Día
+                  </button>
+                </div>
+
+                {paymentType === "hourly" ? (
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Tarifa por hora</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">$</span>
+                      <input
+                        type="number" step="0.01" min="0"
+                        className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                        placeholder="0.00"
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Tarifa por día</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">$</span>
+                      <input
+                        type="number" step="0.01" min="0"
+                        className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                        placeholder="0.00"
+                        value={dailyRate}
+                        onChange={(e) => setDailyRate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t bg-neutral-50">
+        <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-neutral-100 bg-neutral-50/50">
           <button
             onClick={onClose}
             disabled={saving}
-            className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50 transition disabled:opacity-50"
+            className="rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-bold text-obsidian hover:bg-neutral-50 transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={!canSave || saving}
-            className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 transition disabled:opacity-40"
+            className="rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
           >
-            {saving ? "Guardando..." : mode === "create" ? "Crear usuario" : "Guardar cambios"}
+            {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            {mode === "create" ? "Crear Usuario" : "Guardar Cambios"}
           </button>
         </div>
       </div>
@@ -506,6 +503,20 @@ export default function EmpleadosPage() {
   const [toggling, setToggling] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<UserItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const suggestedCode = useMemo(() => {
+    if (users.length === 0) return "EMP-001";
+    let max = 0;
+    for (const u of users) {
+      if (!u.employee_code) continue;
+      const match = u.employee_code.match(/\d+/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (num > max) max = num;
+      }
+    }
+    return `EMP-${String(max + 1).padStart(3, "0")}`;
+  }, [users]);
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
@@ -781,11 +792,11 @@ export default function EmpleadosPage() {
         </div>
       </div>
 
-      {/* Modals */}
       <UserModal
         open={modalOpen}
         mode={modalMode}
         initial={editTarget}
+        suggestedCode={suggestedCode}
         onClose={() => setModalOpen(false)}
         onSaved={onSaved}
       />

@@ -24,17 +24,26 @@ export function Modal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute left-1/2 top-1/2 w-[min(720px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b px-5 py-4">
-          <div className="text-base font-semibold">{title}</div>
-          <button className="rounded-lg px-2 py-1 text-sm hover:bg-black/5" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-obsidian/40 backdrop-blur-sm transition-opacity" 
+        onClick={(e) => { e.preventDefault(); onClose(); }} 
+      />
+      <div className="relative w-full max-w-2xl rounded-[32px] bg-white shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in-fade animate-in-slide-up">
+        <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-8 py-5 shrink-0">
+          <h3 className="text-xl font-black text-obsidian tracking-tight">{title}</h3>
+          <button 
+            type="button"
+            className="h-10 w-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-400 hover:text-obsidian hover:bg-neutral-50 hover:border-neutral-300 transition-colors shadow-sm" 
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
+          >
             ✕
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-auto px-5 py-4">{children}</div>
-        {footer ? <div className="border-t px-5 py-4">{footer}</div> : null}
+        <div className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar text-neutral-600">
+          {children}
+        </div>
+        {footer ? <div className="border-t border-neutral-100 bg-neutral-50/50 px-8 py-5 shrink-0">{footer}</div> : null}
       </div>
     </div>
   );
@@ -68,16 +77,17 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export function Button({
   variant = "primary",
+  type = "button",
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" }) {
-  const base = "inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium transition";
+  const base = "inline-flex items-center justify-center rounded-2xl px-5 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all shadow-sm";
   const styles =
     variant === "primary"
-      ? "bg-black text-white hover:bg-black/90"
+      ? "bg-obsidian text-white hover:bg-gold hover:text-obsidian shadow-obsidian/20"
       : variant === "danger"
-      ? "bg-red-600 text-white hover:bg-red-600/90"
-      : "border bg-white hover:bg-black/5";
-  return <button {...props} className={[base, styles, props.className ?? ""].join(" ")} />;
+      ? "bg-rose-600 text-white hover:bg-rose-700 shadow-rose-600/20"
+      : "border border-neutral-200 bg-white text-neutral-500 hover:text-obsidian hover:bg-neutral-50 hover:border-neutral-300";
+  return <button type={type} {...props} className={[base, styles, props.className ?? ""].join(" ")} />;
 }
 
 export function Select({

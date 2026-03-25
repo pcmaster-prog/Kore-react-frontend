@@ -10,6 +10,17 @@ export type Task = {
   due_at?: string | null;
   created_at: string;
   meta?: Record<string, any> | null;
+
+  // Campos enriquecidos desde el backend (eager-load)
+  has_evidence?: boolean | null;
+  evidence_count?: number | null;
+  assignee_name?: string | null;
+  empleado?: {
+    id: string;
+    full_name?: string | null;
+    name?: string | null;
+    avatar_url?: string | null;
+  } | null;
 };
 
 export type Paginated<T> = {

@@ -71,20 +71,26 @@ function StatCard({
   value,
   icon,
   hint,
+  colorCls = "text-obsidian",
+  bgCls = "bg-white",
 }: {
   title: string;
   value: number | string;
   icon: React.ReactNode;
   hint?: string;
+  colorCls?: string;
+  bgCls?: string;
 }) {
   return (
-    <div className="rounded-3xl border bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-neutral-500">{title}</div>
-        <div className="text-neutral-400">{icon}</div>
+    <div className={cx("rounded-[28px] border p-6 shadow-sm transition-all hover:shadow-md", bgCls)}>
+      <div className="flex items-center justify-between mb-4">
+        <div className={cx("text-4xl font-black tracking-tight", colorCls)}>{value}</div>
+        <div className="h-10 w-10 rounded-2xl bg-white/60 flex items-center justify-center text-neutral-500 shadow-sm border border-neutral-100/50 backdrop-blur-sm">
+          {icon}
+        </div>
       </div>
-      <div className="mt-2 text-2xl font-semibold tracking-tight">{value}</div>
-      {hint ? <div className="mt-1 text-xs text-neutral-500">{hint}</div> : null}
+      <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{title}</div>
+      {hint ? <div className="mt-1 text-xs font-medium text-neutral-400 opacity-80">{hint}</div> : null}
     </div>
   );
 }
@@ -205,62 +211,74 @@ export default function EmployeeDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Mi día</h1>
-          <div className="text-sm text-neutral-500 capitalize">{todayLabel}</div>
+      {/* ── Hero Header ─────────────────────────────────────────────── */}
+      <div className="relative rounded-[32px] sm:rounded-[40px] bg-obsidian overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
+          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
+          <div className="absolute bottom-0 left-1/4 h-24 w-48 rounded-full bg-gold/10" />
         </div>
-
-        <span className={cx("inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm", attendanceNice.cls)}>
-          {attendanceNice.icon}
-          {attendanceNice.label}
-        </span>
+        <div className="relative flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Tu Agenda</p>
+            <h1 className="text-3xl font-black tracking-tight">Mi día</h1>
+            <p className="text-white/50 text-sm font-medium mt-1 capitalize">{todayLabel}</p>
+          </div>
+          <span className={cx(
+            "inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-sm backdrop-blur-md",
+            attendanceState === "checked_in" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
+            attendanceState === "on_break" ? "bg-amber-500/20 text-amber-300 border-amber-500/30" :
+            attendanceState === "checked_out" ? "bg-white/10 text-white/80 border-white/20" :
+            "bg-white/5 text-white/50 border-white/10"
+          )}>
+            {attendanceNice.icon}
+            {attendanceNice.label}
+          </span>
+        </div>
       </div>
 
       {/* Toast */}
       {toast ? (
-        <div
-          className={cx(
-            "rounded-2xl border px-4 py-3 text-sm",
-            toast.type === "ok" && "border-emerald-200 bg-emerald-50 text-emerald-800",
-            toast.type === "warn" && "border-amber-200 bg-amber-50 text-amber-800",
-            toast.type === "err" && "border-rose-200 bg-rose-50 text-rose-800"
-          )}
-        >
+        <div className={cx(
+          "rounded-2xl border px-5 py-4 text-sm font-bold flex items-center gap-3 animate-in-fade",
+          toast.type === "ok" && "border-emerald-200 bg-emerald-50 text-emerald-800",
+          toast.type === "warn" && "border-amber-200 bg-amber-50 text-amber-800",
+          toast.type === "err" && "border-rose-200 bg-rose-50 text-rose-800"
+        )}>
+          {toast.type === "ok" ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
           {toast.msg}
         </div>
       ) : null}
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <StatCard title="Asignadas" value={counts.open} icon={<ClipboardList className="h-4 w-4" />} hint="Listas para iniciar" />
-        <StatCard title="En progreso" value={counts.in_progress} icon={<PlayCircle className="h-4 w-4" />} hint="Trabajándose" />
-        <StatCard title="En revisión" value={counts.pending} icon={<AlertTriangle className="h-4 w-4" />} hint="Esperando aprobación" />
-        <StatCard title="Aprobadas" value={counts.completed} icon={<CheckCircle2 className="h-4 w-4" />} hint="Cerradas hoy" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Asignadas" value={counts.open} icon={<ClipboardList className="h-5 w-5" />} hint="Listas para iniciar" colorCls="text-blue-600" bgCls="bg-blue-50/50 border-blue-100" />
+        <StatCard title="En progreso" value={counts.in_progress} icon={<PlayCircle className="h-5 w-5" />} hint="Trabajándose" colorCls="text-amber-600" bgCls="bg-amber-50/50 border-amber-100" />
+        <StatCard title="En revisión" value={counts.pending} icon={<AlertTriangle className="h-5 w-5" />} hint="Esperando aprobación" colorCls="text-indigo-600" bgCls="bg-indigo-50/50 border-indigo-100" />
+        <StatCard title="Aprobadas" value={counts.completed} icon={<CheckCircle2 className="h-5 w-5" />} hint="Cerradas hoy" colorCls="text-emerald-600" bgCls="bg-emerald-50/50 border-emerald-100" />
       </div>
 
       {/* List */}
-      <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
-        <div className="p-4 border-b flex items-center justify-between">
+      <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+        <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="font-semibold">Tareas de hoy</div>
-            <div className="text-xs text-neutral-500">
+            <div className="text-xl font-black text-obsidian tracking-tight">Tareas de hoy</div>
+            <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
               {rows.length ? `${rows.length} asignadas` : "Sin tareas por ahora"}
             </div>
           </div>
 
           <button
-            className="rounded-xl border px-3 py-2 text-sm hover:bg-neutral-100"
+            className="w-full sm:w-auto rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors shadow-sm flex items-center justify-center sm:inline-flex uppercase tracking-widest"
             onClick={() => nav("/app/employee/mis-tareas/asignaciones")}
           >
-            Ir a Mis tareas <ArrowRight className="inline-block h-4 w-4 ml-1" />
+            Ir a Mis tareas <ArrowRight className="h-4 w-4 ml-2 text-neutral-400" />
           </button>
         </div>
 
         {rows.length ? (
-          <div className="divide-y">
-            {rows.map((r) => {
+          <div className="divide-y divide-neutral-100">
+            {rows.map((r, idx) => {
               const a = r.assignment;
               const t = r.task;
 
@@ -268,52 +286,51 @@ export default function EmployeeDashboard() {
               const canSubmit = a.status === "in_progress";
 
               return (
-                <div key={a.id} className="p-4 hover:bg-neutral-50 transition">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{t.title}</div>
+                <div key={a.id} className={cx("p-5 sm:p-8 transition-colors", idx % 2 === 0 ? "bg-white" : "bg-neutral-50/30 hover:bg-neutral-50")}>
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-lg font-black text-obsidian tracking-tight truncate">{t.title}</div>
 
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         <StatusPill status={a.status} />
                         <PriorityPill priority={t.priority ?? undefined} />
                         {t.due_at ? (
-                          <span className="text-xs text-neutral-500">
-                            Due: {new Date(t.due_at).toLocaleString()}
+                          <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[10px] font-bold text-neutral-500 uppercase tracking-widest shadow-sm">
+                            ⏰ {new Date(t.due_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                           </span>
                         ) : null}
                       </div>
 
                       {t.description ? (
-                        <div className="mt-2 text-sm text-neutral-600 line-clamp-2">{t.description}</div>
+                        <div className="mt-3 text-sm font-medium text-neutral-500 line-clamp-2 leading-relaxed">{t.description}</div>
                       ) : null}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-3 mt-2 lg:mt-0 shrink-0">
                       <button
-                        className="rounded-xl border px-3 py-2 text-sm hover:bg-neutral-100 disabled:opacity-50"
+                        className="w-full sm:w-auto rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors shadow-sm disabled:opacity-50 uppercase tracking-widest sm:min-w-[120px]"
                         disabled={!canStart || busyId === a.id}
                         onClick={() => doStart(a.id)}
-                        title="Iniciar"
                       >
-                        {busyId === a.id ? "..." : "▶ Iniciar"}
+                        {busyId === a.id ? "Aguarde..." : "▶ Iniciar"}
                       </button>
 
                       <button
-                        className="rounded-xl bg-neutral-900 text-white px-3 py-2 text-sm hover:bg-neutral-800 disabled:opacity-50"
+                        className="w-full sm:w-auto rounded-2xl bg-obsidian text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-widest sm:min-w-[140px]"
                         disabled={!canSubmit || busyId === a.id}
                         onClick={() => doSubmit(a.id)}
-                        title="Enviar a revisión (requiere evidencia)"
                       >
-                        {busyId === a.id ? "..." : "📤 Entregar"}
+                        {busyId === a.id ? "Aguarde..." : "📤 Entregar"}
                       </button>
                     </div>
                   </div>
 
                   {/* Small hint */}
                   {a.status === "in_progress" ? (
-                    <div className="mt-2 text-xs text-neutral-500">
-                      Tip: para entregar, asegúrate de subir evidencia en <b>Mis tareas</b>.
+                    <div className="mt-4 rounded-xl bg-amber-50/50 border border-amber-100 p-3 text-xs font-medium text-amber-700 flex items-center gap-2">
+                      <span className="text-amber-500">💡</span>
+                      Para entregar, asegúrate de subir evidencia en <b>Mis tareas</b>.
                     </div>
                   ) : null}
                 </div>
@@ -321,8 +338,12 @@ export default function EmployeeDashboard() {
             })}
           </div>
         ) : (
-          <div className="p-6 text-sm text-neutral-500">
-            Hoy estás libre… o tu admin anda haciendo “asignaciones en su mente” 😄
+          <div className="p-16 text-center">
+            <div className="text-4xl mb-4">🎉</div>
+            <div className="text-sm font-bold text-neutral-500 uppercase tracking-widest">
+              Hoy estás libre
+            </div>
+            <div className="text-xs font-medium text-neutral-400 mt-1">o tu admin anda haciendo "asignaciones en su mente" 😄</div>
           </div>
         )}
       </div>

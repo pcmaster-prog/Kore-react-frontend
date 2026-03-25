@@ -70,137 +70,170 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 opacity-40">
-        <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute top-40 -right-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-72 w-[38rem] rounded-full bg-white/5 blur-3xl" />
+    <div className="min-h-screen w-full flex bg-neutral-50 font-sans">
+      
+      {/* ── Left Panel: Brand Experience (Hidden on Mobile) ── */}
+      <div className="hidden lg:flex lg:w-1/2 bg-obsidian relative overflow-hidden flex-col justify-between p-12">
+        {/* Abstract shapes / Glows */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-white/[0.03] blur-3xl animate-pulse" />
+          <div className="absolute top-1/2 -right-32 h-80 w-80 rounded-full bg-gold/10 blur-3xl" />
+          <div className="absolute bottom-0 left-1/4 h-72 w-[38rem] rounded-full bg-emerald-500/5 blur-3xl" />
+        </div>
+
+        {/* Top Logo */}
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-3 rounded-[24px] bg-white/5 border border-white/10 px-5 py-2.5 backdrop-blur-md shadow-2xl">
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
+            <span className="text-xl font-black tracking-tight text-white">Kore</span>
+            <span className="text-white/50 text-[10px] font-bold tracking-[0.2em] uppercase ml-1">Ops Suite</span>
+          </div>
+        </div>
+
+        {/* Hero Copy */}
+        <div className="relative z-10 max-w-xl">
+          <h1 className="text-[3rem] font-black text-white tracking-tight leading-[1.1] mb-6">
+            Gestión inteligente<br/>para equipos de<br/>alto impacto.
+          </h1>
+          <p className="text-lg text-white/50 font-medium leading-relaxed max-w-md">
+            Entornos centralizados, evidencias inmutables y operaciones precisas. Todo en un solo lugar.
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="relative z-10 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+          © {new Date().getFullYear()} Kore · Operaciones sin drama
+        </div>
       </div>
 
-      <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          {/* Brand */}
-          <div className="mb-6 text-center">
-            <div className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-white border border-white/10">
-              <div className="h-2.5 w-2.5 rounded-full bg-white" />
-              <span className="font-semibold tracking-tight">Kore</span>
-              <span className="text-white/60 text-xs">Ops Suite</span>
+      {/* ── Right Panel: Login Form ── */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-12 lg:px-24 relative">
+        <div className="w-full max-w-sm mx-auto">
+          
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-12 text-center flex justify-center">
+            <div className="inline-flex items-center gap-3 rounded-[24px] bg-obsidian px-5 py-2.5 shadow-xl">
+              <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <span className="text-xl font-black tracking-tight text-white">Kore</span>
+              <span className="text-white/50 text-[10px] font-bold tracking-[0.2em] uppercase ml-1">Ops Suite</span>
             </div>
+          </div>
 
-            <h1 className="mt-4 text-3xl font-semibold text-white tracking-tight">
-              Bienvenido de vuelta
-            </h1>
-            <p className="mt-2 text-sm text-white/60">
-              Inicia sesión para gestionar tareas, evidencias y operación diaria.
+          <div className="mb-10 lg:mb-12 text-center lg:text-left">
+            <h2 className="text-3xl font-black text-obsidian tracking-tight">Iniciar Sesión</h2>
+            <p className="mt-3 text-sm font-medium text-neutral-500 leading-relaxed">
+              Ingresa tus credenciales para acceder a tu entorno de trabajo seguro.
             </p>
           </div>
 
-          {/* Card */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-5 shadow-2xl">
-            {err ? (
-              <div className="mb-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-3 text-sm text-rose-200">
-                <div className="font-medium">No se pudo iniciar sesión</div>
-                <div className="text-rose-200/80">{err}</div>
+          {err ? (
+            <div className="mb-8 rounded-[24px] border border-rose-200 bg-rose-50/50 p-5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                  <span className="text-sm font-bold">!</span>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-rose-800 uppercase tracking-widest">Error de acceso</div>
+                  <div className="mt-1 text-sm font-medium text-rose-600 leading-relaxed">{err}</div>
+                </div>
               </div>
-            ) : null}
+            </div>
+          ) : null}
 
-            {/* Demo quick fill */}
-            <div className="mb-4 flex flex-wrap gap-2">
+          {/* Demos */}
+          <div className="mb-8 p-5 rounded-[28px] border border-neutral-100 bg-white shadow-sm flex flex-col gap-3">
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1 text-center lg:text-left">
+              Credenciales rápidas (Demo)
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
               {DEMOS.map((d) => (
                 <button
                   key={d.label}
                   type="button"
                   onClick={() => fillDemo(d)}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 hover:text-white hover:bg-white/10 transition"
+                  className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-bold text-neutral-600 hover:text-obsidian hover:bg-neutral-100 hover:border-neutral-300 transition-all uppercase tracking-widest shadow-sm"
                 >
-                  Usar demo: <span className="text-white">{d.label}</span>
+                  {d.label}
                 </button>
               ))}
             </div>
+          </div>
 
-            <form onSubmit={onSubmit} className="space-y-4">
-              <label className="block">
-                <span className="text-xs text-white/60">Correo</span>
-                <input
-                  className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-white/20"
-                  placeholder="correo@empresa.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="username"
-                  inputMode="email"
-                />
-              </label>
+          <form onSubmit={onSubmit} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-2">Correo Electrónico</label>
+              <input
+                className="w-full rounded-2xl border border-neutral-200 bg-white px-5 py-3.5 text-sm font-medium text-obsidian placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-obsidian/5 transition-all shadow-sm"
+                placeholder="correo@kore.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                inputMode="email"
+              />
+            </div>
 
-              <label className="block">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/60">Contraseña</span>
-                  {caps ? (
-                    <span className="text-[11px] text-amber-200/80 border border-amber-200/20 bg-amber-200/10 px-2 py-1 rounded-full">
-                      Caps Lock activado
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="mt-1 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:ring-2 focus-within:ring-white/20">
-                  <input
-                    className="w-full bg-transparent text-white placeholder:text-white/30 focus:outline-none"
-                    type={showPass ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyUp={(e) => setCaps((e.getModifierState && e.getModifierState("CapsLock")) || false)}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="text-xs text-white/60 hover:text-white"
-                    onClick={() => setShowPass((v) => !v)}
-                  >
-                    {showPass ? "Ocultar" : "Mostrar"}
-                  </button>
-                </div>
-              </label>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-xs text-white/60 select-none">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                    className="accent-white"
-                  />
-                  Recordarme
-                </label>
-
-                <span className="text-xs text-white/40">
-                  (próximo: “Olvidé mi contraseña” 😉)
-                </span>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between ml-2">
+                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Contraseña</label>
+                {caps ? (
+                  <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Caps Lock
+                  </span>
+                ) : null}
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || !email.trim() || !password.trim()}
-                className="w-full rounded-2xl bg-white text-neutral-900 py-3 font-medium hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              >
-                {loading ? "Entrando..." : "Iniciar sesión"}
+              <div className="relative flex items-center">
+                <input
+                  className="w-full rounded-2xl border border-neutral-200 bg-white px-5 py-3.5 text-sm font-medium text-obsidian placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-obsidian/5 transition-all shadow-sm pr-20"
+                  type={showPass ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyUp={(e) => setCaps((e.getModifierState && e.getModifierState("CapsLock")) || false)}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="absolute right-4 text-[10px] font-bold text-neutral-400 uppercase tracking-widest hover:text-obsidian transition-colors"
+                  onClick={() => setShowPass((v) => !v)}
+                >
+                  {showPass ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="w-4 h-4 rounded border-neutral-300 text-obsidian focus:ring-obsidian/20 transition-all cursor-pointer accent-obsidian"
+                />
+                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest group-hover:text-obsidian transition-colors">
+                  Recordarme
+                </span>
+              </label>
+
+              <button type="button" className="text-[11px] font-bold text-neutral-400 hover:text-obsidian uppercase tracking-widest transition-colors">
+                ¿Olvidaste tu clave?
               </button>
-            </form>
-
-            <div className="mt-4 text-xs text-white/40">
-              Tip: usa demo para validar roles (admin/supervisor/empleado). Kore te redirige automático.
             </div>
 
-            <div className="mt-3 text-center">
-              <Link to="/register" className="text-sm text-white/60 hover:text-white transition">
-                ¿No tienes cuenta? Regístrate
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center text-xs text-white/40">
-            © {new Date().getFullYear()} Kore · Operaciones con evidencia (y sin drama)
-          </div>
+            <button
+              type="submit"
+              disabled={loading || !email.trim() || !password.trim()}
+              className="mt-6 w-full rounded-2xl bg-obsidian text-white px-6 py-4 text-xs font-bold tracking-widest uppercase hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-obsidian focus:ring-offset-2"
+            >
+              {loading ? "Verificando..." : "Ingresar"}
+            </button>
+          </form>
+            {/* //proximanete por empresa el registro
+          <div className="mt-10 text-center">
+            <Link to="/register" className="inline-flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-widest hover:text-obsidian transition-colors">
+              ¿No tienes cuenta? <span className="text-obsidian underline decoration-neutral-300 underline-offset-4">Regístrate</span>
+            </Link>
+          </div> */}
         </div>
       </div>
     </div>

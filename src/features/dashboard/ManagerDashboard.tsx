@@ -2,12 +2,13 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/http";
 import { listPendingApprovals } from "@/features/tasks/api";
+import { auth } from "@/features/auth/store";
 import {
   AlertTriangle, CheckCircle2, Clock,
   ClipboardList,
   Activity,
   Zap, ChevronRight, ArrowUpRight, ArrowDownRight,
-  TrendingUp, Download, Filter, ShoppingBag
+  TrendingUp, Download, Filter
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -86,10 +87,13 @@ function StatCard({ label, value, trend, trendType, icon: Icon, colorClass, sub 
 
 // ─── Dashboard principal ──────────────────────────────────────────────────────
 export default function ManagerDashboard() {
+  const { user } = auth.get();
+  const userName = user?.name?.split(" ")[0] ?? "Usuario";
   const [data, setData] = useState<ManagerDash | null>(null);
   const [pending, setPending] = useState(0);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [showAllActivity, setShowAllActivity] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -122,7 +126,7 @@ export default function ManagerDashboard() {
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 space-y-4 animate-in-fade">
       <div className="h-12 w-12 border-4 border-obsidian/10 border-t-obsidian rounded-full animate-spin" />
-      <div className="text-[11px] font-bold text-obsidian/40 uppercase tracking-widest animate-pulse">Cargando Insights...</div>
+      <div className="text-[11px] font-bold text-obsidian/40 uppercase tracking-widest animate-pulse">Cargando Informacion...</div>
     </div>
   );
 
@@ -147,20 +151,13 @@ export default function ManagerDashboard() {
             Control Operativo · {todayFull}
           </div>
           <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-4 leading-[1.1]">
-            Todo en orden, <span className="text-gold-light italic">Ricardo</span>. 
+            Todo en orden, <span className="text-gold-light italic">{userName}</span>. 
             <br />La operación fluye.
           </h1>
           <p className="text-white/60 text-lg font-medium leading-relaxed max-w-lg mb-8">
             Tienes <span className="text-white font-bold">{pending} aprobaciones</span> pendientes y el cumplimiento de tareas hoy está al <span className="text-white font-bold">{Math.round(((t.completed ?? 0) / ((t.open ?? 0) + (t.in_progress ?? 0) + (t.completed ?? 0) || 1)) * 100)}%</span>.
           </p>
-          <div className="flex flex-wrap gap-4">
-            <button className="px-6 h-12 rounded-2xl bg-white text-obsidian font-bold text-sm shadow-xl shadow-black/10 hover:bg-gold-light hover:text-white transition-all transform hover:-translate-y-1">
-              Ver Reportes
-            </button>
-            <button className="px-6 h-12 rounded-2xl bg-white/10 border border-white/20 text-white font-bold text-sm backdrop-blur-md hover:bg-white/20 transition-all">
-              Nueva Tarea
-            </button>
-          </div>
+          
         </div>
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-gold/10 rounded-full blur-[100px]" />
@@ -206,18 +203,19 @@ export default function ManagerDashboard() {
               <h2 className="text-2xl font-black text-obsidian tracking-tight">Actividad del Turno</h2>
               <p className="text-[11px] font-bold text-neutral-400 mt-1 uppercase tracking-widest">Tiempo Real</p>
             </div>
-            <div className="flex gap-2">
-              <button className="h-10 w-10 rounded-xl bg-neutral-50 flex items-center justify-center text-neutral-500 hover:bg-neutral-100 transition-colors">
+            {/* Proximanete botones de filtrado y descarga */}
+            {/* <div className="flex gap-2">
+              <button disabled className="h-10 w-10 rounded-xl bg-neutral-50/50 flex items-center justify-center text-neutral-400 opacity-50 cursor-not-allowed">
                 <Filter className="h-4 w-4" />
               </button>
-              <button className="h-10 w-10 rounded-xl bg-obsidian text-white flex items-center justify-center shadow-lg shadow-obsidian/20 hover:scale-105 transition-transform">
+              <button disabled className="h-10 w-10 rounded-xl bg-obsidian/50 text-white flex items-center justify-center opacity-50 cursor-not-allowed">
                 <Download className="h-4 w-4" />
               </button>
-            </div>
+            </div> */}
           </div>
           <div className="divide-y divide-neutral-50">
             {data?.activity?.length ? (
-              data.activity.slice(0, 6).map((a) => (
+              data.activity.slice(0, showAllActivity ? undefined : 6).map((a) => (
                 <div key={a.id} className="flex items-center gap-4 py-4 group cursor-pointer">
                   {actionIcon(a.action)}
                   <div className="flex-1 min-w-0">
@@ -238,9 +236,14 @@ export default function ManagerDashboard() {
               </div>
             )}
           </div>
-          <button className="w-full mt-8 h-14 rounded-2xl bg-neutral-50 text-obsidian font-bold text-sm tracking-tight hover:bg-neutral-100 transition-all">
-            Ver Todo el Registro
-          </button>
+          {data?.activity && data.activity.length > 6 && (
+            <button 
+              onClick={() => setShowAllActivity(!showAllActivity)} 
+              className="w-full mt-8 h-14 rounded-2xl bg-neutral-50 text-obsidian font-bold text-sm tracking-tight hover:bg-neutral-100 transition-all"
+            >
+              {showAllActivity ? "Ver Menos" : "Ver Todo el Registro"}
+            </button>
+          )}
         </div>
 
         {/* Side Widgets */}
@@ -275,7 +278,8 @@ export default function ManagerDashboard() {
             </div>
           )}
 
-          {/* Quick Actions / Support */}
+          {/* Quick Actions / Support (Oculto temporalmente) */}
+          {/*
           <div className="bg-gradient-to-br from-gold/10 to-gold-light/5 rounded-[40px] p-8 border border-gold/5 relative overflow-hidden group hover:border-gold/20 transition-all duration-500">
              <div className="relative z-10">
                <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-gold shadow-sm mb-6 group-hover:rotate-6 transition-transform">
@@ -291,6 +295,7 @@ export default function ManagerDashboard() {
              </div>
              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gold/5 rounded-full blur-2xl transition-colors" />
           </div>
+          */}
         </div>
       </div>
     </div>

@@ -147,14 +147,18 @@ function SidebarContent({
 
             {(hasModule("asistencia") || hasModule("nomina")) && (
               <NavGroup label="Gestión">
-                {hasModule("asistencia") && <SidebarLink to="/app/manager/asistencia" label="Asistencia" icon={<CalendarCheck className="h-4.5 w-4.5" />} onClick={onNav} />}
+                {hasModule("asistencia") && <SidebarLink to="/app/manager/asistencia" label="Asistencia general" icon={<CalendarCheck className="h-4.5 w-4.5" />} onClick={onNav} />}
                 {isAdmin && hasModule("nomina") && <SidebarLink to="/app/manager/nomina" label="Nómina" icon={<Users className="h-4.5 w-4.5" />} onClick={onNav} />}
-                <SidebarLink to="/app/manager/usuarios" label="Equipo" icon={<Users className="h-4.5 w-4.5" />} onClick={onNav} />
+                {isAdmin && <SidebarLink to="/app/manager/usuarios" label="Equipo" icon={<Users className="h-4.5 w-4.5" />} onClick={onNav} />}
               </NavGroup>
             )}
 
             <NavGroup label="Sistema">
               {isAdmin && <SidebarLink to="/app/manager/configuracion" label="Ajustes" icon={<Settings className="h-4.5 w-4.5" />} onClick={onNav} />}
+            </NavGroup>
+
+            <NavGroup label="Usuario">
+              {hasModule("asistencia") && <SidebarLink to="/app/employee/asistencia" label="Mi Asistencia" icon={<CalendarCheck className="h-4.5 w-4.5" />} onClick={onNav} />}
               <SidebarLink to="/app/perfil" label="Mi Perfil" icon={<User className="h-4.5 w-4.5" />} onClick={onNav} />
             </NavGroup>
           </div>
@@ -196,26 +200,28 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-bone flex overflow-hidden">
+    <div className="min-h-screen bg-bone flex overflow-hidden w-full max-w-[100vw]">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:block w-72 shrink-0 h-screen fixed">
         <SidebarContent user={user} role={role} onLogout={logout} />
       </aside>
 
-      <div className="flex-1 flex flex-col lg:ml-72 min-h-screen relative">
+      <div className="flex-1 flex flex-col lg:ml-72 min-h-screen relative min-w-0 w-full">
         {/* Top Header */}
-        <header className="h-20 flex items-center justify-between px-6 lg:px-10 z-10">
-          <div className="flex items-center gap-6">
+        <header className="h-20 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-10 shrink-0 gap-2">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1">
             <button
-              className="lg:hidden h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-neutral-100"
+              className="lg:hidden shrink-0 h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-neutral-100"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="h-5 w-5 text-neutral-800" />
             </button>
-            <Breadcrumbs />
+            <div className="min-w-0 overflow-x-auto scrollbar-hide whitespace-nowrap mask-fade-right">
+              <Breadcrumbs />
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 lg:gap-6">
+          <div className="flex items-center gap-2 lg:gap-6 shrink-0">
              <button className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-neutral-100 shadow-sm hover:bg-neutral-50 transition-colors relative">
                <Bell className="h-4.5 w-4.5 text-neutral-700" />
                <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-rose-500 border-2 border-white" />
@@ -231,10 +237,10 @@ export default function AppShell() {
 
              <div className="hidden sm:flex items-center gap-3">
                <div className="text-right">
-                 <div className="text-[13px] font-bold text-neutral-900 leading-none">{user?.name ?? "Usuario"}</div>
+                 <div className="text-[13px] font-bold text-neutral-900 leading-none truncate max-w-[120px]">{user?.name ?? "Usuario"}</div>
                  <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-1.5">{role === 'admin' ? 'Operations Manager' : 'Staff'}</div>
                </div>
-               <div className="h-10 w-10 rounded-xl bg-neutral-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+               <div className="h-10 w-10 rounded-xl flex-shrink-0 bg-neutral-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
                  <User className="h-6 w-6 text-neutral-400 mt-2" />
                </div>
              </div>
@@ -242,9 +248,9 @@ export default function AppShell() {
         </header>
 
         {/* Dynamic Route Content */}
-        <main className="flex-1 p-6 lg:p-10 pt-4 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 pt-4 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
           {/* Internal main-card container effect */}
-          <div className="min-h-[calc(100vh-160px)]">
+          <div className="min-h-[calc(100vh-160px)] min-w-0 w-full">
              <Outlet />
           </div>
         </main>
@@ -252,15 +258,18 @@ export default function AppShell() {
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[100]">
+        <div className="fixed inset-0 z-[100] sm:hidden">
           <div className="absolute inset-0 bg-obsidian/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-[280px] bg-obsidian animate-out-in shadow-2xl">
-            <div className="flex justify-end p-4">
-               <button onClick={() => setMobileOpen(false)} className="text-white/40 hover:text-white transition-colors">
-                 <X className="h-6 w-6" />
-               </button>
+          <div className="absolute left-0 top-0 h-[100dvh] w-[280px] bg-obsidian animate-out-in shadow-2xl overflow-hidden flex flex-col">
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="absolute top-6 right-6 z-50 text-white/40 hover:text-white transition-colors bg-obsidian/50 rounded-full p-1 backdrop-blur-sm"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="flex-1 h-full min-h-0 relative">
+              <SidebarContent user={user} role={role} onNav={() => setMobileOpen(false)} onLogout={() => { setMobileOpen(false); logout(); }} />
             </div>
-            <SidebarContent user={user} role={role} onNav={() => setMobileOpen(false)} onLogout={() => { setMobileOpen(false); logout(); }} />
           </div>
         </div>
       )}

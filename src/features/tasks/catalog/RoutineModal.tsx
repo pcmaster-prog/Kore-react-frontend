@@ -4,8 +4,8 @@ import { Button, Input, Modal, Select, Textarea } from "./ui";
 import type { Routine } from "./api";
 
 const REC_OPTIONS = [
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
+  { value: "daily", label: "Diaria" },
+  { value: "weekly", label: "Semanal" },
 ];
 
 const WEEK = [
@@ -105,33 +105,33 @@ export default function RoutineModal({
       <div className="space-y-4">
         {err ? <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div> : null}
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">Nombre *</div>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Apertura" />
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Nombre *</div>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Apertura" className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" />
           </div>
 
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">Recurrencia</div>
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Recurrencia</div>
             <Select value={recurrence} onChange={(v) => setRecurrence(v as any)} options={REC_OPTIONS} />
           </div>
 
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">Start date (opcional)</div>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Inicio (Opcional)</div>
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" />
           </div>
 
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">End date (opcional)</div>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Fin (Opcional)</div>
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" />
           </div>
 
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">Activa</div>
+            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Activa</div>
             <select
               value={isActive ? "1" : "0"}
               onChange={(e) => setIsActive(e.target.value === "1")}
-              className="w-full rounded-xl border px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/5"
             >
               <option value="1">Sí</option>
               <option value="0">No</option>
@@ -140,8 +140,8 @@ export default function RoutineModal({
         </div>
 
         {recurrence === "weekly" ? (
-          <div>
-            <div className="mb-2 text-xs font-medium text-black/60">Días *</div>
+          <div className="pt-2">
+            <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">Días *</div>
             <div className="flex flex-wrap gap-2">
               {WEEK.map((d) => {
                 const on = weekdays.includes(d.n);
@@ -151,8 +151,8 @@ export default function RoutineModal({
                     type="button"
                     onClick={() => toggleDay(d.n)}
                     className={[
-                      "rounded-xl border px-3 py-2 text-sm",
-                      on ? "bg-black text-white" : "bg-white hover:bg-black/5",
+                      "h-10 w-10 flex items-center justify-center rounded-xl text-[11px] font-black transition-all shadow-sm",
+                      on ? "bg-obsidian text-white border-transparent" : "bg-white border border-neutral-200 text-neutral-400 hover:text-obsidian hover:bg-neutral-50 hover:border-neutral-300",
                     ].join(" ")}
                   >
                     {d.label}
@@ -160,13 +160,13 @@ export default function RoutineModal({
                 );
               })}
             </div>
-            <div className="mt-2 text-xs text-black/50">Tip: Carbon usa 0=Domingo…6=Sábado.</div>
+            <div className="mt-2 text-[10px] text-neutral-400 font-medium">Tip: El Domingo es D.</div>
           </div>
         ) : null}
 
-        <div>
-          <div className="mb-1 text-xs font-medium text-black/60">Descripción</div>
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+        <div className="pt-2">
+          <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">Descripción</div>
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="bg-neutral-50 border-neutral-200 text-obsidian font-medium" placeholder="Escribe un breve objetivo para esta rutina..." />
         </div>
       </div>
     </Modal>

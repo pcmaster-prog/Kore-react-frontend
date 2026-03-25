@@ -54,13 +54,13 @@ function ActionBtn({
       onClick={onClick}
       disabled={!enabled || busy}
       className={cx(
-        "flex flex-col items-center justify-center gap-3 rounded-[28px] border-2 p-6 text-center transition-all w-full shadow-sm",
+        "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-[24px] sm:rounded-[28px] border-2 p-3 sm:p-6 text-center transition-all w-full shadow-sm min-w-0",
         "disabled:opacity-30 disabled:cursor-not-allowed",
         v
       )}
     >
       <div className={cx(
-        "h-12 w-12 rounded-2xl flex items-center justify-center",
+        "h-10 w-10 sm:h-12 sm:w-12 rounded-[14px] sm:rounded-2xl flex items-center justify-center shrink-0",
         variant === "primary" ? "bg-emerald-100 text-emerald-600" :
         variant === "warning" ? "bg-amber-100 text-amber-600" :
         variant === "danger" ? "bg-neutral-100 text-obsidian" :
@@ -68,9 +68,9 @@ function ActionBtn({
       )}>
         {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : icon}
       </div>
-      <div>
-        <div className="text-sm font-black tracking-tight">{label}</div>
-        {sublabel && <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5">{sublabel}</div>}
+      <div className="min-w-0">
+        <div className="text-xs sm:text-sm font-black tracking-tight truncate">{label}</div>
+        {sublabel && <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5 truncate">{sublabel}</div>}
       </div>
     </button>
   );
@@ -163,7 +163,7 @@ export default function EmployeeAttendancePage() {
   });
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl w-full mx-auto min-w-0">
       {/* Header */}
       <div>
         <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em] mb-1">Registro de Jornada</p>
@@ -217,21 +217,21 @@ export default function EmployeeAttendancePage() {
       ) : (
         <>
           {/* Hero state card */}
-          <div className="rounded-[40px] bg-obsidian p-8 text-white relative overflow-hidden">
+          <div className="rounded-[32px] sm:rounded-[40px] bg-obsidian p-6 sm:p-8 text-white relative overflow-hidden">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/[0.03]" />
               <div className="absolute bottom-0 left-1/3 h-16 w-32 rounded-full bg-gold/10" />
             </div>
-            <div className="relative flex items-center justify-between">
+            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest mb-4 {stateConf.cls}">
-                  <span className={cx("h-2 w-2 rounded-full animate-pulse", stateConf.dot)} />
+                <div className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest mb-4 ${stateConf.cls}`}>
+                  <span className={cx("h-2 w-2 rounded-full animate-pulse shrink-0", stateConf.dot)} />
                   {stateConf.label}
                 </div>
-                <div className="text-5xl font-black tracking-tight tabular-nums">{minutesToHHMM(todayMinutes)}</div>
+                <div className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums">{minutesToHHMM(todayMinutes)}</div>
                 <div className="text-white/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
               </div>
-              <div className="text-right space-y-3">
+              <div className="flex gap-8 sm:gap-0 sm:flex-col text-left sm:text-right sm:space-y-3 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
                 <div>
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Entrada</div>
                   <div className="text-lg font-black">{formatTime(dayInfo?.first_check_in_at)}</div>
@@ -245,27 +245,27 @@ export default function EmployeeAttendancePage() {
           </div>
 
           {/* KPI minibar */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-[28px] border border-neutral-100 bg-white p-5 shadow-sm text-center">
-              <Timer className="h-5 w-5 text-neutral-200 mx-auto mb-2" />
-              <div className="text-2xl font-black text-obsidian">{minutesToHHMM(workedThisWeek)}</div>
-              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Esta semana</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center">
+              <Timer className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-200 mb-1 sm:mb-2" />
+              <div className="text-lg sm:text-2xl font-black text-obsidian">{minutesToHHMM(workedThisWeek)}</div>
+              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Esta Semana</div>
             </div>
-            <div className="rounded-[28px] border border-neutral-100 bg-white p-5 shadow-sm text-center">
-              <CheckCircle2 className="h-5 w-5 text-emerald-200 mx-auto mb-2" />
-              <div className="text-2xl font-black text-emerald-600">{completeDays}</div>
-              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Días completos</div>
+            <div className="rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center">
+              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-200 mb-1 sm:mb-2" />
+              <div className="text-lg sm:text-2xl font-black text-emerald-600">{completeDays}</div>
+              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Días Completos</div>
             </div>
-            <div className="rounded-[28px] border border-neutral-100 bg-white p-5 shadow-sm text-center">
-              <Clock className="h-5 w-5 text-amber-200 mx-auto mb-2" />
-              <div className="text-2xl font-black text-amber-600">{minutesToHHMM(totals?.break_minutes ?? 0)}</div>
-              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Pausas hoy</div>
+            <div className="rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-200 mb-1 sm:mb-2" />
+              <div className="text-lg sm:text-2xl font-black text-amber-600">{minutesToHHMM(totals?.break_minutes ?? 0)}</div>
+              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Pausas Hoy</div>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="rounded-[40px] border border-neutral-100 bg-white p-6 shadow-sm">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-5">Acciones Rápidas</div>
+          <div className="rounded-[32px] sm:rounded-[40px] border border-neutral-100 bg-white p-5 sm:p-6 shadow-sm">
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-4 sm:mb-5">Acciones Rápidas</div>
             <div className="grid grid-cols-2 gap-4">
               <ActionBtn label="Entrada" icon={<LogIn className="h-5 w-5" />} enabled={actions?.check_in ?? false} busy={busy} variant="primary" onClick={() => doAction(checkIn, "Entrada registrada")} />
               <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={actions?.check_out ?? false} busy={busy} variant="danger" onClick={() => doAction(checkOut, "Salida registrada")} />

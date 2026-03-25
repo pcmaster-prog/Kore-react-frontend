@@ -8,7 +8,10 @@ if (!baseURL) {
 
 const api = axios.create({
   baseURL,
-  headers: { "Content-Type": "application/json" },
+  headers: { 
+    "Content-Type": "application/json",
+    "Accept-Language": "es" 
+  },
 });
 
 api.interceptors.request.use((config) => {

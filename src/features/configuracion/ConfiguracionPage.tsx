@@ -1,6 +1,6 @@
 // src/features/configuracion/ConfiguracionPage.tsx
 import { useState, useEffect } from "react";
-import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi } from "lucide-react";
+import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2 } from "lucide-react";
 import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import EmpleadosPage from "@/features/employees/EmpleadosPage";
@@ -13,52 +13,63 @@ function cx(...s: Array<string | false | null | undefined>) {
 function RolesTab() {
   const roles = [
     {
-      key: "admin", label: "Administrador", desc: "Acceso completo al sistema",
-      color: "bg-violet-50 border-violet-200 text-violet-700", dot: "bg-violet-500",
-      permisos: ["Gestión de usuarios y empleados","Configuración del sistema","Ver y aprobar nómina","Ver reportes completos","Gestionar tareas y rutinas","Ver y gestionar asistencia"],
+      key: "admin", label: "Administrador", desc: "Acceso completo y configuración global",
+      color: "bg-violet-50 border-violet-100 text-violet-600", dot: "bg-violet-500", icon: <Shield className="h-5 w-5" />,
+      permisos: ["Gestión total de empleados y parámetros", "Configuración de módulos y seguridad", "Visualización de nómina y reportes", "Operaciones sobre tareas de todo el equipo"],
     },
     {
-      key: "supervisor", label: "Supervisor", desc: "Gestión de tareas y equipos",
-      color: "bg-blue-50 border-blue-200 text-blue-700", dot: "bg-blue-500",
-      permisos: ["Asignar y revisar tareas","Ver asistencia del equipo","Aprobar evidencias","Ver actividad del equipo"],
+      key: "supervisor", label: "Supervisor", desc: "Liderazgo de equipos y operaciones",
+      color: "bg-blue-50 border-blue-100 text-blue-600", dot: "bg-blue-500", icon: <Users className="h-5 w-5" />,
+      permisos: ["Asignación de tareas y rutinas recurrentes", "Visualización de asistencia de su equipo", "Aprobación o rechazo de evidencias", "Revisión de la actividad general de operaciones"],
     },
     {
-      key: "empleado", label: "Empleado", desc: "Acceso básico al sistema",
-      color: "bg-neutral-50 border-neutral-200 text-neutral-700", dot: "bg-neutral-400",
-      permisos: ["Ver sus tareas asignadas","Subir evidencias de trabajo","Registrar asistencia","Ver su historial y perfil"],
+      key: "empleado", label: "Empleado", desc: "Registro operativo y consultas personales",
+      color: "bg-neutral-50 border-neutral-100 text-neutral-500", dot: "bg-neutral-400", icon: <Activity className="h-5 w-5" />,
+      permisos: ["Visualización de tareas asignadas para hoy", "Envío de evidencias fotográficas", "Entrada y salida de asistencia personal", "Consulta de historial y perfil"],
     },
   ];
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Roles y Permisos</h2>
-        <p className="text-sm text-neutral-500 mt-0.5">Los roles definen qué puede ver y hacer cada usuario.</p>
+    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black text-obsidian tracking-tight">Roles del Sistema</h2>
+          <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Niveles de permisos y visibilidad</p>
+        </div>
       </div>
-      <div className="space-y-3">
-        {roles.map((r) => (
-          <div key={r.key} className="rounded-2xl border border-neutral-200 bg-white p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className={cx("h-2.5 w-2.5 rounded-full", r.dot)} />
+      <div className="p-8 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {roles.map((r) => (
+            <div key={r.key} className="rounded-[28px] border border-neutral-100 bg-white overflow-hidden hover:shadow-lg hover:shadow-obsidian/5 transition-all group">
+              <div className={cx("p-6 border-b border-neutral-100 flex items-center gap-4 transition-colors", r.color)}>
+                <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                  {r.icon}
+                </div>
                 <div>
-                  <div className="font-semibold">{r.label}</div>
-                  <div className="text-xs text-neutral-500">{r.desc}</div>
+                  <div className="font-black text-lg tracking-tight">{r.label}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest opacity-70 mt-0.5">{r.key}</div>
                 </div>
               </div>
-              <span className={cx("rounded-full border px-2.5 py-1 text-xs font-medium", r.color)}>{r.label}</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-              {r.permisos.map((p) => (
-                <div key={p} className="flex items-center gap-2 text-sm text-neutral-700">
-                  <span className="text-emerald-500 text-xs">✓</span>{p}
+              <div className="p-6">
+                <p className="text-sm font-medium text-neutral-500 mb-4">{r.desc}</p>
+                <div className="space-y-3">
+                  {r.permisos.map((p, i) => (
+                    <div key={i} className="flex gap-3 text-sm font-medium text-neutral-700">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="leading-snug">{p}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
+            <span className="text-sm">💡</span>
           </div>
-        ))}
-      </div>
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        💡 Los roles son fijos en esta versión. Puedes cambiar el rol de un usuario desde la pestaña <strong>Empleados</strong>.
+          Los permisos son pre-establecidos para mantener la seguridad estructural de Kore. Puedes cambiar el rol de un usuario desde la pestaña de Empleados.
+        </div>
       </div>
     </div>
   );
@@ -66,18 +77,19 @@ function RolesTab() {
 
 function TarifasTab() {
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Tarifas de Pago</h2>
-        <p className="text-sm text-neutral-500 mt-0.5">Configura el tipo y tarifa de pago por empleado.</p>
+    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50">
+        <h2 className="text-xl font-black text-obsidian tracking-tight">Tarifas y Remuneración</h2>
+        <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Gestión financiera de recursos humanos</p>
       </div>
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-        💡 Las tarifas por empleado se configuran desde <strong>Empleados → Editar</strong>. El módulo de nómina usará estos valores automáticamente.
-      </div>
-      <div className="rounded-2xl border bg-neutral-50 p-6 text-center text-sm text-neutral-500">
-        <div className="text-2xl mb-2">💰</div>
-        <div className="font-medium text-neutral-700 mb-1">Módulo de Nómina próximamente</div>
-        <div>El cálculo detallado de tarifas estará disponible en el módulo de Nómina.</div>
+      <div className="p-16 flex flex-col items-center justify-center text-center">
+        <div className="h-20 w-20 rounded-[24px] bg-gradient-to-tr from-emerald-100 to-emerald-50 border border-emerald-200 flex items-center justify-center shadow-inner mb-6">
+          <DollarSign className="h-10 w-10 text-emerald-600" />
+        </div>
+        <h3 className="text-2xl font-black text-obsidian tracking-tight mb-2">Centralizado en Nómina</h3>
+        <p className="text-neutral-500 max-w-md font-medium">
+          Las tarifas se asignan de forma individual al crear o editar el perfil de cada empleado en la lista principal. El cálculo final automatizado se realiza desde el <strong>Módulo de Nómina</strong>.
+        </p>
       </div>
     </div>
   );
@@ -99,41 +111,70 @@ function HorariosTab() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold">Configuración de Horarios</h2>
-        <p className="text-sm text-neutral-500 mt-0.5">Define el horario laboral general de la empresa.</p>
+    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black text-obsidian tracking-tight">Esquema Operativo</h2>
+          <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Horarios laborables y tolerancias</p>
+        </div>
+        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
+          {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Clock className="h-4 w-4" />}
+          Guardar Cambios
+        </button>
       </div>
-      {saved && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">✅ Configuración guardada</div>
-      )}
-      <div className="rounded-2xl border bg-neutral-50 p-5 space-y-4">
-        <div className="font-medium text-sm">Horario Laboral General</div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-xs text-neutral-500 mb-1">Hora de entrada</div>
-            <input type="time" className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
+      
+      <div className="p-8 space-y-6">
+        {saved && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5" /> Configuración global de horarios actualizada.
           </div>
-          <div>
-            <div className="text-xs text-neutral-500 mb-1">Hora de salida</div>
-            <input type="time" className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
+              <Clock className="h-5 w-5 text-neutral-400" />
+              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Jornada Standard</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Hora de Entrada</label>
+                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Hora de Salida</label>
+                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-neutral-500 mb-1">Tolerancia de retardo (min)</div>
-            <input type="number" min={0} max={60} className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10" value={lateTolerance} onChange={(e) => setLateTolerance(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-xs text-neutral-500 mb-1">Horas máximas por día</div>
-            <input type="number" min={1} max={24} className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10" value={maxHours} onChange={(e) => setMaxHours(e.target.value)} />
+
+          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
+              <Activity className="h-5 w-5 text-neutral-400" />
+              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Regulaciones</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Tolerancia (min)</label>
+                <input type="number" min={0} max={60} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={lateTolerance} onChange={(e) => setLateTolerance(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Jornada máx (Hrs)</label>
+                <input type="number" min={1} max={24} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={maxHours} onChange={(e) => setMaxHours(e.target.value)} />
+              </div>
+            </div>
           </div>
         </div>
+
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
+            <span className="text-sm">💡</span>
+          </div>
+          Excepciones locales: Los días de descanso semanal y tarifas específicas aplican a nivel de contrato individual en Empleados.
+        </div>
       </div>
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        💡 El día de descanso y horas por empleado se configuran individualmente desde <strong>Empleados → Editar</strong>.
-      </div>
-      <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 transition disabled:opacity-50">
-        {saving ? "Guardando..." : "Guardar Configuración"}
-      </button>
     </div>
   );
 }
@@ -145,10 +186,10 @@ interface ModuleState {
 
 function ModulosTab() {
   const MODS = [
-    { key: "tareas", label: "Tareas", desc: "Asigna y supervisa tareas con evidencias", icon: "📋" },
-    { key: "asistencia", label: "Asistencia", desc: "Control de entrada/salida del equipo", icon: "🕐" },
-    { key: "nomina", label: "Nómina", desc: "Calcula y aprueba el pago semanal", icon: "💰" },
-    { key: "configuracion", label: "Configuración", desc: "Gestión de la plataforma", icon: "⚙️", alwaysOn: true },
+    { key: "tareas", label: "Módulo de Tareas", desc: "Digitalización de checklist, plantillas, evidencias fotográficas y rutinas diarias", icon: "📋", theme: "emerald" },
+    { key: "asistencia", label: "Reloj Checador", desc: "Registro inteligente de jornadas, ingresos, escapes geolocalizados y pausas", icon: "🕒", theme: "amber" },
+    { key: "nomina", label: "Nómina Automática", desc: "Integración de asistencia y salarios para el pre-cálculo financiero", icon: "💰", theme: "violet" },
+    { key: "configuracion", label: "SysAdmin", desc: "Panel rector de comportamientos globales y seguridad inquebrantable", icon: "🛡️", theme: "obsidian", alwaysOn: true },
   ];
   const [modules, setModules] = useState<ModuleState[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
@@ -157,11 +198,7 @@ function ModulosTab() {
   useEffect(() => {
     api.get("/empresa/modulos").then((res) => {
       const raw = (Array.isArray(res.data) ? res.data : res.data?.modules ?? []) as any[];
-      // Normalize to ModuleState objects
-      const mods = raw.map(m => typeof m === "string" 
-        ? { key: m, enabled: true } 
-        : { key: m.slug ?? m.key, enabled: m.enabled === true }
-      ) as ModuleState[];
+      const mods = raw.map(m => typeof m === "string" ? { key: m, enabled: true } : { key: m.slug ?? m.key, enabled: m.enabled === true }) as ModuleState[];
       setModules(mods);
       auth.setModules(mods.filter(m => m.enabled).map(m => m.key));
       window.dispatchEvent(new Event("kore-modules-updated"));
@@ -173,23 +210,15 @@ function ModulosTab() {
 
   async function toggle(key: string) {
     if (key === "configuracion") return;
-    
     const exists = modules.find(m => m.key === key);
     const enabled = !exists?.enabled;
     let next: ModuleState[];
-    
-    if (exists) {
-      next = modules.map(m => m.key === key ? { ...m, enabled } : m);
-    } else {
-      next = [...modules, { key, enabled }];
-    }
+    if (exists) { next = modules.map(m => m.key === key ? { ...m, enabled } : m); }
+    else { next = [...modules, { key, enabled }]; }
 
     setSaving(key);
     try {
-      await api.post("/empresa/modulos", { 
-        module_slug: key, 
-        enabled 
-      });
+      await api.post("/empresa/modulos", { module_slug: key, enabled });
       setModules(next);
       auth.setModules(next.filter(m => m.enabled).map(m => m.key));
       window.dispatchEvent(new Event("kore-modules-updated"));
@@ -197,49 +226,67 @@ function ModulosTab() {
     finally { setSaving(null); }
   }
 
-  if (loadingMods) return <div className="text-sm text-neutral-500">Cargando módulos...</div>;
+  if (loadingMods) return (
+    <div className="rounded-[40px] border border-neutral-100 bg-white p-16 flex flex-col items-center gap-3">
+      <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Sincronizando Sistema...</span>
+    </div>
+  );
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Módulos Activos</h2>
-        <p className="text-sm text-neutral-500 mt-0.5">Activa o desactiva módulos para tu empresa.</p>
+    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50">
+        <h2 className="text-xl font-black text-obsidian tracking-tight">Capacidades del Ecosistema</h2>
+        <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Activa las herramientas de la suite kore</p>
       </div>
-      <div className="space-y-2">
-        {MODS.map((m) => {
-          const mod = modules.find(x => x.key === m.key);
-          const active = m.alwaysOn || mod?.enabled === true;
-          
-          return (
-            <div key={m.key} className={cx("rounded-2xl border p-4 transition", active ? "border-emerald-200 bg-emerald-50" : "border-neutral-200 bg-white")}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{m.icon}</span>
-                  <div>
-                    <div className="text-sm font-medium">{m.label}</div>
-                    <div className="text-xs text-neutral-500">{m.desc}</div>
+      <div className="p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {MODS.map((m) => {
+            const mod = modules.find(x => x.key === m.key);
+            const active = m.alwaysOn || mod?.enabled === true;
+            
+            return (
+              <div key={m.key} className={cx(
+                "rounded-[28px] border overflow-hidden transition-all duration-300 relative group",
+                active ? "border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/60 hover:shadow-lg hover:shadow-emerald-500/5" : "border-neutral-200 bg-white opacity-80 hover:opacity-100"
+              )}>
+                {active && !m.alwaysOn && <div className="absolute top-0 right-0 h-16 w-16 bg-gradient-to-bl from-emerald-200/40 to-transparent pointer-events-none" />}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-14 w-14 rounded-2xl bg-white border border-neutral-100 shadow-sm flex items-center justify-center text-3xl">
+                      {m.icon}
+                    </div>
+                    <div>
+                      {!m.alwaysOn ? (
+                        <button
+                          onClick={() => toggle(m.key)}
+                          disabled={saving === m.key}
+                          className={cx(
+                            "h-8 w-14 rounded-full transition-all flex items-center px-1 border",
+                            active ? "bg-emerald-500 border-emerald-600 shadow-inner" : "bg-neutral-200 border-neutral-300"
+                          )}
+                        >
+                          <div className={cx(
+                            "h-6 w-6 rounded-full bg-white transition-transform duration-300 shadow flex flex-col items-center justify-center",
+                            active ? "translate-x-6" : "translate-x-0"
+                          )}>
+                            {saving === m.key && <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />}
+                          </div>
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-xl border border-obsidian bg-obsidian text-white px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider">
+                          🛡️ Core Activo
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={cx("rounded-full border px-2 py-0.5 text-xs font-medium", active ? "border-emerald-200 bg-emerald-100 text-emerald-700" : "border-neutral-200 bg-neutral-100 text-neutral-500")}>
-                    {active ? "Activo" : "Inactivo"}
-                  </span>
-                  {!m.alwaysOn ? (
-                    <button
-                      onClick={() => toggle(m.key)}
-                      disabled={saving === m.key}
-                      className={cx("h-6 w-11 rounded-full transition-all flex items-center px-0.5", active ? "bg-emerald-500" : "bg-neutral-300")}
-                    >
-                      <div className={cx("h-5 w-5 rounded-full bg-white transition-transform shadow", active ? "translate-x-5" : "translate-x-0")} />
-                    </button>
-                  ) : (
-                    <span className="text-xs text-neutral-400">Siempre activo</span>
-                  )}
+                  <h3 className="text-lg font-black text-obsidian tracking-tight mb-1">{m.label}</h3>
+                  <p className="text-sm font-medium text-neutral-500 line-clamp-2">{m.desc}</p>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -252,9 +299,7 @@ function RedTab() {
   const [loadingIp, setLoadingIp] = useState(false);
 
   useEffect(() => {
-    api.get("/empresa/red").then((res) => {
-      setIp(res.data?.allowed_ip ?? "");
-    }).catch(() => {});
+    api.get("/empresa/red").then((res) => { setIp(res.data?.allowed_ip ?? ""); }).catch(() => {});
   }, []);
 
   async function handleSave() {
@@ -278,51 +323,74 @@ function RedTab() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-lg font-semibold">Restricción por Red</h2>
-        <p className="text-sm text-neutral-500 mt-0.5">Limita desde qué red pueden marcar asistencia tus empleados.</p>
-      </div>
-      {saved && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">✅ Configuración de red guardada</div>}
-      <div className="rounded-2xl border bg-neutral-50 p-5 space-y-4">
+    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
         <div>
-          <div className="text-xs text-neutral-500 mb-1">IP o rango permitido (CIDR)</div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              className="flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black/10"
-              placeholder="Ej. 192.168.1.0/24 o 201.175.42.10"
-              value={ip}
-              onChange={(e) => setIp(e.target.value)}
-            />
-            <button
-              onClick={fetchMyIp}
-              disabled={loadingIp}
-              className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition whitespace-nowrap disabled:opacity-50"
-            >
-              {loadingIp ? "Buscando..." : "¿Cuál es mi IP?"}
-            </button>
+          <h2 className="text-xl font-black text-obsidian tracking-tight">Geocerca Virtual & Redes</h2>
+          <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Seguridad de accesos e IPs</p>
+        </div>
+        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
+          {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Shield className="h-4 w-4" />}
+          Blindar Red
+        </button>
+      </div>
+
+      <div className="p-8 space-y-6">
+        {saved && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5" /> Reglas de red aplicadas correctamente.
+          </div>
+        )}
+        
+        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-8 space-y-6">
+          <div className="flex items-center gap-4 pb-4 border-b border-neutral-100">
+            <div className="h-12 w-12 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm">
+              <Wifi className="h-6 w-6 text-neutral-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Lista Blanca (Whitelist)</h3>
+              <p className="text-xs font-medium text-neutral-500 mt-0.5">Controla quién puede operar la caja o el reloj</p>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Dirección IP o Rango (CIDR)</label>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                className="flex-1 rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold outline-none focus:ring-2 focus:ring-obsidian/10 font-mono tracking-wider transition-all placeholder:text-neutral-300 placeholder:font-sans"
+                placeholder="Ej. 192.168.1.0/24 o 201.175.42.10"
+                value={ip}
+                onChange={(e) => setIp(e.target.value)}
+              />
+              <button
+                onClick={fetchMyIp}
+                disabled={loadingIp}
+                className="rounded-2xl border border-neutral-200 bg-white px-6 py-4 text-xs font-bold text-neutral-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all uppercase tracking-widest disabled:opacity-50"
+              >
+                {loadingIp ? "Rastreando..." : "¿Cuál es mi IP?"}
+              </button>
+            </div>
           </div>
         </div>
+
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-700 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 shrink-0" />
+          Advertencia: Al definir una IP, bloquearás todo tráfico que no provenga de esa locación. Déjalo en blanco para omitir restricciones globales.
+        </div>
       </div>
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-        💡 Deja vacío para permitir el acceso desde cualquier red.
-      </div>
-      <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 transition disabled:opacity-50">
-        {saving ? "Guardando..." : "Guardar Configuración de Red"}
-      </button>
     </div>
   );
 }
 
 const TABS = [
-  { key: "empleados", label: "Empleados", icon: <Users className="h-4 w-4" /> },
+  { key: "empleados", label: "Equipo", icon: <Users className="h-4 w-4" /> },
   { key: "roles",     label: "Roles",     icon: <Shield className="h-4 w-4" /> },
-  { key: "tarifas",   label: "Tarifas",   icon: <DollarSign className="h-4 w-4" /> },
   { key: "horarios",  label: "Horarios",  icon: <Clock className="h-4 w-4" /> },
-  { key: "actividad", label: "Actividad", icon: <Activity className="h-4 w-4" /> },
-  { key: "modulos",   label: "Módulos",   icon: <Blocks className="h-4 w-4" /> },
-  { key: "red",       label: "Red",       icon: <Wifi className="h-4 w-4" /> },
+  { key: "tarifas",   label: "Nómina",   icon: <DollarSign className="h-4 w-4" /> },
+  { key: "modulos",   label: "Capacidades",   icon: <Blocks className="h-4 w-4" /> },
+  { key: "red",       label: "Seguridad",       icon: <Wifi className="h-4 w-4" /> },
+  { key: "actividad", label: "Auditoría", icon: <Activity className="h-4 w-4" /> },
 ] as const;
 
 type TabKey = typeof TABS[number]["key"];
@@ -331,20 +399,33 @@ export default function ConfiguracionPage() {
   const [tab, setTab] = useState<TabKey>("empleados");
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Configuración del Sistema</h1>
-        <p className="text-sm text-neutral-500 mt-0.5">Administra empleados, roles y configuraciones generales.</p>
+    <div className="space-y-6">
+      {/* ── Hero Header ─────────────────────────────────────────────── */}
+      <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-10 text-white">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
+          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
+          <div className="absolute bottom-0 left-1/3 h-20 w-40 rounded-full bg-gold/10" />
+        </div>
+        <div className="relative flex items-center gap-4 flex-wrap">
+          <div>
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Centro de Comando</p>
+            <h1 className="text-3xl font-black tracking-tight">Configuración del Sistema</h1>
+            <p className="text-white/50 text-sm mt-1 max-w-xl">
+              Administra privilegios globales de recursos humanos, seguridad y operaciones financieras desde la terminal central de tu instancia en Kore Suite.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="flex gap-1 rounded-2xl border bg-neutral-50 p-1 overflow-x-auto">
+      <div className="inline-flex flex-wrap gap-1 rounded-3xl border border-neutral-100 bg-white p-1.5 shadow-sm max-w-full overflow-x-auto custom-scrollbar">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={cx(
-              "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition whitespace-nowrap",
-              tab === t.key ? "bg-blue-600 text-white shadow" : "text-neutral-600 hover:bg-white hover:text-neutral-900"
+              "inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+              tab === t.key ? "bg-obsidian text-white shadow-md" : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50"
             )}
           >
             {t.icon}{t.label}
@@ -352,7 +433,7 @@ export default function ConfiguracionPage() {
         ))}
       </div>
 
-      <div>
+      <div className="pb-8">
         {tab === "empleados" && <EmpleadosPage />}
         {tab === "roles"     && <RolesTab />}
         {tab === "tarifas"   && <TarifasTab />}

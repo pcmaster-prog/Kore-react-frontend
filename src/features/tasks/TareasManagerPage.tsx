@@ -1,7 +1,7 @@
 // src/features/tasks/TareasManagerPage.tsx
 // Página contenedora con tabs: Tareas | Plantillas | Rutinas
 import { useState } from "react";
-import { ClipboardList, Layers, RefreshCw, Download, Plus } from "lucide-react";
+import { ClipboardList, Layers, RefreshCw, Plus } from "lucide-react";
 import TasksPage from "./TasksPage";
 import TemplatesPage from "./catalog/TemplatesPage";
 import { useNavigate } from "react-router-dom";
@@ -64,10 +64,6 @@ export default function TareasManagerPage() {
 
         {/* Global Actions */}
         <div className="flex items-center gap-3">
-          <button className="h-11 px-5 rounded-2xl border border-neutral-200 bg-white text-sm font-bold text-obsidian shadow-sm hover:bg-neutral-50 transition-all flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Exportar
-          </button>
           {tab === "tareas" && (
             <button 
               className="h-11 px-5 rounded-2xl bg-obsidian text-sm font-bold text-white shadow-sm hover:bg-gold transition-all flex items-center gap-2"
