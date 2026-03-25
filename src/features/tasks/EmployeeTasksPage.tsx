@@ -435,35 +435,37 @@ export default function EmployeeTasksPage() {
   return (
     <div className="space-y-6">
       {/* ── Tabs principales ─────────────────────────────────────────────── */}
-      <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-fit">
-        {(
-          [
-            {
-              key: "asignaciones",
-              label: "Asignaciones",
-              icon: <ClipboardList className="h-4 w-4" />,
-            },
-            {
-              key: "gondolas",
-              label: "Góndolas",
-              icon: <LayoutGrid className="h-4 w-4" />,
-            },
-          ] as { key: MainTab; label: string; icon: React.ReactNode }[]
-        ).map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setMainTab(t.key)}
-            className={cx(
-              "flex items-center gap-2 px-5 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300",
-              mainTab === t.key
-                ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
-                : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50",
-            )}
-          >
-            {t.icon}
-            {t.label}
-          </button>
-        ))}
+      <div className="w-full overflow-x-auto pb-2 -mb-2" style={{ scrollbarWidth: "none" }}>
+        <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-max">
+          {(
+            [
+              {
+                key: "asignaciones",
+                label: "Asignaciones",
+                icon: <ClipboardList className="h-4 w-4" />,
+              },
+              {
+                key: "gondolas",
+                label: "Góndolas",
+                icon: <LayoutGrid className="h-4 w-4" />,
+              },
+            ] as { key: MainTab; label: string; icon: React.ReactNode }[]
+          ).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setMainTab(t.key)}
+              className={cx(
+                "flex whitespace-nowrap items-center gap-2 px-5 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300 shrink-0",
+                mainTab === t.key
+                  ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
+                  : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50",
+              )}
+            >
+              {t.icon}
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Tab Góndolas ─────────────────────────────────────────────────── */}

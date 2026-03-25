@@ -71,22 +71,24 @@ export default function TareasManagerPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Tabs - Organic Segmented Style */}
-        <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-fit">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={cx(
-                "flex items-center gap-2 px-6 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300",
-                tab === t.key
-                  ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
-                  : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50",
-              )}
-            >
-              {t.icon}
-              {t.label}
-            </button>
-          ))}
+        <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 -mb-2 sm:mb-0" style={{ scrollbarWidth: "none" }}>
+          <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-max">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={cx(
+                  "flex whitespace-nowrap items-center gap-2 px-6 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300 shrink-0",
+                  tab === t.key
+                    ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
+                    : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50",
+                )}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Global Actions */}
