@@ -8,7 +8,7 @@ import {
   ClipboardList,
   Activity,
   Zap, ChevronRight, ArrowUpRight, ArrowDownRight,
-  TrendingUp, Download, Filter
+  TrendingUp
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {

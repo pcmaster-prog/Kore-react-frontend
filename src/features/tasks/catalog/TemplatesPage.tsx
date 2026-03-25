@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Input, Pill, Toggle } from "./ui";
+import { Toggle } from "./ui";
 import TemplateModal from "./TemplateModal";
 import type { Template } from "./api";
 import { createTemplate, deleteTemplate, listTemplates, updateTemplate } from "./api";

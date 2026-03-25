@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, Pill, Toggle, formatWeekdays } from "./ui";
+import { Toggle, formatWeekdays } from "./ui";
 import RoutineModal from "./RoutineModal";
 import type { Routine } from "./api";
 import { createRoutine, deleteRoutine, listRoutines, updateRoutine } from "./api";

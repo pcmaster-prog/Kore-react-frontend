@@ -1,6 +1,6 @@
 // src/features/configuracion/ConfiguracionPage.tsx
 import { useState, useEffect } from "react";
-import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import EmpleadosPage from "@/features/employees/EmpleadosPage";

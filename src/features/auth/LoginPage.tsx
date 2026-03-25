@@ -1,6 +1,6 @@
 //features/auth/LoginPage.tsx
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "./store";
 import { login as apiLogin } from "./api";
 
