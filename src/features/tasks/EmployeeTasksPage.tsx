@@ -1,7 +1,9 @@
 //features/tasks/EmployeeTasksPage.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardList, LayoutGrid } from "lucide-react";
+import { ClipboardList, LayoutGrid, Star } from "lucide-react";
 import GondolasEmpleadoTab from "@/features/gondolas/GondolasEmpleadoTab";
+import SemaforoEmpleadoTab from "@/features/semaforo/SemaforoEmpleadoTab";
+import { getCompanerosParaEvaluar } from "@/features/semaforo/api";
 import {
   listMyAssignments,
   updateMyAssignment,
@@ -281,11 +283,19 @@ function ChecklistAccordion({
   );
 }
 
-type MainTab = "asignaciones" | "gondolas";
+type MainTab = "asignaciones" | "gondolas" | "evaluar";
 
 export default function EmployeeTasksPage() {
   const today = new Date().toISOString().slice(0, 10);
   const [mainTab, setMainTab] = useState<MainTab>("asignaciones");
+
+  // Semáforo: check once on mount if there are peers to evaluate
+  const [hasEvalPending, setHasEvalPending] = useState(false);
+  useEffect(() => {
+    getCompanerosParaEvaluar()
+      .then(data => { if (data.companeros.length > 0) setHasEvalPending(true); })
+      .catch(() => { /* silent — don't show tab if fetch fails */ });
+  }, []);
 
   const [page, setPage] = useState(1);
   const [date, setDate] = useState(today);
@@ -449,6 +459,11 @@ export default function EmployeeTasksPage() {
                 label: "Góndolas",
                 icon: <LayoutGrid className="h-4 w-4" />,
               },
+              ...(hasEvalPending ? [{
+                key: "evaluar" as MainTab,
+                label: "Evaluar",
+                icon: <Star className="h-4 w-4" />,
+              }] : []),
             ] as { key: MainTab; label: string; icon: React.ReactNode }[]
           ).map((t) => (
             <button
@@ -468,8 +483,11 @@ export default function EmployeeTasksPage() {
         </div>
       </div>
 
-      {/* ── Tab Góndolas ─────────────────────────────────────────────────── */}
+      {/* ── Tab Góndolas ───────────────────────────────────────────────────────── */}
       {mainTab === "gondolas" && <GondolasEmpleadoTab />}
+
+      {/* ── Tab Evaluar (Semáforo) ───────────────────────────────────────────── */}
+      {mainTab === "evaluar" && <SemaforoEmpleadoTab />}
 
       {/* ── Tab Asignaciones (contenido original) ────────────────────────── */}
       {mainTab === "asignaciones" && (

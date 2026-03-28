@@ -5,8 +5,9 @@ import { auth } from "@/features/auth/store";
 import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
   CalendarCheck, User, Users,
-  Settings, ChevronRight, Bell
+  Settings, ChevronRight, Bell, Activity
 } from "lucide-react";
+import { getPendientesSupervisor } from "@/features/semaforo/api";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -105,6 +106,21 @@ function SidebarContent({
 
   const hasModule = (slug: string) => activeModules.length === 0 || activeModules.includes(slug);
 
+  // Supervisor: check for pending semaforo evaluations once on mount
+  const [pendingEvaluations, setPendingEvaluations] = useState(0);
+  useEffect(() => {
+    if (isEmployee || isAdmin) return;
+    getPendientesSupervisor()
+      .then((data: any[]) => {
+        const count = data.filter(p => 
+          String(p.empleado?.id) !== String(user?.id) &&
+          String(p.empleado?.user_id) !== String(user?.id)
+        ).length;
+        setPendingEvaluations(count);
+      })
+      .catch(() => { /* silently ignore — don't crash sidebar */ });
+  }, [isEmployee, isAdmin, user?.id]);  // single fetch on mount
+
   return (
     <div className="flex flex-col h-full bg-obsidian text-white">
       {/* Logo Section */}
@@ -150,6 +166,17 @@ function SidebarContent({
                 {hasModule("asistencia") && <SidebarLink to="/app/manager/asistencia" label="Asistencia general" icon={<CalendarCheck className="h-4.5 w-4.5" />} onClick={onNav} />}
                 {isAdmin && hasModule("nomina") && <SidebarLink to="/app/manager/nomina" label="Nómina" icon={<Users className="h-4.5 w-4.5" />} onClick={onNav} />}
                 {isAdmin && <SidebarLink to="/app/manager/usuarios" label="Equipo" icon={<Users className="h-4.5 w-4.5" />} onClick={onNav} />}
+              </NavGroup>
+            )}
+
+            {!isEmployee && pendingEvaluations > 0 && (
+              <NavGroup label="Equipo">
+                <SidebarLink
+                  to="/app/manager/semaforo"
+                  label={`Evaluaciones (${pendingEvaluations})`}
+                  icon={<Activity className="h-4.5 w-4.5" />}
+                  onClick={onNav}
+                />
               </NavGroup>
             )}
 

@@ -34,6 +34,9 @@ import NominaPage from "@/features/nomina/NominaPage";
 // Góndolas
 import GondolaRellenoPage from "@/features/gondolas/GondolaRellenoPage";
 
+// Semáforo
+import SemaforoSupervisorPage from "@/features/semaforo/SemaforoSupervisorPage";
+
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
@@ -106,6 +109,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole allow={["admin"]}>
             <NominaPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/semaforo",
+        element: (
+          <RequireRole allow={["admin", "supervisor"]}>
+            <SemaforoSupervisorPage />
           </RequireRole>
         ),
       },

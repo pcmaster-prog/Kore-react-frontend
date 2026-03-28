@@ -5,6 +5,7 @@ import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import EmpleadosPage from "@/features/employees/EmpleadosPage";
 import ActividadTab from "./ActividadTab";
+import SemaforoAdminTab from "@/features/semaforo/SemaforoAdminTab";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -390,6 +391,7 @@ const TABS = [
   { key: "tarifas",   label: "Nómina",   icon: <DollarSign className="h-4 w-4" /> },
   { key: "modulos",   label: "Capacidades",   icon: <Blocks className="h-4 w-4" /> },
   { key: "red",       label: "Seguridad",       icon: <Wifi className="h-4 w-4" /> },
+  { key: "semaforo",  label: "Semáforo",  icon: <Activity className="h-4 w-4" /> },
   { key: "actividad", label: "Auditoría", icon: <Activity className="h-4 w-4" /> },
 ] as const;
 
@@ -441,6 +443,7 @@ export default function ConfiguracionPage() {
         {tab === "actividad" && <ActividadTab />}
         {tab === "modulos"   && <ModulosTab />}
         {tab === "red"       && <RedTab />}
+        {tab === "semaforo"  && <SemaforoAdminTab />}
       </div>
     </div>
   );
