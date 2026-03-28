@@ -140,24 +140,7 @@ export default function LoginPage() {
             </div>
           ) : null}
 
-          {/* Demos */}
-          <div className="mb-8 p-5 rounded-[28px] border border-neutral-100 bg-white shadow-sm flex flex-col gap-3">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1 text-center lg:text-left">
-              Credenciales rápidas (Demo)
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-              {DEMOS.map((d) => (
-                <button
-                  key={d.label}
-                  type="button"
-                  onClick={() => fillDemo(d)}
-                  className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-bold text-neutral-600 hover:text-obsidian hover:bg-neutral-100 hover:border-neutral-300 transition-all uppercase tracking-widest shadow-sm"
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          
 
           <form onSubmit={onSubmit} className="space-y-5">
             <div className="space-y-1.5">
