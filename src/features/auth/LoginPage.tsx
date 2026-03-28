@@ -4,13 +4,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "./store";
 import { login as apiLogin } from "./api";
 
-type DemoUser = { label: string; email: string; pass: string };
-
-const DEMOS: DemoUser[] = [
-  { label: "Admin", email: "adan@deco.com", pass: "Chivas2017" },
-  { label: "Supervisor", email: "joselin@deco.com", pass: "jos1123456" },
-  { label: "Empleado", email: "kevin@deco.com", pass: "kevin123456" },
-];
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -42,11 +35,6 @@ export default function LoginPage() {
     }
   }, [nav]);
 
-  function fillDemo(d: DemoUser) {
-    setEmail(d.email);
-    setPassword(d.pass);
-    setErr(null);
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
