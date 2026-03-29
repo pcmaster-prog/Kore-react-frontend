@@ -97,19 +97,53 @@ function TarifasTab() {
 }
 
 function HorariosTab() {
-  const [checkInTime, setCheckInTime] = useState("08:00");
+  const [checkInTime, setCheckInTime] = useState("08:30");
   const [checkOutTime, setCheckOutTime] = useState("17:00");
   const [lateTolerance, setLateTolerance] = useState("10");
   const [maxHours, setMaxHours] = useState("8");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    api.get("/empresa/settings/operativo")
+      .then((res) => {
+        const o = res.data.operativo;
+        if (o) {
+          setCheckInTime(o.check_in_time);
+          setCheckOutTime(o.check_out_time);
+          setLateTolerance(o.late_tolerance.toString());
+          setMaxHours(o.max_hours.toString());
+        }
+      })
+      .catch((err) => console.error("Error loading settings", err))
+      .finally(() => setLoading(false));
+  }, []);
+
   async function handleSave() {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setSaving(false); setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      await api.patch("/empresa/settings/operativo", {
+        check_in_time: checkInTime,
+        check_out_time: checkOutTime,
+        late_tolerance: parseInt(lateTolerance),
+        max_hours: parseInt(maxHours)
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error("Error saving settings", err);
+    } finally {
+      setSaving(false);
+    }
   }
+
+  if (loading) return (
+    <div className="rounded-[40px] border border-neutral-100 bg-white p-16 flex flex-col items-center gap-3">
+      <Loader2 className="h-10 w-10 text-obsidian animate-spin" />
+      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Cargando esquema...</span>
+    </div>
+  );
 
   return (
     <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
