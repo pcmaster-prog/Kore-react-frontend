@@ -357,6 +357,17 @@ function UserModal({
             </div>
           </div>
         </div>
+        {/* Welcome Email Banner */}
+        {mode === "create" && (
+          <div className="px-8 pb-4">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 px-5 py-3 text-[11px] font-bold text-emerald-700 flex items-center gap-3">
+              <div className="h-6 w-6 rounded-lg bg-emerald-100 flex items-center justify-center text-xs shadow-sm shadow-emerald-200/50">
+                📧
+              </div>
+              <span>Se enviará automáticamente un correo de bienvenida con las credenciales y documentos configurados.</span>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-neutral-100 bg-neutral-50/50">

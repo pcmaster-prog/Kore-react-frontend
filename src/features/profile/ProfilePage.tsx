@@ -4,7 +4,7 @@ import api from "@/lib/http";
 import {
   User, Mail, Phone, MapPin, Briefcase, Shield,
   Calendar, Hash, CheckCircle2, AlertTriangle,
-  Pencil, Save, X, Loader2,
+  Pencil, Save, X, Loader2, Key,
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -63,6 +63,12 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
 
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3000);
@@ -108,6 +114,34 @@ export default function ProfilePage() {
       showToast("err", e?.response?.data?.message ?? "Error al guardar");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function savePassword() {
+    if (newPassword !== confirmPassword) {
+      showToast("err", "Las contraseñas no coinciden");
+      return;
+    }
+    if (newPassword.length < 6) {
+      showToast("err", "La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      await api.post("/mi-perfil/password", {
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: confirmPassword,
+      });
+      showToast("ok", "Contraseña actualizada correctamente");
+      setChangingPassword(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (e: any) {
+      showToast("err", e?.response?.data?.message ?? "Error al cambiar contraseña");
+    } finally {
+      setSavingPassword(false);
     }
   }
 
@@ -326,6 +360,95 @@ export default function ProfilePage() {
                     <Briefcase className="h-4 w-4 text-neutral-300" />
                     {profile.department}
                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Change Password Section */}
+          <div className="rounded-[32px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-neutral-50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Key className="h-4 w-4 text-neutral-300" />
+                <span className="text-sm font-black text-obsidian tracking-tight">Seguridad</span>
+              </div>
+              {!changingPassword ? (
+                <button
+                  onClick={() => setChangingPassword(true)}
+                  className="rounded-xl border border-neutral-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500 hover:bg-neutral-50 transition"
+                >
+                  <Pencil className="h-3 w-3 inline mr-1" /> Editar
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setChangingPassword(false);
+                      setCurrentPassword("");
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    }}
+                    className="rounded-xl border border-neutral-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 hover:bg-neutral-50 transition"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={savePassword}
+                    disabled={savingPassword}
+                    className="rounded-xl bg-obsidian text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gold transition disabled:opacity-50"
+                  >
+                    {savingPassword ? "..." : "Guardar"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6">
+              {!changingPassword ? (
+                <div className="text-sm font-medium text-neutral-400 flex flex-col gap-1">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-300">Contraseña</div>
+                  <div className="flex items-center justify-between">
+                    <span>••••••••••</span>
+                    <span className="text-[9px] font-bold text-neutral-300 italic">Protegido por seguridad</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Contraseña actual</label>
+                    <input
+                      type="password"
+                      className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Nueva contraseña</label>
+                    <input
+                      type="password"
+                      className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Confirmar nueva contraseña</label>
+                    <input
+                      type="password"
+                      className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                    <div className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1.5 animate-in-fade">
+                      <AlertTriangle className="h-3 w-3" /> Las contraseñas no coinciden
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -1,6 +1,6 @@
 // src/features/configuracion/ConfiguracionPage.tsx
 import { useState, useEffect } from "react";
-import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2 } from "lucide-react";
 import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import EmpleadosPage from "@/features/employees/EmpleadosPage";
@@ -418,10 +418,204 @@ function RedTab() {
   );
 }
 
+function DocumentosTab() {
+  const [documentos, setDocumentos] = useState<Array<{
+    nombre: string;
+    url: string;
+    size: number;
+    uploaded_at: string;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
+
+  function showToast(type: "ok" | "err", msg: string) {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  useEffect(() => {
+    api.get("/empresa/documentos")
+      .then(res => setDocumentos(res.data?.documentos ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      showToast("err", "Solo se permiten archivos PDF");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("err", "El archivo no puede superar 10MB");
+      return;
+    }
+
+    setUploading(true);
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await api.post("/empresa/documentos", form, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setDocumentos(res.data?.documentos ?? []);
+      showToast("ok", "Documento subido correctamente");
+    } catch (e: any) {
+      showToast("err", e?.response?.data?.message ?? "Error al subir documento");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleDelete(index: number) {
+    if (!confirm("¿Eliminar este documento?")) return;
+    try {
+      const res = await api.delete(`/empresa/documentos/${index}`);
+      setDocumentos(res.data?.documentos ?? []);
+      showToast("ok", "Documento eliminado");
+    } catch {
+      showToast("err", "No se pudo eliminar");
+    }
+  }
+
+  function formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  return (
+    <div className="space-y-6 animate-in-up">
+      {toast && (
+        <div className={cx(
+          "rounded-2xl border px-5 py-3 text-sm font-bold flex items-center gap-3",
+          toast.type === "ok" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-rose-50 border-rose-100 text-rose-700"
+        )}>
+          {toast.type === "ok" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+          {toast.msg}
+        </div>
+      )}
+
+      <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+        <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-black text-obsidian tracking-tight">Documentos de Bienvenida</h2>
+            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Gestión de archivos adjuntos para nuevos ingresos</p>
+          </div>
+        </div>
+
+        <div className="p-8 space-y-8">
+          {/* Zona de upload */}
+          <div className="rounded-[32px] border-2 border-dashed border-neutral-100 bg-neutral-50/30 p-10 text-center group hover:border-obsidian/20 transition-all">
+            <div className="h-20 w-20 rounded-[28px] bg-white border border-neutral-100 flex items-center justify-center shadow-sm mx-auto mb-6 group-hover:scale-110 transition-transform">
+              <FileText className="h-10 w-10 text-neutral-300" />
+            </div>
+            <div className="max-w-xs mx-auto">
+              <div className="text-sm font-black text-obsidian tracking-tight mb-1">
+                {uploading ? "Subiendo documento..." : "Subir documento PDF"}
+              </div>
+              <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-6">
+                Solo archivos PDF hasta 10MB
+              </p>
+              
+              <label className={cx(
+                "inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold shadow-md transition-all cursor-pointer",
+                uploading
+                  ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                  : "bg-obsidian text-white hover:bg-gold hover:shadow-lg"
+              )}>
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                {uploading ? "Sincronizando..." : "Agregar documento"}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleUpload}
+                  disabled={uploading}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Lista de documentos */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-2 border-b border-neutral-50">
+              <FileText className="h-4 w-4 text-neutral-300" />
+              <h3 className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Archivos en el Sistema</h3>
+            </div>
+
+            {loading ? (
+              <div className="py-12 flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 text-neutral-200 animate-spin" />
+                <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">Consultando archivos...</span>
+              </div>
+            ) : documentos.length === 0 ? (
+              <div className="rounded-3xl border border-neutral-50 bg-neutral-50/20 p-12 text-center">
+                <div className="text-3xl mb-4 opacity-20">📂</div>
+                <p className="text-sm font-medium text-neutral-400">No hay documentos configurados.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {documentos.map((doc, index) => (
+                  <div
+                    key={index}
+                    className="rounded-2xl border border-neutral-100 bg-white p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-neutral-50 flex items-center justify-center text-rose-500 font-black text-xs border border-neutral-100">
+                        PDF
+                      </div>
+                      <div>
+                        <div className="text-sm font-black text-obsidian tracking-tight line-clamp-1">{doc.nombre}</div>
+                        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">
+                          {formatSize(doc.size)} · {new Date(doc.uploaded_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-neutral-100 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:bg-neutral-50 transition"
+                      >
+                        Ver
+                      </a>
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="h-9 w-9 rounded-xl border border-rose-100 text-rose-500 flex items-center justify-center hover:bg-rose-50 transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-[32px] border border-blue-100 bg-blue-50/50 p-6 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-2xl shadow-sm shrink-0">
+              💡
+            </div>
+            <p className="text-sm font-medium text-blue-700 leading-relaxed">
+              Los documentos se enviarán <strong>automáticamente</strong> adjuntos en el correo de bienvenida de cada nuevo empleado. Recomendamos subir el reglamento interno, contratos o protocolos de operación.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { key: "empleados", label: "Equipo", icon: <Users className="h-4 w-4" /> },
   { key: "roles",     label: "Roles",     icon: <Shield className="h-4 w-4" /> },
   { key: "horarios",  label: "Horarios",  icon: <Clock className="h-4 w-4" /> },
+  { key: "documentos", label: "Documentos", icon: <FileText className="h-4 w-4" /> },
   { key: "tarifas",   label: "Nómina",   icon: <DollarSign className="h-4 w-4" /> },
   { key: "modulos",   label: "Capacidades",   icon: <Blocks className="h-4 w-4" /> },
   { key: "red",       label: "Seguridad",       icon: <Wifi className="h-4 w-4" /> },
@@ -474,6 +668,7 @@ export default function ConfiguracionPage() {
         {tab === "roles"     && <RolesTab />}
         {tab === "tarifas"   && <TarifasTab />}
         {tab === "horarios"  && <HorariosTab />}
+        {tab === "documentos" && <DocumentosTab />}
         {tab === "actividad" && <ActividadTab />}
         {tab === "modulos"   && <ModulosTab />}
         {tab === "red"       && <RedTab />}
