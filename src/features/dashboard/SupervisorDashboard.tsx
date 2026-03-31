@@ -3,6 +3,7 @@ import { getSupervisorDashboard } from "./api";
 import type { SupervisorDashData, EmployeeWorkload } from "./types";
 import type { Task } from "@/features/tasks/types";
 import { assignTask, listTasks, approveAssignment, rejectAssignment } from "@/features/tasks/api";
+import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   Users, Star, Eye, CheckCircle2, XCircle,
   ChevronDown, ChevronUp, ChevronRight, Zap,
@@ -249,18 +250,23 @@ export function AssignTaskModal({
 
 export function OpenTasksPanel({
   onTaskClick,
+  onNewTask,
+  refreshKey = 0,
 }: {
   onTaskClick: (task: { id: string; title: string }) => void;
+  onNewTask?: () => void;
+  refreshKey?: number;
 }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     listTasks({ status: "open", page: 1 })
       .then(res => setTasks(res.data ?? []))
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   return (
     <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
@@ -269,11 +275,22 @@ export function OpenTasksPanel({
           <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Abiertas</h2>
           <p className="text-xs text-neutral-400 mt-0.5">Clic en una tarea para asignarla</p>
         </div>
-        {!loading && tasks.length > 0 && (
-          <span className="h-7 px-2.5 rounded-full bg-blue-50 text-blue-600 text-xs font-black flex items-center justify-center">
-            {tasks.length}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!loading && tasks.length > 0 && (
+            <span className="h-7 px-2.5 rounded-full bg-blue-50 text-blue-600 text-xs font-black flex items-center justify-center">
+              {tasks.length}
+            </span>
+          )}
+          {onNewTask && (
+            <button
+              onClick={onNewTask}
+              className="h-8 px-3 rounded-xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-1.5"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nueva Tarea
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -282,9 +299,18 @@ export function OpenTasksPanel({
         </div>
       ) : tasks.length === 0 ? (
         <div className="py-10 text-center">
-          <CheckCircle2 className="h-8 w-8 text-emerald-200 mx-auto mb-2" />
+          <ClipboardList className="h-8 w-8 text-neutral-200 mx-auto mb-3" />
           <p className="text-sm font-bold text-neutral-300">No hay tareas abiertas</p>
-          <p className="text-xs text-neutral-300">Todas las tareas están asignadas o completadas</p>
+          <p className="text-xs text-neutral-300 mb-4">Crea una nueva tarea para comenzar a asignar</p>
+          {onNewTask && (
+            <button
+              onClick={onNewTask}
+              className="h-9 px-5 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition inline-flex items-center gap-2"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Crear primera tarea
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
@@ -329,19 +355,25 @@ export function OpenTasksPanel({
 
 export function AvailableTasksPanel({
   onAssign,
+  onNewTask,
+  refreshKey = 0,
 }: {
   onAssign: (tasks: { id: string; title: string }[]) => void;
+  onNewTask?: () => void;
+  refreshKey?: number;
 }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    setLoading(true);
+    setSelected(new Set());
     listTasks({ status: "open", page: 1 })
       .then(res => setTasks(res.data ?? []))
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   function toggleTask(id: string) {
     setSelected(prev => {
@@ -366,15 +398,25 @@ export function AvailableTasksPanel({
           <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Disponibles</h2>
           <p className="text-xs text-neutral-400 mt-0.5">Selecciona una o varias para asignar</p>
         </div>
-        {selected.size > 0 && (
-          <button
-            onClick={handleAssign}
-            className="h-9 px-4 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-2"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Asignar ({selected.size})
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {selected.size > 0 ? (
+            <button
+              onClick={handleAssign}
+              className="h-9 px-4 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-2"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Asignar ({selected.size})
+            </button>
+          ) : onNewTask ? (
+            <button
+              onClick={onNewTask}
+              className="h-8 px-3 rounded-xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-1.5"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nueva
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {loading ? (
@@ -383,8 +425,18 @@ export function AvailableTasksPanel({
         </div>
       ) : tasks.length === 0 ? (
         <div className="py-8 text-center">
-          <CheckCircle2 className="h-8 w-8 text-emerald-200 mx-auto mb-2" />
-          <p className="text-sm font-bold text-neutral-300">Sin tareas disponibles</p>
+          <ClipboardList className="h-10 w-10 text-neutral-200 mx-auto mb-3" />
+          <p className="text-sm font-bold text-neutral-300 mb-1">Sin tareas disponibles</p>
+          <p className="text-xs text-neutral-300 mb-4">Crea una tarea rápida o desde el catálogo</p>
+          {onNewTask && (
+            <button
+              onClick={onNewTask}
+              className="h-9 px-5 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition inline-flex items-center gap-2"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nueva Tarea
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
@@ -684,6 +736,8 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
   const [modal, setModal] = useState<{ open: boolean; tasks: { id: string; title: string }[] }>({
     open: false, tasks: [],
   });
+  const [showNewTask, setShowNewTask] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   function reload() {
     setLoading(true);
@@ -697,6 +751,12 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
 
   function openModal(tasks: { id: string; title: string }[]) {
     setModal({ open: true, tasks });
+  }
+
+  function handleNewTaskDone() {
+    setShowNewTask(false);
+    setRefreshKey(k => k + 1);
+    reload();
   }
 
   if (loading) return <LoadingSpinner />;
@@ -732,11 +792,19 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       </div>
 
       {/* 3 · Tareas Abiertas (full width) */}
-      <OpenTasksPanel onTaskClick={t => openModal([t])} />
+      <OpenTasksPanel
+        onTaskClick={t => openModal([t])}
+        onNewTask={() => setShowNewTask(true)}
+        refreshKey={refreshKey}
+      />
 
       {/* 4 · Disponibles + Carga */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AvailableTasksPanel onAssign={tasks => openModal(tasks)} />
+        <AvailableTasksPanel
+          onAssign={tasks => openModal(tasks)}
+          onNewTask={() => setShowNewTask(true)}
+          refreshKey={refreshKey}
+        />
         <WorkloadCard workload={data.workload} />
       </div>
 
@@ -745,7 +813,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
         <PendingReviewCard items={data.pending_review} onRefresh={reload} />
       )}
 
-      {/* Modal */}
+      {/* Modal asignar empleado */}
       {modal.open && (
         <AssignTaskModal
           tasks={modal.tasks}
@@ -753,8 +821,17 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
           onClose={() => setModal({ open: false, tasks: [] })}
           onAssigned={() => {
             setModal({ open: false, tasks: [] });
+            setRefreshKey(k => k + 1);
             reload();
           }}
+        />
+      )}
+
+      {/* Modal nueva tarea */}
+      {showNewTask && (
+        <TaskCatalogPanel
+          onAssigned={handleNewTaskDone}
+          onClose={() => setShowNewTask(false)}
         />
       )}
     </div>

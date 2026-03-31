@@ -11,6 +11,7 @@ import {
   WorkloadCard,
 } from "./SupervisorDashboard";
 import SupervisorDashboard from "./SupervisorDashboard";
+import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   AlertTriangle, CheckCircle2, Clock, ClipboardList,
   Activity, Zap, ChevronRight, ArrowUpRight, ArrowDownRight,
@@ -104,6 +105,8 @@ function AdminDashboard() {
   const [modal, setModal] = useState<{ open: boolean; tasks: { id: string; title: string }[] }>({
     open: false, tasks: [],
   });
+  const [showNewTask, setShowNewTask] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -131,6 +134,11 @@ function AdminDashboard() {
 
   function openModal(tasks: { id: string; title: string }[]) {
     setModal({ open: true, tasks });
+  }
+
+  function handleNewTaskDone() {
+    setShowNewTask(false);
+    setRefreshKey(k => k + 1);
   }
 
   const k = data?.kpi ?? {};
@@ -190,11 +198,19 @@ function AdminDashboard() {
       </div>
 
       {/* 3 · Tareas Abiertas (full width) */}
-      <OpenTasksPanel onTaskClick={t => openModal([t])} />
+      <OpenTasksPanel
+        onTaskClick={t => openModal([t])}
+        onNewTask={() => setShowNewTask(true)}
+        refreshKey={refreshKey}
+      />
 
       {/* 4 · Disponibles + Carga */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AvailableTasksPanel onAssign={tasks => openModal(tasks)} />
+        <AvailableTasksPanel
+          onAssign={tasks => openModal(tasks)}
+          onNewTask={() => setShowNewTask(true)}
+          refreshKey={refreshKey}
+        />
         <WorkloadCard workload={workload} />
       </div>
 
@@ -272,7 +288,7 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal asignar empleado */}
       {modal.open && (
         <AssignTaskModal
           tasks={modal.tasks}
@@ -280,8 +296,17 @@ function AdminDashboard() {
           onClose={() => setModal({ open: false, tasks: [] })}
           onAssigned={() => {
             setModal({ open: false, tasks: [] });
+            setRefreshKey(k => k + 1);
             getSupervisorDashboard().then(r => setWorkload(r.workload ?? []));
           }}
+        />
+      )}
+
+      {/* Modal nueva tarea */}
+      {showNewTask && (
+        <TaskCatalogPanel
+          onAssigned={handleNewTaskDone}
+          onClose={() => setShowNewTask(false)}
         />
       )}
     </div>
