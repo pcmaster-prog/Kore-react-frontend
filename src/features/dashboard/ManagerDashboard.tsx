@@ -1,8 +1,8 @@
-// src/features/dashboard/ManagerDashboard.tsx
 import { useEffect, useState } from "react";
 import api from "@/lib/http";
 import { listPendingApprovals } from "@/features/tasks/api";
 import { auth } from "@/features/auth/store";
+import SupervisorDashboard from "./SupervisorDashboard";
 import {
   AlertTriangle, CheckCircle2, Clock,
   ClipboardList,
@@ -86,7 +86,7 @@ function StatCard({ label, value, trend, trendType, icon: Icon, colorClass, sub 
 }
 
 // ─── Dashboard principal ──────────────────────────────────────────────────────
-export default function ManagerDashboard() {
+function AdminDashboard() {
   const { user } = auth.get();
   const userName = user?.name?.split(" ")[0] ?? "Usuario";
   const [data, setData] = useState<ManagerDash | null>(null);
@@ -300,4 +300,16 @@ export default function ManagerDashboard() {
       </div>
     </div>
   );
+}
+
+export default function ManagerDashboard() {
+  const { user } = auth.get();
+  const isSupervisor = user?.role === 'supervisor';
+  const userName = user?.name?.split(" ")[0] ?? "Usuario";
+
+  if (isSupervisor) {
+    return <SupervisorDashboard userName={userName} />;
+  }
+
+  return <AdminDashboard />;
 }
