@@ -430,8 +430,16 @@ export function OpenTasksPanel({
 
   useEffect(() => {
     setLoading(true);
-    listTasks({ status: "open,in_progress", page: 1 })
-      .then(res => setTasks(res.data ?? []))
+    Promise.all([
+      listTasks({ status: "open", page: 1 }).catch(() => ({ data: [] })),
+      listTasks({ status: "in_progress", page: 1 }).catch(() => ({ data: [] }))
+    ])
+      .then(([openRes, inProgRes]) => {
+        const combined = [...(openRes.data ?? []), ...(inProgRes.data ?? [])];
+        // Sort by created_at descending just in case
+        combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setTasks(combined);
+      })
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
   }, [refreshKey]);
