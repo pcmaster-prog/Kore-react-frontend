@@ -36,35 +36,9 @@ type AttendanceSnap = {
 type ManagerDash = {
   kpi?: { open?: number; in_progress?: number; completed?: number; overdue?: number };
   today?: { open?: number; in_progress?: number; completed?: number };
-  activity?: { id: string; action: string; created_at: string; meta?: any }[];
   attendance?: AttendanceSnap;
 };
 
-function readableAction(action: string, meta?: any): string {
-  const m = meta ?? {};
-  switch (action) {
-    case "task.bulk_created":   return `Tareas creadas${m.task_title ? `: ${m.task_title}` : ""}`;
-    case "task.bulk_reused":    return `Rutina reutilizada${m.task_title ? `: ${m.task_title}` : ""}`;
-    case "task.status_changed": {
-      const s: Record<string, string> = { completed: "Completada", in_progress: "En progreso", open: "Abierta" };
-      return m.task_title ? `${m.task_title} → ${s[m.to] ?? m.to}` : `Estado cambiado → ${s[m.to] ?? m.to}`;
-    }
-    case "evidence.uploaded":   return `Evidencia subida${m.task_title ? `: ${m.task_title}` : ""}`;
-    case "attendance.check_in": return `Entrada: ${m.employee_name ?? "Empleado"}`;
-    case "attendance.check_out":return `Salida: ${m.employee_name ?? "Empleado"}`;
-    default: return action.replace(/\./g, " · ").replace(/_/g, " ");
-  }
-}
-
-function actionIcon(action: string): React.ReactNode {
-  if (action.startsWith("attendance.check_in"))  return <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><ArrowUpRight className="h-4 w-4" /></div>;
-  if (action.startsWith("attendance.check_out")) return <div className="h-9 w-9 rounded-xl bg-neutral-50 text-neutral-400 flex items-center justify-center"><ArrowDownRight className="h-4 w-4" /></div>;
-  if (action.includes("completed"))              return <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><CheckCircle2 className="h-4 w-4" /></div>;
-  if (action.includes("evidence"))               return <div className="h-9 w-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><Activity className="h-4 w-4" /></div>;
-  if (action.includes("bulk_created"))           return <div className="h-9 w-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><ClipboardList className="h-4 w-4" /></div>;
-  if (action.includes("reused"))                 return <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><Zap className="h-4 w-4" /></div>;
-  return <div className="h-9 w-9 rounded-xl bg-neutral-50 text-neutral-400 flex items-center justify-center"><Activity className="h-4 w-4" /></div>;
-}
 
 function StatCard({ label, value, trend, trendType, icon: Icon, colorClass, sub }: any) {
   return (
