@@ -6,10 +6,12 @@ import { getSupervisorDashboard } from "./api";
 import type { EmployeeWorkload } from "./types";
 import {
   AssignTaskModal,
+  AssignTemplateModal,
   OpenTasksPanel,
   AvailableTasksPanel,
   WorkloadCard,
 } from "./SupervisorDashboard";
+import type { Template } from "@/features/tasks/catalog/api";
 import SupervisorDashboard from "./SupervisorDashboard";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
@@ -104,6 +106,9 @@ function AdminDashboard() {
   const [workload, setWorkload] = useState<EmployeeWorkload[]>([]);
   const [modal, setModal] = useState<{ open: boolean; tasks: { id: string; title: string }[] }>({
     open: false, tasks: [],
+  });
+  const [templateModal, setTemplateModal] = useState<{ open: boolean; templates: Template[] }>({
+    open: false, templates: [],
   });
   const [showNewTask, setShowNewTask] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -207,9 +212,8 @@ function AdminDashboard() {
       {/* 4 · Disponibles + Carga */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AvailableTasksPanel
-          onAssign={tasks => openModal(tasks)}
+          onAssignTemplates={templates => setTemplateModal({ open: true, templates })}
           onNewTask={() => setShowNewTask(true)}
-          refreshKey={refreshKey}
         />
         <WorkloadCard workload={workload} />
       </div>
@@ -296,6 +300,20 @@ function AdminDashboard() {
           onClose={() => setModal({ open: false, tasks: [] })}
           onAssigned={() => {
             setModal({ open: false, tasks: [] });
+            setRefreshKey(k => k + 1);
+            getSupervisorDashboard().then(r => setWorkload(r.workload ?? []));
+          }}
+        />
+      )}
+
+      {/* Modal asignar plantilla(s) */}
+      {templateModal.open && (
+        <AssignTemplateModal
+          templates={templateModal.templates}
+          workload={workload}
+          onClose={() => setTemplateModal({ open: false, templates: [] })}
+          onAssigned={() => {
+            setTemplateModal({ open: false, templates: [] });
             setRefreshKey(k => k + 1);
             getSupervisorDashboard().then(r => setWorkload(r.workload ?? []));
           }}

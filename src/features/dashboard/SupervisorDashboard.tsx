@@ -3,6 +3,8 @@ import { getSupervisorDashboard } from "./api";
 import type { SupervisorDashData, EmployeeWorkload } from "./types";
 import type { Task } from "@/features/tasks/types";
 import { assignTask, listTasks, approveAssignment, rejectAssignment } from "@/features/tasks/api";
+import { listTemplates, bulkCreateFromCatalog } from "@/features/tasks/catalog/api";
+import type { Template } from "@/features/tasks/catalog/api";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   Users, Star, Eye, CheckCircle2, XCircle,
@@ -246,6 +248,172 @@ export function AssignTaskModal({
   );
 }
 
+// ─── Assign Template Modal ───────────────────────────────────────────────────
+// Crea tareas desde plantillas y las asigna con bulkCreateFromCatalog
+
+export function AssignTemplateModal({
+  templates,
+  workload,
+  onClose,
+  onAssigned,
+}: {
+  templates: Template[];
+  workload: EmployeeWorkload[];
+  onClose: () => void;
+  onAssigned: () => void;
+}) {
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [assigning, setAssigning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const filteredWorkload = workload
+    .filter(e => e.full_name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.total_minutes - b.total_minutes);
+
+  function toggleEmployee(id: string) {
+    setSelectedEmployees(prev =>
+      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
+    );
+  }
+
+  async function handleAssign() {
+    if (selectedEmployees.length === 0) return;
+    setAssigning(true);
+    setError(null);
+    try {
+      await bulkCreateFromCatalog({
+        date: today,
+        template_ids: templates.map(t => t.id),
+        empleado_ids: selectedEmployees,
+        allow_duplicate: true,
+      });
+      onAssigned();
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? "Error al asignar");
+    } finally {
+      setAssigning(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl max-h-[88vh] flex flex-col">
+
+        {/* Header */}
+        <div className="px-7 pt-7 pb-5 border-b border-neutral-100">
+          <h2 className="text-lg font-black text-obsidian">Asignar Plantilla</h2>
+          {templates.length === 1 ? (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-sm font-bold text-obsidian truncate">{templates[0].title}</span>
+              {templates[0].priority && (
+                <span className={cx(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                  PRIORITY_COLORS[templates[0].priority] ?? PRIORITY_COLORS.medium
+                )}>
+                  {templates[0].priority}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="mt-2">
+              <p className="text-sm font-bold text-obsidian">{templates.length} plantillas seleccionadas</p>
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {templates.slice(0, 4).map(t => (
+                  <span key={t.id} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-obsidian/5 text-obsidian/60 border border-obsidian/10 truncate max-w-[140px]">
+                    {t.title}
+                  </span>
+                ))}
+                {templates.length > 4 && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-400">
+                    +{templates.length - 4} más
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Search */}
+        <div className="px-7 pt-5 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+            <input
+              type="text"
+              placeholder="Buscar empleado..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full h-10 pl-9 pr-3 rounded-xl border border-neutral-200 text-sm outline-none focus:ring-2 focus:ring-obsidian/10 bg-neutral-50/50"
+            />
+          </div>
+        </div>
+
+        {/* Employee list */}
+        <div className="flex-1 overflow-y-auto px-7 pb-4 space-y-2">
+          {filteredWorkload.length === 0 ? (
+            <div className="py-8 text-center text-sm text-neutral-300 font-bold">Sin empleados disponibles</div>
+          ) : (
+            filteredWorkload.map(emp => (
+              <div
+                key={emp.empleado_id}
+                onClick={() => toggleEmployee(emp.empleado_id)}
+                className={cx(
+                  "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
+                  selectedEmployees.includes(emp.empleado_id)
+                    ? "border-obsidian bg-obsidian/5"
+                    : "border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50"
+                )}
+              >
+                <div className={cx(
+                  "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
+                  selectedEmployees.includes(emp.empleado_id) ? "bg-obsidian border-obsidian" : "border-neutral-300"
+                )}>
+                  {selectedEmployees.includes(emp.empleado_id) && <CheckCircle2 className="h-3 w-3 text-white" />}
+                </div>
+                <div className="h-9 w-9 rounded-xl bg-obsidian text-white flex items-center justify-center text-xs font-black shrink-0">
+                  {emp.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-obsidian truncate">{emp.full_name}</div>
+                  <div className="text-xs text-neutral-400">
+                    {emp.task_count} tarea{emp.task_count !== 1 ? "s" : ""} · {emp.total_hours}h asignadas
+                  </div>
+                </div>
+                <span className={cx(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
+                  WORKLOAD_BADGE[emp.workload_level]
+                )}>
+                  {emp.workload_level}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+
+        {error && (
+          <p className="px-7 pb-2 text-xs text-rose-500 font-bold">{error}</p>
+        )}
+
+        {/* Footer */}
+        <div className="px-7 pb-7 pt-4 border-t border-neutral-100 flex gap-3">
+          <button onClick={onClose} className="flex-1 h-12 rounded-2xl border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition">
+            Cancelar
+          </button>
+          <button
+            onClick={handleAssign}
+            disabled={selectedEmployees.length === 0 || assigning}
+            className="flex-1 h-12 rounded-2xl bg-obsidian text-white text-sm font-bold hover:bg-gold transition disabled:opacity-40"
+          >
+            {assigning ? "Asignando..." : `Asignar a ${selectedEmployees.length || ""} empleado${selectedEmployees.length !== 1 ? "s" : ""}`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Open Tasks Panel ────────────────────────────────────────────────────────
 
 export function OpenTasksPanel({
@@ -353,29 +521,28 @@ export function OpenTasksPanel({
 
 // ─── Available Tasks Panel (checkboxes) ─────────────────────────────────────
 
+// Muestra PLANTILLAS (templates) — siempre disponibles independientemente del estado de las tareas
 export function AvailableTasksPanel({
-  onAssign,
+  onAssignTemplates,
   onNewTask,
-  refreshKey = 0,
 }: {
-  onAssign: (tasks: { id: string; title: string }[]) => void;
+  onAssignTemplates: (templates: Template[]) => void;
   onNewTask?: () => void;
-  refreshKey?: number;
 }) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    setSelected(new Set());
-    listTasks({ status: "open", page: 1 })
-      .then(res => setTasks(res.data ?? []))
-      .catch(() => setTasks([]))
+    listTemplates({ active: true })
+      .then(res => setTemplates(res.data ?? []))
+      .catch(() => setTemplates([]))
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, []);
 
-  function toggleTask(id: string) {
+  function toggleTemplate(id: string) {
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -385,21 +552,24 @@ export function AvailableTasksPanel({
   }
 
   function handleAssign() {
-    const selectedTasks = tasks
-      .filter(t => selected.has(t.id))
-      .map(t => ({ id: t.id, title: t.title }));
-    if (selectedTasks.length > 0) onAssign(selectedTasks);
+    const sel = templates.filter(t => selected.has(t.id));
+    if (sel.length > 0) onAssignTemplates(sel);
   }
+
+  const filtered = templates.filter(t =>
+    t.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Disponibles</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Selecciona una o varias para asignar</p>
+          <p className="text-xs text-neutral-400 mt-0.5">Plantillas — selecciona para asignar a empleados</p>
         </div>
         <div className="flex items-center gap-2">
-          {selected.size > 0 ? (
+          {selected.size > 0 && (
             <button
               onClick={handleAssign}
               className="h-9 px-4 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-2"
@@ -407,43 +577,53 @@ export function AvailableTasksPanel({
               <Plus className="h-3.5 w-3.5" />
               Asignar ({selected.size})
             </button>
-          ) : onNewTask ? (
+          )}
+          {onNewTask && (
             <button
               onClick={onNewTask}
-              className="h-8 px-3 rounded-xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-1.5"
+              className="h-8 px-3 rounded-xl border border-neutral-200 text-obsidian text-xs font-bold hover:bg-neutral-50 transition flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               Nueva
             </button>
-          ) : null}
+          )}
         </div>
       </div>
+
+      {/* Search */}
+      {!loading && templates.length > 3 && (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-300" />
+          <input
+            type="text"
+            placeholder="Buscar plantilla..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full h-9 pl-8 pr-3 rounded-xl border border-neutral-200 text-xs outline-none focus:ring-2 focus:ring-obsidian/10 bg-neutral-50/50"
+          />
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-12 bg-neutral-100 rounded-2xl animate-pulse" />)}
         </div>
-      ) : tasks.length === 0 ? (
+      ) : templates.length === 0 ? (
         <div className="py-8 text-center">
           <ClipboardList className="h-10 w-10 text-neutral-200 mx-auto mb-3" />
-          <p className="text-sm font-bold text-neutral-300 mb-1">Sin tareas disponibles</p>
-          <p className="text-xs text-neutral-300 mb-4">Crea una tarea rápida o desde el catálogo</p>
-          {onNewTask && (
-            <button
-              onClick={onNewTask}
-              className="h-9 px-5 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition inline-flex items-center gap-2"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Nueva Tarea
-            </button>
-          )}
+          <p className="text-sm font-bold text-neutral-300 mb-1">Sin plantillas configuradas</p>
+          <p className="text-xs text-neutral-300 mb-4">Ve a Catálogo para crear plantillas de tareas</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="py-6 text-center">
+          <p className="text-sm text-neutral-300">Sin resultados para "{search}"</p>
         </div>
       ) : (
         <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-          {tasks.map(t => (
+          {filtered.map(t => (
             <div
               key={t.id}
-              onClick={() => toggleTask(t.id)}
+              onClick={() => toggleTemplate(t.id)}
               className={cx(
                 "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                 selected.has(t.id)
@@ -460,13 +640,8 @@ export function AvailableTasksPanel({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-obsidian truncate">{t.title}</div>
-                {t.due_at && (
-                  <div className="text-xs text-neutral-400">
-                    Vence:{" "}
-                    {new Date(t.due_at).toLocaleDateString("es-MX", {
-                      day: "numeric", month: "short",
-                    })}
-                  </div>
+                {t.estimated_minutes && (
+                  <div className="text-xs text-neutral-400">⏱ {t.estimated_minutes} min</div>
                 )}
               </div>
               {t.priority && (
@@ -736,6 +911,9 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
   const [modal, setModal] = useState<{ open: boolean; tasks: { id: string; title: string }[] }>({
     open: false, tasks: [],
   });
+  const [templateModal, setTemplateModal] = useState<{ open: boolean; templates: Template[] }>({
+    open: false, templates: [],
+  });
   const [showNewTask, setShowNewTask] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -801,9 +979,8 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       {/* 4 · Disponibles + Carga */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AvailableTasksPanel
-          onAssign={tasks => openModal(tasks)}
+          onAssignTemplates={templates => setTemplateModal({ open: true, templates })}
           onNewTask={() => setShowNewTask(true)}
-          refreshKey={refreshKey}
         />
         <WorkloadCard workload={data.workload} />
       </div>
@@ -821,6 +998,20 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
           onClose={() => setModal({ open: false, tasks: [] })}
           onAssigned={() => {
             setModal({ open: false, tasks: [] });
+            setRefreshKey(k => k + 1);
+            reload();
+          }}
+        />
+      )}
+
+      {/* Modal asignar plantilla(s) */}
+      {templateModal.open && (
+        <AssignTemplateModal
+          templates={templateModal.templates}
+          workload={data.workload}
+          onClose={() => setTemplateModal({ open: false, templates: [] })}
+          onAssigned={() => {
+            setTemplateModal({ open: false, templates: [] });
             setRefreshKey(k => k + 1);
             reload();
           }}
