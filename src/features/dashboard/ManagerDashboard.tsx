@@ -16,7 +16,7 @@ import SupervisorDashboard from "./SupervisorDashboard";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   AlertTriangle, CheckCircle2, Clock, ClipboardList,
-  Activity, Zap, ChevronRight, ArrowUpRight, ArrowDownRight,
+  ArrowUpRight, ArrowDownRight,
   TrendingUp,
 } from "lucide-react";
 
@@ -102,7 +102,6 @@ function AdminDashboard() {
   const [pending, setPending] = useState(0);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [showAllActivity, setShowAllActivity] = useState(false);
   const [workload, setWorkload] = useState<EmployeeWorkload[]>([]);
   const [modal, setModal] = useState<{ open: boolean; tasks: { id: string; title: string }[] }>({
     open: false, tasks: [],
@@ -218,79 +217,35 @@ function AdminDashboard() {
         <WorkloadCard workload={workload} />
       </div>
 
-      {/* 5 · Actividad + Asistencia */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activity */}
-        <div className="lg:col-span-2 bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
-          <div className="mb-6">
-            <h2 className="text-xl font-black text-obsidian tracking-tight">Actividad del Turno</h2>
-            <p className="text-[11px] font-bold text-neutral-400 mt-1 uppercase tracking-widest">Tiempo Real</p>
+      {/* 5 · Asistencia */}
+      {data?.attendance && (
+        <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 max-w-sm">
+          <h3 className="text-lg font-black text-obsidian tracking-tight mb-5">Asistencia Hoy</h3>
+          <div className="flex items-end justify-between mb-3">
+            <div className="text-4xl font-black text-obsidian">{data.attendance.checked_in}</div>
+            <div className="text-xs font-bold text-neutral-400 uppercase pb-1">de {data.attendance.employees_total} Staff</div>
           </div>
-          <div className="divide-y divide-neutral-50">
-            {data?.activity?.length ? (
-              data.activity.slice(0, showAllActivity ? undefined : 5).map(a => (
-                <div key={a.id} className="flex items-center gap-4 py-3.5 group cursor-pointer">
-                  {actionIcon(a.action)}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-obsidian truncate group-hover:text-gold transition-colors">
-                      {readableAction(a.action, a.meta)}
-                    </div>
-                    <div className="text-[11px] font-medium text-neutral-400 mt-0.5">
-                      {new Date(a.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-neutral-400 transition-colors" />
-                </div>
-              ))
-            ) : (
-              <div className="py-10 text-center">
-                <Zap className="h-8 w-8 text-neutral-100 mx-auto mb-2" />
-                <p className="text-xs font-bold text-neutral-300 uppercase tracking-widest">Sin actividad reciente</p>
-              </div>
-            )}
+          <div className="h-2 w-full rounded-full bg-neutral-100 overflow-hidden flex gap-0.5 mb-5">
+            <div className="h-full bg-emerald-400" style={{ width: `${(data.attendance.open / data.attendance.employees_total) * 100}%` }} />
+            <div className="h-full bg-neutral-300" style={{ width: `${(data.attendance.closed / data.attendance.employees_total) * 100}%` }} />
+            <div className="h-full bg-rose-300"    style={{ width: `${(data.attendance.out / data.attendance.employees_total) * 100}%` }} />
           </div>
-          {data?.activity && data.activity.length > 5 && (
-            <button
-              onClick={() => setShowAllActivity(!showAllActivity)}
-              className="w-full mt-6 h-12 rounded-2xl bg-neutral-50 text-obsidian font-bold text-sm hover:bg-neutral-100 transition-all"
-            >
-              {showAllActivity ? "Ver Menos" : "Ver Todo el Registro"}
-            </button>
-          )}
-        </div>
-
-        {/* Attendance */}
-        <div className="space-y-6">
-          {data?.attendance && (
-            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
-              <h3 className="text-lg font-black text-obsidian tracking-tight mb-5">Asistencia Hoy</h3>
-              <div className="flex items-end justify-between mb-3">
-                <div className="text-4xl font-black text-obsidian">{data.attendance.checked_in}</div>
-                <div className="text-xs font-bold text-neutral-400 uppercase pb-1">de {data.attendance.employees_total} Staff</div>
-              </div>
-              <div className="h-2 w-full rounded-full bg-neutral-100 overflow-hidden flex gap-0.5 mb-5">
-                <div className="h-full bg-emerald-400" style={{ width: `${(data.attendance.open / data.attendance.employees_total) * 100}%` }} />
-                <div className="h-full bg-neutral-300" style={{ width: `${(data.attendance.closed / data.attendance.employees_total) * 100}%` }} />
-                <div className="h-full bg-rose-300"    style={{ width: `${(data.attendance.out / data.attendance.employees_total) * 100}%` }} />
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="text-center">
-                  <div className="text-sm font-bold text-emerald-600">{data.attendance.open}</div>
-                  <div className="text-[10px] font-medium text-neutral-400 uppercase">Turno</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-bold text-neutral-400">{data.attendance.closed}</div>
-                  <div className="text-[10px] font-medium text-neutral-400 uppercase">Fuera</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-bold text-rose-400">{data.attendance.out}</div>
-                  <div className="text-[10px] font-medium text-neutral-400 uppercase">Sin-E</div>
-                </div>
-              </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center">
+              <div className="text-sm font-bold text-emerald-600">{data.attendance.open}</div>
+              <div className="text-[10px] font-medium text-neutral-400 uppercase">Turno</div>
             </div>
-          )}
+            <div className="text-center">
+              <div className="text-sm font-bold text-neutral-400">{data.attendance.closed}</div>
+              <div className="text-[10px] font-medium text-neutral-400 uppercase">Fuera</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-bold text-rose-400">{data.attendance.out}</div>
+              <div className="text-[10px] font-medium text-neutral-400 uppercase">Sin-E</div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Modal asignar empleado */}
       {modal.open && (

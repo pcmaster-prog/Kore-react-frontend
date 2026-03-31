@@ -430,7 +430,7 @@ export function OpenTasksPanel({
 
   useEffect(() => {
     setLoading(true);
-    listTasks({ status: "open", page: 1 })
+    listTasks({ status: "open,in_progress", page: 1 })
       .then(res => setTasks(res.data ?? []))
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
