@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
 import { getSupervisorDashboard } from "./api";
 import type { SupervisorDashData, EmployeeWorkload } from "./types";
+import type { Task } from "@/features/tasks/types";
 import { assignTask, listTasks, approveAssignment, rejectAssignment } from "@/features/tasks/api";
 import {
   Users, Star, Eye, CheckCircle2, XCircle,
-  ChevronDown, ChevronUp, Zap, ClipboardList, Plus
+  ChevronDown, ChevronUp, ChevronRight, Zap, ClipboardList, Plus
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
 }
+
+const PRIORITY_COLORS: Record<string, string> = {
+  urgent: 'bg-rose-100 text-rose-700',
+  high:   'bg-orange-100 text-orange-700',
+  medium: 'bg-amber-100 text-amber-700',
+  low:    'bg-neutral-100 text-neutral-500',
+};
 
 function LoadingSpinner() {
   return (
@@ -54,22 +62,25 @@ function KpiCard({ label, value, color, icon }: {
   );
 }
 
-function AssignTaskModal({
+export function AssignTaskModal({
   workload,
   onClose,
   onAssigned,
+  preselectedTask,
 }: {
   workload: EmployeeWorkload[];
   onClose: () => void;
   onAssigned: () => void;
+  preselectedTask?: { id: string; title: string };
 }) {
   const [tasks, setTasks] = useState<any[]>([]);
-  const [selectedTask, setSelectedTask] = useState<string>('');
+  const [selectedTask, setSelectedTask] = useState<string>(preselectedTask?.id ?? '');
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!preselectedTask);
   const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
+    if (preselectedTask) return;
     listTasks({ status: 'open', page: 1 })
       .then(res => setTasks(res.data ?? []))
       .finally(() => setLoading(false));
@@ -103,7 +114,9 @@ function AssignTaskModal({
         <div className="px-8 pt-8 pb-6 border-b border-neutral-100">
           <h2 className="text-xl font-black text-obsidian">Asignar Tarea</h2>
           <p className="text-sm text-neutral-400 mt-1">
-            Selecciona la tarea y elige al empleado con menos carga
+            {preselectedTask
+              ? "Elige quién recibe esta tarea"
+              : "Selecciona la tarea y elige al empleado con menos carga"}
           </p>
         </div>
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
@@ -111,7 +124,11 @@ function AssignTaskModal({
             <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide mb-2 block">
               Tarea a asignar
             </label>
-            {loading ? (
+            {preselectedTask ? (
+              <div className="rounded-xl border border-neutral-100 p-3 bg-neutral-50">
+                <div className="text-sm font-bold text-obsidian">{preselectedTask.title}</div>
+              </div>
+            ) : loading ? (
               <div className="h-10 bg-neutral-100 rounded-xl animate-pulse" />
             ) : (
               <select
@@ -194,6 +211,85 @@ function AssignTaskModal({
   );
 }
 
+export function OpenTasksPanel({
+  onTaskClick,
+}: {
+  onTaskClick: (task: { id: string; title: string; priority?: string | null }) => void;
+}) {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    listTasks({ status: 'open', page: 1 })
+      .then(res => setTasks(res.data ?? []))
+      .catch(() => setTasks([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Abiertas</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Selecciona una tarea para asignarla</p>
+        </div>
+        {!loading && tasks.length > 0 && (
+          <span className="h-7 px-2.5 rounded-full bg-amber-100 text-amber-700 text-xs font-black flex items-center justify-center">
+            {tasks.length}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-14 bg-neutral-100 rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="py-10 text-center">
+          <CheckCircle2 className="h-8 w-8 text-emerald-200 mx-auto mb-2" />
+          <p className="text-sm font-bold text-neutral-300">No hay tareas abiertas</p>
+          <p className="text-xs text-neutral-300">Todas las tareas están en proceso o completadas</p>
+        </div>
+      ) : (
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+          {tasks.map((t) => (
+            <div
+              key={t.id}
+              onClick={() => onTaskClick({ id: t.id, title: t.title, priority: t.priority })}
+              className="flex items-center gap-3 p-4 rounded-2xl border border-neutral-100 cursor-pointer hover:border-obsidian/20 hover:bg-neutral-50 transition group"
+            >
+              <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <ClipboardList className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-obsidian truncate group-hover:text-obsidian">
+                  {t.title}
+                </div>
+                {t.due_at && (
+                  <div className="text-xs text-neutral-400 mt-0.5">
+                    Vence: {new Date(t.due_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                )}
+              </div>
+              {t.priority && (
+                <span className={cx(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                  PRIORITY_COLORS[t.priority] ?? PRIORITY_COLORS.medium
+                )}>
+                  {t.priority}
+                </span>
+              )}
+              <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-neutral-500 transition shrink-0" />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PendingReviewCard({
   items,
   onRefresh,
@@ -204,13 +300,6 @@ function PendingReviewCard({
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [rejectNote, setRejectNote] = useState('');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
-
-  const PRIORITY_COLORS: Record<string, string> = {
-    urgent: 'bg-rose-100 text-rose-700',
-    high:   'bg-orange-100 text-orange-700',
-    medium: 'bg-amber-100 text-amber-700',
-    low:    'bg-neutral-100 text-neutral-500',
-  };
 
   async function handleApprove(assignmentId: string) {
     setReviewingId(assignmentId);
@@ -506,6 +595,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
 
   return (
     <div className="space-y-8 animate-in-up">
+      {/* Header */}
       <div className="relative overflow-hidden bg-obsidian rounded-[40px] p-8 lg:p-10 text-white shadow-2xl shadow-obsidian/20">
         <div className="relative z-10">
           <div className="flex justify-between items-start">
@@ -535,6 +625,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
         <div className="absolute -top-16 -right-16 w-72 h-72 bg-white/5 rounded-full blur-[80px]" />
       </div>
 
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
           label="Pendientes revisión"
@@ -556,6 +647,12 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
         />
       </div>
 
+      {/* Open Tasks Panel */}
+      <OpenTasksPanel
+        onTaskClick={(task) => setAssignModal({ open: true, taskId: task.id, taskTitle: task.title })}
+      />
+
+      {/* Pending Review + Workload */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <PendingReviewCard
           items={data.pending_review}
@@ -572,6 +669,11 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       {assignModal.open && data && (
         <AssignTaskModal
           workload={data.workload}
+          preselectedTask={
+            assignModal.taskId
+              ? { id: assignModal.taskId, title: assignModal.taskTitle! }
+              : undefined
+          }
           onClose={() => setAssignModal({ open: false })}
           onAssigned={() => {
             setAssignModal({ open: false });

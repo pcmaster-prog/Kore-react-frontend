@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import api from "@/lib/http";
 import { listPendingApprovals } from "@/features/tasks/api";
 import { auth } from "@/features/auth/store";
+import { getSupervisorDashboard } from "./api";
+import type { EmployeeWorkload } from "./types";
+import { AssignTaskModal, OpenTasksPanel } from "./SupervisorDashboard";
 import SupervisorDashboard from "./SupervisorDashboard";
 import {
   AlertTriangle, CheckCircle2, Clock,
   ClipboardList,
   Activity,
   Zap, ChevronRight, ArrowUpRight, ArrowDownRight,
-  TrendingUp
+  TrendingUp, Plus
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -94,6 +97,12 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [showAllActivity, setShowAllActivity] = useState(false);
+  const [workload, setWorkload] = useState<EmployeeWorkload[]>([]);
+  const [assignModal, setAssignModal] = useState<{
+    open: boolean;
+    taskId?: string;
+    taskTitle?: string;
+  }>({ open: false });
 
   useEffect(() => {
     let alive = true;
@@ -110,6 +119,10 @@ function AdminDashboard() {
         const res = await listPendingApprovals({ page: 1 });
         if (alive) setPending(res?.total ?? res?.data?.length ?? 0);
       } catch { if (alive) setPending(0); }
+      try {
+        const wl = await getSupervisorDashboard();
+        if (alive) setWorkload(wl.workload ?? []);
+      } catch { if (alive) setWorkload([]); }
       if (alive) setLoading(false);
     })();
     return () => { alive = false; };
@@ -151,13 +164,19 @@ function AdminDashboard() {
             Control Operativo · {todayFull}
           </div>
           <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-4 leading-[1.1]">
-            Todo en orden, <span className="text-gold-light italic">{userName}</span>. 
+            Todo en orden, <span className="text-gold-light italic">{userName}</span>.
             <br />La operación fluye.
           </h1>
-          <p className="text-white/60 text-lg font-medium leading-relaxed max-w-lg mb-8">
+          <p className="text-white/60 text-lg font-medium leading-relaxed max-w-lg mb-6">
             Tienes <span className="text-white font-bold">{pending} aprobaciones</span> pendientes y el cumplimiento de tareas hoy está al <span className="text-white font-bold">{Math.round(((t.completed ?? 0) / ((t.open ?? 0) + (t.in_progress ?? 0) + (t.completed ?? 0) || 1)) * 100)}%</span>.
           </p>
-          
+          <button
+            onClick={() => setAssignModal({ open: true })}
+            className="h-10 px-5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Asignar tarea
+          </button>
         </div>
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-gold/10 rounded-full blur-[100px]" />
@@ -165,35 +184,40 @@ function AdminDashboard() {
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          label="Abiertas" 
-          value={k.open ?? 0} 
+        <StatCard
+          label="Abiertas"
+          value={k.open ?? 0}
           trend="Estable" trendType="none"
           icon={ClipboardList} colorClass="bg-blue-50 text-blue-600"
           sub="Tareas pendientes"
         />
-        <StatCard 
-          label="En Proceso" 
-          value={k.in_progress ?? 0} 
+        <StatCard
+          label="En Proceso"
+          value={k.in_progress ?? 0}
           trend="+2" trendType="up"
           icon={Clock} colorClass="bg-amber-50 text-amber-600"
           sub="Ejecutándose ahora"
         />
-        <StatCard 
-          label="Completadas" 
-          value={k.completed ?? 0} 
+        <StatCard
+          label="Completadas"
+          value={k.completed ?? 0}
           trend="+12%" trendType="up"
           icon={CheckCircle2} colorClass="bg-emerald-50 text-emerald-600"
           sub="Total este mes"
         />
-        <StatCard 
-          label="Vencidas" 
-          value={overdue} 
+        <StatCard
+          label="Vencidas"
+          value={overdue}
           trend="-3" trendType="down"
           icon={AlertTriangle} colorClass="bg-rose-50 text-rose-600"
           sub="Urgente atención"
         />
       </div>
+
+      {/* Open Tasks Panel */}
+      <OpenTasksPanel
+        onTaskClick={(task) => setAssignModal({ open: true, taskId: task.id, taskTitle: task.title })}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Activity */}
@@ -203,15 +227,6 @@ function AdminDashboard() {
               <h2 className="text-2xl font-black text-obsidian tracking-tight">Actividad del Turno</h2>
               <p className="text-[11px] font-bold text-neutral-400 mt-1 uppercase tracking-widest">Tiempo Real</p>
             </div>
-            {/* Proximanete botones de filtrado y descarga */}
-            {/* <div className="flex gap-2">
-              <button disabled className="h-10 w-10 rounded-xl bg-neutral-50/50 flex items-center justify-center text-neutral-400 opacity-50 cursor-not-allowed">
-                <Filter className="h-4 w-4" />
-              </button>
-              <button disabled className="h-10 w-10 rounded-xl bg-obsidian/50 text-white flex items-center justify-center opacity-50 cursor-not-allowed">
-                <Download className="h-4 w-4" />
-              </button>
-            </div> */}
           </div>
           <div className="divide-y divide-neutral-50">
             {data?.activity?.length ? (
@@ -237,8 +252,8 @@ function AdminDashboard() {
             )}
           </div>
           {data?.activity && data.activity.length > 6 && (
-            <button 
-              onClick={() => setShowAllActivity(!showAllActivity)} 
+            <button
+              onClick={() => setShowAllActivity(!showAllActivity)}
               className="w-full mt-8 h-14 rounded-2xl bg-neutral-50 text-obsidian font-bold text-sm tracking-tight hover:bg-neutral-100 transition-all"
             >
               {showAllActivity ? "Ver Menos" : "Ver Todo el Registro"}
@@ -277,27 +292,25 @@ function AdminDashboard() {
               </div>
             </div>
           )}
-
-          {/* Quick Actions / Support (Oculto temporalmente) */}
-          {/*
-          <div className="bg-gradient-to-br from-gold/10 to-gold-light/5 rounded-[40px] p-8 border border-gold/5 relative overflow-hidden group hover:border-gold/20 transition-all duration-500">
-             <div className="relative z-10">
-               <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-gold shadow-sm mb-6 group-hover:rotate-6 transition-transform">
-                 <ShoppingBag className="h-6 w-6" />
-               </div>
-               <h4 className="text-base font-black text-obsidian tracking-tight mb-2">Ayuda Corporativa</h4>
-               <p className="text-[12px] font-medium text-obsidian/50 leading-relaxed mb-6">
-                 ¿Necesitas soporte con reportes o facturación?
-               </p>
-               <button className="text-[13px] font-black text-gold hover:text-obsidian transition-colors inline-flex items-center gap-2">
-                 Contáctanos <ArrowUpRight className="h-4 w-4" />
-               </button>
-             </div>
-             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gold/5 rounded-full blur-2xl transition-colors" />
-          </div>
-          */}
         </div>
       </div>
+
+      {/* Assign Task Modal */}
+      {assignModal.open && (
+        <AssignTaskModal
+          workload={workload}
+          preselectedTask={
+            assignModal.taskId
+              ? { id: assignModal.taskId, title: assignModal.taskTitle! }
+              : undefined
+          }
+          onClose={() => setAssignModal({ open: false })}
+          onAssigned={() => {
+            setAssignModal({ open: false });
+            getSupervisorDashboard().then(r => setWorkload(r.workload ?? []));
+          }}
+        />
+      )}
     </div>
   );
 }
