@@ -20,6 +20,7 @@ export type Template = {
   priority: "low" | "medium" | "high" | "urgent";
   tags?: any;
   is_active: boolean;
+  show_in_dashboard?: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -59,7 +60,7 @@ function unwrapPaginated<T>(res: any): Paginated<T> {
 }
 
 // ───────── Templates ─────────
-export async function listTemplates(params: { page?: number; active?: boolean; search?: string } = {}) {
+export async function listTemplates(params: { page?: number; active?: boolean; search?: string; show_in_dashboard?: boolean } = {}) {
   const res = await api.get("/task-templates", { params });
   return unwrapPaginated<Template>(res);
 }

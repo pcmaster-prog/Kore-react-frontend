@@ -198,6 +198,7 @@ export default function TemplateModal({
   const [estimated, setEstimated] = useState<string>("");
   const [tags, setTags] = useState<string>("");
   const [isActive, setIsActive] = useState(true);
+  const [showInDashboard, setShowInDashboard] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -221,6 +222,7 @@ export default function TemplateModal({
     );
     setTags(initial?.tags ? JSON.stringify(initial.tags) : "");
     setIsActive(initial?.is_active ?? true);
+    setShowInDashboard(initial?.show_in_dashboard ?? false);
 
     // Detectar tipo de instructions
     const ins = initial?.instructions;
@@ -307,6 +309,7 @@ export default function TemplateModal({
         tags: parsedTags ?? null,
         instructions: instructionsPreview ?? null,
         is_active: isActive,
+        show_in_dashboard: showInDashboard,
       };
 
       await onSave(payload);
@@ -387,6 +390,22 @@ export default function TemplateModal({
               <option value="0">No</option>
             </select>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+          <input
+            type="checkbox"
+            id="showInDashboard"
+            checked={showInDashboard}
+            onChange={(e) => setShowInDashboard(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+          />
+          <label htmlFor="showInDashboard" className="text-sm font-bold text-obsidian cursor-pointer select-none">
+            📌 Mostrar rápido en Dashboard
+            <span className="block text-xs font-medium text-neutral-500 mt-0.5">
+              Si lo marcas, esta plantilla aparecerá automáticamente en las Tareas Disponibles del gerente.
+            </span>
+          </label>
         </div>
 
         <div>

@@ -430,15 +430,13 @@ export function OpenTasksPanel({
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      listTasks({ status: "open", page: 1 }).catch(() => ({ data: [] })),
-      listTasks({ status: "in_progress", page: 1 }).catch(() => ({ data: [] }))
-    ])
-      .then(([openRes, inProgRes]) => {
-        const combined = [...(openRes.data ?? []), ...(inProgRes.data ?? [])];
-        // Sort by created_at descending just in case
-        combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        setTasks(combined);
+    const today = new Date().toISOString().slice(0, 10);
+    listTasks({ status: "open,in_progress", date: today, page: 1 })
+      .then(res => {
+        const sorted = [...(res.data ?? [])].sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setTasks(sorted);
       })
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
@@ -544,7 +542,7 @@ export function AvailableTasksPanel({
 
   useEffect(() => {
     setLoading(true);
-    listTemplates({ active: true })
+    listTemplates({ active: true, show_in_dashboard: true })
       .then(res => setTemplates(res.data ?? []))
       .catch(() => setTemplates([]))
       .finally(() => setLoading(false));
