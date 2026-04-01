@@ -10,8 +10,11 @@ import {
   OpenTasksPanel,
   AvailableTasksPanel,
   WorkloadCard,
+  TaskDetailModal,
 } from "./SupervisorDashboard";
-import type { Template } from "@/features/tasks/catalog/api";
+import type { Template, Routine } from "@/features/tasks/catalog/api";
+import AssignRoutineModal from "@/features/tasks/catalog/AssignRoutineModal";
+import type { Task } from "@/features/tasks/types";
 import SupervisorDashboard from "./SupervisorDashboard";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
@@ -82,6 +85,10 @@ function AdminDashboard() {
   });
   const [templateModal, setTemplateModal] = useState<{ open: boolean; templates: Template[] }>({
     open: false, templates: [],
+  });
+  const [detailModal, setDetailModal] = useState<Task | null>(null);
+  const [routineModal, setRoutineModal] = useState<{ open: boolean; routine: Routine | null }>({
+    open: false, routine: null,
   });
   const [showNewTask, setShowNewTask] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -177,7 +184,13 @@ function AdminDashboard() {
 
       {/* 3 · Tareas Abiertas (full width) */}
       <OpenTasksPanel
-        onTaskClick={t => openModal([t])}
+        onTaskClick={t => {
+          if (t.assignees && t.assignees.length > 0) {
+            setDetailModal(t);
+          } else {
+            openModal([{ id: t.id, title: t.title }]);
+          }
+        }}
         onNewTask={() => setShowNewTask(true)}
         refreshKey={refreshKey}
       />
@@ -186,6 +199,7 @@ function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AvailableTasksPanel
           onAssignTemplates={templates => setTemplateModal({ open: true, templates })}
+          onAssignRoutine={routine => setRoutineModal({ open: true, routine })}
           onNewTask={() => setShowNewTask(true)}
         />
         <WorkloadCard workload={workload} />
@@ -221,6 +235,11 @@ function AdminDashboard() {
         </div>
       )}
 
+      {/* Modal Mostrar Detalles de Tarea Ya Asignada */}
+      {detailModal && (
+        <TaskDetailModal task={detailModal} onClose={() => setDetailModal(null)} />
+      )}
+
       {/* Modal asignar empleado */}
       {modal.open && (
         <AssignTaskModal
@@ -229,6 +248,22 @@ function AdminDashboard() {
           onClose={() => setModal({ open: false, tasks: [] })}
           onAssigned={() => {
             setModal({ open: false, tasks: [] });
+            setRefreshKey(k => k + 1);
+            getSupervisorDashboard().then(r => setWorkload(r.workload ?? []));
+          }}
+        />
+      )}
+
+      {/* Modal asignar rutina */}
+      {routineModal.open && routineModal.routine && (
+        <AssignRoutineModal
+          open={routineModal.open}
+          routineName={routineModal.routine.name}
+          onClose={() => setRoutineModal({ open: false, routine: null })}
+          onAssign={async (payload) => {
+            const { assignRoutine } = await import("@/features/tasks/catalog/api");
+            await assignRoutine(routineModal.routine!.id, payload);
+            setRoutineModal({ open: false, routine: null });
             setRefreshKey(k => k + 1);
             getSupervisorDashboard().then(r => setWorkload(r.workload ?? []));
           }}

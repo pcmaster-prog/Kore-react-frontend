@@ -34,6 +34,7 @@ export type Routine = {
   start_date?: string | null;
   end_date?: string | null;
   is_active: boolean;
+  show_in_dashboard?: boolean;
 };
 
 export type RoutineItem = {
@@ -86,7 +87,7 @@ export async function deleteTemplate(id: string) {
 }
 
 // ───────── Routines ─────────
-export async function listRoutines(params: { page?: number; active?: boolean } = {}) {
+export async function listRoutines(params: { page?: number; active?: boolean; search?: string; show_in_dashboard?: boolean } = {}) {
   const res = await api.get("/task-routines", { params });
   return unwrapPaginated<Routine>(res);
 }

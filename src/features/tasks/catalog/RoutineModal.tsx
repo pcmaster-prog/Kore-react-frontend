@@ -38,6 +38,7 @@ export default function RoutineModal({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [showInDashboard, setShowInDashboard] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -53,6 +54,7 @@ export default function RoutineModal({
     setStartDate(initial?.start_date ?? "");
     setEndDate(initial?.end_date ?? "");
     setIsActive(initial?.is_active ?? true);
+    setShowInDashboard(initial?.show_in_dashboard ?? false);
   }, [open, initial]);
 
   const canSave = useMemo(() => {
@@ -81,6 +83,7 @@ export default function RoutineModal({
         start_date: startDate || null,
         end_date: endDate || null,
         is_active: isActive,
+        show_in_dashboard: showInDashboard,
       };
       await onSave(payload);
       onClose();
@@ -175,6 +178,22 @@ export default function RoutineModal({
               <option value="0">No</option>
             </select>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+          <input
+            type="checkbox"
+            id="showInDashboardRoutine"
+            checked={showInDashboard}
+            onChange={(e) => setShowInDashboard(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+          />
+          <label htmlFor="showInDashboardRoutine" className="text-sm font-bold text-obsidian cursor-pointer select-none">
+            📌 Mostrar rápido en Dashboard
+            <span className="block text-xs font-medium text-neutral-500 mt-0.5">
+              Si lo marcas, esta rutina aparecerá automáticamente en las Tareas Disponibles del gerente.
+            </span>
+          </label>
         </div>
 
         {recurrence === "weekly" ? (

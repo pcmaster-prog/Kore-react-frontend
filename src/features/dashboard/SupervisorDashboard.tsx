@@ -3,8 +3,9 @@ import { getSupervisorDashboard } from "./api";
 import type { SupervisorDashData, EmployeeWorkload } from "./types";
 import type { Task } from "@/features/tasks/types";
 import { assignTask, listTasks, approveAssignment, rejectAssignment } from "@/features/tasks/api";
-import { listTemplates, bulkCreateFromCatalog } from "@/features/tasks/catalog/api";
-import type { Template } from "@/features/tasks/catalog/api";
+import { listTemplates, listRoutines, bulkCreateFromCatalog } from "@/features/tasks/catalog/api";
+import type { Template, Routine } from "@/features/tasks/catalog/api";
+import AssignRoutineModal from "@/features/tasks/catalog/AssignRoutineModal";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   Users, Star, Eye, CheckCircle2, XCircle,
@@ -414,6 +415,83 @@ export function AssignTemplateModal({
   );
 }
 
+// ─── Task Detail Modal ───────────────────────────────────────────────────────
+export function TaskDetailModal({
+  task,
+  onClose,
+}: {
+  task: Task;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in-fade">
+      <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in-up">
+        <div className="p-6 border-b border-neutral-100 flex items-start justify-between bg-neutral-50/50">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase">
+                {task.status}
+              </span>
+              {task.priority && (
+                <span className={cx(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
+                  PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.medium
+                )}>
+                  {task.priority}
+                </span>
+              )}
+            </div>
+            <h2 className="text-xl font-black text-obsidian leading-tight pr-4">{task.title}</h2>
+          </div>
+          <button onClick={onClose} className="h-8 w-8 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-neutral-200 transition shrink-0">
+            <XCircle className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="mb-4">
+            <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest mb-3">Empleados Asignados</h3>
+            {(!task.assignees || task.assignees.length === 0) ? (
+              <p className="text-sm text-neutral-500 italic">No hay empleados asignados a esta tarea.</p>
+            ) : (
+              <div className="space-y-3">
+                {task.assignees.map(a => {
+                  const empName = a.empleado?.user?.name || a.empleado?.full_name || "Desconocido";
+                  const pct = a.progress?.pct ?? 0;
+                  return (
+                    <div key={a.id} className="flex items-center gap-3 p-3 rounded-2xl border border-neutral-100 bg-white">
+                       <div className="h-10 w-10 relative shrink-0">
+                         <svg className="h-10 w-10 -rotate-90" viewBox="0 0 40 40">
+                           <circle cx="20" cy="20" r="16" fill="none" stroke="#f3f4f6" strokeWidth="4" />
+                           <circle
+                             cx="20" cy="20" r="16" fill="none"
+                             stroke={pct >= 100 ? "#10b981" : "#6366f1"}
+                             strokeWidth="4"
+                             strokeDasharray={`${(pct / 100) * 100.5} 100.5`}
+                           />
+                         </svg>
+                         <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-obsidian">
+                           {pct}%
+                         </span>
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <div className="text-sm font-bold text-obsidian truncate">{empName}</div>
+                         <div className="text-[10px] font-bold uppercase text-neutral-400 mt-0.5">
+                           {a.status === 'in_progress' ? 'En proceso' : a.status === 'done' ? 'Terminado' : 'Asignado'}
+                         </div>
+                       </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Open Tasks Panel ────────────────────────────────────────────────────────
 
 export function OpenTasksPanel({
@@ -421,7 +499,7 @@ export function OpenTasksPanel({
   onNewTask,
   refreshKey = 0,
 }: {
-  onTaskClick: (task: { id: string; title: string }) => void;
+  onTaskClick: (task: Task) => void;
   onNewTask?: () => void;
   refreshKey?: number;
 }) {
@@ -491,7 +569,7 @@ export function OpenTasksPanel({
           {tasks.map(t => (
             <div
               key={t.id}
-              onClick={() => onTaskClick({ id: t.id, title: t.title })}
+              onClick={() => onTaskClick(t)}
               className="flex items-center gap-3 p-4 rounded-2xl border border-neutral-100 cursor-pointer hover:border-obsidian/20 hover:bg-neutral-50 transition group"
             >
               <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
@@ -527,28 +605,42 @@ export function OpenTasksPanel({
 
 // ─── Available Tasks Panel (checkboxes) ─────────────────────────────────────
 
-// Muestra PLANTILLAS (templates) — siempre disponibles independientemente del estado de las tareas
+// Muestra PLANTILLAS y RUTINAS destacadas
 export function AvailableTasksPanel({
   onAssignTemplates,
+  onAssignRoutine,
   onNewTask,
 }: {
   onAssignTemplates: (templates: Template[]) => void;
+  onAssignRoutine: (routine: Routine) => void;
   onNewTask?: () => void;
 }) {
+  const [tab, setTab] = useState<"templates" | "routines">("templates");
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    listTemplates({ active: true, show_in_dashboard: true })
-      .then(res => setTemplates(res.data ?? []))
-      .catch(() => setTemplates([]))
+    setSelected(new Set());
+    Promise.all([
+      listTemplates({ active: true, show_in_dashboard: true }).catch(() => ({ data: [] })),
+      listRoutines({ active: true, show_in_dashboard: true }).catch(() => ({ data: [] }))
+    ])
+      .then(([tplRes, rtnRes]) => {
+        setTemplates(tplRes.data ?? []);
+        setRoutines(rtnRes.data ?? []);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  function toggleTemplate(id: string) {
+  function toggleItem(id: string) {
+    if (tab === "routines") {
+      setSelected(new Set([id])); // Solo 1 rutina a la vez
+      return;
+    }
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -558,12 +650,18 @@ export function AvailableTasksPanel({
   }
 
   function handleAssign() {
-    const sel = templates.filter(t => selected.has(t.id));
-    if (sel.length > 0) onAssignTemplates(sel);
+    if (tab === "templates") {
+      const sel = templates.filter(t => selected.has(t.id));
+      if (sel.length > 0) onAssignTemplates(sel);
+    } else {
+      const sel = routines.find(r => selected.has(r.id));
+      if (sel) onAssignRoutine(sel);
+    }
   }
 
-  const filtered = templates.filter(t =>
-    t.title.toLowerCase().includes(search.toLowerCase())
+  const items = tab === "templates" ? templates : routines;
+  const filtered = items.filter((item: any) =>
+    (item.title || item.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -572,7 +670,20 @@ export function AvailableTasksPanel({
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Disponibles</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Plantillas — selecciona para asignar a empleados</p>
+          <div className="flex items-center gap-2 mt-2 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100">
+            <button 
+              onClick={() => { setTab("templates"); setSelected(new Set()); }}
+              className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "templates" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
+            >
+              Plantillas
+            </button>
+            <button 
+              onClick={() => { setTab("routines"); setSelected(new Set()); }}
+              className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "routines" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
+            >
+              Rutinas
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {selected.size > 0 && (
@@ -581,7 +692,7 @@ export function AvailableTasksPanel({
               className="h-9 px-4 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-2"
             >
               <Plus className="h-3.5 w-3.5" />
-              Asignar ({selected.size})
+              Asignar {tab === "templates" ? `(${selected.size})` : ''}
             </button>
           )}
           {onNewTask && (
@@ -597,12 +708,12 @@ export function AvailableTasksPanel({
       </div>
 
       {/* Search */}
-      {!loading && templates.length > 3 && (
+      {!loading && items.length > 3 && (
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-300" />
           <input
             type="text"
-            placeholder="Buscar plantilla..."
+            placeholder={`Buscar ${tab === "templates" ? "plantilla" : "rutina"}...`}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full h-9 pl-8 pr-3 rounded-xl border border-neutral-200 text-xs outline-none focus:ring-2 focus:ring-obsidian/10 bg-neutral-50/50"
@@ -614,10 +725,10 @@ export function AvailableTasksPanel({
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-12 bg-neutral-100 rounded-2xl animate-pulse" />)}
         </div>
-      ) : templates.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="py-8 text-center">
           <ClipboardList className="h-10 w-10 text-neutral-200 mx-auto mb-3" />
-          <p className="text-sm font-bold text-neutral-300 mb-1">Sin plantillas configuradas</p>
+          <p className="text-sm font-bold text-neutral-300 mb-1">Sin {tab === "templates" ? "plantillas" : "rutinas"} configuradas</p>
           <p className="text-xs text-neutral-300 mb-4">Ve a Catálogo para crear plantillas de tareas</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -626,13 +737,16 @@ export function AvailableTasksPanel({
         </div>
       ) : (
         <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-          {filtered.map(t => (
+          {filtered.map((t: any) => {
+            const id = t.id;
+            const title = t.title || t.name;
+            return (
             <div
-              key={t.id}
-              onClick={() => toggleTemplate(t.id)}
+              key={id}
+              onClick={() => toggleItem(id)}
               className={cx(
                 "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
-                selected.has(t.id)
+                selected.has(id)
                   ? "border-obsidian bg-obsidian/5"
                   : "border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50"
               )}
@@ -640,14 +754,17 @@ export function AvailableTasksPanel({
               {/* Checkbox */}
               <div className={cx(
                 "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
-                selected.has(t.id) ? "bg-obsidian border-obsidian" : "border-neutral-300"
+                selected.has(id) ? "bg-obsidian border-obsidian" : "border-neutral-300"
               )}>
-                {selected.has(t.id) && <CheckCircle2 className="h-3 w-3 text-white" />}
+                {selected.has(id) && <CheckCircle2 className="h-3 w-3 text-white" />}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-obsidian truncate">{t.title}</div>
+                <div className="text-sm font-bold text-obsidian truncate">{title}</div>
                 {t.estimated_minutes && (
                   <div className="text-xs text-neutral-400">⏱ {t.estimated_minutes} min</div>
+                )}
+                {t.recurrence && (
+                   <div className="text-xs text-neutral-400 capitalize">Recurrencia {t.recurrence}</div>
                 )}
               </div>
               {t.priority && (
@@ -659,7 +776,8 @@ export function AvailableTasksPanel({
                 </span>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -914,11 +1032,15 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
   const [data, setData] = useState<SupervisorDashData | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [detailModal, setDetailModal] = useState<Task | null>(null);
   const [modal, setModal] = useState<{ open: boolean; tasks: { id: string; title: string }[] }>({
     open: false, tasks: [],
   });
   const [templateModal, setTemplateModal] = useState<{ open: boolean; templates: Template[] }>({
     open: false, templates: [],
+  });
+  const [routineModal, setRoutineModal] = useState<{ open: boolean; routine: Routine | null }>({
+    open: false, routine: null,
   });
   const [showNewTask, setShowNewTask] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -977,7 +1099,13 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
 
       {/* 3 · Tareas Abiertas (full width) */}
       <OpenTasksPanel
-        onTaskClick={t => openModal([t])}
+        onTaskClick={t => {
+          if (t.assignees && t.assignees.length > 0) {
+            setDetailModal(t);
+          } else {
+            openModal([{ id: t.id, title: t.title }]);
+          }
+        }}
         onNewTask={() => setShowNewTask(true)}
         refreshKey={refreshKey}
       />
@@ -986,6 +1114,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AvailableTasksPanel
           onAssignTemplates={templates => setTemplateModal({ open: true, templates })}
+          onAssignRoutine={routine => setRoutineModal({ open: true, routine })}
           onNewTask={() => setShowNewTask(true)}
         />
         <WorkloadCard workload={data.workload} />
@@ -996,6 +1125,11 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
         <PendingReviewCard items={data.pending_review} onRefresh={reload} />
       )}
 
+      {/* Modal Mostrar Detalles de Tarea Ya Asignada */}
+      {detailModal && (
+        <TaskDetailModal task={detailModal} onClose={() => setDetailModal(null)} />
+      )}
+
       {/* Modal asignar empleado */}
       {modal.open && (
         <AssignTaskModal
@@ -1004,6 +1138,22 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
           onClose={() => setModal({ open: false, tasks: [] })}
           onAssigned={() => {
             setModal({ open: false, tasks: [] });
+            setRefreshKey(k => k + 1);
+            reload();
+          }}
+        />
+      )}
+
+      {/* Modal asignar rutina */}
+      {routineModal.open && routineModal.routine && (
+        <AssignRoutineModal
+          open={routineModal.open}
+          routineName={routineModal.routine.name}
+          onClose={() => setRoutineModal({ open: false, routine: null })}
+          onAssign={async (payload) => {
+            const { assignRoutine } = await import("@/features/tasks/catalog/api");
+            await assignRoutine(routineModal.routine!.id, payload);
+            setRoutineModal({ open: false, routine: null });
             setRefreshKey(k => k + 1);
             reload();
           }}
