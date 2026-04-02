@@ -13,6 +13,9 @@ export type UserItem = {
   employee_code?: string | null;
   position_title?: string | null;
   hired_at?: string | null;
+  rfc?: string | null;
+  nss?: string | null;
+  expediente_url?: string | null;
   // Campos de nómina
   payment_type?: "hourly" | "daily" | null;
   hourly_rate?: number | null;
@@ -27,6 +30,9 @@ export type CreateUserPayload = {
   employee_code?: string;
   position_title?: string;
   hired_at?: string;
+  rfc?: string;
+  nss?: string;
+  expediente?: File | null;
   payment_type?: "hourly" | "daily";
   hourly_rate?: number;
   daily_rate?: number;
@@ -52,12 +58,31 @@ export async function listUsers(params?: {
 }
 
 export async function createUser(payload: CreateUserPayload) {
-  const res = await api.post("/usuarios", payload);
+  const formData = new FormData();
+  Object.entries(payload).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) {
+      formData.append(k, v instanceof File ? v : String(v));
+    }
+  });
+
+  const res = await api.post("/usuarios", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data.item as UserItem;
 }
 
 export async function updateUser(id: string, payload: UpdateUserPayload) {
-  const res = await api.put(`/usuarios/${id}`, payload);
+  const formData = new FormData();
+  formData.append("_method", "PUT"); // Laravel way to spoof PUT with POST and files
+  Object.entries(payload).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) {
+      formData.append(k, v instanceof File ? v : String(v));
+    }
+  });
+
+  const res = await api.post(`/usuarios/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data.item as UserItem;
 }
 

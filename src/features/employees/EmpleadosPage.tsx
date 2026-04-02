@@ -12,7 +12,7 @@ import {
 } from "./api";
 import {
   Users, UserPlus, CheckCircle2, AlertTriangle,
-  Search, Pencil, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign
+  Search, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign, FileText
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -81,6 +81,9 @@ function UserModal({
   const [paymentType, setPaymentType] = useState<"hourly" | "daily">("hourly");
   const [hourlyRate, setHourlyRate] = useState("");
   const [dailyRate, setDailyRate] = useState("");
+  const [rfc, setRfc] = useState("");
+  const [nss, setNss] = useState("");
+  const [expediente, setExpediente] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -100,6 +103,9 @@ function UserModal({
       setPaymentType((initial.payment_type as any) ?? "hourly");
       setHourlyRate(String(initial.hourly_rate ?? ""));
       setDailyRate(String(initial.daily_rate ?? ""));
+      setRfc(initial.rfc ?? "");
+      setNss(initial.nss ?? "");
+      setExpediente(null);
     } else {
       setName("");
       setEmail("");
@@ -110,6 +116,9 @@ function UserModal({
       setPaymentType("hourly");
       setHourlyRate("");
       setDailyRate("");
+      setRfc("");
+      setNss("");
+      setExpediente(null);
     }
   }, [open, initial, suggestedCode]);
 
@@ -135,6 +144,9 @@ function UserModal({
           payment_type: paymentType,
           hourly_rate: hourlyRate ? parseFloat(hourlyRate) : undefined,
           daily_rate: dailyRate ? parseFloat(dailyRate) : undefined,
+          rfc: rfc.trim() || undefined,
+          nss: nss.trim() || undefined,
+          expediente: expediente,
         };
         item = await createUser(payload);
       } else {
@@ -148,6 +160,9 @@ function UserModal({
           payment_type: paymentType,
           hourly_rate: hourlyRate ? parseFloat(hourlyRate) : undefined,
           daily_rate: dailyRate ? parseFloat(dailyRate) : undefined,
+          rfc: rfc.trim() || undefined,
+          nss: nss.trim() || undefined,
+          expediente: expediente,
         };
         if (password.length >= 6) payload.password = password;
         item = await updateUser(initial!.id, payload);
@@ -262,6 +277,79 @@ function UserModal({
                       {showPassword ? "Ocultar" : "Ver"}
                     </button>
                   </div>
+                </div>
+              </div>
+
+              {/* Documentación Oficial */}
+              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100 pt-6">
+                <FileText className="h-5 w-5 text-neutral-400" />
+                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Documentación Oficial</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">RFC</label>
+                    <input
+                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                      placeholder="13 caracteres"
+                      value={rfc}
+                      onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                      maxLength={13}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">NSS</label>
+                    <input
+                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                      placeholder="11 dígitos"
+                      value={nss}
+                      onChange={(e) => setNss(e.target.value.replace(/\D/g, ''))}
+                      maxLength={11}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Expediente (PDF/Imagen)</label>
+                  <label className="flex items-center justify-center w-full min-h-[50px] relative overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-2 hover:bg-neutral-100 transition-colors cursor-pointer group">
+                    <input
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => setExpediente(e.target.files?.[0] || null)}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <div className="flex items-center gap-2">
+                       <div className="h-8 w-8 rounded-xl bg-white border border-neutral-200 flex flex-col justify-center items-center group-hover:scale-105 transition-transform">
+                          <FileText className="h-4 w-4 text-obsidian" />
+                       </div>
+                       <div className="flex flex-col text-left">
+                          <span className="text-[13px] font-bold text-neutral-700">
+                            {expediente ? expediente.name : "Subir archivo"}
+                          </span>
+                          <span className="text-[10px] items-center text-neutral-400 font-medium">
+                            {expediente ? `${(expediente.size / 1024 / 1024).toFixed(2)} MB` : "Click para seleccionar o arrastra"}
+                          </span>
+                       </div>
+                    </div>
+                  </label>
+                  {mode === 'edit' && initial?.expediente_url && !expediente && (
+                    <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2 flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                         <div className="h-6 w-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                           <CheckCircle2 className="h-3.5 w-3.5" />
+                         </div>
+                         <span className="text-xs font-bold text-blue-800">Doc. actual subido</span>
+                       </div>
+                       <a 
+                         href={initial.expediente_url.startsWith('http') ? initial.expediente_url : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}${initial.expediente_url}`}
+                         target="_blank" 
+                         rel="noreferrer" 
+                         className="text-[11px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-800 transition-colors"
+                         onClick={(e) => e.stopPropagation()}
+                       >
+                         Ver Archivo
+                       </a>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -726,10 +814,14 @@ export default function EmpleadosPage() {
                 </thead>
                 <tbody>
                   {users.map((user) => (
-                    <tr key={user.id} className={cx(
-                      "border-t border-neutral-50 transition",
-                      !user.is_active ? "opacity-40" : "hover:bg-neutral-50/50"
-                    )}>
+                    <tr 
+                      key={user.id} 
+                      onDoubleClick={() => openEdit(user)}
+                      className={cx(
+                        "border-t border-neutral-50 transition cursor-pointer",
+                        !user.is_active ? "opacity-40" : "hover:bg-neutral-50/50"
+                      )}
+                    >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar name={user.name} />
@@ -764,13 +856,6 @@ export default function EmpleadosPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => openEdit(user)}
-                            className="h-8 w-8 rounded-xl border border-neutral-100 flex items-center justify-center text-neutral-400 hover:bg-neutral-50 hover:text-obsidian transition"
-                            title="Editar"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
                           <button
                             onClick={() => setToggleTarget(user)}
                             className={cx(
