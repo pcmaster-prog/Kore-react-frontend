@@ -110,7 +110,10 @@ function AdminDashboard() {
       } catch { if (alive) setPending(0); }
       try {
         const wl = await getSupervisorDashboard();
-        if (alive) setWorkload(wl.workload ?? []);
+        if (alive) {
+          const w = wl.workload;
+          setWorkload(Array.isArray(w) ? w : Object.values(w || {}));
+        }
       } catch { if (alive) setWorkload([]); }
       if (alive) setLoading(false);
     })();

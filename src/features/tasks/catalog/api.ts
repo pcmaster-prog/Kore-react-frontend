@@ -54,10 +54,19 @@ export type CatalogItem = {
 export type Employee = { id: string; name?: string; full_name?: string; apellido?: string; is_active?: boolean };
 
 function unwrapPaginated<T>(res: any): Paginated<T> {
-  if (res?.data?.data && Array.isArray(res.data.data)) return res.data as Paginated<T>;
-  if (res?.data && Array.isArray(res.data)) return { data: res.data } as Paginated<T>;
-  if (res?.data?.data && Array.isArray(res.data.data)) return res.data;
-  return { data: res?.data?.data ?? [] } as Paginated<T>;
+  const isArr = (x: any) => Array.isArray(x);
+  const toArr = (x: any) => (x ? (isArr(x) ? x : Object.values(x)) : []);
+
+  if (res?.data?.data) {
+    if (isArr(res.data.data)) return res.data as Paginated<T>;
+    return { ...res.data, data: toArr(res.data.data) } as Paginated<T>;
+  }
+  if (res?.data) {
+    if (isArr(res.data)) return { data: res.data } as Paginated<T>;
+    if (res.data.data !== undefined) return { ...res.data, data: toArr(res.data.data) } as Paginated<T>;
+    return { data: toArr(res.data) } as Paginated<T>;
+  }
+  return { data: toArr(res) } as Paginated<T>;
 }
 
 // ───────── Templates ─────────

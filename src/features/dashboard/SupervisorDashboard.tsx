@@ -1120,7 +1120,16 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
   function reload() {
     setLoading(true);
     getSupervisorDashboard()
-      .then(setData)
+      .then((d) => {
+        if (d) {
+          if (d.workload && !Array.isArray(d.workload)) d.workload = Object.values(d.workload);
+          if (d.pending_review && !Array.isArray(d.pending_review)) d.pending_review = Object.values(d.pending_review);
+          // if missing, init them so .map/.length won't crash
+          if (!d.workload) d.workload = [];
+          if (!d.pending_review) d.pending_review = [];
+        }
+        setData(d);
+      })
       .catch(e => setErr(e?.response?.data?.message ?? "Error al cargar"))
       .finally(() => setLoading(false));
   }
