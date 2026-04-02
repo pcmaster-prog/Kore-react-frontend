@@ -29,7 +29,10 @@ export const DEFAULT_CRITERIOS: EvaluacionCriterio[] = [
 export async function getEvaluationCriteria(): Promise<EvaluacionCriterio[]> {
   try {
     const res = await api.get("/bitacora/criterios");
-    return res.data as EvaluacionCriterio[];
+    const raw = res.data;
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.data)) return raw.data;
+    return DEFAULT_CRITERIOS;
   } catch {
     // Fallback a criterios por defecto si el backend no está listo
     return DEFAULT_CRITERIOS;

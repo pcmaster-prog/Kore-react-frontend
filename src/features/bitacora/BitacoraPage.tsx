@@ -426,10 +426,13 @@ export default function BitacoraPage() {
 
   // Tareas de un empleado específico
   function tasksForEmployee(empId: string): Task[] {
-    return tasks.filter(t =>
-      t.assignees?.some((a: any) => String(a.empleado_id) === String(empId)) ||
-      String(t.empleado?.id) === String(empId)
-    );
+    return tasks.filter(t => {
+      const assignees = Array.isArray(t.assignees) ? t.assignees : [];
+      return (
+        assignees.some((a: any) => String(a.empleado_id) === String(empId)) ||
+        String((t as any).empleado?.id) === String(empId)
+      );
+    });
   }
 
   // KPIs
