@@ -5,7 +5,7 @@ import { auth } from "@/features/auth/store";
 import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
   CalendarCheck, User, Users,
-  Settings, ChevronRight, Bell, Activity
+  Settings, ChevronRight, Bell, Activity, BookOpen
 } from "lucide-react";
 import { getPendientesSupervisor } from "@/features/semaforo/api";
 
@@ -66,6 +66,7 @@ function Breadcrumbs() {
     asistencia: "Asistencia", activity: "Actividad", "mis-tareas": "Mis tareas",
     asignaciones: "Asignaciones", revision: "Revisión", perfil: "Perfil",
     configuracion: "Configuración", usuarios: "Usuarios", nomina: "Nómina",
+    bitacora: "Bitácora",
   };
   const crumbs = parts
     .filter((p) => p !== "app")
@@ -158,6 +159,7 @@ function SidebarContent({
             {hasModule("tareas") && (
               <NavGroup label="Operaciones">
                 <SidebarLink to="/app/manager/tareas" label="Tareas" icon={<ClipboardList className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/manager/bitacora" label="Bitácora" icon={<BookOpen className="h-4.5 w-4.5" />} onClick={onNav} />
               </NavGroup>
             )}
 

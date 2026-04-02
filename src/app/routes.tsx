@@ -17,6 +17,9 @@ import TasksPageEmployee from "@/features/tasks/EmployeeTasksPage";
 import TareasManagerPage from "@/features/tasks/TareasManagerPage";
 import RoutineDetailPage from "@/features/tasks/catalog/RoutineDetailPage";
 
+// Bitácora
+import BitacoraPage from "@/features/bitacora/BitacoraPage";
+
 // Asistencia
 import EmployeeAttendancePage from "@/features/attendance/EmployeeAttendancePage";
 import ManagerAttendancePage from "@/features/attendance/ManagerAttendancePage";
@@ -67,6 +70,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
             <TareasManagerPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/bitacora",
+        element: (
+          <RequireRole allow={["admin", "supervisor"]}>
+            <BitacoraPage />
           </RequireRole>
         ),
       },
