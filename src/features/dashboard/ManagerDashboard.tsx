@@ -201,6 +201,7 @@ function AdminDashboard() {
           onAssignTemplates={templates => setTemplateModal({ open: true, templates })}
           onAssignRoutine={routine => setRoutineModal({ open: true, routine })}
           onNewTask={() => setShowNewTask(true)}
+          refreshKey={refreshKey}
         />
         <WorkloadCard workload={workload} />
       </div>
@@ -237,7 +238,15 @@ function AdminDashboard() {
 
       {/* Modal Mostrar Detalles de Tarea Ya Asignada */}
       {detailModal && (
-        <TaskDetailModal task={detailModal} onClose={() => setDetailModal(null)} />
+        <TaskDetailModal 
+          task={detailModal} 
+          onClose={() => setDetailModal(null)} 
+          onDeleted={() => {
+            setDetailModal(null);
+            setRefreshKey(k => k + 1);
+            getSupervisorDashboard().then(r => setWorkload(r.workload ?? []));
+          }}
+        />
       )}
 
       {/* Modal asignar empleado */}

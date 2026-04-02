@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { getSupervisorDashboard } from "./api";
 import type { SupervisorDashData, EmployeeWorkload } from "./types";
 import type { Task } from "@/features/tasks/types";
-import { assignTask, listTasks, approveAssignment, rejectAssignment } from "@/features/tasks/api";
+import { assignTask, listTasks, approveAssignment, rejectAssignment, deleteTask } from "@/features/tasks/api";
 import { listTemplates, listRoutines, bulkCreateFromCatalog } from "@/features/tasks/catalog/api";
 import type { Template, Routine } from "@/features/tasks/catalog/api";
 import AssignRoutineModal from "@/features/tasks/catalog/AssignRoutineModal";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
-  Users, Star, Eye, CheckCircle2, XCircle,
+  Users, Star, Eye, CheckCircle2, XCircle, Trash2,
   ChevronDown, ChevronUp, ChevronRight, Zap,
   ClipboardList, Plus, Search
 } from "lucide-react";
@@ -22,6 +22,20 @@ const PRIORITY_COLORS: Record<string, string> = {
   high:   "bg-orange-100 text-orange-700",
   medium: "bg-amber-100 text-amber-700",
   low:    "bg-neutral-100 text-neutral-500",
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  urgent: "Urgente",
+  high:   "Alta",
+  medium: "Media",
+  low:    "Baja",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: "Por Asignar",
+  in_progress: "En Proceso",
+  completed: "Completada",
+  overdue: "Vencida",
 };
 
 const WORKLOAD_BADGE: Record<string, string> = {
@@ -314,7 +328,7 @@ export function AssignTemplateModal({
                   "text-[10px] font-bold px-2 py-0.5 rounded-full",
                   PRIORITY_COLORS[templates[0].priority] ?? PRIORITY_COLORS.medium
                 )}>
-                  {templates[0].priority}
+                  {PRIORITY_LABELS[templates[0].priority] || templates[0].priority}
                 </span>
               )}
             </div>
@@ -419,10 +433,27 @@ export function AssignTemplateModal({
 export function TaskDetailModal({
   task,
   onClose,
+  onDeleted,
 }: {
   task: Task;
   onClose: () => void;
+  onDeleted?: () => void;
 }) {
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!confirm(`¿Estás seguro de que deseas eliminar la tarea "${task.title}" y cancelar sus asignaciones? Esta acción no se puede deshacer.`)) return;
+    setDeleting(true);
+    try {
+      await deleteTask(task.id);
+      if (onDeleted) onDeleted();
+      else onClose();
+    } catch (e: any) {
+      alert(e?.response?.data?.message || "Error al eliminar la tarea.");
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in-fade">
       <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in-up">
@@ -430,14 +461,14 @@ export function TaskDetailModal({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase">
-                {task.status}
+                {STATUS_LABELS[task.status] || task.status}
               </span>
               {task.priority && (
                 <span className={cx(
                   "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
                   PRIORITY_COLORS[task.priority] ?? PRIORITY_COLORS.medium
                 )}>
-                  {task.priority}
+                  {PRIORITY_LABELS[task.priority] || task.priority}
                 </span>
               )}
             </div>
@@ -487,6 +518,17 @@ export function TaskDetailModal({
             )}
           </div>
         </div>
+
+        <div className="p-6 pt-0">
+           <button
+             onClick={handleDelete}
+             disabled={deleting}
+             className="w-full h-11 rounded-xl border border-rose-200 text-rose-500 text-sm font-bold flex items-center justify-center gap-2 hover:bg-rose-50 transition disabled:opacity-50"
+           >
+             <Trash2 className="h-4 w-4" />
+             {deleting ? "Eliminando..." : "Eliminar Tarea"}
+           </button>
+        </div>
       </div>
     </div>
   );
@@ -505,11 +547,20 @@ export function OpenTasksPanel({
 }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"in_progress" | "overdue">("in_progress");
 
   useEffect(() => {
     setLoading(true);
-    const today = new Date().toISOString().slice(0, 10);
-    listTasks({ status: "open,in_progress", date: today, page: 1 })
+    const params: any = { page: 1 };
+    
+    if (tab === "in_progress") {
+      params.status = "in_progress";
+    } else if (tab === "overdue") {
+      params.status = "open,in_progress";
+      params.overdue = true;
+    }
+
+    listTasks(params)
       .then(res => {
         const sorted = [...(res.data ?? [])].sort((a, b) => 
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -518,18 +569,22 @@ export function OpenTasksPanel({
       })
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, tab]);
 
   return (
-    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 shadow-sm border border-neutral-100/50 flex flex-col h-[400px]">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Abiertas</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Clic en una tarea para asignarla</p>
+          <h2 className="text-lg lg:text-xl font-black text-obsidian tracking-tight">Monitoreo de Tareas</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Seguimiento de tareas activas</p>
         </div>
         <div className="flex items-center gap-2">
           {!loading && tasks.length > 0 && (
-            <span className="h-7 px-2.5 rounded-full bg-blue-50 text-blue-600 text-xs font-black flex items-center justify-center">
+            <span className={cx(
+              "h-7 px-2.5 rounded-full text-xs font-black flex items-center justify-center border",
+              tab === "in_progress" ? "bg-amber-50 text-amber-600 border-amber-100" :
+              "bg-rose-50 text-rose-600 border-rose-100"
+            )}>
               {tasks.length}
             </span>
           )}
@@ -539,59 +594,59 @@ export function OpenTasksPanel({
               className="h-8 px-3 rounded-xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
-              Nueva Tarea
+              Nueva
             </button>
           )}
         </div>
       </div>
 
+      <div className="flex items-center gap-2 mb-4 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100 shrink-0">
+        <button onClick={() => setTab("in_progress")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "in_progress" ? "bg-white shadow-sm text-amber-600" : "text-neutral-400 hover:text-amber-500")}>En Proceso</button>
+        <button onClick={() => setTab("overdue")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "overdue" ? "bg-white shadow-sm text-rose-600" : "text-neutral-400 hover:text-rose-500")}>Vencidas</button>
+      </div>
+
       {loading ? (
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1">
           {[1, 2, 3].map(i => <div key={i} className="h-14 bg-neutral-100 rounded-2xl animate-pulse" />)}
         </div>
       ) : tasks.length === 0 ? (
-        <div className="py-10 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
           <ClipboardList className="h-8 w-8 text-neutral-200 mx-auto mb-3" />
-          <p className="text-sm font-bold text-neutral-300">No hay tareas abiertas</p>
-          <p className="text-xs text-neutral-300 mb-4">Crea una nueva tarea para comenzar a asignar</p>
-          {onNewTask && (
-            <button
-              onClick={onNewTask}
-              className="h-9 px-5 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition inline-flex items-center gap-2"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Crear primera tarea
-            </button>
-          )}
+          <p className="text-sm font-bold text-neutral-300">
+             {tab === "in_progress" ? "No hay tareas en proceso" : "No hay tareas vencidas"}
+          </p>
+          <p className="text-xs text-neutral-300 mb-4">Todo está bajo control</p>
         </div>
       ) : (
-        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+        <div className="space-y-2 flex-1 overflow-y-auto pr-1">
           {tasks.map(t => (
             <div
               key={t.id}
               onClick={() => onTaskClick(t)}
-              className="flex items-center gap-3 p-4 rounded-2xl border border-neutral-100 cursor-pointer hover:border-obsidian/20 hover:bg-neutral-50 transition group"
+              className="flex items-center gap-3 p-4 rounded-2xl border border-neutral-100 cursor-pointer hover:border-obsidian/20 hover:bg-neutral-50 transition group shrink-0"
             >
-              <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <ClipboardList className="h-4 w-4" />
+              <div className={cx(
+                "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
+                tab === "in_progress" ? "bg-amber-50 text-amber-600" :
+                "bg-rose-50 text-rose-600"
+              )}>
+                {tab === "in_progress" ? <Zap className="h-4 w-4" /> : <ClipboardList className="h-4 w-4" />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-obsidian truncate">{t.title}</div>
-                {t.due_at && (
-                  <div className="text-xs text-neutral-400 mt-0.5">
-                    Vence:{" "}
-                    {new Date(t.due_at).toLocaleDateString("es-MX", {
-                      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
-                    })}
-                  </div>
-                )}
+                <div className="text-xs text-neutral-400 mt-0.5 truncate">
+                  {t.assignees && t.assignees.length > 0 
+                     ? `Asignada a ${t.assignees.length} empleado(s)` 
+                     : "Sin asignar"}
+                  {t.due_at && ` · Vence ${new Date(t.due_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`}
+                </div>
               </div>
               {t.priority && (
                 <span className={cx(
-                  "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 uppercase",
                   PRIORITY_COLORS[t.priority] ?? PRIORITY_COLORS.medium
                 )}>
-                  {t.priority}
+                  {PRIORITY_LABELS[t.priority] || t.priority}
                 </span>
               )}
               <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-neutral-500 transition shrink-0" />
@@ -610,14 +665,17 @@ export function AvailableTasksPanel({
   onAssignTemplates,
   onAssignRoutine,
   onNewTask,
+  refreshKey = 0,
 }: {
   onAssignTemplates: (templates: Template[]) => void;
   onAssignRoutine: (routine: Routine) => void;
   onNewTask?: () => void;
+  refreshKey?: number;
 }) {
   const [tab, setTab] = useState<"templates" | "routines">("templates");
   const [templates, setTemplates] = useState<Template[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [assignedTitles, setAssignedTitles] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
@@ -625,16 +683,25 @@ export function AvailableTasksPanel({
   useEffect(() => {
     setLoading(true);
     setSelected(new Set());
+    const today = new Date().toISOString().slice(0, 10);
     Promise.all([
       listTemplates({ active: true, show_in_dashboard: true }).catch(() => ({ data: [] })),
-      listRoutines({ active: true, show_in_dashboard: true }).catch(() => ({ data: [] }))
+      listRoutines({ active: true, show_in_dashboard: true }).catch(() => ({ data: [] })),
+      listTasks({ date: today } as any).catch(() => ({ data: [] }))
     ])
-      .then(([tplRes, rtnRes]) => {
+      .then(([tplRes, rtnRes, taskRes]) => {
         setTemplates(tplRes.data ?? []);
         setRoutines(rtnRes.data ?? []);
+        
+        const assigned = new Set<string>();
+        // Guardamos los títulos de las tareas asignadas hoy para filtrarlas en el panel
+        (taskRes.data ?? []).forEach((t: Task) => {
+          if (t.title) assigned.add(t.title.trim().toLowerCase());
+        });
+        setAssignedTitles(assigned);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   function toggleItem(id: string) {
     if (tab === "routines") {
@@ -660,9 +727,13 @@ export function AvailableTasksPanel({
   }
 
   const items = tab === "templates" ? templates : routines;
-  const filtered = items.filter((item: any) =>
-    (item.title || item.name || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = items.filter((item: any) => {
+    const title = (item.title || item.name || "").trim().toLowerCase();
+    // Excluir si ya fue asignada hoy
+    if (assignedTitles.has(title)) return false;
+    // Aplicar búsqueda
+    return title.includes(search.toLowerCase());
+  });
 
   return (
     <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 flex flex-col">
@@ -733,7 +804,8 @@ export function AvailableTasksPanel({
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-6 text-center">
-          <p className="text-sm text-neutral-300">Sin resultados para "{search}"</p>
+          <p className="text-sm font-bold text-neutral-300">¡Al día!</p>
+          <p className="text-xs text-neutral-400 mt-1">Ya se asignaron todas las tareas de este tipo o no hay resultados.</p>
         </div>
       ) : (
         <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
@@ -769,10 +841,10 @@ export function AvailableTasksPanel({
               </div>
               {t.priority && (
                 <span className={cx(
-                  "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 uppercase",
                   PRIORITY_COLORS[t.priority] ?? PRIORITY_COLORS.medium
                 )}>
-                  {t.priority}
+                  {PRIORITY_LABELS[t.priority] || t.priority}
                 </span>
               )}
             </div>
@@ -1116,6 +1188,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
           onAssignTemplates={templates => setTemplateModal({ open: true, templates })}
           onAssignRoutine={routine => setRoutineModal({ open: true, routine })}
           onNewTask={() => setShowNewTask(true)}
+          refreshKey={refreshKey}
         />
         <WorkloadCard workload={data.workload} />
       </div>
@@ -1127,7 +1200,15 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
 
       {/* Modal Mostrar Detalles de Tarea Ya Asignada */}
       {detailModal && (
-        <TaskDetailModal task={detailModal} onClose={() => setDetailModal(null)} />
+        <TaskDetailModal 
+          task={detailModal} 
+          onClose={() => setDetailModal(null)} 
+          onDeleted={() => {
+            setDetailModal(null);
+            setRefreshKey(k => k + 1);
+            reload();
+          }}
+        />
       )}
 
       {/* Modal asignar empleado */}

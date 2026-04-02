@@ -93,6 +93,12 @@ export async function updateTaskStatus(id: string, status: "open" | "in_progress
   return res.data;
 }
 
+// ===== ELIMINAR TAREA =====
+export async function deleteTask(id: string) {
+  const res = await api.delete(`/tareas/${id}`);
+  return res.data;
+}
+
 // ===== APROBACIONES (manager) =====
 export type PendingApprovalItem = {
   id: string; // assignmentId
