@@ -562,7 +562,9 @@ export function OpenTasksPanel({
 
     listTasks(params)
       .then(res => {
-        const sorted = [...(res.data ?? [])].sort((a, b) => 
+        const rawData = res.data;
+        const arr = Array.isArray(rawData) ? rawData : [];
+        const sorted = [...arr].sort((a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         setTasks(sorted);
@@ -695,7 +697,8 @@ export function AvailableTasksPanel({
         
         const assigned = new Set<string>();
         // Guardamos los títulos de las tareas asignadas hoy para filtrarlas en el panel
-        (taskRes.data ?? []).forEach((t: Task) => {
+        const taskArr = Array.isArray(taskRes.data) ? taskRes.data : [];
+        taskArr.forEach((t: Task) => {
           if (t.title) assigned.add(t.title.trim().toLowerCase());
         });
         setAssignedTitles(assigned);

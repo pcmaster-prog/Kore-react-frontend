@@ -17,9 +17,32 @@ type ListTasksParams = {
   overdue?: boolean;
 };
 
-export async function listTasks(params: ListTasksParams) {
-  const res = await api.get<Paginated<Task>>("/tareas", { params });
-  return res.data;
+export async function listTasks(params: ListTasksParams): Promise<Paginated<Task>> {
+  const res = await api.get("/tareas", { params });
+  const raw = res.data;
+
+  // Laravel puede devolver { data: { data: [...], current_page, ... } }
+  // o directamente { data: [...], current_page, ... }
+  // Normalizamos siempre a Paginated<Task> con data como array
+  let normalized: Paginated<Task>;
+
+  if (raw?.data?.data && Array.isArray(raw.data.data)) {
+    // Doble anidado: { data: { data: [], ... } }
+    normalized = raw.data as Paginated<Task>;
+  } else if (raw?.data && Array.isArray(raw.data)) {
+    // Directo: { data: [], current_page, ... }
+    normalized = raw as Paginated<Task>;
+  } else if (Array.isArray(raw)) {
+    // Raramente: el backend devuelve solo el array
+    normalized = { data: raw, current_page: 1, last_page: 1, per_page: raw.length, total: raw.length };
+  } else if (raw?.data && typeof raw.data === "object" && !Array.isArray(raw.data)) {
+    // Objeto no-array en data: convertir a array por si acaso
+    normalized = { ...raw, data: Object.values(raw.data) } as Paginated<Task>;
+  } else {
+    normalized = { data: [], current_page: 1, last_page: 1, per_page: 0, total: 0 };
+  }
+
+  return normalized;
 }
 
 // ===== CATÁLOGO DE TAREAS =====
