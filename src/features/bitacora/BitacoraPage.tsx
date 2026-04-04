@@ -13,6 +13,7 @@ import {
   DEFAULT_CRITERIOS,
   type EvaluacionCriterio,
 } from "./api";
+import { listEmployees } from "@/features/tasks/employeeApi";
 import {
   ChevronDown, ChevronUp, Download, Settings2, Star,
   FileText, Users, CheckCircle2, AlertTriangle, ClipboardList,
@@ -236,20 +237,26 @@ function EmployeeRow({
   criterios,
   evalData,
   onEvalChange,
+  empInfo,
 }: {
   attendance: ByDateItem;
   tasks: Task[];
   criterios: EvaluacionCriterio[];
   evalData: EmployeeEval;
   onEvalChange: (data: Partial<EmployeeEval>) => void;
+  empInfo?: { full_name: string; position_title?: string };
 }) {
   const [expanded, setExpanded] = useState(false);
 
   const empName: string =
     (attendance as any).empleado?.full_name ??
     (attendance as any).empleado?.name ??
+    empInfo?.full_name ??
     `Empleado ${attendance.empleado_id}`;
-  const empPosition: string = (attendance as any).empleado?.position_title ?? "—";
+  const empPosition: string =
+    (attendance as any).empleado?.position_title ??
+    empInfo?.position_title ??
+    "—";
 
   const workedMin = attendance.totals?.worked_minutes ?? 0;
 
@@ -389,13 +396,26 @@ export default function BitacoraPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [criterios, setCriterios] = useState<EvaluacionCriterio[]>(DEFAULT_CRITERIOS);
   const [evals, setEvals] = useState<Record<string, EmployeeEval>>({});
+  const [empMap, setEmpMap] = useState<Record<string, { full_name: string; position_title?: string }>>({});
   const [notasGenerales, setNotasGenerales] = useState("");
   const [showCriteriosModal, setShowCriteriosModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const bitacoraRef = useRef<HTMLDivElement>(null);
 
-  // Cargar datos
+  // Cargar empleados una sola vez
+  useEffect(() => {
+    listEmployees().then((res: any) => {
+      const list: any[] = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      const map: Record<string, { full_name: string; position_title?: string }> = {};
+      list.forEach((e: any) => {
+        if (e.id) map[e.id] = { full_name: e.full_name ?? e.name ?? "—", position_title: e.position_title };
+      });
+      setEmpMap(map);
+    }).catch(() => {});
+  }, []);
+
+  // Cargar datos por fecha
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -586,6 +606,7 @@ export default function BitacoraPage() {
                 criterios={criterios}
                 evalData={evals[a.empleado_id] ?? { rating: 5, checks: {}, note: "" }}
                 onEvalChange={data => updateEval(a.empleado_id, data)}
+                empInfo={empMap[a.empleado_id]}
               />
             ))}
           </div>
