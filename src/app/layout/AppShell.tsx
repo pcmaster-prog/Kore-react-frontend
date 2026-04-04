@@ -1,6 +1,7 @@
 // src/layout/AppShell.tsx
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { auth } from "@/features/auth/store";
 import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
@@ -302,6 +303,9 @@ export default function AppShell() {
           </div>
         </div>
       )}
+
+      {/* PWA Install Banner */}
+      <PWAInstallPrompt />
     </div>
   );
 }

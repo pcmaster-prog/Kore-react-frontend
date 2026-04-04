@@ -21,3 +21,15 @@
   --gold: #453713;
   --radius-organic: 32px;
 }
+
+/* PWA: Evitar el bounce scroll en iOS */
+html, body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* PWA: Safe area para iPhone con notch */
+#root {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
+}
