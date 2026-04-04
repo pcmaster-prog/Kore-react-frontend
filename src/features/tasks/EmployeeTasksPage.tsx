@@ -293,7 +293,7 @@ export default function EmployeeTasksPage() {
   const [hasEvalPending, setHasEvalPending] = useState(false);
   useEffect(() => {
     getCompanerosParaEvaluar()
-      .then(data => { if (data.companeros.length > 0) setHasEvalPending(true); })
+      .then(data => { if (data?.companeros?.length > 0) setHasEvalPending(true); })
       .catch(() => { /* silent — don't show tab if fetch fails */ });
   }, []);
 

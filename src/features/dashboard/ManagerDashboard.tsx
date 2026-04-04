@@ -110,9 +110,9 @@ function AdminDashboard() {
       } catch { if (alive) setPending(0); }
       try {
         const wl = await getSupervisorDashboard();
-        if (alive) {
+        if (alive && wl) {
           const w = wl.workload;
-          setWorkload(Array.isArray(w) ? w : Object.values(w || {}));
+          setWorkload(Array.isArray(w) ? w : w ? Object.values(w) : []);
         }
       } catch { if (alive) setWorkload([]); }
       if (alive) setLoading(false);
@@ -218,9 +218,9 @@ function AdminDashboard() {
             <div className="text-xs font-bold text-neutral-400 uppercase pb-1">de {data.attendance.employees_total} Staff</div>
           </div>
           <div className="h-2 w-full rounded-full bg-neutral-100 overflow-hidden flex gap-0.5 mb-5">
-            <div className="h-full bg-emerald-400" style={{ width: `${(data.attendance.open / data.attendance.employees_total) * 100}%` }} />
-            <div className="h-full bg-neutral-300" style={{ width: `${(data.attendance.closed / data.attendance.employees_total) * 100}%` }} />
-            <div className="h-full bg-rose-300"    style={{ width: `${(data.attendance.out / data.attendance.employees_total) * 100}%` }} />
+            <div className="h-full bg-emerald-400" style={{ width: `${(data.attendance.open / (data.attendance.employees_total || 1)) * 100}%` }} />
+            <div className="h-full bg-neutral-300" style={{ width: `${(data.attendance.closed / (data.attendance.employees_total || 1)) * 100}%` }} />
+            <div className="h-full bg-rose-300"    style={{ width: `${(data.attendance.out / (data.attendance.employees_total || 1)) * 100}%` }} />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="text-center">
