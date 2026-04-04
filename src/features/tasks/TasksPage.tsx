@@ -136,7 +136,7 @@ export default function TasksPage() {
     const handleNewTask = () => setShowCatalog((s) => !s);
     window.addEventListener("kore-new-task", handleNewTask);
     listEmployees()
-      .then((res) => setEmpleados(Array.isArray(res) ? res : (res.data ?? [])))
+      .then((res) => setEmpleados(Array.isArray(res) ? res : []))
       .catch(() => {});
     return () => window.removeEventListener("kore-new-task", handleNewTask);
   }, []);

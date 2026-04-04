@@ -144,7 +144,7 @@ export default function ManagerAttendancePage() {
       const { listEmployees } = await import("@/features/tasks/employeeApi");
       const [dayRes, empRes] = await Promise.all([getByDate(date), listEmployees()]);
       setItems(dayRes.items ?? []);
-      const empArr = Array.isArray(empRes) ? empRes : (empRes?.data ?? []);
+      const empArr = Array.isArray(empRes) ? empRes : [];
       setEmployees(empArr);
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "No se pudo cargar asistencia");
