@@ -1,7 +1,7 @@
 // src/features/bitacora/BitacoraPage.tsx
 import { useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import domtoimage from "dom-to-image-more";
 import type { ByDateItem } from "@/features/attendance/api";
 import { minutesToHHMM } from "@/features/attendance/api";
 import type { Task } from "@/features/tasks/types";
@@ -472,21 +472,29 @@ export default function BitacoraPage() {
     if (!bitacoraRef.current) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(bitacoraRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#f8f7f4",
-        windowWidth: 1200,
+      const el = bitacoraRef.current;
+      const scale = 2;
+      const dataUrl = await domtoimage.toPng(el, {
+        width: el.scrollWidth * scale,
+        height: el.scrollHeight * scale,
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: `${el.scrollWidth}px`,
+          height: `${el.scrollHeight}px`,
+        },
       });
-      const imgData = canvas.toDataURL("image/png");
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise(resolve => { img.onload = resolve; });
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      const imgH = (canvas.height * pdfW) / canvas.width;
+      const imgH = (img.height * pdfW) / img.width;
       let yPos = 0;
       while (yPos < imgH) {
         if (yPos > 0) pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, -yPos, pdfW, imgH);
+        pdf.addImage(dataUrl, "PNG", 0, -yPos, pdfW, imgH);
         yPos += pdfH;
       }
       pdf.save(`bitacora-${date}.pdf`);
