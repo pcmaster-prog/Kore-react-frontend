@@ -4,13 +4,17 @@ import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  base: '/',
+  build: {
+    outDir: 'dist',
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
-        name: "Kore Ops Suite",
+        name: "Kore",
         short_name: "Kore",
         description: "Operación con evidencia (y sin drama).",
         theme_color: "#313852",
