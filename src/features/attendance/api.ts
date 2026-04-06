@@ -116,6 +116,46 @@ export async function cancelRestDay(date: string): Promise<void> {
   await api.delete(`/asistencia/descanso/${date}`);
 }
 
+// ─── Manager: Ajustar Asistencia ─────────────────────────────────────────────
+
+export async function ajustarAsistencia(
+  empleadoId: string,
+  fecha: string,
+  data: {
+    first_check_in_at?: string;  // "HH:mm"
+    last_check_out_at?: string;  // "HH:mm"
+    motivo: string;
+  }
+) {
+  const res = await api.patch(
+    `/asistencia/ajustar/${empleadoId}/${fecha}`,
+    data
+  );
+  return res.data;
+}
+
+// ─── Empleado: Comida ────────────────────────────────────────────────────────
+
+export async function iniciarComida() {
+  const res = await api.post('/asistencia/comida/iniciar');
+  return res.data as {
+    message: string;
+    lunch_start_at: string;
+    lunch_limit_at: string;
+  };
+}
+
+export async function terminarComida() {
+  const res = await api.post('/asistencia/comida/terminar');
+  return res.data as {
+    message: string;
+    lunch_start_at: string;
+    lunch_end_at: string;
+    minutos: number;
+    excedio: boolean;
+  };
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**

@@ -14,6 +14,7 @@ import {
   type TodayResponse,
   type MyDayRow,
 } from "./api";
+import LunchTimer from "./LunchTimer";
 import {
   LogIn, LogOut, Coffee, Play, Moon, XCircle,
   Clock, CheckCircle2, AlertTriangle, Calendar,
@@ -283,6 +284,22 @@ export default function EmployeeAttendancePage() {
               </button>
             )}
           </div>
+
+          {/* Lunch Timer — visible cuando tiene check-in y no check-out */}
+          {today?.day?.first_check_in_at && !today?.day?.last_check_out_at && (
+            <LunchTimer
+              lunchState={{
+                lunch_start_at: (today.day as any).lunch_start_at,
+                lunch_end_at:   (today.day as any).lunch_end_at,
+              }}
+              onUpdate={(newState) => {
+                setToday(prev => prev ? {
+                  ...prev,
+                  day: prev.day ? { ...prev.day, ...newState } : prev.day,
+                } : prev);
+              }}
+            />
+          )}
         </>
       )}
 

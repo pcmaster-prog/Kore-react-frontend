@@ -10,8 +10,9 @@ import {
 } from "./api";
 import {
   Users, UserX, Clock, RefreshCw, Calendar,
-  CheckCircle2, AlertTriangle, Timer, Loader2,
+  CheckCircle2, AlertTriangle, Timer, Loader2, Pencil,
 } from "lucide-react";
+import AjustarAsistenciaModal from "./AjustarAsistenciaModal";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -136,6 +137,12 @@ export default function ManagerAttendancePage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [tab, setTab] = useState<"daily" | "weekly">("daily");
+  const [ajustando, setAjustando] = useState<{
+    empleadoId: string;
+    empleadoNombre: string;
+    checkIn?: string;
+    checkOut?: string;
+  } | null>(null);
 
   const loadDay = useCallback(async () => {
     setLoading(true);
@@ -260,7 +267,7 @@ export default function ManagerAttendancePage() {
                 <table className="w-full text-sm">
                   <thead className="bg-neutral-50/80 border-b border-neutral-50">
                     <tr>
-                      {["Empleado", "Entrada", "Salida", "Estado", "Horas"].map((h) => (
+                      {["Empleado", "Entrada", "Salida", "Estado", "Horas", ""].map((h) => (
                         <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">{h}</th>
                       ))}
                     </tr>
@@ -285,6 +292,24 @@ export default function ManagerAttendancePage() {
                           <td className="px-5 py-4"><StatusBadge item={item} /></td>
                           <td className="px-5 py-4 font-black text-sm text-obsidian">
                             {item.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
+                          </td>
+                          <td className="px-5 py-4">
+                            <button
+                              onClick={() => setAjustando({
+                                empleadoId: item.empleado_id,
+                                empleadoNombre: empName,
+                                checkIn: item.first_check_in_at
+                                  ? new Date(item.first_check_in_at).toTimeString().slice(0, 5)
+                                  : undefined,
+                                checkOut: item.last_check_out_at
+                                  ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
+                                  : undefined,
+                              })}
+                              className="h-8 w-8 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
+                              title="Ajustar horario"
+                            >
+                              <Pencil className="h-3.5 w-3.5 text-neutral-400" />
+                            </button>
                           </td>
                         </tr>
                       );
@@ -317,6 +342,21 @@ export default function ManagerAttendancePage() {
         </>
       ) : (
         <WeeklyPanel employees={employees} date={date} />
+      )}
+
+      {ajustando && (
+        <AjustarAsistenciaModal
+          empleadoId={ajustando.empleadoId}
+          empleadoNombre={ajustando.empleadoNombre}
+          fecha={date}
+          checkInActual={ajustando.checkIn}
+          checkOutActual={ajustando.checkOut}
+          onClose={() => setAjustando(null)}
+          onSaved={() => {
+            setAjustando(null);
+            loadDay();
+          }}
+        />
       )}
     </div>
   );

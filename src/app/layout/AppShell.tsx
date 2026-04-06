@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import NotificationToast from "@/components/NotificationToast";
+import { useNotifications } from "@/hooks/useNotifications";
 import { auth } from "@/features/auth/store";
 import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
@@ -224,6 +226,8 @@ export default function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const role = user?.role ?? "empleado";
 
+  useNotifications();
+
   function logout() {
     auth.clear();
     nav("/login", { replace: true });
@@ -306,6 +310,9 @@ export default function AppShell() {
 
       {/* PWA Install Banner */}
       <PWAInstallPrompt />
+
+      {/* Notification Toast */}
+      <NotificationToast />
     </div>
   );
 }
