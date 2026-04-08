@@ -330,8 +330,8 @@ export default function ProfilePage() {
                 <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Puesto</div>
                 <div className="text-lg font-black text-obsidian">{profile.position_title ?? roleLabel}</div>
               </div>
-
-              {(profile.pay_type || payRate) && (
+              {/* Forma de pago oculta */}
+              {/* {(profile.pay_type || payRate) && (
                 <div>
                   <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Estructura Salarial</div>
                   <div className="flex items-center gap-2">
@@ -343,7 +343,7 @@ export default function ProfilePage() {
                     </span>
                   </div>
                 </div>
-              )}
+              )} */}
 
               <div>
                 <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Fecha de Ingreso</div>
