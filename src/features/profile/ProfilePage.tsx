@@ -176,8 +176,8 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  const payRate = profile.pay_type === "daily" ? profile.daily_rate : profile.hourly_rate;
-  const payLabel = profile.pay_type === "daily" ? "/ día" : "/ hora";
+  // const payRate = profile.pay_type === "daily" ? profile.daily_rate : profile.hourly_rate;
+  // const payLabel = profile.pay_type === "daily" ? "/ día" : "/ hora";
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
