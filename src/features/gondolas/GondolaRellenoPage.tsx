@@ -1,7 +1,7 @@
 // src/features/gondolas/GondolaRellenoPage.tsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, Package, Check } from "lucide-react";
 import { getOrden, iniciarOrden, completarOrden } from "./api";
 import type { GondolaOrden, GondolaOrdenItem } from "./types";
 import { STATUS_CONFIG, UNIDADES } from "./utils";
@@ -21,6 +21,7 @@ export default function GondolaRellenoPage() {
 
   // Cantidades locales
   const [cantidades, setCantidades] = useState<Record<string, number>>({});
+  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
   const [evidencia, setEvidencia] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -53,11 +54,25 @@ export default function GondolaRellenoPage() {
   }
 
   function initCantidades(items: GondolaOrdenItem[]) {
-    const init: Record<string, number> = {};
+    const initC: Record<string, number> = {};
+    const initS: Record<string, boolean> = {};
     items.forEach((it) => {
-      init[it.id] = it.cantidad ?? 0;
+      initC[it.id] = it.cantidad ?? 0;
+      if ((it.cantidad ?? 0) > 0) initS[it.id] = true;
     });
-    setCantidades(init);
+    setCantidades(initC);
+    setSelectedItems(initS);
+  }
+
+  function toggleSelected(itemId: string) {
+    if (isReadonly) return;
+    setSelectedItems((prev) => {
+      const next = !prev[itemId];
+      if (!next) {
+        setCantidades((c) => ({ ...c, [itemId]: 0 }));
+      }
+      return { ...prev, [itemId]: next };
+    });
   }
 
   useEffect(() => {
@@ -72,8 +87,9 @@ export default function GondolaRellenoPage() {
   }
 
   const totalLlenados = Object.values(cantidades).filter((v) => v > 0).length;
+  const totalSeleccionados = Object.values(selectedItems).filter(Boolean).length;
   const totalItems = orden?.items?.length ?? 0;
-  const canSubmit = totalLlenados > 0;
+  const canSubmit = totalSeleccionados > 0;
 
   async function handleCompletar() {
     if (!orden || !canSubmit) return;
@@ -157,7 +173,7 @@ export default function GondolaRellenoPage() {
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs text-neutral-400 font-medium">
-                {totalLlenados}/{totalItems} productos llenados
+                {totalSeleccionados}/{totalItems} productos selecc.
               </span>
               {statusCfg && (
                 <span
@@ -179,7 +195,7 @@ export default function GondolaRellenoPage() {
             style={{
               width:
                 totalItems > 0
-                  ? `${(totalLlenados / totalItems) * 100}%`
+                  ? `${(totalSeleccionados / totalItems) * 100}%`
                   : "0%",
             }}
           />
@@ -197,18 +213,33 @@ export default function GondolaRellenoPage() {
       {/* Lista de productos — scrollable */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-48">
         {(orden.items || []).map((item) => {
+          const isSelected = selectedItems[item.id] ?? false;
           const cant = cantidades[item.id] ?? 0;
           const filled = cant > 0;
           return (
             <div
               key={item.id}
+              onClick={() => toggleSelected(item.id)}
               className={cx(
                 "rounded-[24px] border p-4 flex items-center gap-4 transition-all",
-                filled
-                  ? "border-emerald-200 bg-emerald-50/60"
-                  : "border-neutral-100 bg-white",
+                !isReadonly ? "cursor-pointer" : "",
+                isSelected
+                  ? filled
+                    ? "border-emerald-200 bg-emerald-50/60"
+                    : "border-blue-200 bg-blue-50/60"
+                  : "border-neutral-100 bg-white opacity-80 hover:bg-neutral-50",
               )}
             >
+              {/* Checkbox (Seleccionador) */}
+              <div className={cx(
+                "flex items-center justify-center h-6 w-6 rounded-full border shrink-0 transition-colors",
+                isSelected
+                  ? "bg-obsidian border-obsidian"
+                  : "border-neutral-300 bg-white"
+              )}>
+                {isSelected && <Check className="h-4 w-4 text-white" />}
+              </div>
+
               {/* Foto */}
               <div className="h-14 w-14 shrink-0 rounded-2xl overflow-hidden border border-neutral-100">
                 {item.foto_url ? (
@@ -233,11 +264,12 @@ export default function GondolaRellenoPage() {
                   {item.nombre}
                 </div>
 
+                {isSelected && (
                 <div className="flex items-center gap-2 mt-2">
                   {/* - */}
                   <button
                     type="button"
-                    onClick={() => adjustCant(item.id, -1)}
+                    onClick={(e) => { e.stopPropagation(); adjustCant(item.id, -1); }}
                     disabled={isReadonly || cant <= 0}
                     className="h-9 w-9 rounded-xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-xl font-black text-neutral-700 transition-all disabled:opacity-30"
                   >
@@ -250,6 +282,7 @@ export default function GondolaRellenoPage() {
                     min={0}
                     value={cant}
                     readOnly={isReadonly}
+                    onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
                       const v = parseInt(e.target.value) || 0;
                       setCantidades((prev) => ({
@@ -268,7 +301,7 @@ export default function GondolaRellenoPage() {
                   {/* + */}
                   <button
                     type="button"
-                    onClick={() => adjustCant(item.id, 1)}
+                    onClick={(e) => { e.stopPropagation(); adjustCant(item.id, 1); }}
                     disabled={isReadonly}
                     className="h-9 w-9 rounded-xl bg-obsidian hover:bg-gold active:scale-95 flex items-center justify-center text-xl font-black text-white transition-all disabled:opacity-30"
                   >
@@ -280,6 +313,7 @@ export default function GondolaRellenoPage() {
                     {UNIDADES[item.unidad] ?? item.unidad}
                   </span>
                 </div>
+                )}
               </div>
             </div>
           );
@@ -327,7 +361,7 @@ export default function GondolaRellenoPage() {
             ) : canSubmit ? (
               "✓ Marcar como completado"
             ) : (
-              "Llena al menos 1 cantidad"
+              "Selecciona al menos 1 producto"
             )}
           </button>
         </div>
