@@ -343,7 +343,7 @@ export default function EmployeeDashboard() {
             <div className="text-sm font-bold text-neutral-500 uppercase tracking-widest">
               Hoy estás libre
             </div>
-            <div className="text-xs font-medium text-neutral-400 mt-1">o tu admin anda haciendo "asignaciones en su mente" 😄</div>
+            <div className="text-xs font-medium text-neutral-400 mt-1">¡Disfruta tu día! 😄</div>
           </div>
         )}
       </div>

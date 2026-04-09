@@ -1,7 +1,7 @@
 // src/features/gondolas/GondolaRellenoPage.tsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, Check } from "lucide-react";
+import { ArrowLeft, Package, Check, X, Search } from "lucide-react";
 import { getOrden, iniciarOrden, completarOrden } from "./api";
 import type { GondolaOrden, GondolaOrdenItem } from "./types";
 import { STATUS_CONFIG, UNIDADES } from "./utils";
@@ -11,6 +11,193 @@ function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
 }
 
+/* ─── Modal de selección de productos ─────────────────────────────── */
+function ProductSelectionModal({
+  items,
+  onConfirm,
+  onCancel,
+}: {
+  items: GondolaOrdenItem[];
+  onConfirm: (selectedIds: string[]) => void;
+  onCancel: () => void;
+}) {
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState("");
+
+  function toggle(id: string) {
+    setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function toggleAll() {
+    const allSelected = filteredItems.every((it) => selected[it.id]);
+    const update: Record<string, boolean> = { ...selected };
+    filteredItems.forEach((it) => {
+      update[it.id] = !allSelected;
+    });
+    setSelected(update);
+  }
+
+  const filteredItems = items.filter(
+    (it) =>
+      !search.trim() ||
+      it.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      (it.clave ?? "").toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const totalSelected = Object.values(selected).filter(Boolean).length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-obsidian/50 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+
+      {/* Panel */}
+      <div className="relative bg-white w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-h-[92vh] flex flex-col animate-in-up overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-neutral-100">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-lg font-black text-obsidian tracking-tight">
+              ¿Qué productos necesitas rellenar?
+            </h2>
+            <button
+              onClick={onCancel}
+              className="h-9 w-9 rounded-xl bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors shrink-0"
+            >
+              <X className="h-4 w-4 text-neutral-500" />
+            </button>
+          </div>
+          <p className="text-xs text-neutral-400 font-medium mb-4">
+            Selecciona solo los productos que vas a rellenar hoy.
+          </p>
+
+          {/* Buscador */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar producto..."
+              className="w-full h-10 pl-10 pr-4 rounded-xl border border-neutral-200 text-sm font-medium text-obsidian outline-none focus:border-obsidian focus:ring-2 focus:ring-obsidian/10 transition-all"
+            />
+          </div>
+
+          {/* Seleccionar todos */}
+          <div className="flex items-center justify-between mt-3">
+            <button
+              type="button"
+              onClick={toggleAll}
+              className="text-xs font-bold text-obsidian/70 hover:text-obsidian transition-colors underline underline-offset-2"
+            >
+              {filteredItems.every((it) => selected[it.id])
+                ? "Deseleccionar todos"
+                : "Seleccionar todos"}
+            </button>
+            <span className="text-xs font-bold text-neutral-400">
+              {totalSelected} de {items.length} seleccionados
+            </span>
+          </div>
+        </div>
+
+        {/* Lista de productos */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {filteredItems.length === 0 && (
+            <div className="p-8 text-center text-sm text-neutral-400 font-medium">
+              No se encontraron productos
+            </div>
+          )}
+          {filteredItems.map((item) => {
+            const isChecked = selected[item.id] ?? false;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => toggle(item.id)}
+                className={cx(
+                  "w-full rounded-2xl border p-3 flex items-center gap-3 text-left transition-all active:scale-[0.98]",
+                  isChecked
+                    ? "border-obsidian/30 bg-obsidian/5"
+                    : "border-neutral-100 bg-white hover:bg-neutral-50",
+                )}
+              >
+                {/* Checkbox */}
+                <div
+                  className={cx(
+                    "flex items-center justify-center h-6 w-6 rounded-lg border-2 shrink-0 transition-all",
+                    isChecked
+                      ? "bg-obsidian border-obsidian"
+                      : "border-neutral-300 bg-white",
+                  )}
+                >
+                  {isChecked && <Check className="h-3.5 w-3.5 text-white" />}
+                </div>
+
+                {/* Foto */}
+                <div className="h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-neutral-100">
+                  {item.foto_url ? (
+                    <img
+                      src={item.foto_url}
+                      alt={item.nombre}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-neutral-100 flex items-center justify-center">
+                      <Package className="h-4 w-4 text-neutral-400" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  {item.clave && (
+                    <div className="text-[10px] font-bold text-neutral-400 uppercase">
+                      {item.clave}
+                    </div>
+                  )}
+                  <div className="text-sm font-bold text-obsidian truncate leading-tight">
+                    {item.nombre}
+                  </div>
+                  <div className="text-[10px] font-medium text-neutral-400 uppercase mt-0.5">
+                    {UNIDADES[item.unidad] ?? item.unidad}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer con botón confirmar */}
+        <div className="p-4 border-t border-neutral-100 bg-white">
+          <button
+            type="button"
+            onClick={() => {
+              const ids = Object.entries(selected)
+                .filter(([, v]) => v)
+                .map(([k]) => k);
+              onConfirm(ids);
+            }}
+            disabled={totalSelected === 0}
+            className={cx(
+              "w-full h-14 rounded-2xl text-sm font-black tracking-wide transition-all shadow-md",
+              totalSelected > 0
+                ? "bg-obsidian text-white hover:bg-gold active:scale-[0.98]"
+                : "bg-neutral-200 text-neutral-400 cursor-not-allowed",
+            )}
+          >
+            {totalSelected > 0
+              ? `Continuar con ${totalSelected} producto${totalSelected > 1 ? "s" : ""}`
+              : "Selecciona al menos 1 producto"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Página principal ────────────────────────────────────────────── */
 export default function GondolaRellenoPage() {
   const { ordenId } = useParams<{ ordenId: string }>();
   const nav = useNavigate();
@@ -19,9 +206,12 @@ export default function GondolaRellenoPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // Paso de selección
+  const [showSelection, setShowSelection] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[] | null>(null);
+
   // Cantidades locales
   const [cantidades, setCantidades] = useState<Record<string, number>>({});
-  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
   const [evidencia, setEvidencia] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,12 +229,12 @@ export default function GondolaRellenoPage() {
         try {
           const iniciada = await iniciarOrden(o.id);
           setOrden(iniciada);
-          initCantidades(iniciada.items);
+          handleAfterLoad(iniciada);
         } catch {
-          initCantidades(o.items);
+          handleAfterLoad(o);
         }
       } else {
-        initCantidades(o.items);
+        handleAfterLoad(o);
       }
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error cargando la orden");
@@ -53,26 +243,38 @@ export default function GondolaRellenoPage() {
     }
   }
 
-  function initCantidades(items: GondolaOrdenItem[]) {
-    const initC: Record<string, number> = {};
-    const initS: Record<string, boolean> = {};
-    items.forEach((it) => {
-      initC[it.id] = it.cantidad ?? 0;
-      if ((it.cantidad ?? 0) > 0) initS[it.id] = true;
-    });
-    setCantidades(initC);
-    setSelectedItems(initS);
+  function handleAfterLoad(o: GondolaOrden) {
+    const isReadonly = ["completado", "aprobado"].includes(o.status);
+
+    // Si ya hay items con cantidades (orden completada/aprobada o rechazada con datos previos)
+    const itemsConCantidad = o.items.filter(
+      (it) => it.cantidad != null && it.cantidad > 0,
+    );
+
+    if (isReadonly || itemsConCantidad.length > 0) {
+      // Modo readonly o con datos previos: mostrar directamente esos items
+      const ids = itemsConCantidad.map((it) => it.id);
+      setSelectedIds(ids);
+      const init: Record<string, number> = {};
+      itemsConCantidad.forEach((it) => {
+        init[it.id] = it.cantidad ?? 0;
+      });
+      setCantidades(init);
+    } else {
+      // Mostrar modal de selección
+      setShowSelection(true);
+    }
   }
 
-  function toggleSelected(itemId: string) {
-    if (isReadonly) return;
-    setSelectedItems((prev) => {
-      const next = !prev[itemId];
-      if (!next) {
-        setCantidades((c) => ({ ...c, [itemId]: 0 }));
-      }
-      return { ...prev, [itemId]: next };
+  function handleSelectionConfirm(ids: string[]) {
+    setSelectedIds(ids);
+    setShowSelection(false);
+    // Inicializar cantidades a 0 para cada seleccionado
+    const init: Record<string, number> = {};
+    ids.forEach((id) => {
+      init[id] = 0;
     });
+    setCantidades(init);
   }
 
   useEffect(() => {
@@ -86,9 +288,15 @@ export default function GondolaRellenoPage() {
     }));
   }
 
-  const totalSeleccionados = Object.values(selectedItems).filter(Boolean).length;
-  const totalItems = orden?.items?.length ?? 0;
-  const canSubmit = totalSeleccionados > 0;
+  // Solo los items seleccionados
+  const activeItems =
+    selectedIds && orden
+      ? orden.items.filter((it) => selectedIds.includes(it.id))
+      : [];
+
+  const totalLlenados = Object.values(cantidades).filter((v) => v > 0).length;
+  const totalActive = activeItems.length;
+  const canSubmit = totalLlenados > 0;
 
   async function handleCompletar() {
     if (!orden || !canSubmit) return;
@@ -116,8 +324,9 @@ export default function GondolaRellenoPage() {
     }
   }
 
+  // Solo enviar los productos seleccionados
   function order_items_payload() {
-    return (orden?.items ?? []).map((it) => ({
+    return activeItems.map((it) => ({
       id: it.id,
       cantidad: cantidades[it.id] ?? 0,
     }));
@@ -157,6 +366,15 @@ export default function GondolaRellenoPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-bone max-w-xl mx-auto">
+      {/* Modal selección de productos */}
+      {showSelection && (
+        <ProductSelectionModal
+          items={orden.items}
+          onConfirm={handleSelectionConfirm}
+          onCancel={() => nav(-1)}
+        />
+      )}
+
       {/* Header fijo */}
       <div className="sticky top-0 z-10 bg-white border-b border-neutral-100 shadow-sm px-4 py-4">
         <div className="flex items-center gap-3">
@@ -172,7 +390,7 @@ export default function GondolaRellenoPage() {
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs text-neutral-400 font-medium">
-                {totalSeleccionados}/{totalItems} productos selecc.
+                {totalLlenados}/{totalActive} productos llenados
               </span>
               {statusCfg && (
                 <span
@@ -186,6 +404,15 @@ export default function GondolaRellenoPage() {
               )}
             </div>
           </div>
+          {/* Botón para re-abrir selección (solo si no es readonly) */}
+          {!isReadonly && selectedIds && (
+            <button
+              onClick={() => setShowSelection(true)}
+              className="text-xs font-bold text-obsidian/60 hover:text-obsidian transition-colors underline underline-offset-2 shrink-0"
+            >
+              Cambiar selección
+            </button>
+          )}
         </div>
         {/* Progress bar */}
         <div className="mt-3 h-1.5 rounded-full bg-neutral-100 overflow-hidden">
@@ -193,8 +420,8 @@ export default function GondolaRellenoPage() {
             className="h-full rounded-full bg-emerald-500 transition-all duration-300"
             style={{
               width:
-                totalItems > 0
-                  ? `${(totalSeleccionados / totalItems) * 100}%`
+                totalActive > 0
+                  ? `${(totalLlenados / totalActive) * 100}%`
                   : "0%",
             }}
           />
@@ -209,36 +436,29 @@ export default function GondolaRellenoPage() {
         </div>
       )}
 
-      {/* Lista de productos — scrollable */}
+      {/* Lista de productos seleccionados — scrollable */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-48">
-        {(orden.items || []).map((item) => {
-          const isSelected = selectedItems[item.id] ?? false;
+        {activeItems.length === 0 && !showSelection && (
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <Package className="h-12 w-12 text-neutral-300 mb-4" />
+            <div className="text-sm font-bold text-neutral-400">
+              No hay productos seleccionados
+            </div>
+          </div>
+        )}
+        {activeItems.map((item) => {
           const cant = cantidades[item.id] ?? 0;
           const filled = cant > 0;
           return (
             <div
               key={item.id}
-              onClick={() => toggleSelected(item.id)}
               className={cx(
                 "rounded-[24px] border p-4 flex items-center gap-4 transition-all",
-                !isReadonly ? "cursor-pointer" : "",
-                isSelected
-                  ? filled
-                    ? "border-emerald-200 bg-emerald-50/60"
-                    : "border-blue-200 bg-blue-50/60"
-                  : "border-neutral-100 bg-white opacity-80 hover:bg-neutral-50",
+                filled
+                  ? "border-emerald-200 bg-emerald-50/60"
+                  : "border-neutral-100 bg-white",
               )}
             >
-              {/* Checkbox (Seleccionador) */}
-              <div className={cx(
-                "flex items-center justify-center h-6 w-6 rounded-full border shrink-0 transition-colors",
-                isSelected
-                  ? "bg-obsidian border-obsidian"
-                  : "border-neutral-300 bg-white"
-              )}>
-                {isSelected && <Check className="h-4 w-4 text-white" />}
-              </div>
-
               {/* Foto */}
               <div className="h-14 w-14 shrink-0 rounded-2xl overflow-hidden border border-neutral-100">
                 {item.foto_url ? (
@@ -263,12 +483,11 @@ export default function GondolaRellenoPage() {
                   {item.nombre}
                 </div>
 
-                {isSelected && (
                 <div className="flex items-center gap-2 mt-2">
                   {/* - */}
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); adjustCant(item.id, -1); }}
+                    onClick={() => adjustCant(item.id, -1)}
                     disabled={isReadonly || cant <= 0}
                     className="h-9 w-9 rounded-xl bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-xl font-black text-neutral-700 transition-all disabled:opacity-30"
                   >
@@ -281,7 +500,6 @@ export default function GondolaRellenoPage() {
                     min={0}
                     value={cant}
                     readOnly={isReadonly}
-                    onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
                       const v = parseInt(e.target.value) || 0;
                       setCantidades((prev) => ({
@@ -300,7 +518,7 @@ export default function GondolaRellenoPage() {
                   {/* + */}
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); adjustCant(item.id, 1); }}
+                    onClick={() => adjustCant(item.id, 1)}
                     disabled={isReadonly}
                     className="h-9 w-9 rounded-xl bg-obsidian hover:bg-gold active:scale-95 flex items-center justify-center text-xl font-black text-white transition-all disabled:opacity-30"
                   >
@@ -312,7 +530,6 @@ export default function GondolaRellenoPage() {
                     {UNIDADES[item.unidad] ?? item.unidad}
                   </span>
                 </div>
-                )}
               </div>
             </div>
           );
@@ -360,7 +577,7 @@ export default function GondolaRellenoPage() {
             ) : canSubmit ? (
               "✓ Marcar como completado"
             ) : (
-              "Selecciona al menos 1 producto"
+              "Llena al menos 1 cantidad"
             )}
           </button>
         </div>

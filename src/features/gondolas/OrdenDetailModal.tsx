@@ -156,81 +156,82 @@ export default function OrdenDetailModal({ orden, onClose, onUpdated }: Props) {
                     Cantidades registradas
                   </div>
                   <div className="rounded-2xl border border-neutral-100 overflow-hidden">
-                    {(displayOrden.items?.length ?? 0) === 0 ? (
-                      <div className="p-8 text-center text-sm text-neutral-400 font-medium">
-                        Sin productos
-                      </div>
-                    ) : (
-                      <table className="w-full">
-                        <thead className="bg-neutral-50 border-b border-neutral-100">
-                          <tr>
-                            <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest w-14">
-                              Foto
-                            </th>
-                            <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                              Clave
-                            </th>
-                            <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                              Producto
-                            </th>
-                            <th className="text-right px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                              Cant.
-                            </th>
-                            <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                              Unidad
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(displayOrden.items || []).map((item, i) => (
-                            <tr
-                              key={item.id}
-                              className={cx(
-                                "border-b border-neutral-50 last:border-0",
-                                i % 2 === 0 ? "bg-white" : "bg-neutral-50/50",
-                              )}
-                            >
-                              <td className="px-4 py-3">
-                                {item.foto_url ? (
-                                  <img
-                                    src={item.foto_url}
-                                    alt={item.nombre}
-                                    className="h-10 w-10 rounded-xl object-cover border border-neutral-100"
-                                  />
-                                ) : (
-                                  <div className="h-10 w-10 rounded-xl bg-neutral-100 flex items-center justify-center">
-                                    <Package className="h-4 w-4 text-neutral-400" />
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-xs font-bold text-neutral-400">
-                                {item.clave ?? "—"}
-                              </td>
-                              <td className="px-4 py-3 text-sm font-medium text-obsidian">
-                                {item.nombre}
-                              </td>
-                              <td
+                    {(() => {
+                      const relevantItems = (displayOrden.items || []).filter(
+                        (item) => item.cantidad != null && item.cantidad > 0
+                      );
+
+                      if (relevantItems.length === 0) {
+                        return (
+                          <div className="p-8 text-center text-sm text-neutral-400 font-medium">
+                            No se registraron productos rellenados, o la orden está vacía.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <table className="w-full">
+                          <thead className="bg-neutral-50 border-b border-neutral-100">
+                            <tr>
+                              <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest w-14">
+                                Foto
+                              </th>
+                              <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                Clave
+                              </th>
+                              <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                Producto
+                              </th>
+                              <th className="text-right px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                Cant.
+                              </th>
+                              <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                Unidad
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {relevantItems.map((item, i) => (
+                              <tr
+                                key={item.id}
                                 className={cx(
-                                  "px-4 py-3 text-right text-sm font-black",
-                                  item.cantidad != null && item.cantidad > 0
-                                    ? "text-emerald-700"
-                                    : "text-neutral-300",
+                                  "border-b border-neutral-50 last:border-0",
+                                  i % 2 === 0 ? "bg-white" : "bg-neutral-50/50",
                                 )}
                               >
-                                {item.cantidad != null && item.cantidad > 0
-                                  ? item.cantidad
-                                  : "—"}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex rounded-full border border-neutral-200 px-2 py-0.5 text-xs font-bold text-neutral-500 bg-neutral-50">
-                                  {UNIDADES[item.unidad] ?? item.unidad}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
+                                <td className="px-4 py-3">
+                                  {item.foto_url ? (
+                                    <img
+                                      src={item.foto_url}
+                                      alt={item.nombre}
+                                      className="h-10 w-10 rounded-xl object-cover border border-neutral-100"
+                                    />
+                                  ) : (
+                                    <div className="h-10 w-10 rounded-xl bg-neutral-100 flex items-center justify-center">
+                                      <Package className="h-4 w-4 text-neutral-400" />
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-xs font-bold text-neutral-400">
+                                  {item.clave ?? "—"}
+                                </td>
+                                <td className="px-4 py-3 text-sm font-medium text-obsidian">
+                                  {item.nombre}
+                                </td>
+                                <td className="px-4 py-3 text-right text-sm font-black text-emerald-700">
+                                  {item.cantidad}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="inline-flex rounded-full border border-neutral-200 px-2 py-0.5 text-xs font-bold text-neutral-500 bg-neutral-50">
+                                    {UNIDADES[item.unidad] ?? item.unidad}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
                   </div>
                 </div>
 
