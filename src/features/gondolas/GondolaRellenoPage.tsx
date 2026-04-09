@@ -86,7 +86,6 @@ export default function GondolaRellenoPage() {
     }));
   }
 
-  const totalLlenados = Object.values(cantidades).filter((v) => v > 0).length;
   const totalSeleccionados = Object.values(selectedItems).filter(Boolean).length;
   const totalItems = orden?.items?.length ?? 0;
   const canSubmit = totalSeleccionados > 0;
