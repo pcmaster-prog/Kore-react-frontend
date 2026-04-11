@@ -19,6 +19,7 @@ export default function DiaDescansoAdminModal({
   onClose,
   onSaved,
 }: Props) {
+  const [modalFecha, setModalFecha] = useState(fecha);
   const [motivo, setMotivo] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export default function DiaDescansoAdminModal({
     try {
       await api.post("/asistencia/dia-descanso", {
         empleado_id: empleadoId,
-        fecha,
+        fecha: modalFecha,
         motivo,
       });
       onSaved();
@@ -47,7 +48,7 @@ export default function DiaDescansoAdminModal({
       await api.delete("/asistencia/dia-descanso", {
         data: {
           empleado_id: empleadoId,
-          fecha,
+          fecha: modalFecha,
         },
       });
       onSaved();
@@ -89,9 +90,9 @@ export default function DiaDescansoAdminModal({
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
               <input
                 type="date"
-                readOnly
-                value={fecha}
-                className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 pl-10 pr-4 py-2.5 text-sm font-medium text-obsidian outline-none cursor-not-allowed"
+                value={modalFecha}
+                onChange={(e) => setModalFecha(e.target.value)}
+                className="w-full rounded-2xl border border-neutral-200 bg-white pl-10 pr-4 py-2.5 text-sm font-medium text-obsidian outline-none focus:ring-2 focus:ring-obsidian/10"
               />
             </div>
           </div>

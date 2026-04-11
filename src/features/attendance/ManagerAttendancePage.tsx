@@ -263,10 +263,10 @@ export default function ManagerAttendancePage() {
                 <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
                 <span className="text-xs font-bold uppercase tracking-widest">Cargando registros...</span>
               </div>
-            ) : items.length === 0 ? (
+            ) : employees.length === 0 ? (
               <div className="p-16 flex flex-col items-center gap-4 text-center">
                 <Users className="h-12 w-12 text-neutral-100" />
-                <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin registros para esta fecha</p>
+                <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin nómina (no hay empleados activos)</p>
               </div>
             ) : (
               <div className="overflow-auto">
@@ -279,36 +279,40 @@ export default function ManagerAttendancePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => {
-                      const emp = employees.find((e) => e.id === item.empleado_id);
-                      const empName = emp?.full_name ?? emp?.name ?? "Empleado";
+                    {employees.map((emp) => {
+                      const item = items.find((i) => i.empleado_id === emp.id);
+                      const empName = emp.full_name ?? emp.name ?? "Empleado";
+                      const tieneDiaDescanso = item?.status === 'day_off' || (item as any)?.is_rest_day;
+
                       return (
-                        <tr key={item.id} className="border-t border-neutral-50 hover:bg-neutral-50/50 transition">
+                        <tr key={emp.id} className="border-t border-neutral-50 hover:bg-neutral-50/50 transition">
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-3">
                               <Avatar name={empName} />
                               <div>
                                 <div className="text-sm font-bold text-obsidian">{empName}</div>
-                                {emp?.position_title && <div className="text-[10px] text-neutral-400 mt-0.5">{emp.position_title}</div>}
+                                {emp.position_title && <div className="text-[10px] text-neutral-400 mt-0.5">{emp.position_title}</div>}
                               </div>
                             </div>
                           </td>
-                          <td className="px-5 py-4 font-bold text-sm text-obsidian">{formatTime(item.first_check_in_at)}</td>
-                          <td className="px-5 py-4 text-sm text-neutral-400">{formatTime(item.last_check_out_at)}</td>
-                          <td className="px-5 py-4"><StatusBadge item={item} /></td>
+                          <td className="px-5 py-4 font-bold text-sm text-obsidian">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
+                          <td className="px-5 py-4 text-sm text-neutral-400">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
+                          <td className="px-5 py-4">
+                            {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-100 bg-neutral-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Sin registro</span>}
+                          </td>
                           <td className="px-5 py-4 font-black text-sm text-obsidian">
-                            {item.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
+                            {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
                           </td>
                           <td className="px-5 py-4">
                             <div className="flex gap-2">
                               <button
                                 onClick={() => setAjustando({
-                                  empleadoId: item.empleado_id,
+                                  empleadoId: emp.id,
                                   empleadoNombre: empName,
-                                  checkIn: item.first_check_in_at
+                                  checkIn: item?.first_check_in_at
                                     ? new Date(item.first_check_in_at).toTimeString().slice(0, 5)
                                     : undefined,
-                                  checkOut: item.last_check_out_at
+                                  checkOut: item?.last_check_out_at
                                     ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
                                     : undefined,
                                 })}
@@ -319,9 +323,9 @@ export default function ManagerAttendancePage() {
                               </button>
                               <button
                                 onClick={() => setDescansoAdmin({
-                                  empleadoId: item.empleado_id,
+                                  empleadoId: emp.id,
                                   empleadoNombre: empName,
-                                  tieneDiaDescanso: item.status === 'day_off' || (item as any).is_rest_day
+                                  tieneDiaDescanso,
                                 })}
                                 className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition text-sm mb-0.5"
                                 title="Gestionar día de descanso"
