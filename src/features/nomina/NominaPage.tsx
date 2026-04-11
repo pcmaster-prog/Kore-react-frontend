@@ -42,6 +42,7 @@ type Period = {
   total_adjustments: number;
   total_bonuses: number;
   approved_at?: string | null;
+  excluded_employee_ids?: string[];
   entries: Entry[];
 };
 
@@ -90,11 +91,13 @@ function avatarColor(name: string) {
 
 // ─── Fila editable ────────────────────────────────────────────────────────────
 function EntryRow({
-  entry, approved, onSave,
+  entry, period, approved, onSave, onToggleExclude,
 }: {
   entry: Entry;
+  period: Period;
   approved: boolean;
   onSave: (id: string, patch: Partial<Entry>) => Promise<void>;
+  onToggleExclude: (empleadoId: string, excluir: boolean) => Promise<void>;
 }) {
   const [adj, setAdj] = useState(String(entry.adjustment_amount ?? 0));
   const [adjNote, setAdjNote] = useState(entry.adjustment_note ?? "");
@@ -122,12 +125,13 @@ function EntryRow({
   }
 
   const computedTotal = entry.subtotal + (parseFloat(adj) || 0) + (parseFloat(bonus) || 0);
+  const isExcluded = (period?.excluded_employee_ids ?? []).includes(entry.empleado_id);
 
   return (
     <>
       <tr className={cx(
         "border-t border-neutral-50 transition-colors group",
-        dirty ? "bg-amber-50/30" : "hover:bg-neutral-50/50"
+        isExcluded ? "opacity-40 bg-neutral-50" : (dirty ? "bg-amber-50/30" : "hover:bg-neutral-50/50")
       )}>
         {/* Empleado */}
         <td className="px-5 py-4">
@@ -257,6 +261,26 @@ function EntryRow({
                 {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Check className="h-3 w-3" />Guardar</>}
               </button>
             )}
+          </td>
+        )}
+
+        {/* Excluir/Incluir */}
+        {!approved && (
+          <td className="px-5 py-4 text-right">
+            <button
+              onClick={async () => {
+                await onToggleExclude(entry.empleado_id, !isExcluded);
+              }}
+              className={cx(
+                "h-8 px-3 rounded-xl text-[11px] font-bold transition border",
+                isExcluded
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                  : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
+              )}
+              title={isExcluded ? "Incluir en nómina" : "Excluir de nómina"}
+            >
+              {isExcluded ? "✓ Incluir" : "✕ Excluir"}
+            </button>
           </td>
         )}
       </tr>
@@ -401,6 +425,22 @@ export default function NominaPage() {
     } catch (e: any) {
       showToast("err", e?.response?.data?.message ?? "No se pudo guardar el ajuste");
       throw e;
+    }
+  }
+
+  async function toggleExclude(empleadoId: string, excluir: boolean) {
+    if (!period) return;
+    try {
+      const res = await api.post(`/nomina/periodos/${period.id}/excluir`, {
+        empleado_id: empleadoId,
+        excluir,
+      });
+      setPeriod(prev => prev ? { ...prev, excluded_employee_ids: res.data?.excluded_employee_ids ?? [] } : prev);
+      showToast("ok", res.data?.message ?? (excluir ? "Empleado excluido" : "Empleado incluido"));
+      // Opcional: Generar de nuevo al cambiar para que se recálcule el total
+      await generate();
+    } catch (e: any) {
+      showToast("err", e?.response?.data?.message ?? "Error modificando exclusión");
     }
   }
 
@@ -625,13 +665,13 @@ export default function NominaPage() {
               <table className="w-full text-sm">
                 <thead className="bg-neutral-50/80 border-b border-neutral-50">
                   <tr>
-                    {["Empleado", "Horas/Días", "Tipo", "Tarifa", "Subtotal", "Ajuste", "Bono", "Total", ""].map((h, i) => (
-                      (!approved && i === 8) || approved && i === 8 ? null :
+                    {["Empleado", "Horas/Días", "Tipo", "Tarifa", "Subtotal", "Ajuste", "Bono", "Total"].map((h, i) => (
                       <th key={i} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">
                         {h}
                       </th>
                     ))}
-                    {!approved && <th className="px-5 py-4" />}
+                    {!approved && <th className="px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">Guardar</th>}
+                    {!approved && <th className="px-5 py-4"></th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -647,8 +687,10 @@ export default function NominaPage() {
                       <EntryRow
                         key={entry.id}
                         entry={entry}
+                        period={period}
                         approved={approved}
                         onSave={saveEntry}
+                        onToggleExclude={toggleExclude}
                       />
                     ))
                   )}

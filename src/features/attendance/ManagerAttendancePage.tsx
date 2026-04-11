@@ -13,6 +13,7 @@ import {
   CheckCircle2, AlertTriangle, Timer, Loader2, Pencil,
 } from "lucide-react";
 import AjustarAsistenciaModal from "./AjustarAsistenciaModal";
+import DiaDescansoAdminModal from "./DiaDescansoAdminModal";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -142,6 +143,11 @@ export default function ManagerAttendancePage() {
     empleadoNombre: string;
     checkIn?: string;
     checkOut?: string;
+  } | null>(null);
+  const [descansoAdmin, setDescansoAdmin] = useState<{
+    empleadoId: string;
+    empleadoNombre: string;
+    tieneDiaDescanso: boolean;
   } | null>(null);
 
   const loadDay = useCallback(async () => {
@@ -294,22 +300,35 @@ export default function ManagerAttendancePage() {
                             {item.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
                           </td>
                           <td className="px-5 py-4">
-                            <button
-                              onClick={() => setAjustando({
-                                empleadoId: item.empleado_id,
-                                empleadoNombre: empName,
-                                checkIn: item.first_check_in_at
-                                  ? new Date(item.first_check_in_at).toTimeString().slice(0, 5)
-                                  : undefined,
-                                checkOut: item.last_check_out_at
-                                  ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
-                                  : undefined,
-                              })}
-                              className="h-8 w-8 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
-                              title="Ajustar horario"
-                            >
-                              <Pencil className="h-3.5 w-3.5 text-neutral-400" />
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setAjustando({
+                                  empleadoId: item.empleado_id,
+                                  empleadoNombre: empName,
+                                  checkIn: item.first_check_in_at
+                                    ? new Date(item.first_check_in_at).toTimeString().slice(0, 5)
+                                    : undefined,
+                                  checkOut: item.last_check_out_at
+                                    ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
+                                    : undefined,
+                                })}
+                                className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
+                                title="Ajustar horario"
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-neutral-400" />
+                              </button>
+                              <button
+                                onClick={() => setDescansoAdmin({
+                                  empleadoId: item.empleado_id,
+                                  empleadoNombre: empName,
+                                  tieneDiaDescanso: item.status === 'day_off' || (item as any).is_rest_day
+                                })}
+                                className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition text-sm mb-0.5"
+                                title="Gestionar día de descanso"
+                              >
+                                🛋️
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -354,6 +373,20 @@ export default function ManagerAttendancePage() {
           onClose={() => setAjustando(null)}
           onSaved={() => {
             setAjustando(null);
+            loadDay();
+          }}
+        />
+      )}
+
+      {descansoAdmin && (
+        <DiaDescansoAdminModal
+          empleadoId={descansoAdmin.empleadoId}
+          empleadoNombre={descansoAdmin.empleadoNombre}
+          fecha={date}
+          tieneDiaDescanso={descansoAdmin.tieneDiaDescanso}
+          onClose={() => setDescansoAdmin(null)}
+          onSaved={() => {
+            setDescansoAdmin(null);
             loadDay();
           }}
         />
