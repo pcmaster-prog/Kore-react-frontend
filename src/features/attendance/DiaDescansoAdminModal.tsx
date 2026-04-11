@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { X, Calendar, AlertTriangle, Loader2 } from "lucide-react";
-import { markRestDay, cancelRestDay, getMyToday } from "./api";
 import api from "@/lib/http";
-
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
 
 type Props = {
   empleadoId: string;

@@ -9,7 +9,7 @@ export type AttendanceDay = {
   id: string;
   empleado_id: string;
   date: string;
-  status: "open" | "closed";
+  status: "open" | "closed" | "day_off" | "present" | "late";
   first_check_in_at?: string | null;
   last_check_out_at?: string | null;
 };
