@@ -238,6 +238,7 @@ function EmployeeRow({
   evalData,
   onEvalChange,
   empInfo,
+  isExporting,
 }: {
   attendance: ByDateItem;
   tasks: Task[];
