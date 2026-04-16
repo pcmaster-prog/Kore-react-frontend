@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getSupervisorDashboard } from "./api";
 import type { SupervisorDashData, EmployeeWorkload } from "./types";
 import type { Task } from "@/features/tasks/types";
 import { assignTask, listTasks, approveAssignment, rejectAssignment, deleteTask } from "@/features/tasks/api";
 import { listTemplates, listRoutines, bulkCreateFromCatalog } from "@/features/tasks/catalog/api";
 import type { Template, Routine } from "@/features/tasks/catalog/api";
+import { misOrdenesGondola } from "@/features/gondolas/api";
+import type { GondolaOrden } from "@/features/gondolas/types";
 import AssignRoutineModal from "@/features/tasks/catalog/AssignRoutineModal";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   Users, Star, Eye, CheckCircle2, XCircle, Trash2,
   ChevronDown, ChevronUp, ChevronRight, Zap,
-  ClipboardList, Plus, Search
+  ClipboardList, Plus, Search, LayoutGrid
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -1119,6 +1122,8 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
   });
   const [showNewTask, setShowNewTask] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [gondolaOrdenes, setGondolaOrdenes] = useState<GondolaOrden[]>([]);
+  const nav = useNavigate();
 
   function reload() {
     setLoading(true);
@@ -1127,7 +1132,6 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
         if (d) {
           if (d.workload && !Array.isArray(d.workload)) d.workload = Object.values(d.workload);
           if (d.pending_review && !Array.isArray(d.pending_review)) d.pending_review = Object.values(d.pending_review);
-          // if missing, init them so .map/.length won't crash
           if (!d.workload) d.workload = [];
           if (!d.pending_review) d.pending_review = [];
         }
@@ -1135,6 +1139,11 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       })
       .catch(e => setErr(e?.response?.data?.message ?? "Error al cargar"))
       .finally(() => setLoading(false));
+
+    // Cargar órdenes de góndola propias del supervisor
+    misOrdenesGondola()
+      .then(setGondolaOrdenes)
+      .catch(() => setGondolaOrdenes([]));
   }
 
   useEffect(() => { reload(); }, []);
@@ -1208,6 +1217,55 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       {/* 5 · Pendientes revisión (supervisor only, si hay items) */}
       {data.pending_review.length > 0 && (
         <PendingReviewCard items={data.pending_review} onRefresh={reload} />
+      )}
+
+      {/* 6 · Mis Góndolas (si el supervisor tiene órdenes asignadas) */}
+      {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length > 0 && (
+        <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5 text-amber-500" />
+                <div className="text-xl font-black text-obsidian tracking-tight">Mis Góndolas por rellenar</div>
+              </div>
+              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length} orden(es) activa(s)
+              </div>
+            </div>
+          </div>
+          <div className="divide-y divide-neutral-100">
+            {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).map(o => (
+              <div key={o.id} className="p-5 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xl">🛒</span>
+                    <div className="text-lg font-black text-obsidian tracking-tight truncate">{o.gondola?.nombre}</div>
+                    <span className={cx(
+                      "inline-flex items-center rounded-full border px-2 py-0.5 text-xs",
+                      o.status === 'rechazado' ? "bg-rose-50 text-rose-800 border-rose-200" :
+                      o.status === 'en_proceso' ? "bg-amber-50 text-amber-800 border-amber-200" :
+                      "bg-neutral-50 text-neutral-700 border-neutral-200"
+                    )}>
+                      {o.status === 'rechazado' ? 'Rechazado' : o.status === 'en_proceso' ? 'En proceso' : 'Pendiente'}
+                    </span>
+                  </div>
+                  <div className="text-sm text-neutral-500">{o.items?.length ?? 0} productos</div>
+                  {o.status === 'rechazado' && o.notas_rechazo && (
+                    <div className="mt-2 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs text-rose-700 font-medium">
+                      Motivo: {o.notas_rechazo}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => nav(`/app/employee/gondola-relleno/${o.id}`)}
+                  className="w-full lg:w-auto rounded-2xl bg-obsidian text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                >
+                  {o.status === 'en_proceso' ? '→ Continuar' : o.status === 'rechazado' ? '↩ Volver a completar' : '▶ Iniciar relleno'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Modal Mostrar Detalles de Tarea Ya Asignada */}

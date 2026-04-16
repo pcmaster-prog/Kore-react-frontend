@@ -437,7 +437,7 @@ export default function GondolaRellenoPage() {
       )}
 
       {/* Lista de productos seleccionados — scrollable */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-48">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-72">
         {activeItems.length === 0 && !showSelection && (
           <div className="flex flex-col items-center justify-center p-12 text-center">
             <Package className="h-12 w-12 text-neutral-300 mb-4" />

@@ -7,6 +7,8 @@ import {
   updateMyAssignment,
   type MyAssignmentRow,
 } from "@/features/tasks/api";
+import { misOrdenesGondola } from "@/features/gondolas/api";
+import type { GondolaOrden } from "@/features/gondolas/types";
 import {
   CalendarCheck,
   ClipboardList,
@@ -15,6 +17,7 @@ import {
   PlayCircle,
   AlertTriangle,
   ArrowRight,
+  LayoutGrid,
 } from "lucide-react";
 
 type EmployeeDash = {
@@ -107,6 +110,7 @@ export default function EmployeeDashboard() {
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "warn" | "err"; msg: string } | null>(null);
+  const [gondolaOrdenes, setGondolaOrdenes] = useState<GondolaOrden[]>([]);
 
   async function loadAll() {
     setLoading(true);
@@ -117,6 +121,11 @@ export default function EmployeeDashboard() {
 
       const a = await listMyAssignments({ page: 1, date: today });
       setRows(a.data ?? []);
+
+      // Cargar órdenes de góndola activas
+      misOrdenesGondola()
+        .then(setGondolaOrdenes)
+        .catch(() => setGondolaOrdenes([]));
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "No pude cargar tu dashboard");
     } finally {
@@ -255,7 +264,7 @@ export default function EmployeeDashboard() {
         <StatCard title="Asignadas" value={counts.open} icon={<ClipboardList className="h-5 w-5" />} hint="Listas para iniciar" colorCls="text-blue-600" bgCls="bg-blue-50/50 border-blue-100" />
         <StatCard title="En progreso" value={counts.in_progress} icon={<PlayCircle className="h-5 w-5" />} hint="Trabajándose" colorCls="text-amber-600" bgCls="bg-amber-50/50 border-amber-100" />
         <StatCard title="En revisión" value={counts.pending} icon={<AlertTriangle className="h-5 w-5" />} hint="Esperando aprobación" colorCls="text-indigo-600" bgCls="bg-indigo-50/50 border-indigo-100" />
-        <StatCard title="Aprobadas" value={counts.completed} icon={<CheckCircle2 className="h-5 w-5" />} hint="Cerradas hoy" colorCls="text-emerald-600" bgCls="bg-emerald-50/50 border-emerald-100" />
+        <StatCard title="Góndolas" value={gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length} icon={<LayoutGrid className="h-5 w-5" />} hint="Por rellenar" colorCls="text-amber-600" bgCls="bg-amber-50/50 border-amber-100" />
       </div>
 
       {/* List */}
@@ -347,6 +356,58 @@ export default function EmployeeDashboard() {
           </div>
         )}
       </div>
+
+      {/* ── Mis Góndolas ────────────────────────────────────────────── */}
+      {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length > 0 && (
+        <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="text-xl font-black text-obsidian tracking-tight">Góndolas por rellenar</div>
+              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length} orden(es) activa(s)
+              </div>
+            </div>
+            <button
+              className="w-full sm:w-auto rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors shadow-sm flex items-center justify-center sm:inline-flex uppercase tracking-widest"
+              onClick={() => nav("/app/employee/mis-tareas/asignaciones")}
+            >
+              Ver Góndolas <ArrowRight className="h-4 w-4 ml-2 text-neutral-400" />
+            </button>
+          </div>
+          <div className="divide-y divide-neutral-100">
+            {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).map(o => (
+              <div key={o.id} className="p-5 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">🛒</span>
+                    <div className="text-lg font-black text-obsidian tracking-tight truncate">{o.gondola?.nombre}</div>
+                    <span className={cx(
+                      "inline-flex items-center rounded-full border px-2 py-0.5 text-xs",
+                      o.status === 'rechazado' ? "bg-rose-50 text-rose-800 border-rose-200" :
+                      o.status === 'en_proceso' ? "bg-amber-50 text-amber-800 border-amber-200" :
+                      "bg-neutral-50 text-neutral-700 border-neutral-200"
+                    )}>
+                      {o.status === 'rechazado' ? 'Rechazado' : o.status === 'en_proceso' ? 'En proceso' : 'Pendiente'}
+                    </span>
+                  </div>
+                  <div className="text-sm font-medium text-neutral-500">{o.items?.length ?? 0} productos · Asignada hace poco</div>
+                  {o.status === 'rechazado' && o.notas_rechazo && (
+                    <div className="mt-2 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs text-rose-700 font-medium">
+                      Motivo: {o.notas_rechazo}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => nav(`/app/employee/gondola-relleno/${o.id}`)}
+                  className="w-full lg:w-auto rounded-2xl bg-obsidian text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                >
+                  {o.status === 'en_proceso' ? '→ Continuar' : o.status === 'rechazado' ? '↩ Volver a completar' : '▶ Iniciar relleno'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
