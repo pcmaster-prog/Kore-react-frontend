@@ -21,15 +21,20 @@ export default function GondolasEmpleadoTab() {
   useEffect(() => {
     setLoading(true);
     setErr(null);
-    Promise.all([misOrdenesGondola(), listGondolas()])
-      .then(([ords, gonds]) => {
-        setOrdenes(ords);
-        setGondolasDisponibles(gonds);
-      })
+
+    // Cargamos las órdenes asignadas (siempre disponible para empleados)
+    misOrdenesGondola()
+      .then(setOrdenes)
       .catch((e: any) =>
         setErr(e?.response?.data?.message ?? "Error cargando órdenes"),
       )
       .finally(() => setLoading(false));
+
+    // Cargamos las góndolas disponibles para auto-relleno.
+    // Si el rol no tiene permiso (403), simplemente no mostramos la sección.
+    listGondolas()
+      .then(setGondolasDisponibles)
+      .catch(() => setGondolasDisponibles([]));
   }, []);
 
   async function handleAutoRellenar(gondolaId: string, gondolaNombre: string) {
