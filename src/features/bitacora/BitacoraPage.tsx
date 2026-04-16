@@ -245,8 +245,10 @@ function EmployeeRow({
   evalData: EmployeeEval;
   onEvalChange: (data: Partial<EmployeeEval>) => void;
   empInfo?: { full_name: string; position_title?: string };
+  isExporting?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const showDetail = expanded || isExporting;
 
   const empName: string =
     (attendance as any).empleado?.full_name ??
@@ -298,12 +300,12 @@ function EmployeeRow({
             <Clock className="h-3 w-3" />
             {minutesToHHMM(workedMin)}
           </div>
-          {expanded ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
+          {showDetail ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
         </div>
       </button>
 
       {/* Detalle expandido */}
-      {expanded && (
+      {showDetail && (
         <div className="border-t border-neutral-100 p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Tareas del día */}
           <div>
@@ -371,17 +373,23 @@ function EmployeeRow({
             {/* Calificación */}
             <div className="mt-4 flex items-center gap-2">
               <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">Calificación:</span>
-              <StarRating value={evalData.rating} onChange={v => onEvalChange({ rating: v })} />
+              <StarRating value={evalData.rating} onChange={v => !isExporting && onEvalChange({ rating: v })} />
             </div>
 
             {/* Nota libre */}
-            <textarea
-              value={evalData.note}
-              onChange={e => onEvalChange({ note: e.target.value })}
-              placeholder="Observaciones del admin sobre este empleado..."
-              rows={3}
-              className="mt-3 w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
-            />
+            {!isExporting ? (
+              <textarea
+                value={evalData.note}
+                onChange={e => onEvalChange({ note: e.target.value })}
+                placeholder="Observaciones del admin sobre este empleado..."
+                rows={3}
+                className="mt-3 w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
+              />
+            ) : evalData.note ? (
+              <div className="mt-3 rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-700 whitespace-pre-wrap">
+                {evalData.note}
+              </div>
+            ) : null}
           </div>
         </div>
       )}
@@ -471,6 +479,8 @@ export default function BitacoraPage() {
   async function handleExportPDF() {
     if (!bitacoraRef.current) return;
     setExporting(true);
+    // Esperar a que React renderice los estados expandidos y esconda los textareas
+    await new Promise(resolve => setTimeout(resolve, 300));
     try {
       const el = bitacoraRef.current;
       const scale = 2;
@@ -615,6 +625,7 @@ export default function BitacoraPage() {
                 evalData={evals[a.empleado_id] ?? { rating: 5, checks: {}, note: "" }}
                 onEvalChange={data => updateEval(a.empleado_id, data)}
                 empInfo={empMap[a.empleado_id]}
+                isExporting={exporting}
               />
             ))}
           </div>
@@ -630,13 +641,21 @@ export default function BitacoraPage() {
               Notas Generales del Día
             </span>
           </div>
-          <textarea
-            value={notasGenerales}
-            onChange={e => setNotasGenerales(e.target.value)}
-            placeholder="Observaciones generales, incidencias del negocio, pendientes para mañana..."
-            rows={4}
-            className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
-          />
+          {!exporting ? (
+            <textarea
+              value={notasGenerales}
+              onChange={e => setNotasGenerales(e.target.value)}
+              placeholder="Observaciones generales, incidencias del negocio, pendientes para mañana..."
+              rows={4}
+              className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
+            />
+          ) : notasGenerales ? (
+            <div className="w-full rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-700 whitespace-pre-wrap">
+              {notasGenerales}
+            </div>
+          ) : (
+            <div className="text-sm text-neutral-400 italic">Sin observaciones generales.</div>
+          )}
         </div>
 
         {/* Footer del doc */}
