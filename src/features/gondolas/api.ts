@@ -133,3 +133,6 @@ export const misOrdenesGondola = () =>
     const list = Array.isArray(r.data) ? r.data : r.data?.data;
     return (list || []).map((o: any) => ({ ...o, items: o.items || [] })) as GondolaOrden[];
   });
+
+export const autoRellenarGondola = (gondolaId: string) =>
+  api.post(`/gondolas/${gondolaId}/auto-rellenar`).then((r) => r.data as { message: string; orden_id: string });

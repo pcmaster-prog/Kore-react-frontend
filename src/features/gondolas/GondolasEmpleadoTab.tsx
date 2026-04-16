@@ -1,9 +1,9 @@
 // src/features/gondolas/GondolasEmpleadoTab.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LayoutGrid, AlertCircle, CheckCircle2, Clock } from "lucide-react";
-import { misOrdenesGondola } from "./api";
-import type { GondolaOrden } from "./types";
+import { LayoutGrid, AlertCircle, CheckCircle2, Clock, Plus } from "lucide-react";
+import { misOrdenesGondola, listGondolas, autoRellenarGondola } from "./api";
+import type { Gondola, GondolaOrden } from "./types";
 import { STATUS_CONFIG, tiempoRelativo } from "./utils";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -13,19 +13,41 @@ function cx(...s: Array<string | false | null | undefined>) {
 export default function GondolasEmpleadoTab() {
   const nav = useNavigate();
   const [ordenes, setOrdenes] = useState<GondolaOrden[]>([]);
+  const [gondolasDisponibles, setGondolasDisponibles] = useState<Gondola[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [autoLoading, setAutoLoading] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setErr(null);
-    misOrdenesGondola()
-      .then(setOrdenes)
+    Promise.all([misOrdenesGondola(), listGondolas()])
+      .then(([ords, gonds]) => {
+        setOrdenes(ords);
+        setGondolasDisponibles(gonds);
+      })
       .catch((e: any) =>
         setErr(e?.response?.data?.message ?? "Error cargando órdenes"),
       )
       .finally(() => setLoading(false));
   }, []);
+
+  async function handleAutoRellenar(gondolaId: string, gondolaNombre: string) {
+    if (!confirm(`¿Iniciar relleno de ${gondolaNombre}?`)) return;
+    setAutoLoading(gondolaId);
+    try {
+      const res = await autoRellenarGondola(gondolaId);
+      nav(`/app/employee/gondola-relleno/${res.orden_id}`);
+    } catch (e: any) {
+      if (e?.response?.status === 409) {
+        nav(`/app/employee/gondola-relleno/${e.response.data.orden_id}`);
+      } else {
+        alert(e?.response?.data?.message ?? 'Error al iniciar relleno');
+      }
+    } finally {
+      setAutoLoading(null);
+    }
+  }
 
   const today = new Date().toDateString();
 
@@ -67,7 +89,7 @@ export default function GondolasEmpleadoTab() {
 
   return (
     <div className="space-y-8">
-      {/* Por hacer */}
+      {/* Ordenes por hacer */}
       {porHacer.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -104,6 +126,44 @@ export default function GondolasEmpleadoTab() {
                 orden={o}
                 onNavigate={(id) => nav(`/app/employee/gondola-relleno/${id}`)}
               />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ¿Ves algo que necesita relleno? — Por iniciativa propia */}
+      {gondolasDisponibles.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Plus className="h-4 w-4 text-neutral-400" />
+            <h2 className="text-sm font-black text-obsidian uppercase tracking-widest">
+              ¿Ves algo que necesita relleno?
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {gondolasDisponibles.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => handleAutoRellenar(g.id, g.nombre)}
+                disabled={autoLoading === g.id}
+                className={cx(
+                  "w-full flex items-center gap-3 p-3 rounded-2xl border border-dashed transition text-left",
+                  autoLoading === g.id
+                    ? "opacity-60 cursor-not-allowed border-neutral-200"
+                    : "border-neutral-200 hover:border-obsidian hover:bg-neutral-50"
+                )}
+              >
+                <span className="text-xl">🛒</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-obsidian truncate">{g.nombre}</div>
+                  {(g as any).ubicacion && (
+                    <div className="text-xs text-neutral-400">{(g as any).ubicacion}</div>
+                  )}
+                </div>
+                <div className="ml-auto text-xs font-bold text-obsidian shrink-0">
+                  {autoLoading === g.id ? "Iniciando..." : "Iniciar →"}
+                </div>
+              </button>
             ))}
           </div>
         </section>

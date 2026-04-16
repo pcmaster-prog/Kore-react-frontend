@@ -292,7 +292,7 @@ export default function AppShell() {
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[100] sm:hidden">
+        <div className="fixed inset-0 z-[100] lg:hidden">
           <div className="absolute inset-0 bg-obsidian/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <div className="absolute left-0 top-0 h-[100dvh] w-[280px] bg-obsidian animate-out-in shadow-2xl overflow-hidden flex flex-col">
             <button

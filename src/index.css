@@ -32,4 +32,31 @@ html, body {
 #root {
   padding-bottom: env(safe-area-inset-bottom);
   padding-top: env(safe-area-inset-top);
-}
+}
+
+/* ── Mobile fixes (PARTE 4) ─────────────────────────────── */
+
+/* Safe area helper class para footers fijos */
+.mobile-safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Evitar zoom en inputs en iOS (font-size < 16px dispara zoom) */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Tap targets mínimos de 44px */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Scrollbar hidden helper */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
