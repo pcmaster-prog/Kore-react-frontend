@@ -33,7 +33,7 @@ type Entry = {
   total: number;
 };
 
-type Period = {
+type Period = {                     
   id: string;
   week_start: string;
   week_end: string;

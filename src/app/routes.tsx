@@ -1,10 +1,9 @@
-// src/routes.tsx
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RequireAuth } from "./guards/RequireAuth";
 import { RequireRole } from "./guards/RequireRole";
 import AppShell from "./layout/AppShell";
 
-// Auth
+
 import LoginPage from "@/features/auth/LoginPage";
 import RegisterPage from "@/features/auth/RegisterPage";
 

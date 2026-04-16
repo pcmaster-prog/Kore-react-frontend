@@ -38,7 +38,7 @@ function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
 }
 
-// 🔥 2.1 StatusPill mejorado
+
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string; dot: string }> = {
     open: {
@@ -214,7 +214,7 @@ export default function TasksPage() {
   const [evAssignmentId, setEvAssignmentId] = useState<string | null>(null);
   const [evTaskId, setEvTaskId] = useState<string | null>(null);
 
-  // ✅ Bug 3 — estado para el checklist del empleado
+  
   const [evChecklist, setEvChecklist] = useState<{
     def: any[] | null;
     state: Record<string, { done: boolean; at?: string }> | null;

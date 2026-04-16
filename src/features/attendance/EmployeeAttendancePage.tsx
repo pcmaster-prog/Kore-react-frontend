@@ -103,12 +103,29 @@ export default function EmployeeAttendancePage() {
     }
   }, []);
 
+  // ─── Rango de semana Dom→Sáb ──────────────────────────────────────────────
+  function getCurrentWeekRange(): { from: string; to: string } {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=Dom, 1=Lun … 6=Sáb
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - dayOfWeek); // retroceder al domingo
+    const saturday = new Date(sunday);
+    saturday.setDate(sunday.getDate() + 6);    // avanzar al sábado
+
+    const toISO = (d: Date) => d.toISOString().slice(0, 10);
+    return { from: toISO(sunday), to: toISO(saturday) };
+  }
+
+  const weekRange = getCurrentWeekRange();
+
   const loadHistory = useCallback(async () => {
     try {
-      const res = await getMyDays({ page: 1 });
+      // Pedimos solo los días de la semana Dom→Sáb actual
+      const res = await getMyDays({ from: weekRange.from, to: weekRange.to, page: 1 });
       setHistory(res.data ?? []);
     } catch { /* silent */ }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekRange.from, weekRange.to]);
 
   useEffect(() => {
     loadToday();
@@ -144,9 +161,9 @@ export default function EmployeeAttendancePage() {
   const dayInfo = today?.day;
 
   const todayMinutes = today?.totals?.worked_minutes ?? 0;
+  // "Esta semana" = todos los días del historial (ya filtrados Dom→Sáb) excepto hoy (que viene de totals)
   const historyMinutes = history
     .filter(d => d.date !== today?.date)
-    .slice(0, 7)
     .reduce((acc, d) => acc + (d.totals?.worked_minutes ?? 0), 0);
   const workedThisWeek = todayMinutes + historyMinutes;
   const completeDays = history.filter((d) => d.status === "closed" && !!d.first_check_in_at).length;
