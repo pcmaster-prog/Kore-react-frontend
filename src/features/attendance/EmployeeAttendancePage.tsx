@@ -112,8 +112,13 @@ export default function EmployeeAttendancePage() {
     const saturday = new Date(sunday);
     saturday.setDate(sunday.getDate() + 6);    // avanzar al sábado
 
-    const toISO = (d: Date) => d.toISOString().slice(0, 10);
-    return { from: toISO(sunday), to: toISO(saturday) };
+    const toLocalDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    return { from: toLocalDate(sunday), to: toLocalDate(saturday) };
   }
 
   const weekRange = getCurrentWeekRange();

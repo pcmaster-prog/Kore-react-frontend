@@ -101,6 +101,7 @@ function HorariosTab() {
   const [checkOutTime, setCheckOutTime] = useState("17:00");
   const [lateTolerance, setLateTolerance] = useState("10");
   const [maxHours, setMaxHours] = useState("8");
+  const [weekStart, setWeekStart] = useState("0");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -115,6 +116,10 @@ function HorariosTab() {
           setLateTolerance(o.late_tolerance.toString());
           setMaxHours(o.max_hours.toString());
         }
+        const c = res.data.calendar;
+        if (c && c.week_start !== undefined) {
+          setWeekStart(c.week_start.toString());
+        }
       })
       .catch((err) => console.error("Error loading settings", err))
       .finally(() => setLoading(false));
@@ -123,12 +128,17 @@ function HorariosTab() {
   async function handleSave() {
     setSaving(true);
     try {
-      await api.patch("/empresa/settings/operativo", {
-        check_in_time: checkInTime,
-        check_out_time: checkOutTime,
-        late_tolerance: parseInt(lateTolerance),
-        max_hours: parseInt(maxHours)
-      });
+      await Promise.all([
+        api.patch("/empresa/settings/operativo", {
+          check_in_time: checkInTime,
+          check_out_time: checkOutTime,
+          late_tolerance: parseInt(lateTolerance),
+          max_hours: parseInt(maxHours)
+        }),
+        api.patch("/empresa/settings/calendar", {
+          week_start: parseInt(weekStart)
+        })
+      ]);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
@@ -180,6 +190,18 @@ function HorariosTab() {
               <div>
                 <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Hora de Salida</label>
                 <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Inicio de Semana</label>
+                <select className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={weekStart} onChange={(e) => setWeekStart(e.target.value)}>
+                  <option value="0">Domingo</option>
+                  <option value="1">Lunes</option>
+                  <option value="2">Martes</option>
+                  <option value="3">Miércoles</option>
+                  <option value="4">Jueves</option>
+                  <option value="5">Viernes</option>
+                  <option value="6">Sábado</option>
+                </select>
               </div>
             </div>
           </div>

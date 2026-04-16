@@ -67,10 +67,15 @@ function weekLabel(start: string, end: string): string {
   return `${s.toLocaleDateString("es-MX", opts)} – ${e.toLocaleDateString("es-MX", opts)}`;
 }
 
-function sundayOfCurrentWeek(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - d.getDay());
-  return d.toISOString().slice(0, 10);
+function toLocalDate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function todayLocalDate(): string {
+  return toLocalDate(new Date());
 }
 
 function initials(name: string): string {
@@ -327,30 +332,32 @@ export default function NominaPage() {
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
-  const [weekDate, setWeekDate] = useState<string>(sundayOfCurrentWeek());
+  const [refDate, setRefDate] = useState<string>(todayLocalDate());
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3500);
   }
 
-  const weekStart = weekDate;
-  const weekEnd   = (() => {
-    const d = new Date(weekDate + "T12:00:00");
+  const weekStart = period?.week_start || refDate;
+  const weekEnd   = period?.week_end || (() => {
+    const d = new Date(refDate + "T12:00:00");
     d.setDate(d.getDate() + 6);
-    return d.toISOString().slice(0, 10);
+    return toLocalDate(d);
   })();
 
   function prevWeek() {
-    const d = new Date(weekDate + "T12:00:00");
+    const d = new Date(weekStart + "T12:00:00");
     d.setDate(d.getDate() - 7);
-    setWeekDate(d.toISOString().slice(0, 10));
+    setRefDate(toLocalDate(d));
+    setPeriod(null);
   }
 
   function nextWeek() {
-    const d = new Date(weekDate + "T12:00:00");
+    const d = new Date(weekStart + "T12:00:00");
     d.setDate(d.getDate() + 7);
-    setWeekDate(d.toISOString().slice(0, 10));
+    setRefDate(toLocalDate(d));
+    setPeriod(null);
   }
 
   const loadPeriod = useCallback(async () => {
@@ -358,10 +365,11 @@ export default function NominaPage() {
     setErr(null);
     setPeriod(null);
     try {
-      const res = await api.get("/nomina/periodos", { params: { week_start: weekStart } });
+      const res = await api.get("/nomina/periodos");
       const list = res.data?.data ?? res.data ?? [];
+      // Buscar periodo que contenga el refDate
       const found = Array.isArray(list)
-        ? list.find((p: Period) => p.week_start === weekStart)
+        ? list.find((p: Period) => refDate >= p.week_start && refDate <= p.week_end)
         : null;
 
       if (found) {
@@ -373,7 +381,7 @@ export default function NominaPage() {
     } finally {
       setLoading(false);
     }
-  }, [weekStart]);
+  }, [refDate]);
 
   useEffect(() => { loadPeriod(); }, [loadPeriod]);
 
@@ -381,8 +389,12 @@ export default function NominaPage() {
     setGenerating(true);
     setErr(null);
     try {
-      const res = await api.post("/nomina/periodos/generar", { week_date: weekStart });
-      setPeriod(res.data?.period ?? null);
+      const res = await api.post("/nomina/periodos/generar", { week_date: refDate });
+      const newPeriod = res.data?.period ?? null;
+      setPeriod(newPeriod);
+      if (newPeriod) {
+        setRefDate(newPeriod.week_start);
+      }
       showToast("ok", "Nómina generada correctamente");
     } catch (e: any) {
       showToast("err", e?.response?.data?.message ?? "No se pudo generar la nómina");
@@ -646,7 +658,7 @@ export default function NominaPage() {
               <div>
                 <h2 className="text-xl font-black text-obsidian tracking-tight">Detalle por Empleado</h2>
                 <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
-                  Semana {weekLabel(period.week_start, period.week_end)} · Dom → Sáb
+                  Semana {weekLabel(period.week_start, period.week_end)}
                 </p>
               </div>
               {!approved && (
