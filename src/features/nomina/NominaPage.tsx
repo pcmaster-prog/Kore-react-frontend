@@ -458,9 +458,11 @@ export default function NominaPage() {
 
   function exportPDF() {
     if (!period) return;
-    const w = window.open("", "_blank");
-    if (!w) return;
-    const rows = period.entries.map(e => `
+
+    const excludedIds = period.excluded_employee_ids ?? [];
+    const visibleEntries = period.entries.filter(e => !excludedIds.includes(e.empleado_id));
+
+    const rows = visibleEntries.map(e => `
       <tr>
         <td>${e.empleado_name}</td>
         <td>${fmtUnits(e.payment_type, e.units)}${e.rest_days_paid > 0 ? ` +${e.rest_days_paid}d` : ""}</td>
@@ -494,7 +496,7 @@ export default function NominaPage() {
       <div class="meta">
         Semana: ${weekLabel(period.week_start, period.week_end)} &nbsp;·&nbsp;
         Estado: ${period.status === "approved" ? "✓ Aprobada" : "Borrador"} &nbsp;·&nbsp;
-        Empleados: ${period.entries.length}
+        Empleados: ${visibleEntries.length}
       </div>
       <table>
         <thead><tr>
@@ -507,7 +509,7 @@ export default function NominaPage() {
         <div class="total-box"><div class="label">Total Nómina</div><div class="val">${fmt(period.total_amount)}</div></div>
         <div class="total-box"><div class="label">Ajustes</div><div class="val">${fmt(period.total_adjustments)}</div></div>
         <div class="total-box"><div class="label">Bonos</div><div class="val">${fmt(period.total_bonuses)}</div></div>
-        <div class="total-box"><div class="label">Empleados</div><div class="val">${period.entries.length}</div></div>
+        <div class="total-box"><div class="label">Empleados</div><div class="val">${visibleEntries.length}</div></div>
       </div>
       <script>window.onload = () => window.print();</script>
       </body></html>`);
@@ -516,8 +518,12 @@ export default function NominaPage() {
 
   function exportCSV() {
     if (!period) return;
+
+    const excludedIds = period.excluded_employee_ids ?? [];
+    const visibleEntries = period.entries.filter(e => !excludedIds.includes(e.empleado_id));
+
     const header = "Empleado,Horas/Días,Tipo,Tarifa,Subtotal,Ajuste,Motivo Ajuste,Bono,Motivo Bono,Total\n";
-    const rows = period.entries.map(e =>
+    const rows = visibleEntries.map(e =>
       [
         `"${e.empleado_name}"`,
         fmtUnits(e.payment_type, e.units),
@@ -541,9 +547,11 @@ export default function NominaPage() {
   }
 
   const approved  = period?.status === "approved";
-  const totalEmp  = period?.entries.length ?? 0;
+  const excludedIds = period?.excluded_employee_ids ?? [];
+  const visibleEntries = (period?.entries ?? []).filter(e => !excludedIds.includes(e.empleado_id));
+  const totalEmp  = visibleEntries.length;
   const avgTotal  = totalEmp > 0 ? (period?.total_amount ?? 0) / totalEmp : 0;
-  const draftCount = period?.entries.filter(e => (e.adjustment_amount ?? 0) < 0).length ?? 0;
+  const draftCount = visibleEntries.filter(e => (e.adjustment_amount ?? 0) < 0).length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -713,7 +721,7 @@ export default function NominaPage() {
             {/* Footer con total */}
             <div className="px-8 py-5 border-t border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
               <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-                {period.entries.length} empleado{period.entries.length !== 1 ? "s" : ""}
+                {totalEmp} empleado{totalEmp !== 1 ? "s" : ""} (pagables)
               </span>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Total semana</span>
