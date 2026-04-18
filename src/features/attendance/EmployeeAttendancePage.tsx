@@ -164,6 +164,7 @@ export default function EmployeeAttendancePage() {
   const actions = today?.actions;
   const totals = today?.totals;
   const dayInfo = today?.day;
+  const dayLocked = today?.day?.status === "closed";
 
   const todayMinutes = today?.totals?.worked_minutes ?? 0;
   // "Esta semana" = todos los días del historial (ya filtrados Dom→Sáb) excepto hoy (que viene de totals)
@@ -286,7 +287,26 @@ export default function EmployeeAttendancePage() {
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons or Locked Banner */}
+          {dayLocked ? (
+            <div className="rounded-[32px] sm:rounded-[40px] border-2 border-dashed border-neutral-200 bg-neutral-50 p-8 flex flex-col items-center justify-center text-center gap-4">
+              <div className="h-14 w-14 rounded-[18px] bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-sm font-black text-obsidian tracking-tight">Jornada cerrada por el administrador</div>
+                <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                  Entrada: {formatTime(dayInfo?.first_check_in_at)} &nbsp;&middot;&nbsp; Salida: {formatTime(dayInfo?.last_check_out_at)}
+                </div>
+              </div>
+              <p className="text-xs text-neutral-400 max-w-xs">
+                Tu asistencia de hoy fue registrada y cerrada. Si hay algún error, comunícate con tu supervisor.
+              </p>
+            </div>
+          ) : (
           <div className="rounded-[32px] sm:rounded-[40px] border border-neutral-100 bg-white p-5 sm:p-6 shadow-sm">
             <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-4 sm:mb-5">Acciones Rápidas</div>
             <div className="grid grid-cols-2 gap-4">
@@ -306,9 +326,10 @@ export default function EmployeeAttendancePage() {
               </button>
             )}
           </div>
+          )}
 
-          {/* Lunch Timer — visible cuando tiene check-in y no check-out */}
-          {today?.day?.first_check_in_at && !today?.day?.last_check_out_at && (
+          {/* Lunch Timer — visible cuando tiene check-in y no check-out y no cerrado */}
+          {!dayLocked && today?.day?.first_check_in_at && !today?.day?.last_check_out_at && (
             <LunchTimer
               lunchState={{
                 lunch_start_at: (today.day as any).lunch_start_at,
