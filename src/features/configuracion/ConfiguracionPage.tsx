@@ -102,6 +102,9 @@ function HorariosTab() {
   const [lateTolerance, setLateTolerance] = useState("10");
   const [maxHours, setMaxHours] = useState("8");
   const [weekStart, setWeekStart] = useState("0");
+  const [autoCloseEnabled, setAutoCloseEnabled] = useState(false);
+  const [autoCloseTime, setAutoCloseTime] = useState("17:00");
+  const [autoCloseWeekday, setAutoCloseWeekday] = useState("-1"); // -1 = todos los días
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -115,6 +118,9 @@ function HorariosTab() {
           setCheckOutTime(o.check_out_time);
           setLateTolerance(o.late_tolerance.toString());
           setMaxHours(o.max_hours.toString());
+          setAutoCloseEnabled(!!o.auto_close_enabled);
+          setAutoCloseTime(o.auto_close_time ?? "17:00");
+          setAutoCloseWeekday(o.auto_close_weekday !== null && o.auto_close_weekday !== undefined ? String(o.auto_close_weekday) : "-1");
         }
         const c = res.data.calendar;
         if (c && c.week_start !== undefined) {
@@ -130,10 +136,13 @@ function HorariosTab() {
     try {
       await Promise.all([
         api.patch("/empresa/settings/operativo", {
-          check_in_time: checkInTime,
-          check_out_time: checkOutTime,
-          late_tolerance: parseInt(lateTolerance),
-          max_hours: parseInt(maxHours)
+          check_in_time:       checkInTime,
+          check_out_time:      checkOutTime,
+          late_tolerance:      parseInt(lateTolerance),
+          max_hours:           parseInt(maxHours),
+          auto_close_enabled:  autoCloseEnabled,
+          auto_close_time:     autoCloseEnabled ? autoCloseTime : null,
+          auto_close_weekday:  autoCloseEnabled && autoCloseWeekday !== "-1" ? parseInt(autoCloseWeekday) : null,
         }),
         api.patch("/empresa/settings/calendar", {
           week_start: parseInt(weekStart)
@@ -223,6 +232,67 @@ function HorariosTab() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Cierre Automático */}
+        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-5">
+          <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-neutral-400" />
+              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Cierre Automático de Jornada</h3>
+            </div>
+            {/* Toggle */}
+            <button
+              type="button"
+              onClick={() => setAutoCloseEnabled(v => !v)}
+              className={cx(
+                "h-8 w-14 rounded-full transition-all flex items-center px-1 border",
+                autoCloseEnabled ? "bg-emerald-500 border-emerald-600" : "bg-neutral-200 border-neutral-300"
+              )}
+            >
+              <div className={cx(
+                "h-6 w-6 rounded-full bg-white shadow transition-transform duration-300",
+                autoCloseEnabled ? "translate-x-6" : "translate-x-0"
+              )} />
+            </button>
+          </div>
+
+          {autoCloseEnabled && (
+            <div className="grid grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Hora de Cierre</label>
+                <input
+                  type="time"
+                  value={autoCloseTime}
+                  onChange={e => setAutoCloseTime(e.target.value)}
+                  className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Día de la Semana</label>
+                <select
+                  value={autoCloseWeekday}
+                  onChange={e => setAutoCloseWeekday(e.target.value)}
+                  className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                >
+                  <option value="-1">Todos los días</option>
+                  <option value="0">Domingo</option>
+                  <option value="1">Lunes</option>
+                  <option value="2">Martes</option>
+                  <option value="3">Miércoles</option>
+                  <option value="4">Jueves</option>
+                  <option value="5">Viernes</option>
+                  <option value="6">Sábado</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          <p className="text-[11px] font-medium text-neutral-400">
+            {autoCloseEnabled
+              ? `El sistema cerrará automáticamente la jornada de todos los empleados con día abierto a las ${autoCloseTime}${autoCloseWeekday !== "-1" ? ` los ${["domingos","lunes","martes","miércoles","jueves","viernes","sábados"][parseInt(autoCloseWeekday)]}` : " de cada día"}.`
+              : "Activa esta opción para cerrar jornadas automáticamente y evitar que los empleados marquen salida después de la hora configurada."}
+          </p>
         </div>
 
         <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700 flex items-center gap-3">
