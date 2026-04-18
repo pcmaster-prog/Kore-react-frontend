@@ -1,6 +1,6 @@
 // src/features/configuracion/ConfiguracionPage.tsx
 import { useState, useEffect } from "react";
-import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2 } from "lucide-react";
+import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2, Bell, Send } from "lucide-react";
 import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import EmpleadosPage from "@/features/employees/EmpleadosPage";
@@ -633,10 +633,100 @@ function DocumentosTab() {
   );
 }
 
+function NotificacionesTab() {
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
+
+  async function handleTest() {
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await api.post("/fcm/test");
+      setResult({ type: "ok", msg: res.data.message });
+    } catch (e: any) {
+      setResult({ 
+        type: "err", 
+        msg: e.response?.data?.message || "Error al conectar con el servidor" 
+      });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50">
+        <h2 className="text-xl font-black text-obsidian tracking-tight">Centro de Notificaciones</h2>
+        <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Verificación y estado de alertas push</p>
+      </div>
+      
+      <div className="p-8 space-y-8">
+        {result && (
+          <div className={cx(
+            "rounded-2xl border px-5 py-4 text-sm font-bold flex items-center gap-3 animate-in-fade",
+            result.type === "ok" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-rose-50 border-rose-100 text-rose-700"
+          )}>
+            {result.type === "ok" ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+            {result.msg}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-8 flex flex-col items-center text-center">
+            <div className="h-16 w-16 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm mb-6">
+              <Bell className="h-8 w-8 text-obsidian" />
+            </div>
+            <h3 className="text-lg font-black text-obsidian tracking-tight mb-2">Prueba en Tiempo Real</h3>
+            <p className="text-sm font-medium text-neutral-500 mb-8 max-w-xs">
+              Envía un mensaje instantáneo a este dispositivo para confirmar que el canal de comunicación está abierto y configurado.
+            </p>
+            
+            <button
+              onClick={handleTest}
+              disabled={sending}
+              className="w-full rounded-2xl bg-obsidian px-8 py-4 text-sm font-bold text-white shadow-xl hover:bg-neutral-800 hover:shadow-obsidian/20 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+            >
+              {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+              {sending ? "Enviando..." : "Realizar Prueba"}
+            </button>
+          </div>
+
+          <div className="rounded-[28px] border border-blue-100 bg-blue-50/30 p-8">
+            <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mb-4">Checklist de Verificación</h4>
+            <div className="space-y-4">
+              {[
+                "Permisos del navegador concedidos",
+                "Certificado SSL activo (HTTPS)",
+                "Service Worker registrado",
+                "Token vinculado a tu cuenta"
+              ].map((item, i) => (
+                <div key={i} className="flex gap-3 text-sm font-medium text-blue-900">
+                  <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                  </div>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-700 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+             <span className="text-sm">⚠️</span>
+          </div>
+          Si la prueba falla, verifica que no estás en una pestaña de incógnito y que has limpiado la caché del sitio en las herramientas de desarrollador.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { key: "empleados", label: "Equipo", icon: <Users className="h-4 w-4" /> },
   { key: "roles",     label: "Roles",     icon: <Shield className="h-4 w-4" /> },
   { key: "horarios",  label: "Horarios",  icon: <Clock className="h-4 w-4" /> },
+  { key: "notificaciones", label: "Notificaciones", icon: <Bell className="h-4 w-4" /> },
   { key: "documentos", label: "Documentos", icon: <FileText className="h-4 w-4" /> },
   { key: "tarifas",   label: "Nómina",   icon: <DollarSign className="h-4 w-4" /> },
   { key: "modulos",   label: "Capacidades",   icon: <Blocks className="h-4 w-4" /> },
@@ -690,6 +780,7 @@ export default function ConfiguracionPage() {
         {tab === "roles"     && <RolesTab />}
         {tab === "tarifas"   && <TarifasTab />}
         {tab === "horarios"  && <HorariosTab />}
+        {tab === "notificaciones" && <NotificacionesTab />}
         {tab === "documentos" && <DocumentosTab />}
         {tab === "actividad" && <ActividadTab />}
         {tab === "modulos"   && <ModulosTab />}
