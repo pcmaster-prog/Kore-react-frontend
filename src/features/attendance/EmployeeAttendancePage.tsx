@@ -164,8 +164,13 @@ export default function EmployeeAttendancePage() {
   const actions = today?.actions;
   const totals = today?.totals;
   const dayInfo = today?.day;
-  // Bloqueado si: el stato es closed, el día tiene status closed, o el backend lo marcó como admin_closed
-  const dayLocked = today?.day?.status === "closed" || state === "closed" || (today as any)?.admin_closed === true;
+  // Bloqueado si: el state es closed, el día tiene status closed, el backend marcó admin_closed,
+  // o si last_check_out_at ya tiene valor (admin registró salida manual)
+  const dayLocked =
+    today?.day?.status === "closed" ||
+    state === "closed" ||
+    (today as any)?.admin_closed === true ||
+    !!today?.day?.last_check_out_at;
 
   const todayMinutes = today?.totals?.worked_minutes ?? 0;
   // "Esta semana" = todos los días del historial (ya filtrados Dom→Sáb) excepto hoy (que viene de totals)
