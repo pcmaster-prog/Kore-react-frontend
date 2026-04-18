@@ -459,6 +459,9 @@ export default function NominaPage() {
   function exportPDF() {
     if (!period) return;
 
+    const w = window.open("", "_blank");
+    if (!w) return;
+
     const excludedIds = period.excluded_employee_ids ?? [];
     const visibleEntries = period.entries.filter(e => !excludedIds.includes(e.empleado_id));
 
