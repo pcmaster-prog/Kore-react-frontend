@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ajustarAsistencia } from './api';
-import { X, Loader2 } from 'lucide-react';
+import { ajustarAsistencia, eliminarAsistencia } from './api';
+import { X, Loader2, Trash2 } from 'lucide-react';
 
 type Props = {
   empleadoId: string;
@@ -21,6 +21,7 @@ export default function AjustarAsistenciaModal({
   const [checkOut, setCheckOut] = useState(checkOutActual ?? '');
   const [motivo, setMotivo]     = useState('');
   const [saving, setSaving]     = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [err, setErr]           = useState<string | null>(null);
 
   async function handleSave() {
@@ -41,6 +42,20 @@ export default function AjustarAsistenciaModal({
       setErr(e?.response?.data?.message ?? 'Error al guardar');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm("¿Estás seguro de eliminar el registro de asistencia de este día? Esto no se puede deshacer.")) return;
+    setDeleting(true);
+    setErr(null);
+    try {
+      await eliminarAsistencia(empleadoId, fecha);
+      onSaved();
+    } catch (e: any) {
+      setErr(e?.response?.data?.message ?? 'Error al eliminar');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -113,20 +128,30 @@ export default function AjustarAsistenciaModal({
           </div>
         </div>
 
-        <div className="px-7 pb-7 flex gap-3">
+        <div className="px-7 pb-7 flex flex-col gap-3">
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 h-11 rounded-2xl border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || deleting || (!checkIn && !checkOut)}
+              className="flex-1 h-11 rounded-2xl bg-obsidian text-white text-sm font-bold hover:bg-obsidian/90 transition disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {saving ? 'Guardando...' : 'Guardar ajuste'}
+            </button>
+          </div>
           <button
-            onClick={onClose}
-            className="flex-1 h-11 rounded-2xl border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition"
+            onClick={handleDelete}
+            disabled={saving || deleting}
+            className="w-full h-11 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 text-sm font-bold hover:bg-rose-100 transition disabled:opacity-40 flex items-center justify-center gap-2 mt-2"
           >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || (!checkIn && !checkOut)}
-            className="flex-1 h-11 rounded-2xl bg-obsidian text-white text-sm font-bold hover:bg-obsidian/90 transition disabled:opacity-40 flex items-center justify-center gap-2"
-          >
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {saving ? 'Guardando...' : 'Guardar ajuste'}
+            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            {deleting ? 'Eliminando...' : 'Eliminar registro del día'}
           </button>
         </div>
       </div>

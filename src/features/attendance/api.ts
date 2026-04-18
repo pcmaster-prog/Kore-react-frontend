@@ -134,6 +134,11 @@ export async function ajustarAsistencia(
   return res.data;
 }
 
+export async function eliminarAsistencia(empleadoId: string, fecha: string) {
+  const res = await api.delete(`/asistencia/eliminar/${empleadoId}/${fecha}`);
+  return res.data;
+}
+
 // ─── Empleado: Comida ────────────────────────────────────────────────────────
 
 export async function iniciarComida() {
