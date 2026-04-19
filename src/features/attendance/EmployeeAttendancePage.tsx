@@ -339,7 +339,6 @@ export default function EmployeeAttendancePage() {
 
   const state = today?.state ?? "out";
   const actions = today?.actions;
-  const totals = today?.totals;
   const dayInfo = today?.day;
   const dayLocked =
     today?.day?.status === "closed" ||

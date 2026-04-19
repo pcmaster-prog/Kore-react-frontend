@@ -309,6 +309,9 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
         ) : null}
       </div>
     </div>
+  );
+}
+
 export default function ManagerAttendancePage() {
   const [tab, setTab] = useState<"daily" | "weekly" | "requests">("daily");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
