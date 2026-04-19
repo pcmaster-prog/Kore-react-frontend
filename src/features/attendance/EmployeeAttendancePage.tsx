@@ -11,25 +11,32 @@ import {
   cancelRestDay,
   minutesToHHMM,
   formatTime,
+  getMyLateInfo,
+  getMyAbsenceRequests,
+  createAbsenceRequest,
   type TodayResponse,
   type MyDayRow,
+  type LateInfo,
+  type AbsenceRequest,
 } from "./api";
 import LunchTimer from "./LunchTimer";
 import {
   LogIn, LogOut, Coffee, Play, Moon, XCircle,
   Clock, CheckCircle2, AlertTriangle, Calendar,
-  Timer, Wifi, Loader2,
+  Timer, Wifi, Loader2, FileText, Send, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
 }
 
-// ─── Badge estado del día ─────────────────────────────────────────
+// ─── Badge estado del día ─────────────────────────────────────────────
 function DayBadge({ row }: { row: MyDayRow }) {
   const checkedIn = !!row.first_check_in_at;
   const closed = row.status === "closed";
+  const isLate = !!((row as any).late_minutes && (row as any).late_minutes > 0);
   if (!checkedIn) return <span className="inline-flex items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-500"><span className="h-1.5 w-1.5 rounded-full bg-rose-400" />Ausente</span>;
+  if (closed && isLate) return <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-600"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />Retardo</span>;
   if (closed) return <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Presente</span>;
   return <span className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600"><span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />En curso</span>;
 }
@@ -77,9 +84,172 @@ function ActionBtn({
   );
 }
 
+// ─── Badge de solicitud de ausencia ───────────────────────────────────────────
+function AbsenceBadge({ status }: { status: string }) {
+  if (status === "approved") return <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600"><CheckCircle2 className="h-2.5 w-2.5" />Aprobada</span>;
+  if (status === "rejected") return <span className="inline-flex items-center gap-1 rounded-lg border border-rose-100 bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-500">✕ Rechazada</span>;
+  return <span className="inline-flex items-center gap-1 rounded-lg border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600"><span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />Pendiente</span>;
+}
+
+// ─── Panel de solicitud de ausencia ──────────────────────────────────────────
+function AbsencePanel() {
+  const [open, setOpen] = useState(false);
+  const [requests, setRequests] = useState<AbsenceRequest[]>([]);
+  const [loadingReqs, setLoadingReqs] = useState(false);
+  const [date, setDate] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [sending, setSending] = useState(false);
+  const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().slice(0, 10);
+
+  function showToast(type: "ok" | "err", msg: string) {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  const loadRequests = useCallback(async () => {
+    setLoadingReqs(true);
+    try {
+      const data = await getMyAbsenceRequests();
+      setRequests(data);
+    } catch { /* silent */ }
+    finally { setLoadingReqs(false); }
+  }, []);
+
+  useEffect(() => {
+    if (open) loadRequests();
+  }, [open, loadRequests]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!date || motivo.trim().length < 10) {
+      showToast("err", "Escribe una justificación de al menos 10 caracteres.");
+      return;
+    }
+    setSending(true);
+    try {
+      await createAbsenceRequest({ date, motivo: motivo.trim() });
+      showToast("ok", "Solicitud enviada. Espera la respuesta del administrador.");
+      setDate("");
+      setMotivo("");
+      loadRequests();
+    } catch (e: any) {
+      showToast("err", e?.response?.data?.message ?? "No se pudo enviar la solicitud.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="rounded-[32px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-6 py-5 hover:bg-neutral-50 transition"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+            <FileText className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm font-black text-obsidian tracking-tight">Solicitar Ausencia Justificada</div>
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Envía tu justificación al administrador</div>
+          </div>
+        </div>
+        {open ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
+      </button>
+
+      {open && (
+        <div className="px-6 pb-6 space-y-5 border-t border-neutral-50">
+          {toast && (
+            <div className={cx(
+              "rounded-2xl border px-4 py-3 text-sm font-bold flex items-center gap-3 mt-4",
+              toast.type === "ok" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-rose-50 border-rose-100 text-rose-700"
+            )}>
+              {toast.type === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
+              {toast.msg}
+            </div>
+          )}
+
+          {/* Formulario nuevo */}
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Nueva solicitud</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Fecha a ausentarse</label>
+                <input
+                  type="date"
+                  min={minDate}
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Motivo / Justificación</label>
+              <textarea
+                value={motivo}
+                onChange={e => setMotivo(e.target.value)}
+                rows={3}
+                placeholder="Ej: Cita médica, trámite escolar, asunto familiar urgente..."
+                className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all resize-none"
+              />
+              <div className="text-[10px] text-neutral-400 mt-1">{motivo.length}/500 caracteres (mínimo 10)</div>
+            </div>
+            <button
+              type="submit"
+              disabled={sending || !date || motivo.trim().length < 10}
+              className="inline-flex items-center gap-2 rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white hover:bg-neutral-800 transition disabled:opacity-40"
+            >
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {sending ? "Enviando..." : "Enviar Solicitud"}
+            </button>
+          </form>
+
+          {/* Historial de solicitudes */}
+          <div>
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3">Mis solicitudes</div>
+            {loadingReqs ? (
+              <div className="flex items-center gap-2 py-4 text-neutral-300">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
+              </div>
+            ) : requests.length === 0 ? (
+              <p className="text-xs text-neutral-400 py-2">No tienes solicitudes aún.</p>
+            ) : (
+              <div className="space-y-2">
+                {requests.map(r => (
+                  <div key={r.id} className="rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-obsidian">
+                        {new Date(r.date + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}
+                      </div>
+                      <div className="text-xs text-neutral-500 mt-0.5 line-clamp-2">{r.motivo}</div>
+                      {r.reviewer_note && (
+                        <div className="text-[11px] text-neutral-400 mt-1 italic">Nota: {r.reviewer_note}</div>
+                      )}
+                    </div>
+                    <div className="shrink-0 pt-0.5">
+                      <AbsenceBadge status={r.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EmployeeAttendancePage() {
   const [today, setToday] = useState<TodayResponse | null>(null);
   const [history, setHistory] = useState<MyDayRow[]>([]);
+  const [lateInfo, setLateInfo] = useState<LateInfo | null>(null);
   const [loadingToday, setLoadingToday] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -103,15 +273,21 @@ export default function EmployeeAttendancePage() {
     }
   }, []);
 
+  const loadLateInfo = useCallback(async () => {
+    try {
+      const info = await getMyLateInfo();
+      setLateInfo(info);
+    } catch { /* silent */ }
+  }, []);
+
   // ─── Rango de semana Dom→Sáb ──────────────────────────────────────────────
   function getCurrentWeekRange(): { from: string; to: string } {
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0=Dom, 1=Lun … 6=Sáb
+    const dayOfWeek = now.getDay();
     const sunday = new Date(now);
-    sunday.setDate(now.getDate() - dayOfWeek); // retroceder al domingo
+    sunday.setDate(now.getDate() - dayOfWeek);
     const saturday = new Date(sunday);
-    saturday.setDate(sunday.getDate() + 6);    // avanzar al sábado
-
+    saturday.setDate(sunday.getDate() + 6);
     const toLocalDate = (d: Date) => {
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -125,7 +301,6 @@ export default function EmployeeAttendancePage() {
 
   const loadHistory = useCallback(async () => {
     try {
-      // Pedimos solo los días de la semana Dom→Sáb actual
       const res = await getMyDays({ from: weekRange.from, to: weekRange.to, page: 1 });
       setHistory(res.data ?? []);
     } catch { /* silent */ }
@@ -135,7 +310,8 @@ export default function EmployeeAttendancePage() {
   useEffect(() => {
     loadToday();
     loadHistory();
-  }, [loadToday, loadHistory]);
+    loadLateInfo();
+  }, [loadToday, loadHistory, loadLateInfo]);
 
   async function doAction(fn: () => Promise<any>, msg: string) {
     setBusy(true);
@@ -145,6 +321,7 @@ export default function EmployeeAttendancePage() {
       showToast("ok", msg);
       await loadToday();
       await loadHistory();
+      await loadLateInfo(); // Refresh tardiness after any action
     } catch (e: any) {
       const code = e?.response?.data?.code ?? "";
       if (code === "NETWORK_RESTRICTED") {
@@ -164,8 +341,6 @@ export default function EmployeeAttendancePage() {
   const actions = today?.actions;
   const totals = today?.totals;
   const dayInfo = today?.day;
-  // Bloqueado si: el state es closed, el día tiene status closed, el backend marcó admin_closed,
-  // o si last_check_out_at ya tiene valor (admin registró salida manual)
   const dayLocked =
     today?.day?.status === "closed" ||
     state === "closed" ||
@@ -173,7 +348,6 @@ export default function EmployeeAttendancePage() {
     !!today?.day?.last_check_out_at;
 
   const todayMinutes = today?.totals?.worked_minutes ?? 0;
-  // "Esta semana" = todos los días del historial (ya filtrados Dom→Sáb) excepto hoy (que viene de totals)
   const historyMinutes = history
     .filter(d => d.date !== today?.date)
     .reduce((acc, d) => acc + (d.totals?.worked_minutes ?? 0), 0);
@@ -192,6 +366,10 @@ export default function EmployeeAttendancePage() {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
+  // ─── Banner de retardos ──────────────────────────────────────────────────────
+  const lateCount = lateInfo?.late_count ?? 0;
+  const penaltyActive = lateInfo?.penalty_active ?? false;
+
   return (
     <div className="space-y-6 max-w-2xl w-full mx-auto min-w-0">
       {/* Header */}
@@ -199,6 +377,49 @@ export default function EmployeeAttendancePage() {
         <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em] mb-1">Registro de Jornada</p>
         <h1 className="text-3xl font-black text-obsidian tracking-tight">Mi Asistencia</h1>
       </div>
+
+      {/* ─── Banner de retardos ───────────────────────────────────────────── */}
+      {lateCount > 0 && (
+        <div className={cx(
+          "rounded-2xl border px-5 py-4 flex items-start gap-4",
+          penaltyActive
+            ? "bg-rose-50 border-rose-200"
+            : "bg-amber-50 border-amber-200"
+        )}>
+          <div className={cx(
+            "h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 text-lg",
+            penaltyActive ? "bg-rose-100" : "bg-amber-100"
+          )}>
+            ⏰
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className={cx("text-sm font-black tracking-tight", penaltyActive ? "text-rose-700" : "text-amber-700")}>
+              {penaltyActive
+                ? `🚨 Tienes ${lateCount} retardos este mes`
+                : `⚠️ Llevas ${lateCount} retardo${lateCount > 1 ? "s" : ""} este mes`}
+            </div>
+            <p className={cx("text-xs font-medium mt-0.5", penaltyActive ? "text-rose-600" : "text-amber-600")}>
+              {penaltyActive
+                ? "Has acumulado 3 o más retardos. Tu día de descanso de esta semana NO será pagado."
+                : lateCount === 2
+                  ? "¡Cuidado! Al siguiente retardo tu día de descanso no será pagado."
+                  : "Ten cuidado con la puntualidad. A los 3 retardos pierdes el pago del día de descanso."}
+            </p>
+            {lateInfo?.late_days && lateInfo.late_days.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {lateInfo.late_days.map(d => (
+                  <span key={d.date} className={cx(
+                    "rounded-lg px-2 py-0.5 text-[10px] font-bold border",
+                    penaltyActive ? "bg-rose-100 border-rose-200 text-rose-600" : "bg-amber-100 border-amber-200 text-amber-700"
+                  )}>
+                    {new Date(d.date + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })} · {d.late_minutes}min
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Toast */}
       {toast && (
@@ -270,6 +491,13 @@ export default function EmployeeAttendancePage() {
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Salida</div>
                   <div className="text-lg font-black">{formatTime(dayInfo?.last_check_out_at)}</div>
                 </div>
+                {/* Retardo de hoy */}
+                {(dayInfo as any)?.late_minutes > 0 && (
+                  <div>
+                    <div className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">Retardo</div>
+                    <div className="text-lg font-black text-amber-300">{(dayInfo as any).late_minutes}min</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -286,10 +514,17 @@ export default function EmployeeAttendancePage() {
               <div className="text-lg sm:text-2xl font-black text-emerald-600">{completeDays}</div>
               <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Días Completos</div>
             </div>
-            <div className="rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center">
-              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-200 mb-1 sm:mb-2" />
-              <div className="text-lg sm:text-2xl font-black text-amber-600">{minutesToHHMM(totals?.break_minutes ?? 0)}</div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Pausas Hoy</div>
+            <div className={cx(
+              "rounded-[24px] sm:rounded-[28px] border p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center",
+              lateCount >= 3 ? "border-rose-200 bg-rose-50" : lateCount > 0 ? "border-amber-200 bg-amber-50" : "border-neutral-100 bg-white"
+            )}>
+              <Clock className={cx("h-4 w-4 sm:h-5 sm:w-5 mb-1 sm:mb-2", lateCount >= 3 ? "text-rose-300" : lateCount > 0 ? "text-amber-300" : "text-amber-200")} />
+              <div className={cx("text-lg sm:text-2xl font-black", lateCount >= 3 ? "text-rose-600" : lateCount > 0 ? "text-amber-600" : "text-amber-600")}>
+                {lateCount}
+              </div>
+              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">
+                Retardos (mes)
+              </div>
             </div>
           </div>
 
@@ -305,7 +540,7 @@ export default function EmployeeAttendancePage() {
               <div>
                 <div className="text-sm font-black text-obsidian tracking-tight">Jornada cerrada por el administrador</div>
                 <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
-                  Entrada: {formatTime(dayInfo?.first_check_in_at)} &nbsp;&middot;&nbsp; Salida: {formatTime(dayInfo?.last_check_out_at)}
+                  Entrada: {formatTime(dayInfo?.first_check_in_at)} &nbsp;·&nbsp; Salida: {formatTime(dayInfo?.last_check_out_at)}
                 </div>
               </div>
               <p className="text-xs text-neutral-400 max-w-xs">
@@ -334,7 +569,7 @@ export default function EmployeeAttendancePage() {
           </div>
           )}
 
-          {/* Lunch Timer — visible cuando tiene check-in y no check-out y no cerrado */}
+          {/* Lunch Timer */}
           {!dayLocked && today?.day?.first_check_in_at && !today?.day?.last_check_out_at && (
             <LunchTimer
               lunchState={{
@@ -351,6 +586,9 @@ export default function EmployeeAttendancePage() {
           )}
         </>
       )}
+
+      {/* ─── Panel de solicitudes de ausencia ────────────────────────────────── */}
+      <AbsencePanel />
 
       {/* History table */}
       <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
@@ -384,11 +622,17 @@ export default function EmployeeAttendancePage() {
                     const dayName = d.toLocaleDateString("es-MX", { weekday: "long" });
                     const dateShort = d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
                     const isToday = row.date === new Date().toISOString().slice(0, 10);
+                    const rowLateMinutes = (row as any).late_minutes;
                     return (
                       <tr key={row.id} className={cx("border-t border-neutral-50 transition", isToday ? "bg-blue-50/30" : "hover:bg-neutral-50/50")}>
                         <td className="px-5 py-4 capitalize text-sm font-bold text-obsidian">{dayName}</td>
                         <td className="px-5 py-4 text-sm text-neutral-400">{dateShort}</td>
-                        <td className="px-5 py-4 font-bold text-sm text-obsidian">{formatTime(row.first_check_in_at)}</td>
+                        <td className="px-5 py-4 font-bold text-sm text-obsidian">
+                          {formatTime(row.first_check_in_at)}
+                          {rowLateMinutes > 0 && (
+                            <span className="ml-1.5 text-[10px] font-bold text-amber-500">+{rowLateMinutes}min</span>
+                          )}
+                        </td>
                         <td className="px-5 py-4 text-sm text-neutral-400">{formatTime(row.last_check_out_at)}</td>
                         <td className="px-5 py-4 font-black text-sm text-obsidian">
                           {row.totals ? minutesToHHMM(row.totals.worked_minutes) : "—"}

@@ -161,6 +161,68 @@ export async function terminarComida() {
   };
 }
 
+// ─── Retardos ────────────────────────────────────────────────────────────────
+
+export type LateInfo = {
+  late_count: number;
+  today_late_minutes: number | null;
+  penalty_active: boolean;
+  late_days: { date: string; late_minutes: number }[];
+  month: string;
+};
+
+export async function getMyLateInfo(): Promise<LateInfo> {
+  const res = await api.get("/asistencia/mis-retardos");
+  return res.data as LateInfo;
+}
+
+// ─── Solicitudes de Ausencia ─────────────────────────────────────────────────
+
+export type AbsenceStatus = "pending" | "approved" | "rejected";
+
+export type AbsenceRequest = {
+  id: string;
+  date: string;
+  motivo: string;
+  status: AbsenceStatus;
+  reviewer_note?: string | null;
+  reviewed_at?: string | null;
+  created_at?: string | null;
+  // Solo en vista admin
+  empleado_id?: string;
+  empleado_name?: string;
+};
+
+export async function createAbsenceRequest(data: {
+  date: string;
+  motivo: string;
+}): Promise<AbsenceRequest> {
+  const res = await api.post("/asistencia/ausencias", data);
+  return res.data.request as AbsenceRequest;
+}
+
+export async function getMyAbsenceRequests(): Promise<AbsenceRequest[]> {
+  const res = await api.get("/asistencia/ausencias");
+  return (res.data.data ?? []) as AbsenceRequest[];
+}
+
+export async function getPendingAbsences(): Promise<AbsenceRequest[]> {
+  const res = await api.get("/asistencia/ausencias/pendientes");
+  return (res.data.data ?? []) as AbsenceRequest[];
+}
+
+export async function reviewAbsence(
+  id: string,
+  status: "approved" | "rejected",
+  reviewerNote?: string
+): Promise<AbsenceRequest> {
+  const res = await api.patch(`/asistencia/ausencias/${id}`, {
+    status,
+    reviewer_note: reviewerNote ?? null,
+  });
+  return res.data.request as AbsenceRequest;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**

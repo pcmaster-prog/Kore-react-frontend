@@ -25,6 +25,9 @@ type Entry = {
   rate: number;
   units: number;
   rest_days_paid: number;
+  tardiness_count: number;
+  absences_count: number;
+  penalty_active: boolean;
   subtotal: number;
   adjustment_amount: number;
   adjustment_note?: string | null;
@@ -157,6 +160,26 @@ function EntryRow({
           {entry.rest_days_paid > 0 && (
             <div className="text-[10px] text-emerald-600 font-medium mt-0.5">+{entry.rest_days_paid} descanso pagado</div>
           )}
+          {entry.penalty_active && (
+            <div className="text-[10px] text-rose-500 font-bold mt-0.5">🚨 Sin pago descanso</div>
+          )}
+          {/* Retardos y faltas */}
+          <div className="flex gap-1.5 mt-1 flex-wrap">
+            {(entry.tardiness_count ?? 0) > 0 && (
+              <span className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                entry.penalty_active
+                  ? "bg-rose-50 border-rose-200 text-rose-600"
+                  : "bg-amber-50 border-amber-200 text-amber-600"
+              }`}>
+                ⏰ {entry.tardiness_count} retardo{entry.tardiness_count !== 1 ? "s" : ""}
+              </span>
+            )}
+            {(entry.absences_count ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-lg border border-rose-100 bg-rose-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-500">
+                ✕ {entry.absences_count} falta{entry.absences_count !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
         </td>
 
         {/* Tipo */}
