@@ -43,12 +43,12 @@ function SidebarLink({
           "group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm transition-all duration-200",
           indent && "ml-4 pl-3",
           isActive
-            ? "bg-white/10 text-white shadow-sm backdrop-blur-md"
-            : "text-white/60 hover:bg-white/5 hover:text-white"
+            ? "bg-k-sb-active-bg text-k-sb-active shadow-sm"
+            : "text-k-sb-text hover:bg-k-bg-sidebar-hover hover:text-k-sb-active"
         )
       }
     >
-      <span className={cx("shrink-0 transition-colors uppercase", "group-hover:text-white")}>{icon}</span>
+      <span className={cx("shrink-0 transition-colors uppercase", "group-hover:text-k-sb-active")}>{icon}</span>
       <span className="font-medium tracking-wide">{label}</span>
     </NavLink>
   );
@@ -62,7 +62,7 @@ function NavGroup({
 }) {
   return (
     <div className="space-y-1 mt-6">
-      <div className="px-4 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+      <div className="px-4 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-k-sb-text opacity-70">
         {label}
       </div>
       {children}
@@ -144,16 +144,16 @@ function SidebarContent({
   }, [isEmployee, isAdmin, user?.id]);  // single fetch on mount
 
   return (
-    <div className="flex flex-col h-full bg-obsidian text-white">
+    <div className="flex flex-col h-full bg-k-bg-sidebar text-k-sb-text">
       {/* Logo Section */}
       <div className="px-8 py-10">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-white shadow-xl shadow-black/20 flex items-center justify-center text-obsidian font-black text-xl italic">
+          <div className="h-10 w-10 rounded-2xl bg-k-sb-active shadow-xl flex items-center justify-center text-k-bg-sidebar font-black text-xl italic">
             K
           </div>
           <div>
-            <div className="text-xl font-black tracking-tighter leading-none">Kore</div>
-            <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em] mt-1">Ops Suite</div>
+            <div className="text-xl font-black tracking-tighter leading-none text-k-sb-active">Kore</div>
+            <div className="text-[10px] font-bold text-k-sb-text uppercase tracking-[0.3em] mt-1">Ops Suite</div>
           </div>
         </div>
       </div>
@@ -216,19 +216,19 @@ function SidebarContent({
       </nav>
 
       {/* Footer / User Profile Summary */}
-      <div className="p-4 border-t border-white/5 space-y-4">
+      <div className="p-4 border-t border-k-sb-text/10 space-y-4">
         <div className="flex items-center gap-3 px-2">
-           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-white/20 to-white/5 border border-white/10 flex items-center justify-center text-xs font-bold text-white shadow-inner">
+           <div className="h-9 w-9 rounded-xl bg-k-sb-active-bg border border-k-sb-text/20 flex items-center justify-center text-xs font-bold text-k-sb-active shadow-inner">
             {(user?.name ?? "U")[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-             <div className="text-[13px] font-bold text-white truncate leading-tight">{user?.name ?? "Usuario"}</div>
-             <div className="text-[10px] font-medium text-white/40 truncate mt-0.5">{role === 'admin' ? 'Operations Manager' : 'Staff'}</div>
+             <div className="text-[13px] font-bold text-k-sb-active truncate leading-tight">{user?.name ?? "Usuario"}</div>
+             <div className="text-[10px] font-medium text-k-sb-text truncate mt-0.5">{role === 'admin' ? 'Operations Manager' : 'Staff'}</div>
           </div>
         </div>
         <button
           onClick={onLogout}
-          className="w-full h-11 rounded-xl bg-white/5 text-white/70 text-[13px] font-bold hover:bg-white/10 hover:text-white inline-flex items-center justify-center gap-2 transition-all duration-300 group"
+          className="w-full h-11 rounded-xl bg-k-bg-sidebar-hover text-k-sb-text text-[13px] font-bold hover:bg-k-sb-active-bg hover:text-k-sb-active inline-flex items-center justify-center gap-2 transition-all duration-300 group"
         >
           <LogOut className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
           Cerrar Sesión
@@ -252,7 +252,7 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-bone flex overflow-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen bg-k-bg-page flex overflow-hidden w-full max-w-[100vw]">
       {/* ── A11y Skip to content ── */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:shadow-lg focus:left-4 focus:top-4 focus:rounded-xl">
         Saltar al contenido principal

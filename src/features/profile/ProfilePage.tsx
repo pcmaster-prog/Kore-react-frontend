@@ -4,8 +4,9 @@ import api from "@/lib/http";
 import {
   User, Mail, Phone, MapPin, Briefcase, Shield,
   Calendar, Hash, CheckCircle2, AlertTriangle,
-  Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, MonitorSmartphone
+  Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, MonitorSmartphone, Globe, Moon
 } from "lucide-react";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -201,6 +202,14 @@ export default function ProfilePage() {
     showToast("ok", next ? "Notificaciones habilitadas" : "Notificaciones deshabilitadas");
     updatePreferenceBackend("notifications_enabled", next);
   }
+
+  function changeLanguage(lang: string) {
+    setPreferences(p => ({ ...p, language: lang }));
+    localStorage.setItem("kore_prefs_lang", lang);
+    showToast("ok", "Idioma actualizado");
+    updatePreferenceBackend("language", lang);
+  }
+
   const roleLabel =
     profile?.role === "admin" ? "Administrador"
     : profile?.role === "supervisor" ? "Supervisor"
@@ -461,36 +470,28 @@ export default function ProfilePage() {
                 </button>
               </div>
               {/* Proximanete Cambio de Idiomas */} 
-              {/* <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 text-neutral-400" />
-                  <div className="text-xs font-bold text-obsidian">Idioma</div>
+                  <Globe className="h-4 w-4 text-k-text-b" />
+                  <div className="text-sm font-medium text-k-text-h">Idioma</div>
                 </div>
                 <select 
-                  className="rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
+                  className="rounded-xl border border-k-border bg-k-bg-card2 px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 text-k-text-h"
                   value={preferences.language}
                   onChange={e => changeLanguage(e.target.value)}
                 >
                   <option value="es">Español</option>
                   <option value="en">English</option>
                 </select>
-              </div> */}
-              {/* Proximanete Cambio de Tema */}  
-              {/* <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Moon className="h-4 w-4 text-neutral-400" />
-                  <div className="text-xs font-bold text-obsidian">Tema</div>
-                </div>
-                <select 
-                  className="rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
-                  value={preferences.theme}
-                  onChange={e => toggleTheme(e.target.value)}
-                >
-                  <option value="system">Sistema</option>
-                  <option value="light">Claro</option>
-                  <option value="dark">Oscuro</option>
-                </select>
-              </div> */}
+              </div>
+              {/* Theme Switcher */}  
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-k-text-h mb-2">
+                  <Moon className="w-4 h-4 text-k-text-b" />
+                  Tema visual
+                </label>
+                <ThemeSwitcher />
+              </div>
             </div>
           </div>
 

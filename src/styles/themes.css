@@ -1,0 +1,206 @@
+/* src/styles/themes.css */
+:root {
+  --t: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ① BEIGE CLÁSICO (default)                                  */
+/* ═══════════════════════════════════════════════════════════ */
+[data-theme="beige"] {
+  --bg-page: #f2ece2;
+  --bg-sidebar: #1c2030;
+  --bg-sidebar-hover: rgba(255,255,255,0.05);
+  --bg-card: #ffffff;
+  --bg-card2: #f8f4ee;
+  --sb-text: #8892a8;
+  --sb-active-bg: #2a3045;
+  --sb-active: #ffffff;
+  --accent-btn: #1c2030;
+  --accent-btn-text: #ffffff;
+  --text-h: #111827;
+  --text-b: #6b7280;
+  --badge-p-bg: #e0e7ff;
+  --badge-p-c: #3730a3;
+  --badge-a-bg: #fef3c7;
+  --badge-a-c: #92400e;
+  --badge-b-bg: #d1fae5;
+  --badge-b-c: #065f46;
+  --bar1: #4f46e5;
+  --bar2: #818cf8;
+  --bar3: #c7d2fe;
+  --dot1: #10b981;
+  --dot2: #6366f1;
+  --dot3: #f59e0b;
+  --border: #e8e1d6;
+  --shadow: 0 1px 4px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.04);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ② AZUL PRO                                                 */
+/* ═══════════════════════════════════════════════════════════ */
+[data-theme="azul"] {
+  --bg-page: #edf2fc;
+  --bg-sidebar: #1746c8;
+  --bg-sidebar-hover: rgba(255,255,255,0.08);
+  --bg-card: #ffffff;
+  --bg-card2: #f0f5fd;
+  --sb-text: #a5c0f5;
+  --sb-active-bg: #1338a0;
+  --sb-active: #ffffff;
+  --accent-btn: #2563eb;
+  --accent-btn-text: #ffffff;
+  --text-h: #0f172a;
+  --text-b: #4b5a72;
+  --badge-p-bg: #dbeafe;
+  --badge-p-c: #1e40af;
+  --badge-a-bg: #fef3c7;
+  --badge-a-c: #92400e;
+  --badge-b-bg: #d1fae5;
+  --badge-b-c: #065f46;
+  --bar1: #2563eb;
+  --bar2: #60a5fa;
+  --bar3: #bfdbfe;
+  --dot1: #10b981;
+  --dot2: #3b82f6;
+  --dot3: #f59e0b;
+  --border: #d5e3f8;
+  --shadow: 0 1px 4px rgba(37,99,235,0.06), 0 4px 16px rgba(37,99,235,0.07);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ③ MORADO ELEGANTE                                          */
+/* ═══════════════════════════════════════════════════════════ */
+[data-theme="morado"] {
+  --bg-page: #f5f0fe;
+  --bg-sidebar: #120228;
+  --bg-sidebar-hover: rgba(255,255,255,0.06);
+  --bg-card: #ffffff;
+  --bg-card2: #f9f5ff;
+  --sb-text: #7a5a9e;
+  --sb-active-bg: #220640;
+  --sb-active: #e9d8ff;
+  --accent-btn: #7c3aed;
+  --accent-btn-text: #ffffff;
+  --text-h: #1a0533;
+  --text-b: #6b5880;
+  --badge-p-bg: #ede9fe;
+  --badge-p-c: #5b21b6;
+  --badge-a-bg: #fef9c3;
+  --badge-a-c: #713f12;
+  --badge-b-bg: #fce7f3;
+  --badge-b-c: #9d174d;
+  --bar1: #7c3aed;
+  --bar2: #a78bfa;
+  --bar3: #ddd6fe;
+  --dot1: #c084fc;
+  --dot2: #e879f9;
+  --dot3: #facc15;
+  --border: #e2d4f8;
+  --shadow: 0 1px 4px rgba(109,40,217,0.07), 0 4px 20px rgba(109,40,217,0.09);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ④ ROSA SUAVE                                               */
+/* ═══════════════════════════════════════════════════════════ */
+[data-theme="rosa"] {
+  --bg-page: #fdf0f5;
+  --bg-sidebar: #3b0027;
+  --bg-sidebar-hover: rgba(255,255,255,0.06);
+  --bg-card: #ffffff;
+  --bg-card2: #fff5f9;
+  --sb-text: #c07090;
+  --sb-active-bg: #5c0038;
+  --sb-active: #ffd6e8;
+  --accent-btn: #db2777;
+  --accent-btn-text: #ffffff;
+  --text-h: #3b0027;
+  --text-b: #8a5070;
+  --badge-p-bg: #fce7f3;
+  --badge-p-c: #be185d;
+  --badge-a-bg: #fee2e2;
+  --badge-a-c: #991b1b;
+  --badge-b-bg: #fce7f3;
+  --badge-b-c: #9d174d;
+  --bar1: #ec4899;
+  --bar2: #f9a8d4;
+  --bar3: #fce7f3;
+  --dot1: #f43f5e;
+  --dot2: #e879f9;
+  --dot3: #fb923c;
+  --border: #f9d0e4;
+  --shadow: 0 1px 4px rgba(219,39,119,0.06), 0 4px 16px rgba(219,39,119,0.07);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ⑤ OSCURO ESPACIAL                                          */
+/* ═══════════════════════════════════════════════════════════ */
+[data-theme="oscuro"] {
+  --bg-page: #07090f;
+  --bg-sidebar: #030508;
+  --bg-sidebar-hover: rgba(255,255,255,0.04);
+  --bg-card: #0e1220;
+  --bg-card2: #090d18;
+  --sb-text: #2e4060;
+  --sb-active-bg: #0c1a34;
+  --sb-active: #a8c8ff;
+  --accent-btn: #0ea5e9;
+  --accent-btn-text: #ffffff;
+  --text-h: #d8e4f5;
+  --text-b: #3d5270;
+  --badge-p-bg: #0c2348;
+  --badge-p-c: #60a5fa;
+  --badge-a-bg: #271500;
+  --badge-a-c: #fbbf24;
+  --badge-b-bg: #022614;
+  --badge-b-c: #34d399;
+  --bar1: #0ea5e9;
+  --bar2: #38bdf8;
+  --bar3: #7dd3fc;
+  --dot1: #34d399;
+  --dot2: #38bdf8;
+  --dot3: #a78bfa;
+  --border: #0d1826;
+  --shadow: 0 1px 4px rgba(0,0,0,0.5), 0 4px 24px rgba(0,0,0,0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ⑥ BLACK — jet black + clean white                          */
+/* ═══════════════════════════════════════════════════════════ */
+[data-theme="black"] {
+  --bg-page: #050505;
+  --bg-sidebar: #000000;
+  --bg-sidebar-hover: rgba(255,255,255,0.04);
+  --bg-card: #111111;
+  --bg-card2: #090909;
+  --sb-text: #333333;
+  --sb-active-bg: #1c1c1c;
+  --sb-active: #eeeeee;
+  --accent-btn: #ffffff;
+  --accent-btn-text: #000000;
+  --text-h: #eeeeee;
+  --text-b: #444444;
+  --badge-p-bg: #1a1a1a;
+  --badge-p-c: #d4d4d4;
+  --badge-a-bg: #1f1200;
+  --badge-a-c: #d97706;
+  --badge-b-bg: #021a0c;
+  --badge-b-c: #34d399;
+  --bar1: #e5e5e5;
+  --bar2: #737373;
+  --bar3: #404040;
+  --dot1: #e5e5e5;
+  --dot2: #737373;
+  --dot3: #a3a3a3;
+  --border: #1c1c1c;
+  --shadow: 0 1px 4px rgba(0,0,0,0.9), 0 4px 24px rgba(0,0,0,0.95);
+}
+
+/* Transición global para TODOS los elementos */
+*, *::before, *::after {
+  transition: background-color var(--t), 
+              border-color var(--t), 
+              color var(--t), 
+              box-shadow var(--t),
+              fill var(--t),
+              stroke var(--t);
+}

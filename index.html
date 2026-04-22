@@ -20,6 +20,12 @@
   <link rel="icon" type="image/ico" href="/favicon.ico" />
 
   <title>Kore</title>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('kore-theme') || 'beige';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
 </head>
 
 <body>
