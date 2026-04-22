@@ -849,7 +849,7 @@ export default function ConfiguracionPage() {
 
   function handleTabClick(item: any) {
     if (item.isLink) {
-      navigate("/empleados");
+      navigate("/app/manager/usuarios");
     } else {
       setActiveTab(item.key);
     }
