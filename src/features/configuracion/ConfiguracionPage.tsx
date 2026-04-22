@@ -1,7 +1,7 @@
 // src/features/configuracion/ConfiguracionPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2, Bell, Send, Settings2, ExternalLink, ChevronRight, HelpCircle, CalendarDays, ChevronDown } from "lucide-react";
+import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2, Bell, Send, Settings2, ExternalLink, ChevronRight, HelpCircle, ChevronDown } from "lucide-react";
 import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import ActividadTab from "./ActividadTab";
@@ -291,41 +291,7 @@ function HorariosTab() {
           </div>
         </div>
 
-        {/* 5.5 Vista previa del horario (NUEVO) */}
-        <div className="rounded-[28px] border border-neutral-100 bg-white shadow-sm p-6 overflow-hidden mt-8">
-          <div className="flex items-center gap-3 pb-4 mb-4 border-b border-neutral-50">
-            <CalendarDays className="h-5 w-5 text-blue-500" />
-            <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Vista Previa de la Semana</h3>
-            <span className="ml-auto text-[10px] font-bold text-neutral-400 bg-neutral-50 px-2.5 py-1 rounded-xl">
-              {lateTolerance} min de tolerancia
-            </span>
-          </div>
-          <div className="flex overflow-x-auto gap-2 pb-2 custom-scrollbar">
-            {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((_, i) => {
-              // Reordenar por weekStart
-              const ws = parseInt(weekStart);
-              const realIndex = (i + ws) % 7;
-              const isWeekend = realIndex === 0 || realIndex === 6;
-              return (
-                <div key={i} className={cx(
-                  "flex-1 min-w-[80px] rounded-2xl border p-3 flex flex-col items-center text-center gap-2",
-                  isWeekend ? "bg-neutral-50 border-neutral-100" : "bg-blue-50/30 border-blue-100"
-                )}>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][realIndex]}</span>
-                  {!isWeekend ? (
-                    <>
-                      <div className="text-xs font-bold text-obsidian">{checkInTime}</div>
-                      <div className="h-4 w-px bg-neutral-200" />
-                      <div className="text-xs font-bold text-obsidian">{checkOutTime}</div>
-                    </>
-                  ) : (
-                    <div className="text-xs font-bold text-neutral-400 py-4">Libre</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+
 
         {/* 5.6 Excepciones visuales (NUEVO) */}
         <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-4">

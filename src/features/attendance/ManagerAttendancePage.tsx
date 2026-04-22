@@ -501,7 +501,7 @@ export default function ManagerAttendancePage() {
                         const tieneDiaDescanso = item?.status === 'day_off' || (item as any)?.is_rest_day;
 
                         return (
-                          <tr key={emp.id} className="border-t border-neutral-50 hover:bg-neutral-50/50 transition">
+                          <tr key={emp.id} className="group border-t border-neutral-50 hover:bg-neutral-50/50 transition">
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar name={empName} />

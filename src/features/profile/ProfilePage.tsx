@@ -4,7 +4,7 @@ import api from "@/lib/http";
 import {
   User, Mail, Phone, MapPin, Briefcase, Shield,
   Calendar, Hash, CheckCircle2, AlertTriangle,
-  Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, Globe, Moon, MonitorSmartphone
+  Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, MonitorSmartphone
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -187,25 +187,6 @@ export default function ProfilePage() {
       console.error("Error saving preference", e);
     }
   }
-
-  function toggleTheme(newTheme: string) {
-    setPreferences(p => ({ ...p, theme: newTheme }));
-    localStorage.setItem("kore_prefs_theme", newTheme);
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (newTheme === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    }
-    showToast("ok", "Tema actualizado");
-    updatePreferenceBackend("theme", newTheme);
-  }
-
   async function toggleNotifications() {
     const next = !preferences.notifications;
     
@@ -220,14 +201,6 @@ export default function ProfilePage() {
     showToast("ok", next ? "Notificaciones habilitadas" : "Notificaciones deshabilitadas");
     updatePreferenceBackend("notifications_enabled", next);
   }
-
-  function changeLanguage(lang: string) {
-    setPreferences(p => ({ ...p, language: lang }));
-    localStorage.setItem("kore_prefs_lang", lang);
-    showToast("ok", "Idioma actualizado");
-    updatePreferenceBackend("language", lang);
-  }
-
   const roleLabel =
     profile?.role === "admin" ? "Administrador"
     : profile?.role === "supervisor" ? "Supervisor"
@@ -487,8 +460,8 @@ export default function ProfilePage() {
                   )} />
                 </button>
               </div>
-
-              <div className="flex items-center justify-between">
+              {/* Proximanete Cambio de Idiomas */} 
+              {/* <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Globe className="h-4 w-4 text-neutral-400" />
                   <div className="text-xs font-bold text-obsidian">Idioma</div>
@@ -501,9 +474,9 @@ export default function ProfilePage() {
                   <option value="es">Español</option>
                   <option value="en">English</option>
                 </select>
-              </div>
-
-              <div className="flex items-center justify-between">
+              </div> */}
+              {/* Proximanete Cambio de Tema */}  
+              {/* <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Moon className="h-4 w-4 text-neutral-400" />
                   <div className="text-xs font-bold text-obsidian">Tema</div>
@@ -517,7 +490,7 @@ export default function ProfilePage() {
                   <option value="light">Claro</option>
                   <option value="dark">Oscuro</option>
                 </select>
-              </div>
+              </div> */}
             </div>
           </div>
 

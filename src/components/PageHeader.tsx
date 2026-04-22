@@ -39,7 +39,7 @@ export default function PageHeader({
         <div className="flex items-center gap-3 flex-wrap">
           <h1
             className={`
-              font-black text-obsidian tracking-tight leading-tight truncate
+              font-black text-obsidian tracking-tight leading-tight break-words
               ${compact ? "text-xl" : "text-2xl lg:text-3xl"}
             `}
           >

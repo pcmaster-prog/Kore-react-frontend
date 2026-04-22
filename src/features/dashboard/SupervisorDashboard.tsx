@@ -568,6 +568,7 @@ export function OpenTasksPanel({
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"in_progress" | "overdue">("in_progress");
+  const [panelOpen, setPanelOpen] = useState(true);
 
   useEffect(() => {
     setLoading(true);
@@ -594,11 +595,20 @@ export function OpenTasksPanel({
   }, [refreshKey, tab]);
 
   return (
-    <div className="bg-white rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 shadow-sm border border-neutral-100/50 flex flex-col min-h-[500px] lg:min-h-[600px]">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg lg:text-xl font-black text-obsidian tracking-tight">Monitoreo de Tareas</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Seguimiento de tareas activas</p>
+    <div className={cx(
+      "bg-white shadow-sm border border-neutral-100/50 flex flex-col transition-all overflow-hidden",
+      panelOpen ? "rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 min-h-[500px] lg:min-h-[600px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6"
+    )}>
+      <div className={cx("flex items-center justify-between", panelOpen ? "mb-4" : "")}>
+        <div 
+          className="flex-1 cursor-pointer flex items-center gap-3" 
+          onClick={() => setPanelOpen(!panelOpen)}
+        >
+          <div>
+            <h2 className="text-lg lg:text-xl font-black text-obsidian tracking-tight">Monitoreo de Tareas</h2>
+            {panelOpen && <p className="text-xs text-neutral-400 mt-0.5">Seguimiento de tareas activas</p>}
+          </div>
+          {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
         </div>
         <div className="flex items-center gap-2">
           {!loading && tasks.length > 0 && (
@@ -622,8 +632,10 @@ export function OpenTasksPanel({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-4 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100 shrink-0">
-        <button onClick={() => setTab("in_progress")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "in_progress" ? "bg-white shadow-sm text-amber-600" : "text-neutral-400 hover:text-amber-500")}>En Proceso</button>
+      {panelOpen && (
+        <>
+          <div className="flex items-center gap-2 mb-4 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100 shrink-0 self-start">
+            <button onClick={() => setTab("in_progress")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "in_progress" ? "bg-white shadow-sm text-amber-600" : "text-neutral-400 hover:text-amber-500")}>En Proceso</button>
         <button onClick={() => setTab("overdue")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "overdue" ? "bg-white shadow-sm text-rose-600" : "text-neutral-400 hover:text-rose-500")}>Vencidas</button>
       </div>
 
@@ -676,6 +688,8 @@ export function OpenTasksPanel({
           ))}
         </div>
       )}
+        </>
+      )}
     </div>
   );
 }
@@ -701,6 +715,7 @@ export function AvailableTasksPanel({
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [panelOpen, setPanelOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -759,25 +774,36 @@ export function AvailableTasksPanel({
   });
 
   return (
-    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 flex flex-col h-full min-h-[400px]">
+    <div className={cx(
+      "bg-white shadow-sm border border-neutral-100/50 flex flex-col transition-all overflow-hidden h-full",
+      panelOpen ? "rounded-[40px] p-8 min-h-[400px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6 min-h-0"
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Disponibles</h2>
-          <div className="flex items-center gap-2 mt-2 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100">
-            <button 
-              onClick={() => { setTab("templates"); setSelected(new Set()); }}
-              className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "templates" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
-            >
-              Plantillas
-            </button>
-            <button 
-              onClick={() => { setTab("routines"); setSelected(new Set()); }}
-              className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "routines" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
-            >
-              Rutinas
-            </button>
+      <div className={cx("flex items-center justify-between", panelOpen ? "mb-5" : "")}>
+        <div 
+          className="flex-1 cursor-pointer flex items-center gap-3" 
+          onClick={() => setPanelOpen(!panelOpen)}
+        >
+          <div>
+            <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Disponibles</h2>
+            {panelOpen && (
+              <div className="flex items-center gap-2 mt-2 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setTab("templates"); setSelected(new Set()); }}
+                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "templates" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
+                >
+                  Plantillas
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setTab("routines"); setSelected(new Set()); }}
+                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "routines" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
+                >
+                  Rutinas
+                </button>
+              </div>
+            )}
           </div>
+          {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
         </div>
         <div className="flex items-center gap-2">
           {selected.size > 0 && (
@@ -801,6 +827,8 @@ export function AvailableTasksPanel({
         </div>
       </div>
 
+      {panelOpen && (
+        <>
       {/* Search */}
       {!loading && items.length > 3 && (
         <div className="relative mb-4">
@@ -874,6 +902,8 @@ export function AvailableTasksPanel({
             );
           })}
         </div>
+      )}
+        </>
       )}
     </div>
   );
@@ -1022,17 +1052,29 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
 
+  const [panelOpen, setPanelOpen] = useState(false);
+
   return (
-    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 h-full min-h-[400px] flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-black text-obsidian tracking-tight">Carga del Equipo</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Minutos asignados en tareas activas</p>
+    <div className={cx(
+      "bg-white shadow-sm border border-neutral-100/50 flex flex-col transition-all overflow-hidden h-full",
+      panelOpen ? "rounded-[40px] p-8 min-h-[400px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6 min-h-0"
+    )}>
+      <div className={cx("flex items-center justify-between", panelOpen ? "mb-6" : "")}>
+        <div 
+          className="flex-1 cursor-pointer flex items-center gap-3" 
+          onClick={() => setPanelOpen(!panelOpen)}
+        >
+          <div>
+            <h2 className="text-xl font-black text-obsidian tracking-tight">Carga del Equipo</h2>
+            {panelOpen && <p className="text-xs text-neutral-400 mt-0.5">Minutos asignados en tareas activas</p>}
+          </div>
+          {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
         </div>
-        <Users className="h-5 w-5 text-neutral-300" />
+        <Users className="h-5 w-5 text-neutral-300 hidden md:block" />
       </div>
 
-      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 flex-1">
+      {panelOpen && (
+        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 flex-1">
         {workload.length === 0 ? (
           <div className="py-8 text-center text-sm text-neutral-400">No hay empleados activos</div>
         ) : (
@@ -1117,6 +1159,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
             ))
         )}
       </div>
+      )}
     </div>
   );
 }

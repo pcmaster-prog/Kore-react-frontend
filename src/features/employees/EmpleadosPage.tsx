@@ -704,11 +704,29 @@ export default function EmpleadosPage() {
     <>
       <div className="space-y-6">
         {/* ── Hero Header ─────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-[32px] border border-neutral-100 shadow-sm flex-wrap">
-          <div>
-            <h1 className="text-xl font-black text-obsidian tracking-tight">
-              Equipo <span className="text-neutral-400 font-medium ml-2">· {total} usuarios</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:px-6 sm:py-5 rounded-[32px] border border-neutral-100 shadow-sm flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+            <h1 className="text-xl font-black text-obsidian tracking-tight flex items-center gap-2">
+              <Users className="h-5 w-5 text-neutral-400" /> Equipo
             </h1>
+            <div className="flex flex-wrap items-center gap-4 sm:border-l border-neutral-100 sm:pl-6">
+              <div className="flex items-center gap-2 text-sm font-bold">
+                <span className="text-obsidian">{total}</span>
+                <span className="text-neutral-400 uppercase text-[10px] tracking-widest">Total</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm font-bold">
+                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                 <span className="text-obsidian">{active}</span>
+                 <span className="text-neutral-400 uppercase text-[10px] tracking-widest">Activos</span>
+              </div>
+              {inactive > 0 && (
+                <div className="flex items-center gap-2 text-sm font-bold">
+                   <div className="h-2 w-2 rounded-full bg-rose-500" />
+                   <span className="text-obsidian">{inactive}</span>
+                   <span className="text-neutral-400 uppercase text-[10px] tracking-widest">Inactivos</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -726,34 +744,6 @@ export default function EmpleadosPage() {
             {toast.msg}
           </div>
         )}
-
-        {/* KPIs */}
-        <div className="grid grid-cols-1 gap-4">
-          <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-             <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-neutral-100 text-neutral-500 flex items-center justify-center">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="text-3xl font-black text-obsidian tracking-tight">{total} <span className="text-sm text-neutral-400 font-bold ml-1 uppercase tracking-widest">Empleados</span></div>
-                </div>
-             </div>
-             <div className="flex gap-4 border-t md:border-t-0 md:border-l border-neutral-100 pt-4 md:pt-0 md:pl-6">
-                <div className="flex items-center gap-2 text-sm font-bold">
-                   <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                   <span className="text-obsidian">{active}</span>
-                   <span className="text-neutral-400">Activos</span>
-                </div>
-                {inactive > 0 && (
-                  <div className="flex items-center gap-2 text-sm font-bold">
-                     <div className="h-2 w-2 rounded-full bg-rose-500" />
-                     <span className="text-obsidian">{inactive}</span>
-                     <span className="text-neutral-400">Inactivos</span>
-                  </div>
-                )}
-             </div>
-          </div>
-        </div>
 
         {/* Filtros */}
         <div className="flex flex-col md:flex-row gap-3">
