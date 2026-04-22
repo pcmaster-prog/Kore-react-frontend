@@ -32,14 +32,14 @@ export function useTheme() {
   });
 
   const applyTheme = useCallback((newTheme: ThemeName) => {
-    document.body.setAttribute('data-theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem(STORAGE_KEY, newTheme);
     setThemeState(newTheme);
   }, []);
 
   // Aplicar tema al montar
   useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
   // Sincronizar con backend (opcional, se llama cuando el usuario guarda preferencias)
