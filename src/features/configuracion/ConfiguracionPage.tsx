@@ -1,11 +1,12 @@
 // src/features/configuracion/ConfiguracionPage.tsx
 import { useState, useEffect } from "react";
-import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2, Bell, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2, Bell, Send, Settings2, ExternalLink, ChevronRight, HelpCircle, CalendarDays, ChevronDown } from "lucide-react";
 import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
-import EmpleadosPage from "@/features/employees/EmpleadosPage";
 import ActividadTab from "./ActividadTab";
 import SemaforoAdminTab from "@/features/semaforo/SemaforoAdminTab";
+import PageHeader from "@/components/PageHeader";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -191,28 +192,84 @@ function HorariosTab() {
               <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Jornada Standard</h3>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Hora de Entrada</label>
-                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Entrada</label>
+                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
               </div>
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Hora de Salida</label>
-                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
+              <div className="flex-1">
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Salida</label>
+                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
               </div>
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Inicio de Semana</label>
-                <select className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={weekStart} onChange={(e) => setWeekStart(e.target.value)}>
-                  <option value="0">Domingo</option>
-                  <option value="1">Lunes</option>
-                  <option value="2">Martes</option>
-                  <option value="3">Miércoles</option>
-                  <option value="4">Jueves</option>
-                  <option value="5">Viernes</option>
-                  <option value="6">Sábado</option>
+              <div className="flex-1">
+                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Inicio Sem.</label>
+                <select className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={weekStart} onChange={(e) => setWeekStart(e.target.value)}>
+                  <option value="0">Dom</option>
+                  <option value="1">Lun</option>
+                  <option value="2">Mar</option>
+                  <option value="3">Mié</option>
+                  <option value="4">Jue</option>
+                  <option value="5">Vie</option>
+                  <option value="6">Sáb</option>
                 </select>
               </div>
             </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">Cierre Automático</span>
+                <div className="group relative">
+                  <HelpCircle className="h-4 w-4 text-neutral-400 hover:text-obsidian transition-colors cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-obsidian text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
+                    Cierra automáticamente los días abiertos de los empleados.
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAutoCloseEnabled(v => !v)}
+                className={cx(
+                  "h-6 w-11 rounded-full transition-all flex items-center px-0.5 border",
+                  autoCloseEnabled ? "bg-emerald-500 border-emerald-600" : "bg-neutral-200 border-neutral-300"
+                )}
+              >
+                <div className={cx(
+                  "h-4 w-4 rounded-full bg-white shadow transition-transform duration-300",
+                  autoCloseEnabled ? "translate-x-5" : "translate-x-0"
+                )} />
+              </button>
+            </div>
+
+            {autoCloseEnabled && (
+              <div className="flex gap-4 animate-in-fade">
+                <div className="flex-1">
+                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Hora de Cierre</label>
+                  <input
+                    type="time"
+                    value={autoCloseTime}
+                    onChange={e => setAutoCloseTime(e.target.value)}
+                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Día</label>
+                  <select
+                    value={autoCloseWeekday}
+                    onChange={e => setAutoCloseWeekday(e.target.value)}
+                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                  >
+                    <option value="-1">Diario</option>
+                    <option value="0">Dom</option>
+                    <option value="1">Lun</option>
+                    <option value="2">Mar</option>
+                    <option value="3">Mié</option>
+                    <option value="4">Jue</option>
+                    <option value="5">Vie</option>
+                    <option value="6">Sáb</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-6">
@@ -224,75 +281,65 @@ function HorariosTab() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Tolerancia (min)</label>
-                <input type="number" min={0} max={60} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={lateTolerance} onChange={(e) => setLateTolerance(e.target.value)} />
+                <input type="number" min={0} max={60} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={lateTolerance} onChange={(e) => setLateTolerance(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Jornada máx (Hrs)</label>
-                <input type="number" min={1} max={24} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={maxHours} onChange={(e) => setMaxHours(e.target.value)} />
+                <input type="number" min={1} max={24} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={maxHours} onChange={(e) => setMaxHours(e.target.value)} />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Cierre Automático */}
-        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-5">
-          <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-            <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-neutral-400" />
-              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Cierre Automático de Jornada</h3>
-            </div>
-            {/* Toggle */}
-            <button
-              type="button"
-              onClick={() => setAutoCloseEnabled(v => !v)}
-              className={cx(
-                "h-8 w-14 rounded-full transition-all flex items-center px-1 border",
-                autoCloseEnabled ? "bg-emerald-500 border-emerald-600" : "bg-neutral-200 border-neutral-300"
-              )}
-            >
-              <div className={cx(
-                "h-6 w-6 rounded-full bg-white shadow transition-transform duration-300",
-                autoCloseEnabled ? "translate-x-6" : "translate-x-0"
-              )} />
-            </button>
+        {/* 5.5 Vista previa del horario (NUEVO) */}
+        <div className="rounded-[28px] border border-neutral-100 bg-white shadow-sm p-6 overflow-hidden mt-8">
+          <div className="flex items-center gap-3 pb-4 mb-4 border-b border-neutral-50">
+            <CalendarDays className="h-5 w-5 text-blue-500" />
+            <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Vista Previa de la Semana</h3>
           </div>
+          <div className="flex overflow-x-auto gap-2 pb-2 custom-scrollbar">
+            {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((_, i) => {
+              // Reordenar por weekStart
+              const ws = parseInt(weekStart);
+              const realIndex = (i + ws) % 7;
+              const isWeekend = realIndex === 0 || realIndex === 6;
+              return (
+                <div key={i} className={cx(
+                  "flex-1 min-w-[80px] rounded-2xl border p-3 flex flex-col items-center text-center gap-2",
+                  isWeekend ? "bg-neutral-50 border-neutral-100" : "bg-blue-50/30 border-blue-100"
+                )}>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][realIndex]}</span>
+                  {!isWeekend ? (
+                    <>
+                      <div className="text-xs font-bold text-obsidian">{checkInTime}</div>
+                      <div className="h-4 w-px bg-neutral-200" />
+                      <div className="text-xs font-bold text-obsidian">{checkOutTime}</div>
+                    </>
+                  ) : (
+                    <div className="text-xs font-bold text-neutral-400 py-4">Libre</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-          {autoCloseEnabled && (
-            <div className="grid grid-cols-2 gap-4 pt-1">
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Hora de Cierre</label>
-                <input
-                  type="time"
-                  value={autoCloseTime}
-                  onChange={e => setAutoCloseTime(e.target.value)}
-                  className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Día de la Semana</label>
-                <select
-                  value={autoCloseWeekday}
-                  onChange={e => setAutoCloseWeekday(e.target.value)}
-                  className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
-                >
-                  <option value="-1">Todos los días</option>
-                  <option value="0">Domingo</option>
-                  <option value="1">Lunes</option>
-                  <option value="2">Martes</option>
-                  <option value="3">Miércoles</option>
-                  <option value="4">Jueves</option>
-                  <option value="5">Viernes</option>
-                  <option value="6">Sábado</option>
-                </select>
-              </div>
+        {/* 5.6 Excepciones visuales (NUEVO) */}
+        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Excepciones y Festivos</h3>
+          </div>
+          <div className="flex items-center gap-4 overflow-x-auto custom-scrollbar pb-2">
+            <div className="min-w-[200px] rounded-2xl bg-white border border-neutral-200 p-4 shadow-sm">
+              <div className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-1">Próximo Festivo</div>
+              <div className="text-sm font-black text-obsidian">Día del Trabajo</div>
+              <div className="text-xs font-medium text-neutral-500 mt-1">1 de Mayo</div>
             </div>
-          )}
-
-          <p className="text-[11px] font-medium text-neutral-400">
-            {autoCloseEnabled
-              ? `El sistema cerrará automáticamente la jornada de todos los empleados con día abierto a las ${autoCloseTime}${autoCloseWeekday !== "-1" ? ` los ${["domingos","lunes","martes","miércoles","jueves","viernes","sábados"][parseInt(autoCloseWeekday)]}` : " de cada día"}.`
-              : "Activa esta opción para cerrar jornadas automáticamente y evitar que los empleados marquen salida después de la hora configurada."}
-          </p>
+            <div className="min-w-[200px] rounded-2xl bg-white border border-neutral-200 p-4 shadow-sm border-dashed flex items-center justify-center text-neutral-400 hover:text-obsidian hover:bg-neutral-50 cursor-pointer transition-colors">
+              <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2"><Clock className="h-4 w-4" /> Agregar Excepción</span>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700 flex items-center gap-3">
@@ -792,70 +839,120 @@ function NotificacionesTab() {
   );
 }
 
-const TABS = [
-  { key: "empleados", label: "Equipo", icon: <Users className="h-4 w-4" /> },
-  { key: "roles",     label: "Roles",     icon: <Shield className="h-4 w-4" /> },
-  { key: "horarios",  label: "Horarios",  icon: <Clock className="h-4 w-4" /> },
-  { key: "notificaciones", label: "Notificaciones", icon: <Bell className="h-4 w-4" /> },
-  { key: "documentos", label: "Documentos", icon: <FileText className="h-4 w-4" /> },
-  { key: "tarifas",   label: "Nómina",   icon: <DollarSign className="h-4 w-4" /> },
-  { key: "modulos",   label: "Capacidades",   icon: <Blocks className="h-4 w-4" /> },
-  { key: "red",       label: "Seguridad",       icon: <Wifi className="h-4 w-4" /> },
-  { key: "semaforo",  label: "Semáforo",  icon: <Activity className="h-4 w-4" /> },
-  { key: "actividad", label: "Auditoría", icon: <Activity className="h-4 w-4" /> },
-] as const;
-
-type TabKey = typeof TABS[number]["key"];
+const TAB_GROUPS = [
+  {
+    key: "personal",
+    label: "Personal",
+    icon: <Users className="h-4 w-4" />,
+    items: [
+      { key: "empleados", label: "Equipo", icon: <ExternalLink className="h-4 w-4" />, isLink: true },
+      { key: "roles", label: "Roles", icon: <Shield className="h-4 w-4" /> },
+    ]
+  },
+  {
+    key: "operaciones",
+    label: "Operaciones",
+    icon: <Settings2 className="h-4 w-4" />,
+    items: [
+      { key: "horarios", label: "Horarios", icon: <Clock className="h-4 w-4" /> },
+      { key: "tarifas", label: "Nómina", icon: <DollarSign className="h-4 w-4" /> },
+      { key: "semaforo", label: "Semáforo", icon: <Activity className="h-4 w-4" /> },
+      { key: "modulos", label: "Capacidades", icon: <Blocks className="h-4 w-4" /> },
+    ]
+  },
+  {
+    key: "sistema",
+    label: "Sistema",
+    icon: <Shield className="h-4 w-4" />,
+    items: [
+      { key: "notificaciones", label: "Notificaciones", icon: <Bell className="h-4 w-4" /> },
+      { key: "red", label: "Seguridad", icon: <Wifi className="h-4 w-4" /> },
+      { key: "actividad", label: "Auditoría", icon: <Activity className="h-4 w-4" /> },
+      { key: "documentos", label: "Documentos", icon: <FileText className="h-4 w-4" /> },
+    ]
+  }
+];
 
 export default function ConfiguracionPage() {
-  const [tab, setTab] = useState<TabKey>("empleados");
+  const navigate = useNavigate();
+  const [activeGroup, setActiveGroup] = useState<string>("operaciones");
+  const [activeTab, setActiveTab] = useState<string>("horarios");
+
+  function handleTabClick(item: any) {
+    if (item.isLink) {
+      navigate("/empleados");
+    } else {
+      setActiveTab(item.key);
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      {/* ── Hero Header ─────────────────────────────────────────────── */}
-      <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-10 text-white">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
-          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
-          <div className="absolute bottom-0 left-1/3 h-20 w-40 rounded-full bg-gold/10" />
-        </div>
-        <div className="relative flex items-center gap-4 flex-wrap">
-          <div>
-            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Centro de Comando</p>
-            <h1 className="text-3xl font-black tracking-tight">Configuración del Sistema</h1>
-            <p className="text-white/50 text-sm mt-1 max-w-xl">
-              Administra privilegios globales de recursos humanos, seguridad y operaciones financieras desde la terminal central de tu instancia en Kore Suite.
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6 pb-24 max-w-7xl mx-auto">
+      <PageHeader
+        title="Configuración del Sistema"
+        subtitle="Administra privilegios globales de recursos humanos, seguridad y operaciones financieras desde la terminal central."
+      />
 
-      <div className="inline-flex flex-wrap gap-1 rounded-3xl border border-neutral-100 bg-white p-1.5 shadow-sm max-w-full overflow-x-auto custom-scrollbar">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={cx(
-              "inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
-              tab === t.key ? "bg-obsidian text-white shadow-md" : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50"
-            )}
-          >
-            {t.icon}{t.label}
-          </button>
-        ))}
-      </div>
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Sidebar Nav */}
+        <div className="w-full lg:w-64 shrink-0 space-y-4">
+          {TAB_GROUPS.map(group => (
+            <div key={group.key} className="bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden">
+              <button 
+                onClick={() => setActiveGroup(activeGroup === group.key ? "" : group.key)}
+                className="w-full flex items-center justify-between p-4 bg-neutral-50/50 hover:bg-neutral-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={cx(
+                    "h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-inner",
+                    activeGroup === group.key ? "bg-obsidian" : "bg-neutral-300"
+                  )}>
+                    {group.icon}
+                  </div>
+                  <span className="text-sm font-bold text-obsidian">{group.label}</span>
+                </div>
+                <ChevronDown className={cx("h-4 w-4 text-neutral-400 transition-transform", activeGroup === group.key ? "rotate-180" : "rotate-0")} />
+              </button>
+              
+              {activeGroup === group.key && (
+                <div className="p-2 space-y-1 animate-in-fade">
+                  {group.items.map(item => {
+                    const isActive = activeTab === item.key && !item.isLink;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => handleTabClick(item)}
+                        className={cx(
+                          "w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs font-bold transition-all",
+                          isActive ? "bg-obsidian text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-obsidian"
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className={isActive ? "text-white/70" : "text-neutral-400"}>{item.icon}</span>
+                          {item.label}
+                        </div>
+                        {isActive && <ChevronRight className="h-3.5 w-3.5" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
-      <div className="pb-8">
-        {tab === "empleados" && <EmpleadosPage />}
-        {tab === "roles"     && <RolesTab />}
-        {tab === "tarifas"   && <TarifasTab />}
-        {tab === "horarios"  && <HorariosTab />}
-        {tab === "notificaciones" && <NotificacionesTab />}
-        {tab === "documentos" && <DocumentosTab />}
-        {tab === "actividad" && <ActividadTab />}
-        {tab === "modulos"   && <ModulosTab />}
-        {tab === "red"       && <RedTab />}
-        {tab === "semaforo"  && <SemaforoAdminTab />}
+        {/* Content Area */}
+        <div className="flex-1 min-w-0 w-full">
+          {activeTab === "roles"     && <RolesTab />}
+          {activeTab === "tarifas"   && <TarifasTab />}
+          {activeTab === "horarios"  && <HorariosTab />}
+          {activeTab === "notificaciones" && <NotificacionesTab />}
+          {activeTab === "documentos" && <DocumentosTab />}
+          {activeTab === "actividad" && <ActividadTab />}
+          {activeTab === "modulos"   && <ModulosTab />}
+          {activeTab === "red"       && <RedTab />}
+          {activeTab === "semaforo"  && <SemaforoAdminTab />}
+        </div>
       </div>
     </div>
   );

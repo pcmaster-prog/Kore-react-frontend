@@ -14,6 +14,9 @@ import {
   type ChecklistItem,
   type ChecklistState,
 } from "./api";
+import { isEnabled } from "@/lib/featureFlags";
+import EmptyState from "@/components/EmptyState";
+import PageHeader from "@/components/PageHeader";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -493,86 +496,106 @@ export default function EmployeeTasksPage() {
       {mainTab === "asignaciones" && (
         <>
           {/* ── Hero Header ─────────────────────────────────────────────── */}
-          <div className="relative rounded-[32px] sm:rounded-[40px] bg-obsidian overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
-              <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
-              <div className="absolute bottom-0 left-1/4 h-24 w-48 rounded-full bg-gold/10" />
-            </div>
-            <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
-                  Operaciones
-                </p>
-                <h1 className="text-3xl font-black tracking-tight">
-                  Mis tareas
-                </h1>
-                <p className="text-white/50 text-sm font-medium mt-1">
-                  Gestiona tu día: checklist → evidencia → envío a revisión →
-                  aprobación.
-                </p>
+          {isEnabled("newEmployeeTasks") ? (
+            <PageHeader
+              title="Mis tareas"
+              subtitle="Gestiona tu día: checklist → evidencia → envío a revisión → aprobación."
+              badge={
+                (data?.total ?? 0) > 0
+                  ? { text: `${data?.total} tareas en total`, variant: "info" }
+                  : undefined
+              }
+            />
+          ) : (
+            <div className="relative rounded-[32px] sm:rounded-[40px] bg-obsidian overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
+                <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
+                <div className="absolute bottom-0 left-1/4 h-24 w-48 rounded-full bg-gold/10" />
               </div>
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-sm backdrop-blur-md">
-                <span className="text-white/50">Total Tareas:</span>
-                <span className="text-white text-base">{data?.total ?? 0}</span>
+              <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
+                    Operaciones
+                  </p>
+                  <h1 className="text-3xl font-black tracking-tight">
+                    Mis tareas
+                  </h1>
+                  <p className="text-white/50 text-sm font-medium mt-1">
+                    Gestiona tu día: checklist → evidencia → envío a revisión →
+                    aprobación.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-sm backdrop-blur-md">
+                  <span className="text-white/50">Total Tareas:</span>
+                  <span className="text-white text-base">{data?.total ?? 0}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
-            {[
-              {
-                label: "Asignadas",
-                val: kpi.assigned,
-                cls: "text-blue-600",
-                bg: "bg-blue-50/50 border-blue-100",
-              },
-              {
-                label: "En progreso",
-                val: kpi.in_progress,
-                cls: "text-amber-600",
-                bg: "bg-amber-50/50 border-amber-100",
-              },
-              {
-                label: "En revisión",
-                val: kpi.done_pending,
-                cls: "text-indigo-600",
-                bg: "bg-indigo-50/50 border-indigo-100",
-              },
-              {
-                label: "Aprobadas",
-                val: kpi.approved,
-                cls: "text-emerald-600",
-                bg: "bg-emerald-50/50 border-emerald-100",
-              },
-              {
-                label: "Rechazadas",
-                val: kpi.rejected,
-                cls: "text-rose-600",
-                bg: "bg-rose-50/50 border-rose-100",
-              },
-            ].map((k) => (
-              <div
-                key={k.label}
-                className={cx(
-                  "rounded-[24px] sm:rounded-[28px] border p-4 sm:p-5 shadow-sm transition-all hover:shadow-md overflow-hidden",
-                  k.bg,
-                )}
-              >
+          {isEnabled("newEmployeeTasks") && kpi.assigned === 0 && kpi.in_progress === 0 && kpi.done_pending === 0 && kpi.approved === 0 && kpi.rejected === 0 ? (
+            <EmptyState
+              variant="celebration"
+              title="¡No tienes tareas pendientes!"
+              description="Has completado todas tus asignaciones o aún no te han asignado ninguna."
+            />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+              {[
+                {
+                  label: "Asignadas",
+                  val: kpi.assigned,
+                  cls: "text-blue-600",
+                  bg: "bg-blue-50/50 border-blue-100",
+                },
+                {
+                  label: "En progreso",
+                  val: kpi.in_progress,
+                  cls: "text-amber-600",
+                  bg: "bg-amber-50/50 border-amber-100",
+                },
+                {
+                  label: "En revisión",
+                  val: kpi.done_pending,
+                  cls: "text-indigo-600",
+                  bg: "bg-indigo-50/50 border-indigo-100",
+                },
+                {
+                  label: "Aprobadas",
+                  val: kpi.approved,
+                  cls: "text-emerald-600",
+                  bg: "bg-emerald-50/50 border-emerald-100",
+                },
+                {
+                  label: "Rechazadas",
+                  val: kpi.rejected,
+                  cls: "text-rose-600",
+                  bg: "bg-rose-50/50 border-rose-100",
+                },
+              ].map((k) => (
                 <div
+                  key={k.label}
                   className={cx(
-                    "text-2xl sm:text-3xl font-black tracking-tight mb-1 sm:mb-2",
-                    k.cls,
+                    "rounded-[24px] sm:rounded-[28px] border p-4 sm:p-5 shadow-sm transition-all hover:shadow-md overflow-hidden",
+                    k.bg,
                   )}
                 >
-                  {k.val}
+                  <div
+                    className={cx(
+                      "text-2xl sm:text-3xl font-black tracking-tight mb-1 sm:mb-2",
+                      k.cls,
+                    )}
+                  >
+                    {k.val}
+                  </div>
+                  <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest truncate">
+                    {k.label}
+                  </div>
                 </div>
-                <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest truncate">
-                  {k.label}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Filtros Toolbar */}
           <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 shadow-sm w-full mx-auto overflow-hidden text-clip">
@@ -681,9 +704,26 @@ export default function EmployeeTasksPage() {
             )}
 
             {!err && !loading && (data?.data?.length ?? 0) === 0 && (
-              <div className="p-16 text-center text-sm font-bold text-neutral-400 uppercase tracking-widest">
-                No tienes tareas para esta fecha.
-              </div>
+              isEnabled("newEmployeeTasks") ? (
+                <EmptyState
+                  variant="neutral"
+                  title="Sin resultados"
+                  description="No se encontraron tareas con los filtros actuales."
+                  action={(date || status !== "assigned,in_progress,done_pending,approved,rejected" || search) ? {
+                    label: "¿Quieres ver todas?",
+                    onClick: () => {
+                      setDate("");
+                      setStatus("assigned,in_progress,done_pending,approved,rejected");
+                      setSearch("");
+                      setPage(1);
+                    }
+                  } : undefined}
+                />
+              ) : (
+                <div className="p-16 text-center text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                  No tienes tareas para esta fecha.
+                </div>
+              )
             )}
 
             {!err && data?.data?.length ? (

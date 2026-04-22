@@ -1,13 +1,15 @@
 // src/features/nomina/NominaPage.tsx
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "@/lib/http";
 import {
   CheckCircle2, ChevronLeft, ChevronRight,
   Download, FileSpreadsheet, Loader2,
   AlertTriangle, RefreshCw, Clock, CalendarDays,
   DollarSign, Users, TrendingDown, TrendingUp,
-  Pencil, Check,
+  Pencil, Check, MoreVertical, Save, Trash2
 } from "lucide-react";
+import { isEnabled } from "@/lib/featureFlags";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -99,40 +101,64 @@ function avatarColor(name: string) {
 
 // ─── Fila editable ────────────────────────────────────────────────────────────
 function EntryRow({
-  entry, period, approved, onSave, onToggleExclude,
+  entry, period, approved, onSave, onToggleExclude, pendingPatch, onPatch
 }: {
   entry: Entry;
   period: Period;
   approved: boolean;
   onSave: (id: string, patch: Partial<Entry>) => Promise<void>;
   onToggleExclude: (empleadoId: string, excluir: boolean) => Promise<void>;
+  pendingPatch?: Partial<Entry>;
+  onPatch: (id: string, patch: Partial<Entry>) => void;
 }) {
-  const [adj, setAdj] = useState(String(entry.adjustment_amount ?? 0));
-  const [adjNote, setAdjNote] = useState(entry.adjustment_note ?? "");
-  const [bonus, setBonus] = useState(String(entry.bonus_amount ?? 0));
-  const [bonusNote, setBonusNote] = useState(entry.bonus_note ?? "");
+  const currentAdj = pendingPatch?.adjustment_amount ?? entry.adjustment_amount ?? 0;
+  const currentAdjNote = pendingPatch?.adjustment_note ?? entry.adjustment_note ?? "";
+  const currentBonus = pendingPatch?.bonus_amount ?? entry.bonus_amount ?? 0;
+  const currentBonusNote = pendingPatch?.bonus_note ?? entry.bonus_note ?? "";
+
+  const [adj, setAdj] = useState(String(currentAdj));
+  const [adjNote, setAdjNote] = useState(currentAdjNote);
+  const [bonus, setBonus] = useState(String(currentBonus));
+  const [bonusNote, setBonusNote] = useState(currentBonusNote);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  const originalAdj   = useRef(entry.adjustment_amount);
-  const originalBonus = useRef(entry.bonus_amount);
+  const [editingAdj, setEditingAdj] = useState(false);
+  const [editingBonus, setEditingBonus] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showConfirmExclude, setShowConfirmExclude] = useState(false);
 
-  async function save() {
-    setSaving(true);
-    await onSave(entry.id, {
-      adjustment_amount: parseFloat(adj) || 0,
-      adjustment_note:   adjNote || null,
-      bonus_amount:      parseFloat(bonus) || 0,
-      bonus_note:        bonusNote || null,
+  // Sync internal state if pendingPatch changes from outside (not strictly needed since we update patch on edit, but good practice)
+  useEffect(() => {
+    if (!dirty) {
+      setAdj(String(currentAdj));
+      setAdjNote(currentAdjNote);
+      setBonus(String(currentBonus));
+      setBonusNote(currentBonusNote);
+    }
+  }, [currentAdj, currentAdjNote, currentBonus, currentBonusNote, dirty]);
+
+  function handleChange() {
+    setDirty(true);
+    const parsedAdj = parseFloat(adj) || 0;
+    const parsedBonus = parseFloat(bonus) || 0;
+    onPatch(entry.id, {
+      adjustment_amount: parsedAdj,
+      adjustment_note: adjNote || null,
+      bonus_amount: parsedBonus,
+      bonus_note: bonusNote || null,
     } as any);
-    setSaving(false);
-    setDirty(false);
-    originalAdj.current   = parseFloat(adj) || 0;
-    originalBonus.current = parseFloat(bonus) || 0;
   }
 
-  const computedTotal = entry.subtotal + (parseFloat(adj) || 0) + (parseFloat(bonus) || 0);
+  // Update patch whenever inputs change
+  useEffect(() => {
+    if (dirty) {
+      handleChange();
+    }
+  }, [adj, adjNote, bonus, bonusNote]);
+
+  const computedTotal = entry.subtotal + currentAdj + currentBonus;
   const isExcluded = (period?.excluded_employee_ids ?? []).includes(entry.empleado_id);
 
   return (
@@ -210,8 +236,18 @@ function EntryRow({
         {/* Ajuste */}
         <td className="px-5 py-4">
           {approved ? (
-            <div className={cx("text-sm font-semibold", (entry.adjustment_amount ?? 0) < 0 ? "text-rose-500" : "text-neutral-500")}>
-              {(entry.adjustment_amount ?? 0) !== 0 ? fmt(entry.adjustment_amount) : <span className="text-neutral-300">—</span>}
+            <div className={cx("text-sm font-semibold", currentAdj < 0 ? "text-rose-500" : "text-neutral-500")}>
+              {currentAdj !== 0 ? fmt(currentAdj) : <span className="text-neutral-300">—</span>}
+            </div>
+          ) : (isEnabled("newManagementAdmin") && !editingAdj) ? (
+            <div 
+              onClick={() => { setEditingAdj(true); setExpanded(true); }}
+              className="cursor-pointer group flex items-center gap-2"
+            >
+              <span className={cx("text-sm font-semibold transition-colors", currentAdj < 0 ? "text-rose-500" : "text-neutral-400 group-hover:text-obsidian")}>
+                {currentAdj !== 0 ? fmt(currentAdj) : "—"}
+              </span>
+              <Pencil className="h-3 w-3 text-neutral-300 group-hover:text-obsidian transition-colors" />
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
@@ -220,6 +256,8 @@ function EntryRow({
                 step="0.01"
                 value={adj}
                 onChange={(e) => { setAdj(e.target.value); setDirty(true); }}
+                onBlur={() => setEditingAdj(false)}
+                autoFocus={editingAdj}
                 className={cx(
                   "w-24 rounded-xl border px-2.5 py-1.5 text-sm font-medium outline-none transition",
                   "focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300",
@@ -227,16 +265,18 @@ function EntryRow({
                 )}
                 placeholder="0"
               />
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className={cx(
-                  "h-7 w-7 rounded-lg flex items-center justify-center transition",
-                  expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
-                )}
-                title="Agregar motivo"
-              >
-                <Pencil className="h-3 w-3" />
-              </button>
+              {!isEnabled("newManagementAdmin") && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className={cx(
+                    "h-7 w-7 rounded-lg flex items-center justify-center transition",
+                    expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
+                  )}
+                  title="Agregar motivo"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
             </div>
           )}
         </td>
@@ -245,7 +285,17 @@ function EntryRow({
         <td className="px-5 py-4">
           {approved ? (
             <div className="text-sm font-semibold text-emerald-600">
-              {(entry.bonus_amount ?? 0) > 0 ? fmt(entry.bonus_amount) : <span className="text-neutral-300">—</span>}
+              {currentBonus > 0 ? fmt(currentBonus) : <span className="text-neutral-300">—</span>}
+            </div>
+          ) : (isEnabled("newManagementAdmin") && !editingBonus) ? (
+            <div 
+              onClick={() => { setEditingBonus(true); setExpanded(true); }}
+              className="cursor-pointer group flex items-center gap-2"
+            >
+              <span className={cx("text-sm font-semibold transition-colors", currentBonus > 0 ? "text-emerald-600" : "text-neutral-400 group-hover:text-obsidian")}>
+                {currentBonus !== 0 ? fmt(currentBonus) : "—"}
+              </span>
+              <Pencil className="h-3 w-3 text-neutral-300 group-hover:text-obsidian transition-colors" />
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
@@ -255,19 +305,23 @@ function EntryRow({
                 min="0"
                 value={bonus}
                 onChange={(e) => { setBonus(e.target.value); setDirty(true); }}
+                onBlur={() => setEditingBonus(false)}
+                autoFocus={editingBonus}
                 className="w-24 rounded-xl border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium text-obsidian outline-none transition focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300"
                 placeholder="0"
               />
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className={cx(
-                  "h-7 w-7 rounded-lg flex items-center justify-center transition",
-                  expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
-                )}
-                title="Agregar motivo"
-              >
-                <Pencil className="h-3 w-3" />
-              </button>
+              {!isEnabled("newManagementAdmin") && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className={cx(
+                    "h-7 w-7 rounded-lg flex items-center justify-center transition",
+                    expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
+                  )}
+                  title="Agregar motivo"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
             </div>
           )}
         </td>
@@ -277,41 +331,134 @@ function EntryRow({
           <div className="text-sm font-black text-obsidian">{fmt(computedTotal)}</div>
         </td>
 
-        {/* Guardar */}
+        {/* Guardar/Acciones */}
         {!approved && (
-          <td className="px-5 py-4">
-            {dirty && (
-              <button
-                onClick={save}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-obsidian px-3 py-1.5 text-[11px] font-bold text-white hover:bg-gold transition disabled:opacity-50"
-              >
-                {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Check className="h-3 w-3" />Guardar</>}
-              </button>
+          <td className="px-5 py-4 text-right relative">
+            {isEnabled("newManagementAdmin") ? (
+              <div className="relative inline-block text-left">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="h-8 w-8 rounded-xl flex items-center justify-center hover:bg-neutral-100 transition-colors"
+                >
+                  <MoreVertical className="h-4 w-4 text-neutral-500" />
+                </button>
+                {showDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)} />
+                    <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-neutral-100 shadow-xl z-20 overflow-hidden py-2">
+                      <button
+                        onClick={async () => {
+                          setShowDropdown(false);
+                          if (!isEnabled("newManagementAdmin")) {
+                            setSaving(true);
+                            await onSave(entry.id, {
+                              adjustment_amount: parseFloat(adj) || 0,
+                              adjustment_note: adjNote || null,
+                              bonus_amount: parseFloat(bonus) || 0,
+                              bonus_note: bonusNote || null,
+                            });
+                            setSaving(false);
+                            setDirty(false);
+                          } else {
+                            // "Guardar" individual can just trigger the global save for this row or we can leave it as "dirty will be picked up by global save".
+                            // But maybe they want to force save one row.
+                            setSaving(true);
+                            await onSave(entry.id, {
+                              adjustment_amount: parseFloat(adj) || 0,
+                              adjustment_note: adjNote || null,
+                              bonus_amount: parseFloat(bonus) || 0,
+                              bonus_note: bonusNote || null,
+                            });
+                            setSaving(false);
+                            setDirty(false);
+                          }
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm font-semibold text-obsidian hover:bg-neutral-50 flex items-center gap-2"
+                      >
+                        <Check className="h-4 w-4" /> Guardar fila
+                      </button>
+                      <div className="h-px w-full bg-neutral-100 my-1" />
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          setShowConfirmExclude(true);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" /> {isExcluded ? "Incluir" : "Excluir"}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                {dirty && (
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      await onSave(entry.id, {
+                        adjustment_amount: parseFloat(adj) || 0,
+                        adjustment_note: adjNote || null,
+                        bonus_amount: parseFloat(bonus) || 0,
+                        bonus_note: bonusNote || null,
+                      });
+                      setSaving(false);
+                      setDirty(false);
+                    }}
+                    disabled={saving}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-obsidian px-3 py-1.5 text-[11px] font-bold text-white hover:bg-gold transition disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Check className="h-3 w-3" />Guardar</>}
+                  </button>
+                )}
+                <button
+                  onClick={async () => {
+                    await onToggleExclude(entry.empleado_id, !isExcluded);
+                  }}
+                  className={cx(
+                    "ml-2 h-8 px-3 rounded-xl text-[11px] font-bold transition border",
+                    isExcluded
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                      : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
+                  )}
+                  title={isExcluded ? "Incluir en nómina" : "Excluir de nómina"}
+                >
+                  {isExcluded ? "✓ Incluir" : "✕ Excluir"}
+                </button>
+              </>
             )}
           </td>
         )}
-
-        {/* Excluir/Incluir */}
-        {!approved && (
-          <td className="px-5 py-4 text-right">
-            <button
-              onClick={async () => {
-                await onToggleExclude(entry.empleado_id, !isExcluded);
-              }}
-              className={cx(
-                "h-8 px-3 rounded-xl text-[11px] font-bold transition border",
-                isExcluded
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                  : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
-              )}
-              title={isExcluded ? "Incluir en nómina" : "Excluir de nómina"}
-            >
-              {isExcluded ? "✓ Incluir" : "✕ Excluir"}
-            </button>
-          </td>
-        )}
       </tr>
+
+      {/* Confirm Exclude Modal */}
+      {showConfirmExclude && (
+        <tr>
+          <td colSpan={9} className="px-5 py-4 bg-rose-50 border-t border-rose-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-rose-600" />
+                <span className="text-sm font-bold text-rose-800">
+                  ¿Estás seguro de que deseas {isExcluded ? "incluir" : "excluir"} a {entry.empleado_name} de esta nómina?
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setShowConfirmExclude(false)} className="px-3 py-1.5 rounded-lg border border-rose-200 text-xs font-bold text-rose-700 hover:bg-rose-100 transition">Cancelar</button>
+                <button 
+                  onClick={async () => {
+                    await onToggleExclude(entry.empleado_id, !isExcluded);
+                    setShowConfirmExclude(false);
+                  }} 
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 text-xs font-bold text-white hover:bg-rose-700 transition"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
 
       {/* Fila de motivos expandida */}
       {expanded && !approved && (
@@ -355,6 +502,9 @@ export default function NominaPage() {
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
+  const [globalPatches, setGlobalPatches] = useState<Record<string, Partial<Entry>>>({});
+  const [savingGlobal, setSavingGlobal] = useState(false);
+
   const [refDate, setRefDate] = useState<string>(todayLocalDate());
 
   function showToast(type: "ok" | "err", msg: string) {
@@ -387,6 +537,7 @@ export default function NominaPage() {
     setLoading(true);
     setErr(null);
     setPeriod(null);
+    setGlobalPatches({});
     try {
       const res = await api.get("/nomina/periodos");
       const list = res.data?.data ?? res.data ?? [];
@@ -460,6 +611,23 @@ export default function NominaPage() {
     } catch (e: any) {
       showToast("err", e?.response?.data?.message ?? "No se pudo guardar el ajuste");
       throw e;
+    }
+  }
+
+  async function saveAllChanges() {
+    if (!period || Object.keys(globalPatches).length === 0) return;
+    setSavingGlobal(true);
+    try {
+      for (const id of Object.keys(globalPatches)) {
+        await api.patch(`/nomina/periodos/${period.id}/entradas/${id}`, globalPatches[id]);
+      }
+      showToast("ok", "Cambios guardados globalmente");
+      setGlobalPatches({});
+      await loadPeriod();
+    } catch (e: any) {
+      showToast("err", e?.response?.data?.message ?? "Error al guardar algunos cambios");
+    } finally {
+      setSavingGlobal(false);
     }
   }
 
@@ -579,8 +747,19 @@ export default function NominaPage() {
   const avgTotal  = totalEmp > 0 ? (period?.total_amount ?? 0) / totalEmp : 0;
   const draftCount = visibleEntries.filter(e => (e.adjustment_amount ?? 0) < 0).length ?? 0;
 
+  // Chart data
+  const chartData = Object.entries(
+    visibleEntries.reduce((acc, entry) => {
+      const role = entry.empleado_role || "Sin rol";
+      acc[role] = (acc[role] || 0) + entry.total;
+      return acc;
+    }, {} as Record<string, number>)
+  ).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+  const colors = ["#000000", "#10b981", "#f59e0b", "#f43f5e", "#8b5cf6", "#3b82f6", "#14b8a6"];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
 
       {/* ── Header Hero ─────────────────────────────────────────────────────── */}
       <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-8 text-white">
@@ -697,12 +876,16 @@ export default function NominaPage() {
               </div>
               {!approved && (
                 <button
-                  onClick={generate}
+                  onClick={() => {
+                    if (Object.keys(globalPatches).length > 0 && !confirm("Hay cambios sin guardar. ¿Recalcular nómina de todos modos y perder los cambios?")) return;
+                    generate();
+                  }}
                   disabled={generating}
+                  title="Vuelve a calcular la nómina tomando la última información de asistencia"
                   className="inline-flex items-center gap-1.5 rounded-2xl border border-neutral-100 bg-white px-4 py-2 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition"
                 >
                   <RefreshCw className={cx("h-3.5 w-3.5", generating && "animate-spin")} />
-                  Recalcular
+                  {isEnabled("newManagementAdmin") ? "Recalcular nómina del mes" : "Recalcular"}
                 </button>
               )}
             </div>
@@ -723,13 +906,13 @@ export default function NominaPage() {
                 <tbody>
                   {period.entries.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="px-5 py-16 text-center">
+                      <td colSpan={10} className="px-5 py-16 text-center">
                         <Users className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
                         <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">Sin empleados en este periodo</p>
                       </td>
                     </tr>
                   ) : (
-                    period.entries.map(entry => (
+                    visibleEntries.map(entry => (
                       <EntryRow
                         key={entry.id}
                         entry={entry}
@@ -737,6 +920,8 @@ export default function NominaPage() {
                         approved={approved}
                         onSave={saveEntry}
                         onToggleExclude={toggleExclude}
+                        pendingPatch={globalPatches[entry.id]}
+                        onPatch={(id, patch) => setGlobalPatches(prev => ({ ...prev, [id]: { ...prev[id], ...patch } }))}
                       />
                     ))
                   )}
@@ -838,6 +1023,35 @@ export default function NominaPage() {
               </div>
             </div>
 
+            {/* Gráfico de distribución (NUEVO) */}
+            {isEnabled("newManagementAdmin") && chartData.length > 0 && (
+              <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden mb-4">
+                <div className="px-6 py-5 border-b border-neutral-50">
+                  <h3 className="text-sm font-black text-obsidian tracking-tight">Distribución de Costos</h3>
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Por departamento / Rol</p>
+                </div>
+                <div className="p-6">
+                  <div className="h-48 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          cursor={{ fill: '#f5f5f5' }}
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          formatter={(value: any) => [fmt(value), "Costo"]}
+                        />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {chartData.map((_entry, index) => (
+                            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Estado / nota */}
             {approved ? (
               <div className="rounded-[28px] border border-emerald-100 bg-emerald-50 p-5 text-xs text-emerald-700 flex items-start gap-3">
@@ -858,6 +1072,25 @@ export default function NominaPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Floating Save Bar for Global Save */}
+      {isEnabled("newManagementAdmin") && Object.keys(globalPatches).length > 0 && !approved && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10">
+          <div className="bg-obsidian text-white rounded-full px-6 py-3 shadow-2xl flex items-center gap-6 border border-white/10">
+            <div className="text-sm font-bold">
+              Hay cambios pendientes de guardar
+            </div>
+            <button
+              onClick={saveAllChanges}
+              disabled={savingGlobal}
+              className="flex items-center gap-2 bg-white text-obsidian px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:bg-neutral-100 transition disabled:opacity-50"
+            >
+              {savingGlobal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Guardar Cambios
+            </button>
           </div>
         </div>
       )}

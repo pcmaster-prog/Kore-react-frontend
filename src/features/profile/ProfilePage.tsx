@@ -4,7 +4,7 @@ import api from "@/lib/http";
 import {
   User, Mail, Phone, MapPin, Briefcase, Shield,
   Calendar, Hash, CheckCircle2, AlertTriangle,
-  Pencil, Save, X, Loader2, Key,
+  Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, Globe, Moon, MonitorSmartphone
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -29,12 +29,24 @@ type ProfileData = {
   attendance_status?: string | null;
 };
 
-function Avatar({ name, url }: { name: string; url?: string | null }) {
+function Avatar({ name, url, onUpload }: { name: string; url?: string | null; onUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   const initials = name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
-  if (url) return <img src={url} alt={name} className="h-28 w-28 rounded-[28px] object-cover border-4 border-white shadow-lg" />;
   return (
-    <div className="h-28 w-28 rounded-[28px] bg-obsidian text-white font-black text-3xl flex items-center justify-center border-4 border-white shadow-lg">
-      {initials}
+    <div className="relative group">
+      {url ? (
+        <img src={url} alt={name} className="h-28 w-28 rounded-[28px] object-cover border-4 border-white shadow-lg" />
+      ) : (
+        <div className="h-28 w-28 rounded-[28px] bg-obsidian text-white font-black text-3xl flex items-center justify-center border-4 border-white shadow-lg">
+          {initials}
+        </div>
+      )}
+      {onUpload && (
+        <label className="absolute inset-0 bg-black/40 rounded-[28px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+          <Camera className="h-6 w-6 text-white mb-1" />
+          <span className="text-[9px] font-bold text-white uppercase tracking-widest">Cambiar</span>
+          <input type="file" accept="image/*" className="hidden" onChange={onUpload} />
+        </label>
+      )}
     </div>
   );
 }
@@ -68,6 +80,16 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+
+  const [avatarLocal, setAvatarLocal] = useState<string | null>(localStorage.getItem("kore_avatar"));
+  
+  const [preferences, setPreferences] = useState({
+    notifications: localStorage.getItem("kore_prefs_notif") !== "false",
+    language: localStorage.getItem("kore_prefs_lang") || "es",
+    theme: localStorage.getItem("kore_prefs_theme") || "system",
+  });
+
+  const [securityExpanded, setSecurityExpanded] = useState(false);
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
@@ -145,6 +167,46 @@ export default function ProfilePage() {
     }
   }
 
+  function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setAvatarLocal(base64);
+      localStorage.setItem("kore_avatar", base64);
+      showToast("ok", "Avatar guardado localmente en este dispositivo");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function toggleTheme(newTheme: string) {
+    setPreferences(p => ({ ...p, theme: newTheme }));
+    localStorage.setItem("kore_prefs_theme", newTheme);
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (newTheme === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  }
+
+  function toggleNotifications() {
+    const next = !preferences.notifications;
+    setPreferences(p => ({ ...p, notifications: next }));
+    localStorage.setItem("kore_prefs_notif", String(next));
+  }
+
+  function changeLanguage(lang: string) {
+    setPreferences(p => ({ ...p, language: lang }));
+    localStorage.setItem("kore_prefs_lang", lang);
+  }
+
   const roleLabel =
     profile?.role === "admin" ? "Administrador"
     : profile?.role === "supervisor" ? "Supervisor"
@@ -203,33 +265,25 @@ export default function ProfilePage() {
             </div>
             <div className="relative">
               <div className="flex justify-center mb-5">
-                <Avatar name={profile.full_name} url={profile.avatar_url} />
+                <Avatar name={profile.full_name} url={avatarLocal || profile.avatar_url} onUpload={handleAvatarUpload} />
               </div>
               <div className="font-black text-xl tracking-tight">{profile.full_name}</div>
               <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-2">{profile.position_title ?? roleLabel}</div>
 
               <div className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-white/10 border border-white/10 px-4 py-2 text-xs font-bold">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 Activo
               </div>
             </div>
           </div>
 
-          {/* Performance Metrics placeholder */}
           <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-5">
-              <Shield className="h-4 w-4 text-neutral-300" />
-              <span className="text-sm font-black text-obsidian tracking-tight">Nivel de Acceso</span>
+            <div className="flex items-center gap-2 mb-4">
+              <MonitorSmartphone className="h-4 w-4 text-neutral-300" />
+              <span className="text-sm font-black text-obsidian tracking-tight">Actividad Reciente</span>
             </div>
-            <div className="rounded-2xl bg-obsidian/5 border border-neutral-100 p-4">
-              <div className="text-xs font-bold text-obsidian uppercase tracking-wider mb-1">{roleLabel}</div>
-              <p className="text-[11px] text-neutral-400 leading-relaxed">
-                {profile.role === "empleado"
-                  ? "Puedes ver tus tareas, marcar asistencia y subir evidencias."
-                  : profile.role === "supervisor"
-                  ? "Puedes gestionar tareas, asistencia y revisar el trabajo del equipo."
-                  : "Acceso completo al sistema, incluyendo configuración y reportes."}
-              </p>
+            <div className="text-xs font-medium text-neutral-500 leading-relaxed">
+              Último acceso: hoy a las {new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })} desde {navigator.userAgent.includes("Chrome") ? "Chrome" : "Navegador"} / {navigator.platform.includes("Win") ? "Windows" : "Sistema OS"}.
             </div>
           </div>
         </div>
@@ -353,6 +407,14 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              <div>
+                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Nivel de Acceso</div>
+                <div className="flex items-center gap-2 text-sm font-bold text-obsidian">
+                  <Shield className="h-4 w-4 text-neutral-300" />
+                  {roleLabel}
+                </div>
+              </div>
+
               {profile.department && (
                 <div>
                   <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departamento</div>
@@ -365,93 +427,163 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Change Password Section */}
+          {/* Preferencias (NUEVO) */}
           <div className="rounded-[32px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
             <div className="px-6 py-5 border-b border-neutral-50 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Key className="h-4 w-4 text-neutral-300" />
+                <MonitorSmartphone className="h-4 w-4 text-neutral-300" />
+                <span className="text-sm font-black text-obsidian tracking-tight">Preferencias</span>
+              </div>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-4 w-4 text-neutral-400" />
+                  <div>
+                    <div className="text-xs font-bold text-obsidian">Notificaciones Push</div>
+                    <div className="text-[10px] text-neutral-400">Recibir alertas locales</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleNotifications}
+                  className={cx(
+                    "h-6 w-11 rounded-full transition-all flex items-center px-0.5 border",
+                    preferences.notifications ? "bg-emerald-500 border-emerald-600" : "bg-neutral-200 border-neutral-300"
+                  )}
+                >
+                  <div className={cx(
+                    "h-4 w-4 rounded-full bg-white shadow transition-transform duration-300",
+                    preferences.notifications ? "translate-x-5" : "translate-x-0"
+                  )} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Globe className="h-4 w-4 text-neutral-400" />
+                  <div className="text-xs font-bold text-obsidian">Idioma</div>
+                </div>
+                <select 
+                  className="rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
+                  value={preferences.language}
+                  onChange={e => changeLanguage(e.target.value)}
+                >
+                  <option value="es">Español</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Moon className="h-4 w-4 text-neutral-400" />
+                  <div className="text-xs font-bold text-obsidian">Tema</div>
+                </div>
+                <select 
+                  className="rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
+                  value={preferences.theme}
+                  onChange={e => toggleTheme(e.target.value)}
+                >
+                  <option value="system">Sistema</option>
+                  <option value="light">Claro</option>
+                  <option value="dark">Oscuro</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Change Password Section */}
+          <div className="rounded-[32px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+            <button 
+              onClick={() => setSecurityExpanded(!securityExpanded)}
+              className="w-full px-6 py-5 flex items-center justify-between hover:bg-neutral-50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Key className="h-4 w-4 text-neutral-400" />
                 <span className="text-sm font-black text-obsidian tracking-tight">Seguridad</span>
               </div>
-              {!changingPassword ? (
-                <button
-                  onClick={() => setChangingPassword(true)}
-                  className="rounded-xl border border-neutral-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500 hover:bg-neutral-50 transition"
-                >
-                  <Pencil className="h-3 w-3 inline mr-1" /> Editar
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setChangingPassword(false);
-                      setCurrentPassword("");
-                      setNewPassword("");
-                      setConfirmPassword("");
-                    }}
-                    className="rounded-xl border border-neutral-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 hover:bg-neutral-50 transition"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={savePassword}
-                    disabled={savingPassword}
-                    className="rounded-xl bg-obsidian text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gold transition disabled:opacity-50"
-                  >
-                    {savingPassword ? "..." : "Guardar"}
-                  </button>
-                </div>
-              )}
-            </div>
+              <ChevronDown className={cx("h-4 w-4 text-neutral-400 transition-transform", securityExpanded ? "rotate-180" : "rotate-0")} />
+            </button>
 
-            <div className="p-6">
-              {!changingPassword ? (
-                <div className="text-sm font-medium text-neutral-400 flex flex-col gap-1">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-300">Contraseña</div>
-                  <div className="flex items-center justify-between">
-                    <span>••••••••••</span>
-                    <span className="text-[9px] font-bold text-neutral-300 italic">Protegido por seguridad</span>
+            {securityExpanded && (
+              <div className="p-6 border-t border-neutral-50 animate-in-fade">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-sm font-medium text-neutral-400 flex flex-col gap-1">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-300">Contraseña</div>
+                    <div className="text-xs font-medium">••••••••••</div>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Contraseña actual</label>
-                    <input
-                      type="password"
-                      className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Nueva contraseña</label>
-                    <input
-                      type="password"
-                      className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Confirmar nueva contraseña</label>
-                    <input
-                      type="password"
-                      className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  {newPassword && confirmPassword && newPassword !== confirmPassword && (
-                    <div className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1.5 animate-in-fade">
-                      <AlertTriangle className="h-3 w-3" /> Las contraseñas no coinciden
+                  {!changingPassword ? (
+                    <button
+                      onClick={() => setChangingPassword(true)}
+                      className="rounded-xl border border-neutral-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500 hover:bg-neutral-50 transition"
+                    >
+                      <Pencil className="h-3 w-3 inline mr-1" /> Editar
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setChangingPassword(false);
+                          setCurrentPassword("");
+                          setNewPassword("");
+                          setConfirmPassword("");
+                        }}
+                        className="rounded-xl border border-neutral-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 hover:bg-neutral-50 transition"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={savePassword}
+                        disabled={savingPassword}
+                        className="rounded-xl bg-obsidian text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gold transition disabled:opacity-50"
+                      >
+                        {savingPassword ? "..." : "Guardar"}
+                      </button>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+
+                {changingPassword && (
+                  <div className="space-y-4 pt-4 border-t border-neutral-50">
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Contraseña actual</label>
+                      <input
+                        type="password"
+                        className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Nueva contraseña</label>
+                      <input
+                        type="password"
+                        className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Mínimo 6 caracteres"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Confirmar nueva contraseña</label>
+                      <input
+                        type="password"
+                        className="w-full rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                      <div className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1.5 animate-in-fade">
+                        <AlertTriangle className="h-3 w-3" /> Las contraseñas no coinciden
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

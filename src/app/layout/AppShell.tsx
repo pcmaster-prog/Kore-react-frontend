@@ -11,6 +11,7 @@ import {
   Settings, ChevronRight, Bell, Activity, BookOpen
 } from "lucide-react";
 import { getPendientesSupervisor } from "@/features/semaforo/api";
+import { isEnabled } from "@/lib/featureFlags";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -85,15 +86,22 @@ function Breadcrumbs() {
     .filter((p) => p !== "app")
     .map(toTitleCase);
 
+  // Fase 1.4: Ocultar breadcrumb en desktop
+  const hideDesktop = isEnabled("hideBreadcrumbDesktop");
+  // En móvil, solo mostrar último nivel
+  const mobileCrumbs = crumbs.length > 0 ? [crumbs[crumbs.length - 1]] : [];
+  
   return (
-    <div className="flex items-center gap-2 text-[13px] text-neutral-400 font-medium">
+    <div className={`flex items-center gap-2 text-[13px] text-neutral-400 font-medium ${hideDesktop ? "lg:hidden" : ""}`}>
       <span className="text-neutral-500 hover:text-neutral-900 transition-colors cursor-default">Kore</span>
-      {crumbs.map((c, i) => (
+      {/* Desktop: full crumbs · Mobile: last only */}
+      {/* On mobile the lg:hidden parent handles visibility; show last crumb */}
+      {(hideDesktop ? mobileCrumbs : crumbs).map((c, i) => (
         <span key={`${c}-${i}`} className="flex items-center gap-2">
           <ChevronRight className="h-3.5 w-3.5 text-neutral-300" strokeWidth={3} />
           <span className={cx(
             "transition-colors",
-            i === crumbs.length - 1 ? "text-neutral-900 font-bold" : "hover:text-neutral-600 cursor-default"
+            i === (hideDesktop ? mobileCrumbs : crumbs).length - 1 ? "text-neutral-900 font-bold" : "hover:text-neutral-600 cursor-default"
           )}>{c}</span>
         </span>
       ))}

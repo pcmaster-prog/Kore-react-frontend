@@ -25,6 +25,7 @@ import {
   Clock, CheckCircle2, AlertTriangle, Calendar,
   Timer, Wifi, Loader2, FileText, Send, ChevronDown, ChevronUp,
 } from "lucide-react";
+import { isEnabled } from "@/lib/featureFlags";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -255,11 +256,32 @@ export default function EmployeeAttendancePage() {
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
   const [wifiBlocked, setWifiBlocked] = useState(false);
+  const [liveMinutes, setLiveMinutes] = useState(0);
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3500);
   }
+
+  // Timer logic for Fase 4.7
+  useEffect(() => {
+    if (today?.state === "working" && today.day?.first_check_in_at && isEnabled("newManagementEmployee")) {
+      const start = new Date(today.day.first_check_in_at).getTime();
+      const breaks = today.totals?.break_minutes ?? 0;
+      
+      const updateLive = () => {
+        const now = new Date().getTime();
+        const diffMins = Math.floor((now - start) / 60000);
+        setLiveMinutes(Math.max(0, diffMins - breaks));
+      };
+      
+      updateLive();
+      const interval = setInterval(updateLive, 60000);
+      return () => clearInterval(interval);
+    } else {
+      setLiveMinutes(today?.totals?.worked_minutes ?? 0);
+    }
+  }, [today]);
 
   const loadToday = useCallback(async () => {
     setLoadingToday(true);
@@ -354,11 +376,11 @@ export default function EmployeeAttendancePage() {
   const completeDays = history.filter((d) => d.status === "closed" && !!d.first_check_in_at).length;
 
   const stateConf = {
-    working: { label: "Jornada Activa", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", dot: "bg-emerald-400" },
+    working: { label: isEnabled("newManagementEmployee") ? `En turno · ${minutesToHHMM(liveMinutes)} transcurridos` : "Jornada Activa", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", dot: "bg-emerald-400" },
     break: { label: "En Pausa", cls: "bg-amber-500/15 text-amber-300 border-amber-400/30", dot: "bg-amber-400" },
     closed: { label: "Turno Cerrado", cls: "bg-neutral-500/15 text-neutral-300 border-neutral-400/30", dot: "bg-neutral-400" },
     rest: { label: "Día de Descanso", cls: "bg-sky-500/15 text-sky-300 border-sky-400/30", dot: "bg-sky-400" },
-    out: { label: "Sin Turno", cls: "bg-neutral-500/15 text-neutral-300 border-neutral-400/30", dot: "bg-neutral-400" },
+    out: { label: isEnabled("newManagementEmployee") ? "Fuera de turno" : "Sin Turno", cls: "bg-neutral-500/15 text-neutral-300 border-neutral-400/30", dot: "bg-neutral-400" },
   }[state] ?? { label: state, cls: "bg-neutral-500/15 text-neutral-300 border-neutral-400/30", dot: "bg-neutral-300" };
 
   const todayFormatted = new Date().toLocaleDateString("es-MX", {
@@ -478,7 +500,7 @@ export default function EmployeeAttendancePage() {
                   <span className={cx("h-2 w-2 rounded-full animate-pulse shrink-0", stateConf.dot)} />
                   {stateConf.label}
                 </div>
-                <div className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums">{minutesToHHMM(todayMinutes)}</div>
+                <div className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums">{isEnabled("newManagementEmployee") ? minutesToHHMM(liveMinutes) : minutesToHHMM(todayMinutes)}</div>
                 <div className="text-white/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
               </div>
               <div className="flex gap-8 sm:gap-0 sm:flex-col text-left sm:text-right sm:space-y-3 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
@@ -501,8 +523,22 @@ export default function EmployeeAttendancePage() {
             </div>
           </div>
 
+          {isEnabled("newManagementEmployee") && (
+            <div className="rounded-[24px] border border-neutral-100 bg-white p-4 shadow-sm flex items-center justify-between gap-4">
+              <div className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex-1">
+                Llevas <span className="text-obsidian">{minutesToHHMM(workedThisWeek)}</span> / 40h
+              </div>
+              <div className="w-1/2 bg-neutral-100 rounded-full h-2.5 overflow-hidden flex">
+                <div 
+                  className={cx("h-full rounded-full transition-all duration-500", (workedThisWeek / 2400) < 0.5 ? "bg-rose-500" : (workedThisWeek / 2400) < 0.9 ? "bg-amber-400" : "bg-emerald-500")}
+                  style={{ width: `${Math.min(100, (workedThisWeek / 2400) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* KPI minibar */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className={cx("grid gap-2 sm:gap-4", (!isEnabled("newManagementEmployee") || lateCount > 0) ? "grid-cols-3" : "grid-cols-2")}>
             <div className="rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center">
               <Timer className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-200 mb-1 sm:mb-2" />
               <div className="text-lg sm:text-2xl font-black text-obsidian">{minutesToHHMM(workedThisWeek)}</div>
@@ -513,18 +549,20 @@ export default function EmployeeAttendancePage() {
               <div className="text-lg sm:text-2xl font-black text-emerald-600">{completeDays}</div>
               <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Días Completos</div>
             </div>
-            <div className={cx(
-              "rounded-[24px] sm:rounded-[28px] border p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center",
-              lateCount >= 3 ? "border-rose-200 bg-rose-50" : lateCount > 0 ? "border-amber-200 bg-amber-50" : "border-neutral-100 bg-white"
-            )}>
-              <Clock className={cx("h-4 w-4 sm:h-5 sm:w-5 mb-1 sm:mb-2", lateCount >= 3 ? "text-rose-300" : lateCount > 0 ? "text-amber-300" : "text-amber-200")} />
-              <div className={cx("text-lg sm:text-2xl font-black", lateCount >= 3 ? "text-rose-600" : lateCount > 0 ? "text-amber-600" : "text-amber-600")}>
-                {lateCount}
+            {(!isEnabled("newManagementEmployee") || lateCount > 0) && (
+              <div className={cx(
+                "rounded-[24px] sm:rounded-[28px] border p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center",
+                lateCount >= 3 ? "border-rose-200 bg-rose-50" : lateCount > 0 ? "border-amber-200 bg-amber-50" : "border-neutral-100 bg-white"
+              )}>
+                <Clock className={cx("h-4 w-4 sm:h-5 sm:w-5 mb-1 sm:mb-2", lateCount >= 3 ? "text-rose-300" : lateCount > 0 ? "text-amber-300" : "text-amber-200")} />
+                <div className={cx("text-lg sm:text-2xl font-black", lateCount >= 3 ? "text-rose-600" : lateCount > 0 ? "text-amber-600" : "text-amber-600")}>
+                  {lateCount}
+                </div>
+                <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">
+                  Retardos (mes)
+                </div>
               </div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">
-                Retardos (mes)
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Action buttons or Locked Banner */}
@@ -552,8 +590,13 @@ export default function EmployeeAttendancePage() {
             <div className="grid grid-cols-2 gap-4">
               <ActionBtn label="Entrada" icon={<LogIn className="h-5 w-5" />} enabled={actions?.check_in ?? false} busy={busy} variant="primary" onClick={() => doAction(checkIn, "Entrada registrada")} />
               <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={actions?.check_out ?? false} busy={busy} variant="danger" onClick={() => doAction(checkOut, "Salida registrada")} />
-              <ActionBtn label="Inicio Descanso" icon={<Coffee className="h-5 w-5" />} enabled={actions?.break_start ?? false} busy={busy} variant="warning" onClick={() => doAction(breakStart, "Pausa iniciada")} />
-              <ActionBtn label="Fin Descanso" icon={<Play className="h-5 w-5" />} enabled={actions?.break_end ?? false} busy={busy} variant="warning" onClick={() => doAction(breakEnd, "Pausa terminada")} />
+              
+              {(!isEnabled("newManagementEmployee") || actions?.break_start) && (
+                <ActionBtn label="Inicio Descanso" icon={<Coffee className="h-5 w-5" />} enabled={actions?.break_start ?? false} busy={busy} variant="warning" onClick={() => doAction(breakStart, "Pausa iniciada")} />
+              )}
+              {(!isEnabled("newManagementEmployee") || actions?.break_end) && (
+                <ActionBtn label="Fin Descanso" icon={<Play className="h-5 w-5" />} enabled={actions?.break_end ?? false} busy={busy} variant="warning" onClick={() => doAction(breakEnd, "Pausa terminada")} />
+              )}
             </div>
 
             {state === "out" && !today?.is_rest_day && today?.state !== "rest" && (

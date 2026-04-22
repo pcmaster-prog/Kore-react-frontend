@@ -17,8 +17,11 @@ import { listEmployees } from "@/features/tasks/employeeApi";
 import {
   ChevronDown, ChevronUp, Download, Settings2, Star,
   FileText, Users, CheckCircle2, AlertTriangle, ClipboardList,
-  Plus, Trash2, X, Loader2, Clock
+  Plus, Trash2, X, Loader2, Clock, Mail, Share2
 } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import { isEnabled } from "@/lib/featureFlags";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -410,6 +413,7 @@ export default function BitacoraPage() {
   const [showCriteriosModal, setShowCriteriosModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [showNotas, setShowNotas] = useState(false);
   const bitacoraRef = useRef<HTMLDivElement>(null);
 
   // Cargar empleados una sola vez
@@ -517,139 +521,220 @@ export default function BitacoraPage() {
   return (
     <div className="min-h-screen bg-bone">
       {/* Controls bar (fuera del PDF) */}
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-black text-obsidian tracking-tight">Bitácora del Día</h1>
-          <p className="text-sm text-neutral-400 mt-1 capitalize">{formatFechaLarga(date)}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <input
-            type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            className="h-10 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 shadow-sm"
+      {isEnabled("newManagementAdmin") ? (
+        <div className="mb-6">
+          <PageHeader
+            title="Bitácora del Día"
+            subtitle={formatFechaLarga(date)}
+            actions={
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="h-11 rounded-xl border-2 border-neutral-200 bg-white px-4 text-sm font-black outline-none focus:border-obsidian focus:ring-4 focus:ring-obsidian/10 shadow-sm transition-all"
+                />
+                <button
+                  onClick={() => setShowCriteriosModal(true)}
+                  className="h-11 px-4 rounded-xl border-2 border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+                >
+                  <Settings2 className="h-4 w-4" />
+                  Criterios
+                </button>
+                <button
+                  onClick={() => {
+                    const subject = encodeURIComponent(`Bitácora del Día - ${date}`);
+                    window.open(`mailto:?subject=${subject}`);
+                  }}
+                  className="h-11 px-4 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+                >
+                  <Mail className="h-4 w-4" />
+                  Email
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert("Enlace copiado al portapapeles");
+                  }}
+                  className="h-11 px-4 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Compartir
+                </button>
+                <button
+                  onClick={handleExportPDF}
+                  disabled={exporting || loading}
+                  className="h-11 px-5 rounded-xl bg-obsidian text-white text-sm font-bold flex items-center gap-2 hover:bg-obsidian/90 transition-colors shadow-sm disabled:opacity-60"
+                >
+                  {exporting
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <Download className="h-4 w-4" />}
+                  {exporting ? "Generando..." : "Exportar"}
+                </button>
+              </div>
+            }
           />
-          <button
-            onClick={() => setShowCriteriosModal(true)}
-            className="h-10 px-4 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
-          >
-            <Settings2 className="h-4 w-4" />
-            Criterios
-          </button>
-          <button
-            onClick={handleExportPDF}
-            disabled={exporting || loading}
-            className="h-10 px-5 rounded-xl bg-obsidian text-white text-sm font-bold flex items-center gap-2 hover:bg-obsidian/90 transition-colors shadow-sm disabled:opacity-60"
-          >
-            {exporting
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <Download className="h-4 w-4" />}
-            {exporting ? "Generando..." : "Exportar PDF"}
-          </button>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-black text-obsidian tracking-tight">Bitácora del Día</h1>
+            <p className="text-sm text-neutral-400 mt-1 capitalize">{formatFechaLarga(date)}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="h-10 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 shadow-sm"
+            />
+            <button
+              onClick={() => setShowCriteriosModal(true)}
+              className="h-10 px-4 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+            >
+              <Settings2 className="h-4 w-4" />
+              Criterios
+            </button>
+            <button
+              onClick={handleExportPDF}
+              disabled={exporting || loading}
+              className="h-10 px-5 rounded-xl bg-obsidian text-white text-sm font-bold flex items-center gap-2 hover:bg-obsidian/90 transition-colors shadow-sm disabled:opacity-60"
+            >
+              {exporting
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Download className="h-4 w-4" />}
+              {exporting ? "Generando..." : "Exportar PDF"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* === CONTENIDO DEL PDF === */}
       <div ref={bitacoraRef} className="space-y-6">
 
         {/* Header del documento */}
-        <div className="bg-obsidian rounded-[32px] px-8 py-7 flex items-center justify-between text-white">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-10 w-10 rounded-2xl bg-white flex items-center justify-center text-obsidian font-black text-xl italic">K</div>
-              <div>
-                <div className="text-xl font-black tracking-tighter">Kore</div>
-                <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Ops Suite</div>
+        {!isEnabled("newManagementAdmin") && (
+          <div className="bg-obsidian rounded-[32px] px-8 py-7 flex items-center justify-between text-white">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-10 w-10 rounded-2xl bg-white flex items-center justify-center text-obsidian font-black text-xl italic">K</div>
+                <div>
+                  <div className="text-xl font-black tracking-tighter">Kore</div>
+                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Ops Suite</div>
+                </div>
+              </div>
+              <div className="font-black text-2xl mt-3">Bitácora diaria</div>
+              <div className="text-white/60 text-sm mt-1">Reporte de actividades del equipo</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-1">Fecha</div>
+              <div className="text-3xl font-black tabular-nums">
+                {date.split("-").reverse().join(" / ")}
+              </div>
+              <div className="text-white/50 text-sm mt-1 capitalize">
+                {new Date(date + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long" })}
+                {" · Turno del día"}
               </div>
             </div>
-            <div className="font-black text-2xl mt-3">Bitácora diaria</div>
-            <div className="text-white/60 text-sm mt-1">Reporte de actividades del equipo</div>
           </div>
-          <div className="text-right">
-            <div className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-1">Fecha</div>
-            <div className="text-3xl font-black tabular-nums">
-              {date.split("-").reverse().join(" / ")}
-            </div>
-            <div className="text-white/50 text-sm mt-1 capitalize">
-              {new Date(date + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long" })}
-              {" · Turno del día"}
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: "Empleados activos", value: totalActivos, icon: <Users className="h-5 w-5" />, color: "text-blue-600 bg-blue-50" },
-            { label: "Tareas completadas", value: tareasCompletadas, icon: <ClipboardList className="h-5 w-5" />, color: "text-emerald-600 bg-emerald-50" },
-            { label: "Promedio del equipo", value: `${avgRating} ★`, icon: <Star className="h-5 w-5" />, color: "text-amber-500 bg-amber-50" },
-            { label: "Sin incidencias", value: sinIncidencias, icon: <CheckCircle2 className="h-5 w-5" />, color: "text-teal-600 bg-teal-50" },
-          ].map(kpi => (
-            <div key={kpi.label} className="bg-white rounded-[24px] border border-neutral-100 p-5 shadow-sm">
-              <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center mb-3", kpi.color)}>
-                {kpi.icon}
-              </div>
-              <div className="text-2xl font-black text-obsidian">{kpi.value}</div>
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wide mt-1">{kpi.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Empleados */}
+        {/* Empleados e KPIs (EmptyState cuando no hay registros) */}
         {loading ? (
           <div className="bg-white rounded-[32px] border border-neutral-100 p-16 flex flex-col items-center gap-3">
             <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
             <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Cargando bitácora...</span>
           </div>
         ) : attendance.length === 0 ? (
-          <div className="bg-white rounded-[32px] border border-neutral-100 p-16 flex flex-col items-center gap-4 text-center">
-            <AlertTriangle className="h-12 w-12 text-neutral-200" />
-            <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">
-              Sin registros de asistencia para esta fecha
-            </p>
-            <p className="text-xs text-neutral-300">Selecciona otro día o verifica que haya empleados con check-in registrado</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 px-1">
-              <FileText className="h-4 w-4 text-neutral-400" />
-              <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
-                Empleados y Tareas Realizadas
-              </span>
+          isEnabled("newManagementAdmin") ? (
+            <EmptyState
+              variant="neutral"
+              title="Aún no hay registros para hoy"
+              description="No hay asistencia registrada en la fecha seleccionada."
+            />
+          ) : (
+            <div className="bg-white rounded-[32px] border border-neutral-100 p-16 flex flex-col items-center gap-4 text-center">
+              <AlertTriangle className="h-12 w-12 text-neutral-200" />
+              <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                Sin registros de asistencia para esta fecha
+              </p>
+              <p className="text-xs text-neutral-300">Selecciona otro día o verifica que haya empleados con check-in registrado</p>
             </div>
-            {attendance.map(a => (
-              <EmployeeRow
-                key={a.empleado_id}
-                attendance={a}
-                tasks={tasksForEmployee(a.empleado_id)}
-                criterios={criterios}
-                evalData={evals[a.empleado_id] ?? { rating: 5, checks: {}, note: "" }}
-                onEvalChange={data => updateEval(a.empleado_id, data)}
-                empInfo={empMap[a.empleado_id]}
-                isExporting={exporting}
-              />
-            ))}
+          )
+        ) : (
+          <div className="space-y-6">
+            {(!isEnabled("newManagementAdmin") || attendance.length > 0) && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: "Empleados activos", value: totalActivos, icon: <Users className="h-5 w-5" />, color: "text-blue-600 bg-blue-50" },
+                  { label: "Tareas completadas", value: tareasCompletadas, icon: <ClipboardList className="h-5 w-5" />, color: "text-emerald-600 bg-emerald-50" },
+                  { label: "Promedio del equipo", value: `${avgRating} ★`, icon: <Star className="h-5 w-5" />, color: "text-amber-500 bg-amber-50" },
+                  { label: "Sin incidencias", value: sinIncidencias, icon: <CheckCircle2 className="h-5 w-5" />, color: "text-teal-600 bg-teal-50" },
+                ].map(kpi => (
+                  <div key={kpi.label} className="bg-white rounded-[24px] border border-neutral-100 p-5 shadow-sm">
+                    <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center mb-3", kpi.color)}>
+                      {kpi.icon}
+                    </div>
+                    <div className="text-2xl font-black text-obsidian">{kpi.value}</div>
+                    <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wide mt-1">{kpi.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 px-1">
+                <FileText className="h-4 w-4 text-neutral-400" />
+                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+                  Empleados y Tareas Realizadas
+                </span>
+              </div>
+              {attendance.map(a => (
+                <EmployeeRow
+                  key={a.empleado_id}
+                  attendance={a}
+                  tasks={tasksForEmployee(a.empleado_id)}
+                  criterios={criterios}
+                  evalData={evals[a.empleado_id] ?? { rating: 5, checks: {}, note: "" }}
+                  onEvalChange={data => updateEval(a.empleado_id, data)}
+                  empInfo={empMap[a.empleado_id]}
+                  isExporting={exporting}
+                />
+              ))}
+            </div>
           </div>
         )}
 
         {/* Notas generales */}
         <div className="bg-white rounded-[32px] border border-neutral-100 p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-8 w-8 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center">
-              <FileText className="h-4 w-4 text-neutral-400" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-neutral-400" />
+              </div>
+              <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+                Notas Generales del Día
+              </span>
             </div>
-            <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
-              Notas Generales del Día
-            </span>
+            {isEnabled("newManagementAdmin") && !exporting && !showNotas && !notasGenerales && (
+              <button
+                onClick={() => setShowNotas(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition"
+              >
+                <Plus className="h-3 w-3" /> Agregar nota del día
+              </button>
+            )}
           </div>
           {!exporting ? (
-            <textarea
-              value={notasGenerales}
-              onChange={e => setNotasGenerales(e.target.value)}
-              placeholder="Observaciones generales, incidencias del negocio, pendientes para mañana..."
-              rows={4}
-              className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
-            />
+            (!isEnabled("newManagementAdmin") || showNotas || notasGenerales) ? (
+              <textarea
+                value={notasGenerales}
+                onChange={e => setNotasGenerales(e.target.value)}
+                placeholder="Observaciones generales, incidencias del negocio, pendientes para mañana..."
+                rows={4}
+                className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
+              />
+            ) : null
           ) : notasGenerales ? (
             <div className="w-full rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-700 whitespace-pre-wrap">
               {notasGenerales}

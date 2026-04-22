@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import AjustarAsistenciaModal from "./AjustarAsistenciaModal";
 import DiaDescansoAdminModal from "./DiaDescansoAdminModal";
+import { isEnabled } from "@/lib/featureFlags";
+import EmptyState from "@/components/EmptyState";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
@@ -408,116 +410,141 @@ export default function ManagerAttendancePage() {
 
       {tab === "daily" ? (
         <>
-          {/* KPI cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { label: "Presentes", val: checkedIn, pct: Math.round((checkedIn / totalEmps) * 100), icon: Users, iconBg: "bg-emerald-100 text-emerald-600", numCls: "text-emerald-600" },
-              { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, iconBg: "bg-rose-50 text-rose-400", numCls: "text-rose-500" },
-              { label: "En turno", val: onShift, pct: Math.round((onShift / totalEmps) * 100), icon: Clock, iconBg: "bg-amber-100 text-amber-600", numCls: "text-amber-600" },
-            ].map((k) => (
-              <div key={k.label} className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm">
-                <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center mb-4", k.iconBg)}>
-                  <k.icon className="h-5 w-5" />
-                </div>
-                <div className={cx("text-4xl font-black tracking-tight", k.numCls)}>{k.val}</div>
-                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">{k.label}</div>
-                <div className="text-xs font-bold text-neutral-300 mt-0.5">{k.pct}% del personal</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Table */}
-          <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-            <div className="px-8 py-6 border-b border-neutral-50">
-              <h3 className="text-lg font-black text-obsidian tracking-tight">Registro de Asistencia</h3>
-              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
-                {items.length} registros · {employees.length} empleados
-              </p>
-            </div>
-            {loading ? (
-              <div className="p-16 flex flex-col items-center gap-3 text-neutral-400">
-                <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
-                <span className="text-xs font-bold uppercase tracking-widest">Cargando registros...</span>
-              </div>
-            ) : employees.length === 0 ? (
-              <div className="p-16 flex flex-col items-center gap-4 text-center">
-                <Users className="h-12 w-12 text-neutral-100" />
-                <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin nómina (no hay empleados activos)</p>
-              </div>
+            {isEnabled("newManagementAdmin") && checkedIn === 0 && onShift === 0 && closed === 0 ? (
+              <EmptyState
+                variant="neutral"
+                title="Esperando registros del día"
+                description="El equipo aún no marca entrada."
+              />
             ) : (
-              <div className="overflow-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-neutral-50/80 border-b border-neutral-50">
-                    <tr>
-                      {["Empleado", "Entrada", "Salida", "Estado", "Horas", ""].map((h) => (
-                        <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {employees.map((emp) => {
-                      const item = items.find((i) => i.empleado_id === emp.id);
-                      const empName = emp.full_name ?? emp.name ?? "Empleado";
-                      const tieneDiaDescanso = item?.status === 'day_off' || (item as any)?.is_rest_day;
-
-                      return (
-                        <tr key={emp.id} className="border-t border-neutral-50 hover:bg-neutral-50/50 transition">
-                          <td className="px-5 py-4">
-                            <div className="flex items-center gap-3">
-                              <Avatar name={empName} />
-                              <div>
-                                <div className="text-sm font-bold text-obsidian">{empName}</div>
-                                {emp.position_title && <div className="text-[10px] text-neutral-400 mt-0.5">{emp.position_title}</div>}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 font-bold text-sm text-obsidian">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
-                          <td className="px-5 py-4 text-sm text-neutral-400">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
-                          <td className="px-5 py-4">
-                            {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-100 bg-neutral-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Sin registro</span>}
-                          </td>
-                          <td className="px-5 py-4 font-black text-sm text-obsidian">
-                            {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
-                          </td>
-                          <td className="px-5 py-4">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => setAjustando({
-                                  empleadoId: emp.id,
-                                  empleadoNombre: empName,
-                                  checkIn: item?.first_check_in_at
-                                    ? new Date(item.first_check_in_at).toTimeString().slice(0, 5)
-                                    : undefined,
-                                  checkOut: item?.last_check_out_at
-                                    ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
-                                    : undefined,
-                                })}
-                                className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
-                                title="Ajustar horario"
-                              >
-                                <Pencil className="h-3.5 w-3.5 text-neutral-400" />
-                              </button>
-                              <button
-                                onClick={() => setDescansoAdmin({
-                                  empleadoId: emp.id,
-                                  empleadoNombre: empName,
-                                  tieneDiaDescanso,
-                                })}
-                                className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition text-sm mb-0.5"
-                                title="Gestionar día de descanso"
-                              >
-                                🛋️
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { label: "Presentes", val: checkedIn, pct: Math.round((checkedIn / totalEmps) * 100), icon: Users, iconBg: "bg-emerald-100 text-emerald-600", numCls: "text-emerald-600" },
+                  { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, iconBg: "bg-rose-50 text-rose-400", numCls: "text-rose-500" },
+                  { label: "En turno", val: onShift, pct: Math.round((onShift / totalEmps) * 100), icon: Clock, iconBg: "bg-amber-100 text-amber-600", numCls: "text-amber-600" },
+                ].map((k) => (
+                  <div key={k.label} className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex flex-col">
+                    <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center mb-4", k.iconBg)}>
+                      <k.icon className="h-5 w-5" />
+                    </div>
+                    <div className={cx("text-4xl font-black tracking-tight", k.numCls)}>{k.val}</div>
+                    <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">{k.label}</div>
+                    <div className="text-xs font-bold text-neutral-300 mt-0.5">{k.pct}% del personal</div>
+                  </div>
+                ))}
               </div>
             )}
-          </div>
+
+            {/* Table */}
+            <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden mt-6">
+              <div className="px-8 py-6 border-b border-neutral-50">
+                <h3 className="text-lg font-black text-obsidian tracking-tight">Registro de Asistencia</h3>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                  {items.length} registros · {employees.length} empleados
+                </p>
+              </div>
+              {loading ? (
+                <div className="p-16 flex flex-col items-center gap-3 text-neutral-400">
+                  <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Cargando registros...</span>
+                </div>
+              ) : employees.length === 0 ? (
+                <div className="p-16 flex flex-col items-center gap-4 text-center">
+                  <Users className="h-12 w-12 text-neutral-100" />
+                  <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin nómina (no hay empleados activos)</p>
+                </div>
+              ) : (isEnabled("newManagementAdmin") && checkedIn === 0 && onShift === 0 && closed === 0) ? (
+                <EmptyState
+                  variant="action"
+                  title="Aún no hay asistencias"
+                  description="Todos los empleados están pendientes de marcar entrada."
+                  action={{
+                    label: "Registrar entrada manual",
+                    onClick: () => {
+                      if (employees.length > 0) {
+                        const firstEmp = employees[0];
+                        setAjustando({
+                          empleadoId: firstEmp.id,
+                          empleadoNombre: firstEmp.full_name ?? firstEmp.name ?? "Empleado",
+                        });
+                      }
+                    }
+                  }}
+                />
+              ) : (
+                <div className="overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-neutral-50/80 border-b border-neutral-50">
+                      <tr>
+                        {["Empleado", "Entrada", "Salida", "Estado", "Horas", ""].map((h) => (
+                          <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employees.map((emp) => {
+                        const item = items.find((i) => i.empleado_id === emp.id);
+                        const empName = emp.full_name ?? emp.name ?? "Empleado";
+                        const tieneDiaDescanso = item?.status === 'day_off' || (item as any)?.is_rest_day;
+
+                        return (
+                          <tr key={emp.id} className="border-t border-neutral-50 hover:bg-neutral-50/50 transition">
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar name={empName} />
+                                <div>
+                                  <div className="text-sm font-bold text-obsidian">{empName}</div>
+                                  {emp.position_title && <div className="text-[10px] text-neutral-400 mt-0.5">{emp.position_title}</div>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-4 font-bold text-sm text-obsidian">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
+                            <td className="px-5 py-4 text-sm text-neutral-400">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
+                            <td className="px-5 py-4">
+                              {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-600"><AlertTriangle className="h-2.5 w-2.5" /> Faltante</span>}
+                            </td>
+                            <td className="px-5 py-4 font-black text-sm text-obsidian">
+                              {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
+                            </td>
+                            <td className="px-5 py-4">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setAjustando({
+                                    empleadoId: emp.id,
+                                    empleadoNombre: empName,
+                                    checkIn: item?.first_check_in_at
+                                      ? new Date(item.first_check_in_at).toTimeString().slice(0, 5)
+                                      : undefined,
+                                    checkOut: item?.last_check_out_at
+                                      ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
+                                      : undefined,
+                                  })}
+                                  className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
+                                  title="Ajustar horario"
+                                >
+                                  <Pencil className="h-3.5 w-3.5 text-neutral-400" />
+                                </button>
+                                <button
+                                  onClick={() => setDescansoAdmin({
+                                    empleadoId: emp.id,
+                                    empleadoNombre: empName,
+                                    tieneDiaDescanso,
+                                  })}
+                                  className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition text-sm mb-0.5"
+                                  title="Gestionar día de descanso"
+                                >
+                                  🛋️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
 
           {/* Bottom summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Search,
 } from "lucide-react";
+import { isEnabled } from "@/lib/featureFlags";
 
 type CatalogApiItem = CatalogResponse["catalog"][number];
 
@@ -360,17 +361,56 @@ export default function TaskCatalogPanel({
                   </label>
                   <label className="block">
                     <span className="block text-[11px] font-bold uppercase tracking-widest text-neutral-400 mb-2">
-                      Tiempo (Minutos)
+                      Minutos Est.
                     </span>
-                    <input
-                      type="number"
-                      className="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-obsidian/10 transition-shadow"
-                      placeholder="Ej. 15"
-                      value={newEstMin}
-                      onChange={(e) => setNewEstMin(e.target.value)}
-                    />
+                    {isEnabled("newTaskModal") ? (
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { val: "15", label: "15m" },
+                          { val: "30", label: "30m" },
+                          { val: "60", label: "1h" },
+                          { val: "120", label: "2h" },
+                        ].map((t) => (
+                          <button
+                            key={t.val}
+                            type="button"
+                            onClick={() => setNewEstMin(t.val)}
+                            className={`py-3 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${
+                              newEstMin === t.val
+                                ? "bg-obsidian text-white shadow-md shadow-obsidian/20"
+                                : "bg-neutral-50 border border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:bg-white"
+                            }`}
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-obsidian/10 transition-shadow"
+                        placeholder="Ej. 15"
+                        value={newEstMin}
+                        onChange={(e) => setNewEstMin(e.target.value)}
+                      />
+                    )}
                   </label>
                 </div>
+                {isEnabled("newTaskModal") && newEstMin && selectedEmps.length > 0 && (
+                  <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 animate-in-fade flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center text-indigo-500 shadow-sm shrink-0">
+                      <Clock className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                        Carga Estimada
+                      </p>
+                      <p className="text-xs font-medium text-indigo-700 mt-0.5">
+                        Esta tarea ocupará <span className="font-bold">{Number(newEstMin) * selectedEmps.length} min</span> en total ({newEstMin}m × {selectedEmps.length} personas).
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
