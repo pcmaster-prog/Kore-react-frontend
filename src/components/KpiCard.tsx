@@ -16,6 +16,7 @@ interface KpiCardProps {
   forceShow?: boolean;
   trend?: { value: number; direction: "up" | "down" };
   sub?: string;
+  compact?: boolean;
 }
 
 const colorTokens: Record<
