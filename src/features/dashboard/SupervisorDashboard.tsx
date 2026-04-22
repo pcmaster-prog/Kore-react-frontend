@@ -70,7 +70,7 @@ function ErrorCard({ message }: { message: string }) {
       <p className="text-sm text-k-text-b mb-6">{message}</p>
       <button
         onClick={() => window.location.reload()}
-        className="h-11 px-6 bg-k-bg-sidebar text-white rounded-xl font-bold text-sm"
+        className="h-11 px-6 bg-k-accent-btn text-k-accent-btn-text rounded-xl font-bold text-sm"
       >
         Reintentar
       </button>
@@ -222,7 +222,7 @@ export function AssignTaskModal({
                 className={cx(
                   "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                   selectedEmployees.includes(emp.empleado_id)
-                    ? "border-obsidian bg-k-bg-sidebar/5"
+                    ? "border-obsidian bg-k-accent-btn/5"
                     : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
                 )}
               >
@@ -234,11 +234,11 @@ export function AssignTaskModal({
                     : "border-neutral-300"
                 )}>
                   {selectedEmployees.includes(emp.empleado_id) && (
-                    <CheckCircle2 className="h-3 w-3 text-white" />
+                    <CheckCircle2 className="h-3 w-3 text-k-text-h" />
                   )}
                 </div>
                 {/* Avatar */}
-                <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-black shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-k-accent-btn text-k-accent-btn-text flex items-center justify-center text-xs font-black shrink-0">
                   {emp.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}
                 </div>
                 {/* Info */}
@@ -271,7 +271,7 @@ export function AssignTaskModal({
           <button
             onClick={handleAssign}
             disabled={selectedEmployees.length === 0 || assigning}
-            className="flex-1 h-12 rounded-2xl bg-k-bg-sidebar text-white text-sm font-bold hover:bg-gold transition disabled:opacity-40"
+            className="flex-1 h-12 rounded-2xl bg-k-accent-btn text-k-accent-btn-text text-sm font-bold hover:opacity-90 transition disabled:opacity-40"
           >
             {assigning
               ? "Asignando..."
@@ -397,7 +397,7 @@ export function AssignTemplateModal({
                 className={cx(
                   "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                   selectedEmployees.includes(emp.empleado_id)
-                    ? "border-obsidian bg-k-bg-sidebar/5"
+                    ? "border-obsidian bg-k-accent-btn/5"
                     : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
                 )}
               >
@@ -405,9 +405,9 @@ export function AssignTemplateModal({
                   "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
                   selectedEmployees.includes(emp.empleado_id) ? "bg-k-bg-sidebar border-obsidian" : "border-neutral-300"
                 )}>
-                  {selectedEmployees.includes(emp.empleado_id) && <CheckCircle2 className="h-3 w-3 text-white" />}
+                  {selectedEmployees.includes(emp.empleado_id) && <CheckCircle2 className="h-3 w-3 text-k-text-h" />}
                 </div>
-                <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-black shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-k-accent-btn text-k-accent-btn-text flex items-center justify-center text-xs font-black shrink-0">
                   {emp.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -439,7 +439,7 @@ export function AssignTemplateModal({
           <button
             onClick={handleAssign}
             disabled={selectedEmployees.length === 0 || assigning}
-            className="flex-1 h-12 rounded-2xl bg-k-bg-sidebar text-white text-sm font-bold hover:bg-gold transition disabled:opacity-40"
+            className="flex-1 h-12 rounded-2xl bg-k-accent-btn text-k-accent-btn-text text-sm font-bold hover:opacity-90 transition disabled:opacity-40"
           >
             {assigning ? "Asignando..." : `Asignar a ${selectedEmployees.length || ""} empleado${selectedEmployees.length !== 1 ? "s" : ""}`}
           </button>
@@ -623,7 +623,7 @@ export function OpenTasksPanel({
           {onNewTask && (
             <button
               onClick={onNewTask}
-              className="h-8 px-3 rounded-xl bg-k-bg-sidebar text-white text-xs font-bold hover:bg-gold transition flex items-center gap-1.5"
+              className="h-8 px-3 rounded-xl bg-k-accent-btn text-k-accent-btn-text text-xs font-bold hover:opacity-90 transition flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               Nueva
@@ -809,7 +809,7 @@ export function AvailableTasksPanel({
           {selected.size > 0 && (
             <button
               onClick={handleAssign}
-              className="h-9 px-4 rounded-2xl bg-k-bg-sidebar text-white text-xs font-bold hover:bg-gold transition flex items-center gap-2"
+              className="h-9 px-4 rounded-2xl bg-k-accent-btn text-k-accent-btn-text text-xs font-bold hover:opacity-90 transition flex items-center gap-2"
             >
               <Plus className="h-3.5 w-3.5" />
               Asignar {tab === "templates" ? `(${selected.size})` : ''}
@@ -870,7 +870,7 @@ export function AvailableTasksPanel({
               className={cx(
                 "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                 selected.has(id)
-                  ? "border-obsidian bg-k-bg-sidebar/5"
+                  ? "border-obsidian bg-k-accent-btn/5"
                   : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
               )}
             >
@@ -879,7 +879,7 @@ export function AvailableTasksPanel({
                 "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
                 selected.has(id) ? "bg-k-bg-sidebar border-obsidian" : "border-neutral-300"
               )}>
-                {selected.has(id) && <CheckCircle2 className="h-3 w-3 text-white" />}
+                {selected.has(id) && <CheckCircle2 className="h-3 w-3 text-k-text-h" />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-k-text-h truncate">{title}</div>
@@ -995,7 +995,7 @@ function PendingReviewCard({
                   <button
                     onClick={() => handleReject(item.assignment_id)}
                     disabled={!rejectNote.trim() || reviewingId === item.assignment_id}
-                    className="flex-1 h-8 rounded-xl bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition disabled:opacity-50"
+                    className="flex-1 h-8 rounded-xl bg-rose-500 text-k-text-h text-xs font-bold hover:bg-rose-600 transition disabled:opacity-50"
                   >
                     Confirmar rechazo
                   </button>
@@ -1006,7 +1006,7 @@ function PendingReviewCard({
                 <button
                   onClick={() => handleApprove(item.assignment_id)}
                   disabled={reviewingId === item.assignment_id}
-                  className="flex-1 h-9 rounded-xl bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="flex-1 h-9 rounded-xl bg-emerald-500 text-k-text-h text-xs font-bold hover:bg-emerald-600 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" /> Aprobar
                 </button>
@@ -1086,7 +1086,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
                   className="flex items-center gap-3 p-3 cursor-pointer hover:bg-neutral-50 transition"
                   onClick={() => setExpanded(expanded === emp.empleado_id ? null : emp.empleado_id)}
                 >
-                  <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="h-9 w-9 rounded-xl bg-k-accent-btn text-k-accent-btn-text flex items-center justify-center text-xs font-bold shrink-0">
                     {emp.full_name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1226,7 +1226,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
     <div className="space-y-6 animate-in-up">
 
       {/* 1 · Hero */}
-      <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-10 text-white shadow-2xl shadow-obsidian/20">
+      <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-10 text-k-text-h shadow-2xl shadow-obsidian/20">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-k-bg-card/10 text-[10px] font-bold tracking-[0.2em] uppercase mb-4">
             <Zap className="h-3 w-3" />
@@ -1235,9 +1235,9 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
           <h1 className="text-3xl lg:text-4xl font-black tracking-tight mb-2">
             Hola, <span className="italic">{userName}</span>.
           </h1>
-          <p className="text-white/60 text-base">
-            <span className="text-white font-bold">{data.kpi.pending_review}</span> en revisión ·{" "}
-            <span className="text-white font-bold">{data.kpi.active_tasks}</span> activas ahora
+          <p className="text-k-text-h/60 text-base">
+            <span className="text-k-text-h font-bold">{data.kpi.pending_review}</span> en revisión ·{" "}
+            <span className="text-k-text-h font-bold">{data.kpi.active_tasks}</span> activas ahora
           </p>
         </div>
         <div className="absolute -top-16 -right-16 w-72 h-72 bg-k-bg-card/5 rounded-full blur-[80px]" />
@@ -1318,7 +1318,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
                 </div>
                 <button
                   onClick={() => nav(`/app/employee/gondola-relleno/${o.id}`)}
-                  className="w-full lg:w-auto rounded-2xl bg-k-bg-sidebar text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                  className="w-full lg:w-auto rounded-2xl bg-k-accent-btn text-k-accent-btn-text px-6 py-3 text-xs font-bold shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
                 >
                   {o.status === 'en_proceso' ? '→ Continuar' : o.status === 'rechazado' ? '↩ Volver a completar' : '▶ Iniciar relleno'}
                 </button>

@@ -36,8 +36,8 @@ function StatusPill({ status }: { status?: string }) {
     : s === "done_pending" ? { label: "En revisión", cls: "bg-indigo-50 text-indigo-800 border-indigo-200" }
     : s === "approved" ? { label: "Aprobada", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" }
     : s === "rejected" ? { label: "Rechazada", cls: "bg-rose-50 text-rose-800 border-rose-200" }
-    : s === "assigned" ? { label: "Asignada", cls: "bg-neutral-50 text-neutral-700 border-neutral-200" }
-    : { label: status ?? "-", cls: "bg-neutral-50 text-neutral-700 border-neutral-200" };
+    : s === "assigned" ? { label: "Asignada", cls: "bg-k-bg-card2 text-neutral-700 border-k-border" }
+    : { label: status ?? "-", cls: "bg-k-bg-card2 text-neutral-700 border-k-border" };
   return <span className={cx("inline-flex items-center rounded-full border px-2 py-0.5 text-xs", conf.cls)}>{conf.label}</span>;
 }
 
@@ -47,7 +47,7 @@ function PriorityPill({ priority }: { priority?: string }) {
     p === "urgent" ? { label: "Urgente", cls: "bg-rose-50 text-rose-800 border-rose-200" }
     : p === "high" ? { label: "Alta", cls: "bg-orange-50 text-orange-800 border-orange-200" }
     : p === "low" ? { label: "Baja", cls: "bg-sky-50 text-sky-800 border-sky-200" }
-    : { label: "Media", cls: "bg-neutral-50 text-neutral-700 border-neutral-200" };
+    : { label: "Media", cls: "bg-k-bg-card2 text-neutral-700 border-k-border" };
   return <span className={cx("inline-flex items-center rounded-full border px-2 py-0.5 text-xs", conf.cls)}>{conf.label}</span>;
 }
 
@@ -104,8 +104,8 @@ export default function EmployeeDashboard() {
   const attendanceNice =
     attendanceState === "checked_in" ? { label: "En turno", cls: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", icon: <CalendarCheck className="h-4 w-4" /> }
     : attendanceState === "on_break" ? { label: "En pausa", cls: "bg-amber-500/20 text-amber-300 border-amber-500/30", icon: <Flame className="h-4 w-4" /> }
-    : attendanceState === "checked_out" ? { label: "Salida registrada", cls: "bg-white/10 text-white/80 border-white/20", icon: <CheckCircle2 className="h-4 w-4" /> }
-    : { label: dash?.attendance?.state ?? "-", cls: "bg-white/5 text-white/50 border-white/10", icon: <AlertTriangle className="h-4 w-4" /> };
+    : attendanceState === "checked_out" ? { label: "Salida registrada", cls: "bg-k-bg-card/10 text-k-text-h/80 border-white/20", icon: <CheckCircle2 className="h-4 w-4" /> }
+    : { label: dash?.attendance?.state ?? "-", cls: "bg-k-bg-card/5 text-k-text-h/50 border-white/10", icon: <AlertTriangle className="h-4 w-4" /> };
 
   // 2.8 — Contextual status text
   const shiftText =
@@ -170,17 +170,17 @@ export default function EmployeeDashboard() {
           }
         />
       ) : (
-        <div className="relative rounded-[32px] sm:rounded-[40px] bg-obsidian overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
+        <div className="relative rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-k-text-h shadow-lg">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
+            <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-k-bg-card/[0.03]" />
             <div className="absolute bottom-0 left-1/4 h-24 w-48 rounded-full bg-gold/10" />
           </div>
           <div className="relative flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Tu Agenda</p>
+              <p className="text-[10px] font-bold text-k-text-h/40 uppercase tracking-[0.2em] mb-1">Tu Agenda</p>
               <h1 className="text-3xl font-black tracking-tight">Mi día</h1>
             </div>
-            <span className={cx("inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-sm backdrop-blur-md", attendanceNice.cls)}>
+            <span className={cx("inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-k-card backdrop-blur-md", attendanceNice.cls)}>
               {attendanceNice.icon}{attendanceNice.label}
             </span>
           </div>
@@ -228,13 +228,13 @@ export default function EmployeeDashboard() {
       )}
 
       {/* ── Tasks list ─────────────────────────────────────────────── */}
-      <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-        <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+        <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="text-xl font-black text-obsidian tracking-tight">Tareas de hoy</div>
+            <div className="text-xl font-black text-k-text-h tracking-tight">Tareas de hoy</div>
             {/* 3.8 — Badge conteo solo si > 0 */}
             {rows.length > 0 && (
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+              <div className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">
                 {rows.length} asignadas
               </div>
             )}
@@ -242,18 +242,18 @@ export default function EmployeeDashboard() {
           {/* 2.12 — No mostrar "Ir a mis tareas" si no hay tareas */}
           {rows.length > 0 && (
             <button
-              className="w-full sm:w-auto rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors shadow-sm flex items-center justify-center sm:inline-flex uppercase tracking-widest"
+              className="w-full sm:w-auto rounded-2xl border border-k-border bg-k-bg-card px-5 py-2.5 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors shadow-k-card flex items-center justify-center sm:inline-flex uppercase tracking-widest"
               onClick={() => nav("/app/employee/mis-tareas/asignaciones")}
             >
-              Ir a Mis tareas <ArrowRight className="h-4 w-4 ml-2 text-neutral-400" />
+              Ir a Mis tareas <ArrowRight className="h-4 w-4 ml-2 text-k-text-b" />
             </button>
           )}
           {rows.length === 0 && useNew && (
             <button
-              className="w-full sm:w-auto rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors shadow-sm flex items-center justify-center sm:inline-flex uppercase tracking-widest"
+              className="w-full sm:w-auto rounded-2xl border border-k-border bg-k-bg-card px-5 py-2.5 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors shadow-k-card flex items-center justify-center sm:inline-flex uppercase tracking-widest"
               onClick={() => nav("/app/employee/asistencia")}
             >
-              <Calendar className="h-4 w-4 mr-2 text-neutral-400" />
+              <Calendar className="h-4 w-4 mr-2 text-k-text-b" />
               Ver mi horario
             </button>
           )}
@@ -267,26 +267,26 @@ export default function EmployeeDashboard() {
               const canStart = a.status === "assigned";
               const canSubmit = a.status === "in_progress";
               return (
-                <div key={a.id} className={cx("p-5 sm:p-8 transition-colors", idx % 2 === 0 ? "bg-white" : "bg-neutral-50/30 hover:bg-neutral-50")}>
+                <div key={a.id} className={cx("p-5 sm:p-8 transition-colors", idx % 2 === 0 ? "bg-k-bg-card" : "bg-k-bg-card2/30 hover:bg-k-bg-card2")}>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="min-w-0 flex-1">
-                      <div className="text-lg font-black text-obsidian tracking-tight truncate">{t.title}</div>
+                      <div className="text-lg font-black text-k-text-h tracking-tight truncate">{t.title}</div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <StatusPill status={a.status} />
                         <PriorityPill priority={t.priority ?? undefined} />
                         {t.due_at && (
-                          <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[10px] font-bold text-neutral-500 uppercase tracking-widest shadow-sm">
+                          <span className="inline-flex items-center rounded-full border border-k-border bg-k-bg-card px-2.5 py-1 text-[10px] font-bold text-k-text-b uppercase tracking-widest shadow-k-card">
                             ⏰ {new Date(t.due_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                           </span>
                         )}
                       </div>
-                      {t.description && <div className="mt-3 text-sm font-medium text-neutral-500 line-clamp-2 leading-relaxed">{t.description}</div>}
+                      {t.description && <div className="mt-3 text-sm font-medium text-k-text-b line-clamp-2 leading-relaxed">{t.description}</div>}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 mt-2 lg:mt-0 shrink-0">
-                      <button className="w-full sm:w-auto rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors shadow-sm disabled:opacity-50 uppercase tracking-widest sm:min-w-[120px]" disabled={!canStart || busyId === a.id} onClick={() => doStart(a.id)}>
+                      <button className="w-full sm:w-auto rounded-2xl border border-k-border bg-k-bg-card px-6 py-3 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors shadow-k-card disabled:opacity-50 uppercase tracking-widest sm:min-w-[120px]" disabled={!canStart || busyId === a.id} onClick={() => doStart(a.id)}>
                         {busyId === a.id ? "Aguarde..." : "▶ Iniciar"}
                       </button>
-                      <button className="w-full sm:w-auto rounded-2xl bg-obsidian text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-widest sm:min-w-[140px]" disabled={!canSubmit || busyId === a.id} onClick={() => doSubmit(a.id)}>
+                      <button className="w-full sm:w-auto rounded-2xl bg-k-accent-btn text-k-accent-btn-text px-6 py-3 text-xs font-bold shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-widest sm:min-w-[140px]" disabled={!canSubmit || busyId === a.id} onClick={() => doSubmit(a.id)}>
                         {busyId === a.id ? "Aguarde..." : "📤 Entregar"}
                       </button>
                     </div>
@@ -313,11 +313,11 @@ export default function EmployeeDashboard() {
 
       {/* ── Gondolas ───────────────────────────────────────────────── */}
       {gondolasActivas.length > 0 && (
-        <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="text-xl font-black text-obsidian tracking-tight">Góndolas por rellenar</div>
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">{gondolasActivas.length} orden(es) activa(s)</div>
+              <div className="text-xl font-black text-k-text-h tracking-tight">Góndolas por rellenar</div>
+              <div className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">{gondolasActivas.length} orden(es) activa(s)</div>
             </div>
           </div>
           <div className="divide-y divide-neutral-100">
@@ -326,21 +326,21 @@ export default function EmployeeDashboard() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">🛒</span>
-                    <div className="text-lg font-black text-obsidian tracking-tight truncate">{o.gondola?.nombre}</div>
+                    <div className="text-lg font-black text-k-text-h tracking-tight truncate">{o.gondola?.nombre}</div>
                     <span className={cx("inline-flex items-center rounded-full border px-2 py-0.5 text-xs",
                       o.status === 'rechazado' ? "bg-rose-50 text-rose-800 border-rose-200" :
                       o.status === 'en_proceso' ? "bg-amber-50 text-amber-800 border-amber-200" :
-                      "bg-neutral-50 text-neutral-700 border-neutral-200"
+                      "bg-k-bg-card2 text-neutral-700 border-k-border"
                     )}>
                       {o.status === 'rechazado' ? 'Rechazado' : o.status === 'en_proceso' ? 'En proceso' : 'Pendiente'}
                     </span>
                   </div>
-                  <div className="text-sm font-medium text-neutral-500">{o.items?.length ?? 0} productos</div>
+                  <div className="text-sm font-medium text-k-text-b">{o.items?.length ?? 0} productos</div>
                   {o.status === 'rechazado' && o.notas_rechazo && (
                     <div className="mt-2 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs text-rose-700 font-medium">Motivo: {o.notas_rechazo}</div>
                   )}
                 </div>
-                <button onClick={() => nav(`/app/employee/gondola-relleno/${o.id}`)} className="w-full lg:w-auto rounded-2xl bg-obsidian text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
+                <button onClick={() => nav(`/app/employee/gondola-relleno/${o.id}`)} className="w-full lg:w-auto rounded-2xl bg-k-accent-btn text-k-accent-btn-text px-6 py-3 text-xs font-bold shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
                   {o.status === 'en_proceso' ? '→ Continuar' : o.status === 'rechazado' ? '↩ Volver a completar' : '▶ Iniciar relleno'}
                 </button>
               </div>
@@ -353,15 +353,15 @@ export default function EmployeeDashboard() {
 }
 
 // Legacy stat card for feature flag fallback
-function LegacyStat({ title, value, icon, hint, colorCls = "text-obsidian", bgCls = "bg-white" }: any) {
+function LegacyStat({ title, value, icon, hint, colorCls = "text-k-text-h", bgCls = "bg-k-bg-card" }: any) {
   return (
-    <div className={cx("rounded-[28px] border p-6 shadow-sm transition-all hover:shadow-md", bgCls)}>
+    <div className={cx("rounded-[28px] border p-6 shadow-k-card transition-all hover:shadow-md", bgCls)}>
       <div className="flex items-center justify-between mb-4">
         <div className={cx("text-4xl font-black tracking-tight", colorCls)}>{value}</div>
-        <div className="h-10 w-10 rounded-2xl bg-white/60 flex items-center justify-center text-neutral-500 shadow-sm border border-neutral-100/50">{icon}</div>
+        <div className="h-10 w-10 rounded-2xl bg-k-bg-card/60 flex items-center justify-center text-k-text-b shadow-k-card border border-k-border">{icon}</div>
       </div>
-      <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{title}</div>
-      {hint && <div className="mt-1 text-xs font-medium text-neutral-400 opacity-80">{hint}</div>}
+      <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">{title}</div>
+      {hint && <div className="mt-1 text-xs font-medium text-k-text-b opacity-80">{hint}</div>}
     </div>
   );
 }

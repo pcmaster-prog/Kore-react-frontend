@@ -52,10 +52,10 @@ function ActionBtn({
   onClick: () => void;
 }) {
   const v = {
-    primary: "bg-white border-neutral-100 text-obsidian hover:bg-emerald-50 hover:border-emerald-200",
-    warning: "bg-white border-neutral-100 text-obsidian hover:bg-amber-50 hover:border-amber-200",
-    danger: "bg-white border-neutral-100 text-obsidian hover:bg-neutral-50",
-    neutral: "bg-neutral-50 border-neutral-100 text-neutral-300 cursor-not-allowed",
+    primary: "bg-k-bg-card border-k-border text-k-text-h hover:bg-emerald-50 hover:border-emerald-200",
+    warning: "bg-k-bg-card border-k-border text-k-text-h hover:bg-amber-50 hover:border-amber-200",
+    danger: "bg-k-bg-card border-k-border text-k-text-h hover:bg-k-bg-card2",
+    neutral: "bg-k-bg-card2 border-k-border text-k-text-b cursor-not-allowed",
   }[variant];
 
   return (
@@ -63,7 +63,7 @@ function ActionBtn({
       onClick={onClick}
       disabled={!enabled || busy}
       className={cx(
-        "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-[24px] sm:rounded-[28px] border-2 p-3 sm:p-6 text-center transition-all w-full shadow-sm min-w-0",
+        "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-[24px] sm:rounded-[28px] border-2 p-3 sm:p-6 text-center transition-all w-full shadow-k-card min-w-0",
         "disabled:opacity-30 disabled:cursor-not-allowed",
         v
       )}
@@ -72,14 +72,14 @@ function ActionBtn({
         "h-10 w-10 sm:h-12 sm:w-12 rounded-[14px] sm:rounded-2xl flex items-center justify-center shrink-0",
         variant === "primary" ? "bg-emerald-100 text-emerald-600" :
         variant === "warning" ? "bg-amber-100 text-amber-600" :
-        variant === "danger" ? "bg-neutral-100 text-obsidian" :
-        "bg-neutral-100 text-neutral-300"
+        variant === "danger" ? "bg-neutral-100 text-k-text-h" :
+        "bg-neutral-100 text-k-text-b"
       )}>
         {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : icon}
       </div>
       <div className="min-w-0">
         <div className="text-xs sm:text-sm font-black tracking-tight truncate">{label}</div>
-        {sublabel && <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5 truncate">{sublabel}</div>}
+        {sublabel && <div className="text-[10px] font-bold text-k-text-b uppercase tracking-wider mt-0.5 truncate">{sublabel}</div>}
       </div>
     </button>
   );
@@ -145,21 +145,21 @@ function AbsencePanel() {
   }
 
   return (
-    <div className="rounded-[32px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-6 py-5 hover:bg-neutral-50 transition"
+        className="w-full flex items-center justify-between px-6 py-5 hover:bg-k-bg-card2 transition"
       >
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
             <FileText className="h-5 w-5 text-blue-600" />
           </div>
           <div className="text-left">
-            <div className="text-sm font-black text-obsidian tracking-tight">Solicitar Ausencia Justificada</div>
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Envía tu justificación al administrador</div>
+            <div className="text-sm font-black text-k-text-h tracking-tight">Solicitar Ausencia Justificada</div>
+            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">Envía tu justificación al administrador</div>
           </div>
         </div>
-        {open ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
+        {open ? <ChevronUp className="h-4 w-4 text-k-text-b" /> : <ChevronDown className="h-4 w-4 text-k-text-b" />}
       </button>
 
       {open && (
@@ -176,34 +176,34 @@ function AbsencePanel() {
 
           {/* Formulario nuevo */}
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Nueva solicitud</div>
+            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Nueva solicitud</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Fecha a ausentarse</label>
+                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Fecha a ausentarse</label>
                 <input
                   type="date"
                   min={minDate}
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                  className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Motivo / Justificación</label>
+              <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Motivo / Justificación</label>
               <textarea
                 value={motivo}
                 onChange={e => setMotivo(e.target.value)}
                 rows={3}
                 placeholder="Ej: Cita médica, trámite escolar, asunto familiar urgente..."
-                className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all resize-none"
+                className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all resize-none"
               />
-              <div className="text-[10px] text-neutral-400 mt-1">{motivo.length}/500 caracteres (mínimo 10)</div>
+              <div className="text-[10px] text-k-text-b mt-1">{motivo.length}/500 caracteres (mínimo 10)</div>
             </div>
             <button
               type="submit"
               disabled={sending || !date || motivo.trim().length < 10}
-              className="inline-flex items-center gap-2 rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white hover:bg-neutral-800 transition disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h hover:opacity-90 transition disabled:opacity-40"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {sending ? "Enviando..." : "Enviar Solicitud"}
@@ -212,25 +212,25 @@ function AbsencePanel() {
 
           {/* Historial de solicitudes */}
           <div>
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3">Mis solicitudes</div>
+            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-3">Mis solicitudes</div>
             {loadingReqs ? (
-              <div className="flex items-center gap-2 py-4 text-neutral-300">
+              <div className="flex items-center gap-2 py-4 text-k-text-b">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
               </div>
             ) : requests.length === 0 ? (
-              <p className="text-xs text-neutral-400 py-2">No tienes solicitudes aún.</p>
+              <p className="text-xs text-k-text-b py-2">No tienes solicitudes aún.</p>
             ) : (
               <div className="space-y-2">
                 {requests.map(r => (
-                  <div key={r.id} className="rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-3 flex items-start justify-between gap-3">
+                  <div key={r.id} className="rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-obsidian">
+                      <div className="text-sm font-bold text-k-text-h">
                         {new Date(r.date + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}
                       </div>
-                      <div className="text-xs text-neutral-500 mt-0.5 line-clamp-2">{r.motivo}</div>
+                      <div className="text-xs text-k-text-b mt-0.5 line-clamp-2">{r.motivo}</div>
                       {r.reviewer_note && (
-                        <div className="text-[11px] text-neutral-400 mt-1 italic">Nota: {r.reviewer_note}</div>
+                        <div className="text-[11px] text-k-text-b mt-1 italic">Nota: {r.reviewer_note}</div>
                       )}
                     </div>
                     <div className="shrink-0 pt-0.5">
@@ -378,10 +378,10 @@ export default function EmployeeAttendancePage() {
   const stateConf = {
     working: { label: isEnabled("newManagementEmployee") ? `En turno · ${minutesToHHMM(liveMinutes)} transcurridos` : "Jornada Activa", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", dot: "bg-emerald-400" },
     break: { label: "En Pausa", cls: "bg-amber-500/15 text-amber-300 border-amber-400/30", dot: "bg-amber-400" },
-    closed: { label: "Turno Cerrado", cls: "bg-neutral-500/15 text-neutral-300 border-neutral-400/30", dot: "bg-neutral-400" },
+    closed: { label: "Turno Cerrado", cls: "bg-neutral-500/15 text-k-text-b border-neutral-400/30", dot: "bg-neutral-400" },
     rest: { label: "Día de Descanso", cls: "bg-sky-500/15 text-sky-300 border-sky-400/30", dot: "bg-sky-400" },
-    out: { label: isEnabled("newManagementEmployee") ? "Fuera de turno" : "Sin Turno", cls: "bg-neutral-500/15 text-neutral-300 border-neutral-400/30", dot: "bg-neutral-400" },
-  }[state] ?? { label: state, cls: "bg-neutral-500/15 text-neutral-300 border-neutral-400/30", dot: "bg-neutral-300" };
+    out: { label: isEnabled("newManagementEmployee") ? "Fuera de turno" : "Sin Turno", cls: "bg-neutral-500/15 text-k-text-b border-neutral-400/30", dot: "bg-neutral-400" },
+  }[state] ?? { label: state, cls: "bg-neutral-500/15 text-k-text-b border-neutral-400/30", dot: "bg-neutral-300" };
 
   const todayFormatted = new Date().toLocaleDateString("es-MX", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
@@ -395,8 +395,8 @@ export default function EmployeeAttendancePage() {
     <div className="space-y-6 max-w-2xl w-full mx-auto min-w-0">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em] mb-1">Registro de Jornada</p>
-        <h1 className="text-3xl font-black text-obsidian tracking-tight">Mi Asistencia</h1>
+        <p className="text-[10px] font-bold text-k-text-b uppercase tracking-[0.2em] mb-1">Registro de Jornada</p>
+        <h1 className="text-3xl font-black text-k-text-h tracking-tight">Mi Asistencia</h1>
       </div>
 
       {/* ─── Banner de retardos ───────────────────────────────────────────── */}
@@ -467,8 +467,8 @@ export default function EmployeeAttendancePage() {
       )}
 
       {loadingToday ? (
-        <div className="rounded-[40px] border bg-white p-16 flex flex-col items-center gap-4 text-neutral-400">
-          <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+        <div className="rounded-[40px] border bg-k-bg-card p-16 flex flex-col items-center gap-4 text-k-text-b">
+          <div className="h-10 w-10 border-4 border-k-border border-t-obsidian rounded-full animate-spin" />
           <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
         </div>
       ) : today?.is_rest_day ? (
@@ -489,9 +489,9 @@ export default function EmployeeAttendancePage() {
       ) : (
         <>
           {/* Hero state card */}
-          <div className="rounded-[32px] sm:rounded-[40px] bg-obsidian p-6 sm:p-8 text-white relative overflow-hidden">
+          <div className="rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar p-6 sm:p-8 text-k-text-h relative overflow-hidden">
             <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/[0.03]" />
+              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-k-bg-card/[0.03]" />
               <div className="absolute bottom-0 left-1/3 h-16 w-32 rounded-full bg-gold/10" />
             </div>
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-4">
@@ -501,15 +501,15 @@ export default function EmployeeAttendancePage() {
                   {stateConf.label}
                 </div>
                 <div className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums">{isEnabled("newManagementEmployee") ? minutesToHHMM(liveMinutes) : minutesToHHMM(todayMinutes)}</div>
-                <div className="text-white/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
+                <div className="text-k-text-h/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
               </div>
               <div className="flex gap-8 sm:gap-0 sm:flex-col text-left sm:text-right sm:space-y-3 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
                 <div>
-                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Entrada</div>
+                  <div className="text-[10px] font-bold text-k-text-h/30 uppercase tracking-widest">Entrada</div>
                   <div className="text-lg font-black">{formatTime(dayInfo?.first_check_in_at)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Salida</div>
+                  <div className="text-[10px] font-bold text-k-text-h/30 uppercase tracking-widest">Salida</div>
                   <div className="text-lg font-black">{formatTime(dayInfo?.last_check_out_at)}</div>
                 </div>
                 {/* Retardo de hoy */}
@@ -524,9 +524,9 @@ export default function EmployeeAttendancePage() {
           </div>
 
           {isEnabled("newManagementEmployee") && (
-            <div className="rounded-[24px] border border-neutral-100 bg-white p-4 shadow-sm flex items-center justify-between gap-4">
-              <div className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex-1">
-                Llevas <span className="text-obsidian">{minutesToHHMM(workedThisWeek)}</span> / 40h
+            <div className="rounded-[24px] border border-k-border bg-k-bg-card p-4 shadow-k-card flex items-center justify-between gap-4">
+              <div className="text-xs font-bold text-k-text-b uppercase tracking-widest flex-1">
+                Llevas <span className="text-k-text-h">{minutesToHHMM(workedThisWeek)}</span> / 40h
               </div>
               <div className="w-1/2 bg-neutral-100 rounded-full h-2.5 overflow-hidden flex">
                 <div 
@@ -539,26 +539,26 @@ export default function EmployeeAttendancePage() {
 
           {/* KPI minibar */}
           <div className={cx("grid gap-2 sm:gap-4", (!isEnabled("newManagementEmployee") || lateCount > 0) ? "grid-cols-3" : "grid-cols-2")}>
-            <div className="rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center">
+            <div className="rounded-[24px] sm:rounded-[28px] border border-k-border bg-k-bg-card p-3 sm:p-5 shadow-k-card text-center min-w-0 flex flex-col items-center justify-center">
               <Timer className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-200 mb-1 sm:mb-2" />
-              <div className="text-lg sm:text-2xl font-black text-obsidian">{minutesToHHMM(workedThisWeek)}</div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Esta Semana</div>
+              <div className="text-lg sm:text-2xl font-black text-k-text-h">{minutesToHHMM(workedThisWeek)}</div>
+              <div className="text-[9px] sm:text-[10px] font-bold text-k-text-b uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Esta Semana</div>
             </div>
-            <div className="rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center">
+            <div className="rounded-[24px] sm:rounded-[28px] border border-k-border bg-k-bg-card p-3 sm:p-5 shadow-k-card text-center min-w-0 flex flex-col items-center justify-center">
               <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-200 mb-1 sm:mb-2" />
               <div className="text-lg sm:text-2xl font-black text-emerald-600">{completeDays}</div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Días Completos</div>
+              <div className="text-[9px] sm:text-[10px] font-bold text-k-text-b uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Días Completos</div>
             </div>
             {(!isEnabled("newManagementEmployee") || lateCount > 0) && (
               <div className={cx(
-                "rounded-[24px] sm:rounded-[28px] border p-3 sm:p-5 shadow-sm text-center min-w-0 flex flex-col items-center justify-center",
-                lateCount >= 3 ? "border-rose-200 bg-rose-50" : lateCount > 0 ? "border-amber-200 bg-amber-50" : "border-neutral-100 bg-white"
+                "rounded-[24px] sm:rounded-[28px] border p-3 sm:p-5 shadow-k-card text-center min-w-0 flex flex-col items-center justify-center",
+                lateCount >= 3 ? "border-rose-200 bg-rose-50" : lateCount > 0 ? "border-amber-200 bg-amber-50" : "border-k-border bg-k-bg-card"
               )}>
                 <Clock className={cx("h-4 w-4 sm:h-5 sm:w-5 mb-1 sm:mb-2", lateCount >= 3 ? "text-rose-300" : lateCount > 0 ? "text-amber-300" : "text-amber-200")} />
                 <div className={cx("text-lg sm:text-2xl font-black", lateCount >= 3 ? "text-rose-600" : lateCount > 0 ? "text-amber-600" : "text-amber-600")}>
                   {lateCount}
                 </div>
-                <div className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">
+                <div className="text-[9px] sm:text-[10px] font-bold text-k-text-b uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">
                   Retardos (mes)
                 </div>
               </div>
@@ -567,26 +567,26 @@ export default function EmployeeAttendancePage() {
 
           {/* Action buttons or Locked Banner */}
           {dayLocked ? (
-            <div className="rounded-[32px] sm:rounded-[40px] border-2 border-dashed border-neutral-200 bg-neutral-50 p-8 flex flex-col items-center justify-center text-center gap-4">
-              <div className="h-14 w-14 rounded-[18px] bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <div className="rounded-[32px] sm:rounded-[40px] border-2 border-dashed border-k-border bg-k-bg-card2 p-8 flex flex-col items-center justify-center text-center gap-4">
+              <div className="h-14 w-14 rounded-[18px] bg-neutral-100 border border-k-border flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-k-text-b" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </div>
               <div>
-                <div className="text-sm font-black text-obsidian tracking-tight">Jornada cerrada por el administrador</div>
-                <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                <div className="text-sm font-black text-k-text-h tracking-tight">Jornada cerrada por el administrador</div>
+                <div className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">
                   Entrada: {formatTime(dayInfo?.first_check_in_at)} &nbsp;·&nbsp; Salida: {formatTime(dayInfo?.last_check_out_at)}
                 </div>
               </div>
-              <p className="text-xs text-neutral-400 max-w-xs">
+              <p className="text-xs text-k-text-b max-w-xs">
                 Tu asistencia de hoy fue registrada y cerrada. Si hay algún error, comunícate con tu supervisor.
               </p>
             </div>
           ) : (
-          <div className="rounded-[32px] sm:rounded-[40px] border border-neutral-100 bg-white p-5 sm:p-6 shadow-sm">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-4 sm:mb-5">Acciones Rápidas</div>
+          <div className="rounded-[32px] sm:rounded-[40px] border border-k-border bg-k-bg-card p-5 sm:p-6 shadow-k-card">
+            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-4 sm:mb-5">Acciones Rápidas</div>
             <div className="grid grid-cols-2 gap-4">
               <ActionBtn label="Entrada" icon={<LogIn className="h-5 w-5" />} enabled={actions?.check_in ?? false} busy={busy} variant="primary" onClick={() => doAction(checkIn, "Entrada registrada")} />
               <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={actions?.check_out ?? false} busy={busy} variant="danger" onClick={() => doAction(checkOut, "Salida registrada")} />
@@ -603,7 +603,7 @@ export default function EmployeeAttendancePage() {
               <button
                 onClick={() => doAction(() => markRestDay(today!.date), "Día de descanso marcado")}
                 disabled={busy}
-                className="mt-5 w-full rounded-2xl border-2 border-dashed border-neutral-200 bg-neutral-50 px-4 py-3.5 text-sm font-bold text-neutral-500 hover:bg-neutral-100 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="mt-5 w-full rounded-2xl border-2 border-dashed border-k-border bg-k-bg-card2 px-4 py-3.5 text-sm font-bold text-k-text-b hover:bg-neutral-100 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Moon className="h-4 w-4" />Marcar día de descanso
               </button>
@@ -633,28 +633,28 @@ export default function EmployeeAttendancePage() {
       <AbsencePanel />
 
       {/* History table */}
-      <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
         <div className="px-8 py-6 border-b border-neutral-50 flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-neutral-300" />
+          <Calendar className="h-5 w-5 text-k-text-b" />
           <div>
-            <h3 className="text-sm font-black text-obsidian tracking-tight">Actividad de la Semana</h3>
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Tus últimos registros</p>
+            <h3 className="text-sm font-black text-k-text-h tracking-tight">Actividad de la Semana</h3>
+            <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">Tus últimos registros</p>
           </div>
         </div>
 
         {history.length === 0 ? (
           <div className="p-12 text-center">
             <Calendar className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
-            <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin registros aún</p>
+            <p className="text-xs font-bold text-k-text-b uppercase tracking-widest">Sin registros aún</p>
           </div>
         ) : (
           <>
             <div className="overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-neutral-50/80 border-b border-neutral-50">
+                <thead className="bg-k-bg-card2/80 border-b border-neutral-50">
                   <tr>
                     {["Día", "Fecha", "Entrada", "Salida", "Horas", "Estado"].map((h) => (
-                      <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">{h}</th>
+                      <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -666,17 +666,17 @@ export default function EmployeeAttendancePage() {
                     const isToday = row.date === new Date().toISOString().slice(0, 10);
                     const rowLateMinutes = (row as any).late_minutes;
                     return (
-                      <tr key={row.id} className={cx("border-t border-neutral-50 transition", isToday ? "bg-blue-50/30" : "hover:bg-neutral-50/50")}>
-                        <td className="px-5 py-4 capitalize text-sm font-bold text-obsidian">{dayName}</td>
-                        <td className="px-5 py-4 text-sm text-neutral-400">{dateShort}</td>
-                        <td className="px-5 py-4 font-bold text-sm text-obsidian">
+                      <tr key={row.id} className={cx("border-t border-neutral-50 transition", isToday ? "bg-blue-50/30" : "hover:bg-k-bg-card2/50")}>
+                        <td className="px-5 py-4 capitalize text-sm font-bold text-k-text-h">{dayName}</td>
+                        <td className="px-5 py-4 text-sm text-k-text-b">{dateShort}</td>
+                        <td className="px-5 py-4 font-bold text-sm text-k-text-h">
                           {formatTime(row.first_check_in_at)}
                           {rowLateMinutes > 0 && (
                             <span className="ml-1.5 text-[10px] font-bold text-amber-500">+{rowLateMinutes}min</span>
                           )}
                         </td>
-                        <td className="px-5 py-4 text-sm text-neutral-400">{formatTime(row.last_check_out_at)}</td>
-                        <td className="px-5 py-4 font-black text-sm text-obsidian">
+                        <td className="px-5 py-4 text-sm text-k-text-b">{formatTime(row.last_check_out_at)}</td>
+                        <td className="px-5 py-4 font-black text-sm text-k-text-h">
                           {row.totals ? minutesToHHMM(row.totals.worked_minutes) : "—"}
                         </td>
                         <td className="px-5 py-4"><DayBadge row={row} /></td>
@@ -686,9 +686,9 @@ export default function EmployeeAttendancePage() {
                 </tbody>
               </table>
             </div>
-            <div className="px-8 py-5 border-t border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
-              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Total semanal</span>
-              <span className="text-xl font-black text-obsidian">{minutesToHHMM(workedThisWeek)}</span>
+            <div className="px-8 py-5 border-t border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
+              <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Total semanal</span>
+              <span className="text-xl font-black text-k-text-h">{minutesToHHMM(workedThisWeek)}</span>
             </div>
           </>
         )}

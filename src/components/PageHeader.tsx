@@ -39,7 +39,7 @@ export default function PageHeader({
         <div className="flex items-center gap-3 flex-wrap">
           <h1
             className={`
-              font-black text-obsidian tracking-tight leading-tight break-words
+              font-black text-k-text-h tracking-tight leading-tight break-words
               ${compact ? "text-xl" : "text-2xl lg:text-3xl"}
             `}
           >
@@ -58,7 +58,7 @@ export default function PageHeader({
           )}
         </div>
         {subtitle && (
-          <p className="text-sm font-medium text-neutral-400 mt-1 truncate">
+          <p className="text-sm font-medium text-k-text-b mt-1 truncate">
             {subtitle}
           </p>
         )}
@@ -76,13 +76,13 @@ export default function PageHeader({
           <div className="lg:hidden relative">
             <button
               onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
-              className="h-10 px-4 rounded-xl bg-white border border-neutral-200 shadow-sm
-                         flex items-center gap-2 text-sm font-bold text-obsidian
-                         hover:bg-neutral-50 transition-colors"
+              className="h-10 px-4 rounded-xl bg-k-bg-card border border-k-border shadow-k-card
+                         flex items-center gap-2 text-sm font-bold text-k-text-h
+                         hover:bg-k-bg-card2 transition-colors"
             >
               Acciones
               <ChevronDown
-                className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${
+                className={`h-4 w-4 text-k-text-b transition-transform duration-200 ${
                   mobileActionsOpen ? "rotate-180" : ""
                 }`}
               />
@@ -96,7 +96,7 @@ export default function PageHeader({
                   onClick={() => setMobileActionsOpen(false)}
                 />
                 {/* Dropdown */}
-                <div className="absolute right-0 top-12 z-50 min-w-[200px] rounded-2xl bg-white border border-neutral-200 shadow-xl p-3 space-y-2 animate-in-up">
+                <div className="absolute right-0 top-12 z-50 min-w-[200px] rounded-2xl bg-k-bg-card border border-k-border shadow-xl p-3 space-y-2 animate-in-up">
                   {actions}
                 </div>
               </>

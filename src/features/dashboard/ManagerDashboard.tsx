@@ -186,8 +186,8 @@ function AdminDashboard() {
               {/* 2.4 Acciones Rápidas */}
               <button
                 onClick={() => setShowNewTask(true)}
-                className="h-10 px-5 rounded-xl bg-obsidian text-white text-sm font-bold
-                           hover:bg-neutral-800 transition-all shadow-sm
+                className="h-10 px-5 rounded-xl bg-k-accent-btn text-k-accent-btn-text text-sm font-bold
+                           hover:opacity-90 transition-all shadow-k-card
                            flex items-center gap-2"
               >
                 <PlusCircle className="h-4 w-4" />
@@ -195,20 +195,20 @@ function AdminDashboard() {
               </button>
               <button
                 onClick={() => nav("/app/manager/asistencia")}
-                className="h-10 px-5 rounded-xl bg-white border border-neutral-200 text-sm font-bold text-obsidian
-                           hover:bg-neutral-50 transition-colors shadow-sm
+                className="h-10 px-5 rounded-xl bg-k-bg-card border border-k-border text-sm font-bold text-k-text-h
+                           hover:bg-k-bg-card2 transition-colors shadow-k-card
                            flex items-center gap-2"
               >
-                <CalendarCheck className="h-4 w-4 text-neutral-500" />
+                <CalendarCheck className="h-4 w-4 text-k-text-b" />
                 Ver Asistencia
               </button>
               <button
                 onClick={() => nav("/app/manager/nomina")}
-                className="h-10 px-5 rounded-xl bg-white border border-neutral-200 text-sm font-bold text-obsidian
-                           hover:bg-neutral-50 transition-colors shadow-sm
+                className="h-10 px-5 rounded-xl bg-k-bg-card border border-k-border text-sm font-bold text-k-text-h
+                           hover:bg-k-bg-card2 transition-colors shadow-k-card
                            flex items-center gap-2"
               >
-                <FileText className="h-4 w-4 text-neutral-500" />
+                <FileText className="h-4 w-4 text-k-text-b" />
                 Generar Nómina
               </button>
             </>
@@ -216,13 +216,13 @@ function AdminDashboard() {
         />
       ) : (
         /* Legacy hero — kept behind feature flag */
-        <div className="relative overflow-hidden bg-obsidian rounded-[40px] p-8 lg:p-12 text-white shadow-2xl shadow-obsidian/20">
+        <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-12 text-k-text-h shadow-2xl shadow-obsidian/20">
           <div className="relative z-10 max-w-2xl">
             <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-3 leading-[1.1]">
               Hola, <span className="text-gold-light italic">{userName}</span>.
             </h1>
-            <p className="text-white/60 text-base font-medium leading-relaxed max-w-lg">
-              <span className="text-white font-bold">{pending} aprobaciones</span> pendientes
+            <p className="text-k-text-h/60 text-base font-medium leading-relaxed max-w-lg">
+              <span className="text-k-text-h font-bold">{pending} aprobaciones</span> pendientes
             </p>
           </div>
           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
@@ -233,9 +233,9 @@ function AdminDashboard() {
       {/* ── Fila de Métricas Rápidas (Completadas + Asistencia) ───── */}
       {useNewLayout && (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-neutral-100 shadow-sm shrink-0">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-k-bg-card border border-k-border shadow-k-card shrink-0">
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm font-bold text-obsidian">
+            <span className="text-sm font-bold text-k-text-h">
               Completadas hoy: {data?.today?.completed ?? 0}
             </span>
           </div>
@@ -243,14 +243,14 @@ function AdminDashboard() {
           {data?.attendance && (
             <button
               onClick={() => nav("/app/manager/asistencia")}
-              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-neutral-100 shadow-sm
-                         hover:shadow-md hover:bg-neutral-50 transition-all group shrink-0 text-left"
+              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-k-bg-card border border-k-border shadow-k-card
+                         hover:shadow-md hover:bg-k-bg-card2 transition-all group shrink-0 text-left"
             >
               <CalendarCheck className="h-5 w-5 text-blue-500" />
-              <span className="text-sm font-bold text-obsidian">
+              <span className="text-sm font-bold text-k-text-h">
                 {data.attendance.checked_in}/{data.attendance.employees_total} presentes hoy
               </span>
-              <ArrowRight className="h-4 w-4 text-neutral-300 group-hover:text-neutral-500 group-hover:translate-x-0.5 transition-all ml-1" />
+              <ArrowRight className="h-4 w-4 text-k-text-b group-hover:text-k-text-b group-hover:translate-x-0.5 transition-all ml-1" />
             </button>
           )}
         </div>
@@ -299,15 +299,15 @@ function AdminDashboard() {
 
       {/* ── 2.5 · Feed de Actividad Reciente (PENDIENTE BACKEND) ── */}
       {useNewLayout && (
-        <div className="bg-white rounded-[28px] shadow-sm border border-neutral-100/50 overflow-hidden">
+        <div className="bg-k-bg-card rounded-[28px] shadow-k-card border border-k-border overflow-hidden">
           <button 
             onClick={() => setActivityOpen(!activityOpen)}
-            className="w-full p-6 flex items-center justify-between hover:bg-neutral-50 transition-colors"
+            className="w-full p-6 flex items-center justify-between hover:bg-k-bg-card2 transition-colors"
           >
-            <h3 className="text-lg font-black text-obsidian tracking-tight">
+            <h3 className="text-lg font-black text-k-text-h tracking-tight">
               Actividad Reciente
             </h3>
-            <ChevronDown className={cx("h-5 w-5 text-neutral-400 transition-transform duration-300", activityOpen ? "rotate-180" : "rotate-0")} />
+            <ChevronDown className={cx("h-5 w-5 text-k-text-b transition-transform duration-300", activityOpen ? "rotate-180" : "rotate-0")} />
           </button>
           
           {activityOpen && (
@@ -316,19 +316,19 @@ function AdminDashboard() {
                 activityFeed.map(item => (
                   <div
                     key={item.id}
-                    className="flex items-start gap-3 p-3 rounded-2xl hover:bg-neutral-50 transition-colors group"
+                    className="flex items-start gap-3 p-3 rounded-2xl hover:bg-k-bg-card2 transition-colors group"
                   >
                     <div className="h-8 w-8 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 group-hover:bg-neutral-200 transition-colors">
-                      <ClipboardList className="h-4 w-4 text-neutral-400" />
+                      <ClipboardList className="h-4 w-4 text-k-text-b" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <div className="text-sm font-medium text-neutral-700 truncate">{item.text}</div>
-                      <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5">{item.time}</div>
+                      <div className="text-[10px] font-bold text-k-text-b uppercase tracking-wider mt-0.5">{item.time}</div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-neutral-400 text-center py-4">No hay actividad reciente</div>
+                <div className="text-sm text-k-text-b text-center py-4">No hay actividad reciente</div>
               )}
             </div>
           )}
@@ -339,11 +339,11 @@ function AdminDashboard() {
       {!useNewLayout && (
         /* Legacy attendance card */
         data?.attendance && (
-          <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 max-w-sm">
-            <h3 className="text-lg font-black text-obsidian tracking-tight mb-5">Asistencia Hoy</h3>
+          <div className="bg-k-bg-card rounded-[40px] p-8 shadow-k-card border border-k-border max-w-sm">
+            <h3 className="text-lg font-black text-k-text-h tracking-tight mb-5">Asistencia Hoy</h3>
             <div className="flex items-end justify-between mb-3">
-              <div className="text-4xl font-black text-obsidian">{data.attendance.checked_in}</div>
-              <div className="text-xs font-bold text-neutral-400 uppercase pb-1">de {data.attendance.employees_total} Staff</div>
+              <div className="text-4xl font-black text-k-text-h">{data.attendance.checked_in}</div>
+              <div className="text-xs font-bold text-k-text-b uppercase pb-1">de {data.attendance.employees_total} Staff</div>
             </div>
             <div className="h-2 w-full rounded-full bg-neutral-100 overflow-hidden flex gap-0.5 mb-5">
               <div className="h-full bg-emerald-400" style={{ width: `${(data.attendance.open / (data.attendance.employees_total || 1)) * 100}%` }} />
@@ -353,15 +353,15 @@ function AdminDashboard() {
             <div className="grid grid-cols-3 gap-2">
               <div className="text-center">
                 <div className="text-sm font-bold text-emerald-600">{data.attendance.open}</div>
-                <div className="text-[10px] font-medium text-neutral-400 uppercase">Turno</div>
+                <div className="text-[10px] font-medium text-k-text-b uppercase">Turno</div>
               </div>
               <div className="text-center">
-                <div className="text-sm font-bold text-neutral-400">{data.attendance.closed}</div>
-                <div className="text-[10px] font-medium text-neutral-400 uppercase">Fuera</div>
+                <div className="text-sm font-bold text-k-text-b">{data.attendance.closed}</div>
+                <div className="text-[10px] font-medium text-k-text-b uppercase">Fuera</div>
               </div>
               <div className="text-center">
                 <div className="text-sm font-bold text-rose-400">{data.attendance.out}</div>
-                <div className="text-[10px] font-medium text-neutral-400 uppercase">Sin-E</div>
+                <div className="text-[10px] font-medium text-k-text-b uppercase">Sin-E</div>
               </div>
             </div>
           </div>
@@ -436,16 +436,16 @@ function AdminDashboard() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function LegacyStatCard({ label, value, icon: Icon, colorClass, sub }: any) {
   return (
-    <div className="bg-white rounded-[28px] p-5 shadow-sm border border-neutral-100/50 flex flex-col justify-between group hover:shadow-lg transition-all duration-300">
+    <div className="bg-k-bg-card rounded-[28px] p-5 shadow-k-card border border-k-border flex flex-col justify-between group hover:shadow-lg transition-all duration-300">
       <div className="flex items-start justify-between mb-3">
         <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110", colorClass)}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
       <div>
-        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.15em] mb-0.5">{label}</div>
-        <div className="text-2xl font-black text-obsidian tracking-tighter">{value}</div>
-        {sub && <div className="text-[10px] font-medium text-neutral-400 mt-0.5">{sub}</div>}
+        <div className="text-[10px] font-bold text-k-text-b uppercase tracking-[0.15em] mb-0.5">{label}</div>
+        <div className="text-2xl font-black text-k-text-h tracking-tighter">{value}</div>
+        {sub && <div className="text-[10px] font-medium text-k-text-b mt-0.5">{sub}</div>}
       </div>
     </div>
   );

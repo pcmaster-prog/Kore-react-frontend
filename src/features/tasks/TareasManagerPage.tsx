@@ -64,7 +64,7 @@ export default function TareasManagerPage() {
           actions={
             tab === "tareas" && (
               <button
-                className="h-10 px-5 rounded-xl bg-obsidian text-sm font-bold text-white shadow-sm hover:bg-neutral-800 transition-all flex items-center gap-2"
+                className="h-10 px-5 rounded-xl bg-k-accent-btn text-sm font-bold text-k-accent-btn-text shadow-k-card hover:opacity-90 transition-all flex items-center gap-2"
                 onClick={() => window.dispatchEvent(new CustomEvent("kore-new-task"))}
               >
                 <Plus className="h-4 w-4" />
@@ -76,10 +76,10 @@ export default function TareasManagerPage() {
       ) : (
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian/5 text-[10px] font-bold tracking-widest uppercase text-obsidian/40 mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-k-bg-sidebar/5 text-[10px] font-bold tracking-widest uppercase text-k-text-h/40 mb-2">
               Operations Module
             </div>
-            <h1 className="text-3xl font-black text-obsidian tracking-tight mb-4">
+            <h1 className="text-3xl font-black text-k-text-h tracking-tight mb-4">
               Gestión de Tareas
             </h1>
           </div>
@@ -89,7 +89,7 @@ export default function TareasManagerPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Tabs - Organic Segmented Style */}
         <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 -mb-2 sm:mb-0" style={{ scrollbarWidth: "none" }}>
-          <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-max">
+          <div className="flex p-1.5 bg-k-bg-card border border-k-border rounded-[28px] shadow-k-card w-max">
             {TABS.map((t) => (
               <button
                 key={t.key}
@@ -97,8 +97,8 @@ export default function TareasManagerPage() {
                 className={cx(
                   "flex whitespace-nowrap items-center gap-2 px-6 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300 shrink-0",
                   tab === t.key
-                    ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
-                    : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50",
+                    ? "bg-k-accent-btn text-k-accent-btn-text shadow-lg shadow-obsidian/20"
+                    : "text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2",
                 )}
               >
                 {t.icon}
@@ -113,7 +113,7 @@ export default function TareasManagerPage() {
           <div className="flex items-center gap-3">
             {tab === "tareas" && (
               <button
-                className="h-11 px-5 rounded-2xl bg-obsidian text-sm font-bold text-white shadow-sm hover:bg-gold transition-all flex items-center gap-2"
+                className="h-11 px-5 rounded-2xl bg-k-accent-btn text-sm font-bold text-k-accent-btn-text shadow-k-card hover:opacity-90 transition-all flex items-center gap-2"
                 onClick={() =>
                   window.dispatchEvent(new CustomEvent("kore-new-task"))
                 }

@@ -28,7 +28,7 @@ function StatusPill({ s }: { s: string }) {
     s === "assigned"
       ? {
           label: "Asignada",
-          cls: "bg-neutral-50 text-neutral-700 border-neutral-200",
+          cls: "bg-k-bg-card2 text-neutral-700 border-k-border",
         }
       : s === "in_progress"
         ? {
@@ -52,7 +52,7 @@ function StatusPill({ s }: { s: string }) {
                 }
               : {
                   label: s,
-                  cls: "bg-neutral-50 text-neutral-700 border-neutral-200",
+                  cls: "bg-k-bg-card2 text-neutral-700 border-k-border",
                 };
 
   return (
@@ -80,7 +80,7 @@ function PriorityPill({ p }: { p?: string | null }) {
         : key === "low"
           ? {
               label: "Baja",
-              cls: "bg-neutral-50 text-neutral-700 border-neutral-200",
+              cls: "bg-k-bg-card2 text-neutral-700 border-k-border",
             }
           : {
               label: "Media",
@@ -162,8 +162,8 @@ function EvidenceInlineUploader({
         disabled={busy}
         className={cx(
           "rounded-2xl px-3 py-2 text-sm font-medium border transition",
-          busy ? "opacity-60 cursor-not-allowed" : "hover:bg-neutral-50",
-          "bg-white",
+          busy ? "opacity-60 cursor-not-allowed" : "hover:bg-k-bg-card2",
+          "bg-k-bg-card",
         )}
       >
         {busy ? "Subiendo..." : "📎 Evidencia"}
@@ -201,8 +201,8 @@ function ChecklistInline({
             key={it.id}
             className={cx(
               "flex items-start gap-3 rounded-2xl border p-3 transition",
-              disabled ? "opacity-70" : "hover:bg-neutral-50",
-              done ? "bg-emerald-50 border-emerald-200" : "bg-white",
+              disabled ? "opacity-70" : "hover:bg-k-bg-card2",
+              done ? "bg-emerald-50 border-emerald-200" : "bg-k-bg-card",
             )}
           >
             <input
@@ -221,14 +221,14 @@ function ChecklistInline({
                     (requerido)
                   </span>
                 ) : (
-                  <span className="ml-1 text-xs text-neutral-400">
+                  <span className="ml-1 text-xs text-k-text-b">
                     (opcional)
                   </span>
                 )}
               </div>
 
               {updatedAt ? (
-                <div className="text-xs text-neutral-500 mt-1">
+                <div className="text-xs text-k-text-b mt-1">
                   Actualizado: {new Date(updatedAt).toLocaleString()}
                 </div>
               ) : null}
@@ -239,7 +239,7 @@ function ChecklistInline({
                 "text-xs rounded-full px-2.5 py-1 border",
                 done
                   ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                  : "bg-neutral-50 text-neutral-700 border-neutral-200",
+                  : "bg-k-bg-card2 text-neutral-700 border-k-border",
               )}
             >
               {done ? "Hecho" : "Pendiente"}
@@ -264,15 +264,15 @@ function ChecklistAccordion({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mt-4 rounded-3xl border bg-white overflow-hidden">
+    <div className="mt-4 rounded-3xl border bg-k-bg-card overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-3 p-4 hover:bg-neutral-50 transition"
+        className="w-full flex items-center justify-between gap-3 p-4 hover:bg-k-bg-card2 transition"
       >
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">Checklist</span>
-          <span className="text-xs text-neutral-500">(palomea y listo)</span>
+          <span className="text-xs text-k-text-b">(palomea y listo)</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export default function EmployeeTasksPage() {
     <div className="space-y-6">
       {/* ── Tabs principales ─────────────────────────────────────────────── */}
       <div className="w-full overflow-x-auto pb-2 -mb-2" style={{ scrollbarWidth: "none" }}>
-        <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-max">
+        <div className="flex p-1.5 bg-k-bg-card border border-k-border rounded-[28px] shadow-k-card w-max">
           {(
             [
               {
@@ -475,8 +475,8 @@ export default function EmployeeTasksPage() {
               className={cx(
                 "flex whitespace-nowrap items-center gap-2 px-5 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300 shrink-0",
                 mainTab === t.key
-                  ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
-                  : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50",
+                  ? "bg-k-accent-btn text-k-accent-btn-text shadow-lg shadow-obsidian/20"
+                  : "text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2",
               )}
             >
               {t.icon}
@@ -507,28 +507,28 @@ export default function EmployeeTasksPage() {
               }
             />
           ) : (
-            <div className="relative rounded-[32px] sm:rounded-[40px] bg-obsidian overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
+            <div className="relative rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-k-text-h shadow-lg">
               <div className="pointer-events-none absolute inset-0">
-                <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
-                <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
+                <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-k-bg-card/[0.03]" />
+                <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-k-bg-card/[0.04]" />
                 <div className="absolute bottom-0 left-1/4 h-24 w-48 rounded-full bg-gold/10" />
               </div>
               <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
+                  <p className="text-[10px] font-bold text-k-text-h/40 uppercase tracking-[0.2em] mb-1">
                     Operaciones
                   </p>
                   <h1 className="text-3xl font-black tracking-tight">
                     Mis tareas
                   </h1>
-                  <p className="text-white/50 text-sm font-medium mt-1">
+                  <p className="text-k-text-h/50 text-sm font-medium mt-1">
                     Gestiona tu día: checklist → evidencia → envío a revisión →
                     aprobación.
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-sm backdrop-blur-md">
-                  <span className="text-white/50">Total Tareas:</span>
-                  <span className="text-white text-base">{data?.total ?? 0}</span>
+                <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-k-bg-card/5 px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-k-card backdrop-blur-md">
+                  <span className="text-k-text-h/50">Total Tareas:</span>
+                  <span className="text-k-text-h text-base">{data?.total ?? 0}</span>
                 </div>
               </div>
             </div>
@@ -577,7 +577,7 @@ export default function EmployeeTasksPage() {
                 <div
                   key={k.label}
                   className={cx(
-                    "rounded-[24px] sm:rounded-[28px] border p-4 sm:p-5 shadow-sm transition-all hover:shadow-md overflow-hidden",
+                    "rounded-[24px] sm:rounded-[28px] border p-4 sm:p-5 shadow-k-card transition-all hover:shadow-md overflow-hidden",
                     k.bg,
                   )}
                 >
@@ -589,7 +589,7 @@ export default function EmployeeTasksPage() {
                   >
                     {k.val}
                   </div>
-                  <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest truncate">
+                  <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest truncate">
                     {k.label}
                   </div>
                 </div>
@@ -598,12 +598,12 @@ export default function EmployeeTasksPage() {
           )}
 
           {/* Filtros Toolbar */}
-          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between rounded-[24px] sm:rounded-[28px] border border-neutral-100 bg-white p-3 shadow-sm w-full mx-auto overflow-hidden text-clip">
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between rounded-[24px] sm:rounded-[28px] border border-k-border bg-k-bg-card p-3 shadow-k-card w-full mx-auto overflow-hidden text-clip">
             {/* BUSCADOR */}
-            <div className="flex items-center gap-2 px-3 py-2 w-full lg:w-auto flex-1 bg-neutral-50 lg:bg-transparent rounded-xl lg:rounded-none border border-neutral-100 lg:border-transparent">
-              <span className="text-neutral-400 text-sm shrink-0">🔍</span>
+            <div className="flex items-center gap-2 px-3 py-2 w-full lg:w-auto flex-1 bg-k-bg-card2 lg:bg-transparent rounded-xl lg:rounded-none border border-k-border lg:border-transparent">
+              <span className="text-k-text-b text-sm shrink-0">🔍</span>
               <input
-                className="w-full min-w-0 text-sm outline-none bg-transparent placeholder:text-neutral-400 font-medium"
+                className="w-full min-w-0 text-sm outline-none bg-transparent placeholder:text-k-text-b font-medium"
                 placeholder="Buscar tarea..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -617,8 +617,8 @@ export default function EmployeeTasksPage() {
 
             {/* FECHA */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto px-1 sm:px-0">
-              <div className="flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2 border border-neutral-100 flex-1 min-w-0">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest shrink-0">
+              <div className="flex items-center gap-2 rounded-xl bg-k-bg-card2 px-3 py-2 border border-k-border flex-1 min-w-0">
+                <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest shrink-0">
                   Fecha
                 </span>
                 <input
@@ -639,10 +639,10 @@ export default function EmployeeTasksPage() {
                   setPage(1);
                 }}
                 className={cx(
-                  "rounded-xl border px-5 py-2 text-xs font-bold uppercase tracking-widest transition-colors shadow-sm shrink-0 whitespace-nowrap",
+                  "rounded-xl border px-5 py-2 text-xs font-bold uppercase tracking-widest transition-colors shadow-k-card shrink-0 whitespace-nowrap",
                   !date
-                    ? "bg-obsidian text-white border-obsidian"
-                    : "bg-white text-neutral-500 border-neutral-200 hover:bg-neutral-50",
+                    ? "bg-k-accent-btn text-k-accent-btn-text border-obsidian"
+                    : "bg-k-bg-card text-k-text-b border-k-border hover:bg-k-bg-card2",
                 )}
               >
                 {date ? "Hoy" : "Todas"}
@@ -653,8 +653,8 @@ export default function EmployeeTasksPage() {
 
             {/* ESTADO */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto px-1 sm:px-0 lg:pl-2">
-              <div className="flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2 border border-neutral-100 flex-1 min-w-0">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest shrink-0">
+              <div className="flex items-center gap-2 rounded-xl bg-k-bg-card2 px-3 py-2 border border-k-border flex-1 min-w-0">
+                <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest shrink-0">
                   Estado
                 </span>
                 <select
@@ -679,14 +679,14 @@ export default function EmployeeTasksPage() {
           </div>
 
           {/* Lista */}
-          <div className="rounded-[32px] sm:rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden mt-6">
-            <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex flex-wrap items-center justify-between gap-4">
-              <div className="text-xl font-black text-obsidian tracking-tight">
+          <div className="rounded-[32px] sm:rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden mt-6">
+            <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex flex-wrap items-center justify-between gap-4">
+              <div className="text-xl font-black text-k-text-h tracking-tight">
                 Resultados
               </div>
               {loading && (
-                <div className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
-                  <div className="h-4 w-4 border-2 border-neutral-200 border-t-obsidian rounded-full animate-spin" />{" "}
+                <div className="text-xs font-bold text-k-text-b uppercase tracking-widest flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-k-border border-t-obsidian rounded-full animate-spin" />{" "}
                   Buscando tareas...
                 </div>
               )}
@@ -720,7 +720,7 @@ export default function EmployeeTasksPage() {
                   } : undefined}
                 />
               ) : (
-                <div className="p-16 text-center text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                <div className="p-16 text-center text-sm font-bold text-k-text-b uppercase tracking-widest">
                   No tienes tareas para esta fecha.
                 </div>
               )
@@ -785,12 +785,12 @@ export default function EmployeeTasksPage() {
                   return (
                     <div
                       key={a.id}
-                      className="rounded-[24px] sm:rounded-[32px] border border-neutral-100 bg-white p-5 sm:p-6 hover:shadow-md transition-shadow"
+                      className="rounded-[24px] sm:rounded-[32px] border border-k-border bg-k-bg-card p-5 sm:p-6 hover:shadow-md transition-shadow"
                     >
                       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap mb-2">
-                            <div className="text-lg font-black text-obsidian tracking-tight truncate mr-2">
+                            <div className="text-lg font-black text-k-text-h tracking-tight truncate mr-2">
                               {t.title}
                             </div>
                             <StatusPill s={a.status} />
@@ -798,20 +798,20 @@ export default function EmployeeTasksPage() {
                           </div>
 
                           {t.description ? (
-                            <div className="text-sm font-medium text-neutral-500 mt-2 line-clamp-2 leading-relaxed">
+                            <div className="text-sm font-medium text-k-text-b mt-2 line-clamp-2 leading-relaxed">
                               {t.description}
                             </div>
                           ) : (
-                            <div className="text-sm font-medium text-neutral-400 mt-2 italic">
+                            <div className="text-sm font-medium text-k-text-b mt-2 italic">
                               Sin descripción.
                             </div>
                           )}
 
-                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">
-                            <span className="rounded-full border border-neutral-100 px-3 py-1 shadow-sm">
+                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-k-text-b uppercase tracking-widest">
+                            <span className="rounded-full border border-k-border px-3 py-1 shadow-k-card">
                               Catálogo: {t.meta?.catalog_date ?? "-"}
                             </span>
-                            <span className="rounded-full border border-neutral-100 px-3 py-1 shadow-sm">
+                            <span className="rounded-full border border-k-border px-3 py-1 shadow-k-card">
                               Vence:{" "}
                               {t.due_at
                                 ? new Date(t.due_at).toLocaleTimeString([], {
@@ -821,11 +821,11 @@ export default function EmployeeTasksPage() {
                                 : "-"}
                             </span>
                             {hasEvidence ? (
-                              <span className="rounded-full border px-3 py-1 bg-emerald-50 text-emerald-800 border-emerald-200 shadow-sm transition">
+                              <span className="rounded-full border px-3 py-1 bg-emerald-50 text-emerald-800 border-emerald-200 shadow-k-card transition">
                                 Evidencia Lista
                               </span>
                             ) : (
-                              <span className="rounded-full border px-3 py-1 bg-amber-50 text-amber-900 border-amber-200 shadow-sm transition">
+                              <span className="rounded-full border px-3 py-1 bg-amber-50 text-amber-900 border-amber-200 shadow-k-card transition">
                                 Falta evidencia
                               </span>
                             )}
@@ -865,9 +865,9 @@ export default function EmployeeTasksPage() {
                         </ChecklistAccordion>
                       ) : null}
 
-                      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap items-center gap-3 border-t border-neutral-100 pt-5">
+                      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap items-center gap-3 border-t border-k-border pt-5">
                         <button
-                          className="w-full md:w-auto rounded-2xl border border-neutral-200 bg-white px-5 py-3 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors uppercase tracking-widest disabled:opacity-50 min-w-0 md:min-w-[120px]"
+                          className="w-full md:w-auto rounded-2xl border border-k-border bg-k-bg-card px-5 py-3 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors uppercase tracking-widest disabled:opacity-50 min-w-0 md:min-w-[120px]"
                           disabled={!canStart || isBusy}
                           onClick={() => setAssignmentStatus(it, "in_progress")}
                         >
@@ -875,7 +875,7 @@ export default function EmployeeTasksPage() {
                         </button>
 
                         <button
-                          className="w-full md:w-auto rounded-2xl bg-obsidian text-white px-5 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-widest min-w-0 md:min-w-[120px]"
+                          className="w-full md:w-auto rounded-2xl bg-k-accent-btn text-k-accent-btn-text px-5 py-3 text-xs font-bold shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-widest min-w-0 md:min-w-[120px]"
                           disabled={
                             !canSubmitToReview || isBusy || !canSubmit(it)
                           }
@@ -896,7 +896,7 @@ export default function EmployeeTasksPage() {
                         </button>
 
                         <button
-                          className="w-full md:w-auto rounded-2xl border border-neutral-200 bg-white px-5 py-3 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition-colors uppercase tracking-widest disabled:opacity-50 min-w-0 md:min-w-[120px]"
+                          className="w-full md:w-auto rounded-2xl border border-k-border bg-k-bg-card px-5 py-3 text-xs font-bold text-k-text-b hover:bg-k-bg-card2 transition-colors uppercase tracking-widest disabled:opacity-50 min-w-0 md:min-w-[120px]"
                           disabled={!canReopen || isBusy}
                           onClick={() => setAssignmentStatus(it, "assigned")}
                           title="Regresar a asignada"
@@ -945,19 +945,19 @@ export default function EmployeeTasksPage() {
             ) : null}
 
             {data && data.last_page > 1 && (
-              <div className="p-6 border-t border-neutral-50 bg-neutral-50/50 flex flex-wrap items-center justify-between gap-4">
+              <div className="p-6 border-t border-neutral-50 bg-k-bg-card2/50 flex flex-wrap items-center justify-between gap-4">
                 <button
-                  className="rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors uppercase tracking-widest disabled:opacity-50 inline-flex items-center"
+                  className="rounded-2xl border border-k-border bg-k-bg-card px-5 py-2.5 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors uppercase tracking-widest disabled:opacity-50 inline-flex items-center"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   Anterior
                 </button>
-                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">
                   Página {page} de {data.last_page}
                 </div>
                 <button
-                  className="rounded-2xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-bold text-obsidian hover:bg-neutral-50 transition-colors uppercase tracking-widest disabled:opacity-50 inline-flex items-center"
+                  className="rounded-2xl border border-k-border bg-k-bg-card px-5 py-2.5 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors uppercase tracking-widest disabled:opacity-50 inline-flex items-center"
                   disabled={page >= data.last_page}
                   onClick={() =>
                     setPage((p) => Math.min(data.last_page, p + 1))

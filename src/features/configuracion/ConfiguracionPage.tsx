@@ -26,25 +26,25 @@ function RolesTab() {
     },
     {
       key: "empleado", label: "Empleado", desc: "Registro operativo y consultas personales",
-      color: "bg-neutral-50 border-neutral-100 text-neutral-500", dot: "bg-neutral-400", icon: <Activity className="h-5 w-5" />,
+      color: "bg-k-bg-card2 border-k-border text-k-text-b", dot: "bg-neutral-400", icon: <Activity className="h-5 w-5" />,
       permisos: ["Visualización de tareas asignadas para hoy", "Envío de evidencias fotográficas", "Entrada y salida de asistencia personal", "Consulta de historial y perfil"],
     },
   ];
 
   return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-black text-obsidian tracking-tight">Roles del Sistema</h2>
-          <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Niveles de permisos y visibilidad</p>
+          <h2 className="text-xl font-black text-k-text-h tracking-tight">Roles del Sistema</h2>
+          <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Niveles de permisos y visibilidad</p>
         </div>
       </div>
       <div className="p-6 md:p-10 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {roles.map((r) => (
-            <div key={r.key} className="rounded-[28px] border border-neutral-100 bg-white overflow-hidden hover:shadow-lg hover:shadow-obsidian/5 transition-all group">
-              <div className={cx("p-6 border-b border-neutral-100 flex items-center gap-4 transition-colors", r.color)}>
-                <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+            <div key={r.key} className="rounded-[28px] border border-k-border bg-k-bg-card overflow-hidden hover:shadow-lg hover:shadow-obsidian/5 transition-all group">
+              <div className={cx("p-6 border-b border-k-border flex items-center gap-4 transition-colors", r.color)}>
+                <div className="h-12 w-12 rounded-2xl bg-k-bg-card flex items-center justify-center shadow-k-card">
                   {r.icon}
                 </div>
                 <div>
@@ -53,7 +53,7 @@ function RolesTab() {
                 </div>
               </div>
               <div className="p-6">
-                <p className="text-sm font-medium text-neutral-500 mb-4">{r.desc}</p>
+                <p className="text-sm font-medium text-k-text-b mb-4">{r.desc}</p>
                 <div className="space-y-3">
                   {r.permisos.map((p, i) => (
                     <div key={i} className="flex gap-3 text-sm font-medium text-neutral-700">
@@ -79,17 +79,17 @@ function RolesTab() {
 
 function TarifasTab() {
   return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50">
-        <h2 className="text-xl font-black text-obsidian tracking-tight">Tarifas y Remuneración</h2>
-        <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Gestión financiera de recursos humanos</p>
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50">
+        <h2 className="text-xl font-black text-k-text-h tracking-tight">Tarifas y Remuneración</h2>
+        <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Gestión financiera de recursos humanos</p>
       </div>
       <div className="p-6 md:p-10 flex flex-col items-center justify-center text-center">
         <div className="h-20 w-20 rounded-[24px] bg-gradient-to-tr from-emerald-100 to-emerald-50 border border-emerald-200 flex items-center justify-center shadow-inner mb-6">
           <DollarSign className="h-10 w-10 text-emerald-600" />
         </div>
-        <h3 className="text-2xl font-black text-obsidian tracking-tight mb-2">Centralizado en Nómina</h3>
-        <p className="text-neutral-500 max-w-md font-medium">
+        <h3 className="text-2xl font-black text-k-text-h tracking-tight mb-2">Centralizado en Nómina</h3>
+        <p className="text-k-text-b max-w-md font-medium">
           Las tarifas se asignan de forma individual al crear o editar el perfil de cada empleado en la lista principal. El cálculo final automatizado se realiza desde el <strong>Módulo de Nómina</strong>.
         </p>
       </div>
@@ -159,20 +159,20 @@ function HorariosTab() {
   }
 
   if (loading) return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white p-16 flex flex-col items-center gap-3">
-      <Loader2 className="h-10 w-10 text-obsidian animate-spin" />
-      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Cargando esquema...</span>
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card p-16 flex flex-col items-center gap-3">
+      <Loader2 className="h-10 w-10 text-k-text-h animate-spin" />
+      <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Cargando esquema...</span>
     </div>
   );
 
   return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-black text-obsidian tracking-tight">Esquema Operativo</h2>
-          <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Horarios laborables y tolerancias</p>
+          <h2 className="text-xl font-black text-k-text-h tracking-tight">Esquema Operativo</h2>
+          <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Horarios laborables y tolerancias</p>
         </div>
-        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
+        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
           {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Clock className="h-4 w-4" />}
           Guardar Cambios
         </button>
@@ -186,24 +186,24 @@ function HorariosTab() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-6">
-            <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
-              <Clock className="h-5 w-5 text-neutral-400" />
-              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Jornada Standard</h3>
+          <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+              <Clock className="h-5 w-5 text-k-text-b" />
+              <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Jornada Standard</h3>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Entrada</label>
-                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
+                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Entrada</label>
+                <input type="time" className="w-full rounded-2xl border border-k-border bg-k-bg-card px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
               </div>
               <div className="flex-1">
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Salida</label>
-                <input type="time" className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
+                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Salida</label>
+                <input type="time" className="w-full rounded-2xl border border-k-border bg-k-bg-card px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
               </div>
               <div className="flex-1">
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Inicio Sem.</label>
-                <select className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={weekStart} onChange={(e) => setWeekStart(e.target.value)}>
+                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Inicio Sem.</label>
+                <select className="w-full rounded-2xl border border-k-border bg-k-bg-card px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={weekStart} onChange={(e) => setWeekStart(e.target.value)}>
                   <option value="0">Dom</option>
                   <option value="1">Lun</option>
                   <option value="2">Mar</option>
@@ -215,12 +215,12 @@ function HorariosTab() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+            <div className="flex items-center justify-between pt-4 border-t border-k-border">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">Cierre Automático</span>
+                <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">Cierre Automático</span>
                 <div className="group relative">
-                  <HelpCircle className="h-4 w-4 text-neutral-400 hover:text-obsidian transition-colors cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-obsidian text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
+                  <HelpCircle className="h-4 w-4 text-k-text-b hover:text-k-text-h transition-colors cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-k-accent-btn text-k-accent-btn-text text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
                     Cierra automáticamente los días abiertos de los empleados.
                   </div>
                 </div>
@@ -234,7 +234,7 @@ function HorariosTab() {
                 )}
               >
                 <div className={cx(
-                  "h-4 w-4 rounded-full bg-white shadow transition-transform duration-300",
+                  "h-4 w-4 rounded-full bg-k-bg-card shadow transition-transform duration-300",
                   autoCloseEnabled ? "translate-x-5" : "translate-x-0"
                 )} />
               </button>
@@ -243,20 +243,20 @@ function HorariosTab() {
             {autoCloseEnabled && (
               <div className="flex gap-4 animate-in-fade">
                 <div className="flex-1">
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Hora de Cierre</label>
+                  <label className="block text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Hora de Cierre</label>
                   <input
                     type="time"
                     value={autoCloseTime}
                     onChange={e => setAutoCloseTime(e.target.value)}
-                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Día</label>
+                  <label className="block text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Día</label>
                   <select
                     value={autoCloseWeekday}
                     onChange={e => setAutoCloseWeekday(e.target.value)}
-                    className="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
                   >
                     <option value="-1">Diario</option>
                     <option value="0">Dom</option>
@@ -272,20 +272,20 @@ function HorariosTab() {
             )}
           </div>
 
-          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-6">
-            <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
-              <Activity className="h-5 w-5 text-neutral-400" />
-              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Regulaciones</h3>
+          <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+              <Activity className="h-5 w-5 text-k-text-b" />
+              <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Regulaciones</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Tolerancia (min)</label>
-                <input type="number" min={0} max={60} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={lateTolerance} onChange={(e) => setLateTolerance(e.target.value)} />
+                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Tolerancia (min)</label>
+                <input type="number" min={0} max={60} className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={lateTolerance} onChange={(e) => setLateTolerance(e.target.value)} />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Jornada máx (Hrs)</label>
-                <input type="number" min={1} max={24} className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={maxHours} onChange={(e) => setMaxHours(e.target.value)} />
+                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Jornada máx (Hrs)</label>
+                <input type="number" min={1} max={24} className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={maxHours} onChange={(e) => setMaxHours(e.target.value)} />
               </div>
             </div>
           </div>
@@ -294,18 +294,18 @@ function HorariosTab() {
 
 
         {/* 5.6 Excepciones visuales (NUEVO) */}
-        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 space-y-4">
-          <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
+        <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-k-border">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
-            <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Excepciones y Festivos</h3>
+            <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Excepciones y Festivos</h3>
           </div>
           <div className="flex items-center gap-4 overflow-x-auto custom-scrollbar pb-2">
-            <div className="min-w-[200px] rounded-2xl bg-white border border-neutral-200 p-4 shadow-sm">
+            <div className="min-w-[200px] rounded-2xl bg-k-bg-card border border-k-border p-4 shadow-k-card">
               <div className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-1">Próximo Festivo</div>
-              <div className="text-sm font-black text-obsidian">Día del Trabajo</div>
-              <div className="text-xs font-medium text-neutral-500 mt-1">1 de Mayo</div>
+              <div className="text-sm font-black text-k-text-h">Día del Trabajo</div>
+              <div className="text-xs font-medium text-k-text-b mt-1">1 de Mayo</div>
             </div>
-            <div className="min-w-[200px] rounded-2xl bg-white border border-neutral-200 p-4 shadow-sm border-dashed flex items-center justify-center text-neutral-400 hover:text-obsidian hover:bg-neutral-50 cursor-pointer transition-colors">
+            <div className="min-w-[200px] rounded-2xl bg-k-bg-card border border-k-border p-4 shadow-k-card border-dashed flex items-center justify-center text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2 cursor-pointer transition-colors">
               <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2"><Clock className="h-4 w-4" /> Agregar Excepción</span>
             </div>
           </div>
@@ -370,17 +370,17 @@ function ModulosTab() {
   }
 
   if (loadingMods) return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white p-16 flex flex-col items-center gap-3">
-      <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
-      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Sincronizando Sistema...</span>
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card p-16 flex flex-col items-center gap-3">
+      <div className="h-10 w-10 border-4 border-k-border border-t-obsidian rounded-full animate-spin" />
+      <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Sincronizando Sistema...</span>
     </div>
   );
 
   return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50">
-        <h2 className="text-xl font-black text-obsidian tracking-tight">Capacidades del Ecosistema</h2>
-        <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Activa las herramientas de la suite kore</p>
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50">
+        <h2 className="text-xl font-black text-k-text-h tracking-tight">Capacidades del Ecosistema</h2>
+        <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Activa las herramientas de la suite kore</p>
       </div>
       <div className="p-6 md:p-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -391,12 +391,12 @@ function ModulosTab() {
             return (
               <div key={m.key} className={cx(
                 "rounded-[28px] border overflow-hidden transition-all duration-300 relative group",
-                active ? "border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/60 hover:shadow-lg hover:shadow-emerald-500/5" : "border-neutral-200 bg-white opacity-80 hover:opacity-100"
+                active ? "border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/60 hover:shadow-lg hover:shadow-emerald-500/5" : "border-k-border bg-k-bg-card opacity-80 hover:opacity-100"
               )}>
                 {active && !m.alwaysOn && <div className="absolute top-0 right-0 h-16 w-16 bg-gradient-to-bl from-emerald-200/40 to-transparent pointer-events-none" />}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-2xl bg-white border border-neutral-100 shadow-sm flex items-center justify-center text-3xl">
+                    <div className="h-14 w-14 rounded-2xl bg-k-bg-card border border-k-border shadow-k-card flex items-center justify-center text-3xl">
                       {m.icon}
                     </div>
                     <div>
@@ -410,21 +410,21 @@ function ModulosTab() {
                           )}
                         >
                           <div className={cx(
-                            "h-5 w-5 rounded-full bg-white transition-transform duration-300 shadow flex flex-col items-center justify-center",
+                            "h-5 w-5 rounded-full bg-k-bg-card transition-transform duration-300 shadow flex flex-col items-center justify-center",
                             active ? "translate-x-5" : "translate-x-0"
                           )}>
-                            {saving === m.key && <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />}
+                            {saving === m.key && <Loader2 className="h-3 w-3 animate-spin text-k-text-b" />}
                           </div>
                         </button>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-xl border border-obsidian bg-obsidian text-white px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1.5 rounded-xl border border-obsidian bg-k-accent-btn text-k-accent-btn-text px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider">
                           🛡️ Core Activo
                         </span>
                       )}
                     </div>
                   </div>
-                  <h3 className="text-lg font-black text-obsidian tracking-tight mb-1">{m.label}</h3>
-                  <p className="text-sm font-medium text-neutral-500 line-clamp-2">{m.desc}</p>
+                  <h3 className="text-lg font-black text-k-text-h tracking-tight mb-1">{m.label}</h3>
+                  <p className="text-sm font-medium text-k-text-b line-clamp-2">{m.desc}</p>
                 </div>
               </div>
             );
@@ -466,13 +466,13 @@ function RedTab() {
   }
 
   return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-black text-obsidian tracking-tight">Geocerca Virtual & Redes</h2>
-          <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Seguridad de accesos e IPs</p>
+          <h2 className="text-xl font-black text-k-text-h tracking-tight">Geocerca Virtual & Redes</h2>
+          <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Seguridad de accesos e IPs</p>
         </div>
-        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
+        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
           {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Shield className="h-4 w-4" />}
           Blindar Red
         </button>
@@ -485,23 +485,23 @@ function RedTab() {
           </div>
         )}
         
-        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-4 pb-4 border-b border-neutral-100">
-            <div className="h-12 w-12 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm">
-              <Wifi className="h-6 w-6 text-neutral-400" />
+        <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 md:p-8 space-y-6">
+          <div className="flex items-center gap-4 pb-4 border-b border-k-border">
+            <div className="h-12 w-12 rounded-2xl bg-k-bg-card border border-k-border flex items-center justify-center shadow-k-card">
+              <Wifi className="h-6 w-6 text-k-text-b" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Lista Blanca (Whitelist)</h3>
-              <p className="text-xs font-medium text-neutral-500 mt-0.5">Controla quién puede operar la caja o el reloj</p>
+              <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Lista Blanca (Whitelist)</h3>
+              <p className="text-xs font-medium text-k-text-b mt-0.5">Controla quién puede operar la caja o el reloj</p>
             </div>
           </div>
           
           <div>
-            <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Dirección IP o Rango (CIDR)</label>
+            <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Dirección IP o Rango (CIDR)</label>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
-                className="flex-1 rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold outline-none focus:ring-2 focus:ring-obsidian/10 font-mono tracking-wider transition-all placeholder:text-neutral-300 placeholder:font-sans"
+                className="flex-1 rounded-2xl border border-k-border bg-k-bg-card px-5 py-4 text-sm font-bold outline-none focus:ring-2 focus:ring-obsidian/10 font-mono tracking-wider transition-all placeholder:text-k-text-b placeholder:font-sans"
                 placeholder="Ej. 192.168.1.0/24 o 201.175.42.10"
                 value={ip}
                 onChange={(e) => setIp(e.target.value)}
@@ -509,7 +509,7 @@ function RedTab() {
               <button
                 onClick={fetchMyIp}
                 disabled={loadingIp}
-                className="rounded-2xl border border-neutral-200 bg-white px-6 py-4 text-xs font-bold text-neutral-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all uppercase tracking-widest disabled:opacity-50"
+                className="rounded-2xl border border-k-border bg-k-bg-card px-6 py-4 text-xs font-bold text-neutral-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all uppercase tracking-widest disabled:opacity-50"
               >
                 {loadingIp ? "Rastreando..." : "¿Cuál es mi IP?"}
               </button>
@@ -607,33 +607,33 @@ function DocumentosTab() {
         </div>
       )}
 
-      <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-        <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
+      <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+        <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-black text-obsidian tracking-tight">Documentos de Bienvenida</h2>
-            <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Gestión de archivos adjuntos para nuevos ingresos</p>
+            <h2 className="text-xl font-black text-k-text-h tracking-tight">Documentos de Bienvenida</h2>
+            <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Gestión de archivos adjuntos para nuevos ingresos</p>
           </div>
         </div>
 
         <div className="p-6 md:p-10 space-y-8">
           {/* Zona de upload */}
-          <div className="rounded-[32px] border-2 border-dashed border-neutral-100 bg-neutral-50/30 p-10 text-center group hover:border-obsidian/20 transition-all">
-            <div className="h-20 w-20 rounded-[28px] bg-white border border-neutral-100 flex items-center justify-center shadow-sm mx-auto mb-6 group-hover:scale-110 transition-transform">
-              <FileText className="h-10 w-10 text-neutral-300" />
+          <div className="rounded-[32px] border-2 border-dashed border-k-border bg-k-bg-card2/30 p-10 text-center group hover:border-obsidian/20 transition-all">
+            <div className="h-20 w-20 rounded-[28px] bg-k-bg-card border border-k-border flex items-center justify-center shadow-k-card mx-auto mb-6 group-hover:scale-110 transition-transform">
+              <FileText className="h-10 w-10 text-k-text-b" />
             </div>
             <div className="max-w-xs mx-auto">
-              <div className="text-sm font-black text-obsidian tracking-tight mb-1">
+              <div className="text-sm font-black text-k-text-h tracking-tight mb-1">
                 {uploading ? "Subiendo documento..." : "Subir documento PDF"}
               </div>
-              <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-6">
+              <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-6">
                 Solo archivos PDF hasta 10MB
               </p>
               
               <label className={cx(
                 "inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold shadow-md transition-all cursor-pointer",
                 uploading
-                  ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
-                  : "bg-obsidian text-white hover:bg-gold hover:shadow-lg"
+                  ? "bg-neutral-100 text-k-text-b cursor-not-allowed"
+                  : "bg-k-accent-btn text-k-accent-btn-text hover:opacity-90 hover:shadow-lg"
               )}>
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                 {uploading ? "Sincronizando..." : "Agregar documento"}
@@ -651,34 +651,34 @@ function DocumentosTab() {
           {/* Lista de documentos */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 pb-2 border-b border-neutral-50">
-              <FileText className="h-4 w-4 text-neutral-300" />
-              <h3 className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em]">Archivos en el Sistema</h3>
+              <FileText className="h-4 w-4 text-k-text-b" />
+              <h3 className="text-[10px] font-bold text-k-text-b uppercase tracking-[0.2em]">Archivos en el Sistema</h3>
             </div>
 
             {loading ? (
               <div className="py-12 flex flex-col items-center gap-3">
                 <Loader2 className="h-8 w-8 text-neutral-200 animate-spin" />
-                <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">Consultando archivos...</span>
+                <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Consultando archivos...</span>
               </div>
             ) : documentos.length === 0 ? (
-              <div className="rounded-3xl border border-neutral-50 bg-neutral-50/20 p-12 text-center">
+              <div className="rounded-3xl border border-neutral-50 bg-k-bg-card2/20 p-12 text-center">
                 <div className="text-3xl mb-4 opacity-20">📂</div>
-                <p className="text-sm font-medium text-neutral-400">No hay documentos configurados.</p>
+                <p className="text-sm font-medium text-k-text-b">No hay documentos configurados.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
                 {documentos.map((doc, index) => (
                   <div
                     key={index}
-                    className="rounded-2xl border border-neutral-100 bg-white p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                    className="rounded-2xl border border-k-border bg-k-bg-card p-4 flex items-center justify-between hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-neutral-50 flex items-center justify-center text-rose-500 font-black text-xs border border-neutral-100">
+                      <div className="h-12 w-12 rounded-xl bg-k-bg-card2 flex items-center justify-center text-rose-500 font-black text-xs border border-k-border">
                         PDF
                       </div>
                       <div>
-                        <div className="text-sm font-black text-obsidian tracking-tight line-clamp-1">{doc.nombre}</div>
-                        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">
+                        <div className="text-sm font-black text-k-text-h tracking-tight line-clamp-1">{doc.nombre}</div>
+                        <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">
                           {formatSize(doc.size)} · {new Date(doc.uploaded_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                         </div>
                       </div>
@@ -688,7 +688,7 @@ function DocumentosTab() {
                         href={doc.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-xl border border-neutral-100 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:bg-neutral-50 transition"
+                        className="rounded-xl border border-k-border px-4 py-2 text-[10px] font-black uppercase tracking-widest text-k-text-b hover:bg-k-bg-card2 transition"
                       >
                         Ver
                       </a>
@@ -706,7 +706,7 @@ function DocumentosTab() {
           </div>
 
           <div className="rounded-[32px] border border-blue-100 bg-blue-50/50 p-6 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-white border border-blue-100 flex items-center justify-center text-2xl shadow-sm shrink-0">
+            <div className="h-12 w-12 rounded-2xl bg-k-bg-card border border-blue-100 flex items-center justify-center text-2xl shadow-k-card shrink-0">
               💡
             </div>
             <p className="text-sm font-medium text-blue-700 leading-relaxed">
@@ -740,10 +740,10 @@ function NotificacionesTab() {
   }
 
   return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50">
-        <h2 className="text-xl font-black text-obsidian tracking-tight">Centro de Notificaciones</h2>
-        <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Verificación y estado de alertas push</p>
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
+      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50">
+        <h2 className="text-xl font-black text-k-text-h tracking-tight">Centro de Notificaciones</h2>
+        <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Verificación y estado de alertas push</p>
       </div>
       
       <div className="p-6 md:p-10 space-y-8">
@@ -758,19 +758,19 @@ function NotificacionesTab() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 md:p-8 flex flex-col items-center text-center">
-            <div className="h-16 w-16 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm mb-6">
-              <Bell className="h-8 w-8 text-obsidian" />
+          <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 md:p-8 flex flex-col items-center text-center">
+            <div className="h-16 w-16 rounded-2xl bg-k-bg-card border border-k-border flex items-center justify-center shadow-k-card mb-6">
+              <Bell className="h-8 w-8 text-k-text-h" />
             </div>
-            <h3 className="text-lg font-black text-obsidian tracking-tight mb-2">Prueba en Tiempo Real</h3>
-            <p className="text-sm font-medium text-neutral-500 mb-8 max-w-xs">
+            <h3 className="text-lg font-black text-k-text-h tracking-tight mb-2">Prueba en Tiempo Real</h3>
+            <p className="text-sm font-medium text-k-text-b mb-8 max-w-xs">
               Envía un mensaje instantáneo a este dispositivo para confirmar que el canal de comunicación está abierto y configurado.
             </p>
             
             <button
               onClick={handleTest}
               disabled={sending}
-              className="w-full rounded-2xl bg-obsidian px-8 py-4 text-sm font-bold text-white shadow-xl hover:bg-neutral-800 hover:shadow-obsidian/20 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+              className="w-full rounded-2xl bg-k-accent-btn px-8 py-4 text-sm font-bold text-k-text-h shadow-xl hover:opacity-90 hover:shadow-obsidian/20 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
             >
               {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               {sending ? "Enviando..." : "Realizar Prueba"}
@@ -866,21 +866,21 @@ export default function ConfiguracionPage() {
         {/* Sidebar Nav */}
         <div className="w-full lg:w-64 shrink-0 space-y-4">
           {TAB_GROUPS.map(group => (
-            <div key={group.key} className="bg-white rounded-3xl border border-neutral-100 shadow-sm overflow-hidden">
+            <div key={group.key} className="bg-k-bg-card rounded-3xl border border-k-border shadow-k-card overflow-hidden">
               <button 
                 onClick={() => setActiveGroup(activeGroup === group.key ? "" : group.key)}
-                className="w-full flex items-center justify-between p-4 bg-neutral-50/50 hover:bg-neutral-50 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-k-bg-card2/50 hover:bg-k-bg-card2 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className={cx(
-                    "h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-inner",
-                    activeGroup === group.key ? "bg-obsidian" : "bg-neutral-300"
+                    "h-8 w-8 rounded-xl flex items-center justify-center text-k-text-h shadow-inner",
+                    activeGroup === group.key ? "bg-k-bg-sidebar" : "bg-neutral-300"
                   )}>
                     {group.icon}
                   </div>
-                  <span className="text-sm font-bold text-obsidian">{group.label}</span>
+                  <span className="text-sm font-bold text-k-text-h">{group.label}</span>
                 </div>
-                <ChevronDown className={cx("h-4 w-4 text-neutral-400 transition-transform", activeGroup === group.key ? "rotate-180" : "rotate-0")} />
+                <ChevronDown className={cx("h-4 w-4 text-k-text-b transition-transform", activeGroup === group.key ? "rotate-180" : "rotate-0")} />
               </button>
               
               {activeGroup === group.key && (
@@ -893,11 +893,11 @@ export default function ConfiguracionPage() {
                         onClick={() => handleTabClick(item)}
                         className={cx(
                           "w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs font-bold transition-all",
-                          isActive ? "bg-obsidian text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-obsidian"
+                          isActive ? "bg-k-accent-btn text-k-accent-btn-text" : "text-k-text-b hover:bg-neutral-100 hover:text-k-text-h"
                         )}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className={isActive ? "text-white/70" : "text-neutral-400"}>{item.icon}</span>
+                          <span className={isActive ? "text-k-text-h/70" : "text-k-text-b"}>{item.icon}</span>
                           {item.label}
                         </div>
                         {isActive && <ChevronRight className="h-3.5 w-3.5" />}

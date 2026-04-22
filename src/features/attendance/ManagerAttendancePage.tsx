@@ -92,32 +92,32 @@ function AbsenceRequestsTab() {
       )}
 
       {/* Pendientes */}
-      <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
         <div className="px-8 py-6 border-b border-neutral-50 flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-black text-obsidian tracking-tight">Solicitudes de Ausencia</h3>
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+            <h3 className="text-lg font-black text-k-text-h tracking-tight">Solicitudes de Ausencia</h3>
+            <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">
               {pending.length} pendiente{pending.length !== 1 ? "s" : ""} de revisión
             </p>
           </div>
           <button
             onClick={loadRequests}
             disabled={loading}
-            className="h-9 w-9 rounded-xl border border-neutral-100 flex items-center justify-center hover:bg-neutral-50 transition"
+            className="h-9 w-9 rounded-xl border border-k-border flex items-center justify-center hover:bg-k-bg-card2 transition"
           >
-            <RefreshCw className={cx("h-4 w-4 text-neutral-400", loading && "animate-spin")} />
+            <RefreshCw className={cx("h-4 w-4 text-k-text-b", loading && "animate-spin")} />
           </button>
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-neutral-300">
+          <div className="flex flex-col items-center gap-3 py-16 text-k-text-b">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
           </div>
         ) : pending.length === 0 ? (
           <div className="py-16 text-center">
             <FileText className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
-            <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin solicitudes pendientes</p>
+            <p className="text-xs font-bold text-k-text-b uppercase tracking-widest">Sin solicitudes pendientes</p>
           </div>
         ) : (
           <div className="divide-y divide-neutral-50">
@@ -129,11 +129,11 @@ function AbsenceRequestsTab() {
                       <Calendar className="h-5 w-5 text-amber-500" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-black text-obsidian">{req.empleado_name ?? "—"}</div>
-                      <div className="text-xs font-bold text-neutral-500 mt-0.5">
+                      <div className="text-sm font-black text-k-text-h">{req.empleado_name ?? "—"}</div>
+                      <div className="text-xs font-bold text-k-text-b mt-0.5">
                         {new Date((req.date ?? "") + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                       </div>
-                      <p className="text-xs text-neutral-400 mt-1.5 line-clamp-3">{req.motivo}</p>
+                      <p className="text-xs text-k-text-b mt-1.5 line-clamp-3">{req.motivo}</p>
                     </div>
                   </div>
                   <AbsenceStatusBadge status={req.status} />
@@ -142,13 +142,13 @@ function AbsenceRequestsTab() {
                 {/* Nota del revisor + botones */}
                 <div className="mt-4 ml-13 pl-0 sm:pl-13">
                   <div className="flex items-center gap-2 mb-2">
-                    <MessageSquare className="h-3.5 w-3.5 text-neutral-300 shrink-0" />
+                    <MessageSquare className="h-3.5 w-3.5 text-k-text-b shrink-0" />
                     <input
                       type="text"
                       placeholder="Nota opcional para el empleado..."
                       value={noteInputs[req.id] ?? ""}
                       onChange={e => setNoteInputs(prev => ({ ...prev, [req.id]: e.target.value }))}
-                      className="flex-1 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition"
+                      className="flex-1 rounded-xl border border-k-border bg-k-bg-card2 px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition"
                     />
                   </div>
                   <div className="flex gap-2">
@@ -178,22 +178,22 @@ function AbsenceRequestsTab() {
 
       {/* Revisadas recientemente */}
       {reviewed.length > 0 && (
-        <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
           <div className="px-8 py-6 border-b border-neutral-50">
-            <h3 className="text-sm font-black text-obsidian tracking-tight">Revisadas Recientemente</h3>
+            <h3 className="text-sm font-black text-k-text-h tracking-tight">Revisadas Recientemente</h3>
           </div>
           <div className="divide-y divide-neutral-50">
             {reviewed.slice(0, 10).map(req => (
               <div key={req.id} className="px-8 py-4 flex items-start gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-obsidian">{req.empleado_name ?? "—"}</span>
-                    <span className="text-neutral-300">·</span>
-                    <span className="text-xs text-neutral-400">
+                    <span className="text-sm font-bold text-k-text-h">{req.empleado_name ?? "—"}</span>
+                    <span className="text-k-text-b">·</span>
+                    <span className="text-xs text-k-text-b">
                       {new Date((req.date ?? "") + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
                     </span>
                   </div>
-                  {req.reviewer_note && <p className="text-xs text-neutral-400 mt-0.5 italic">"{req.reviewer_note}"</p>}
+                  {req.reviewer_note && <p className="text-xs text-k-text-b mt-0.5 italic">"{req.reviewer_note}"</p>}
                 </div>
                 <AbsenceStatusBadge status={req.status} />
               </div>
@@ -222,7 +222,7 @@ function StatusBadge({ item }: { item: ByDateItem }) {
   if ((item as any).is_rest_day || (item as any).state === "rest")
     return <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-100 bg-sky-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-600">Descanso</span>;
   if (!checkedIn)
-    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-100 bg-neutral-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-500"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />Ausente</span>;
+    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-k-border bg-k-bg-card2 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-k-text-b"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />Ausente</span>;
   if (closed)
     return <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Presente</span>;
   return (
@@ -256,14 +256,14 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
   }, [selectedEmp, date]);
 
   return (
-    <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
       <div className="px-8 py-6 border-b border-neutral-50 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h3 className="text-lg font-black text-obsidian tracking-tight">Resumen Semanal</h3>
-          <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Horas trabajadas, pausas y horas pagables</p>
+          <h3 className="text-lg font-black text-k-text-h tracking-tight">Resumen Semanal</h3>
+          <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">Horas trabajadas, pausas y horas pagables</p>
         </div>
         <select
-          className="rounded-2xl border border-neutral-100 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
+          className="rounded-2xl border border-k-border px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
           value={selectedEmp}
           onChange={(e) => setSelectedEmp(e.target.value)}
         >
@@ -274,7 +274,7 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
       </div>
       <div className="p-8">
         {loading ? (
-          <div className="flex items-center justify-center gap-3 py-8 text-neutral-400">
+          <div className="flex items-center justify-center gap-3 py-8 text-k-text-b">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
           </div>
@@ -284,8 +284,8 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
           </div>
         ) : summary ? (
           <div className="space-y-5">
-            <div className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-              Semana: <span className="text-obsidian">{summary.week.from} → {summary.week.to}</span>
+            <div className="text-xs font-bold text-k-text-b uppercase tracking-widest">
+              Semana: <span className="text-k-text-h">{summary.week.from} → {summary.week.to}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
@@ -296,16 +296,16 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
               ].map((kpi) => (
                 <div key={kpi.label} className={cx(
                   "rounded-[28px] border p-5 text-center",
-                  kpi.highlight ? "bg-obsidian text-white border-obsidian" : "bg-neutral-50/50 border-neutral-100"
+                  kpi.highlight ? "bg-k-accent-btn text-k-accent-btn-text border-obsidian" : "bg-k-bg-card2/50 border-k-border"
                 )}>
-                  <kpi.icon className={cx("h-5 w-5 mx-auto mb-2", kpi.highlight ? "text-white/40" : "text-neutral-200")} />
-                  <div className={cx("text-2xl font-black", kpi.highlight ? "" : "text-obsidian")}>{kpi.val}</div>
-                  <div className={cx("text-[10px] font-bold uppercase tracking-widest mt-1", kpi.highlight ? "text-white/40" : "text-neutral-400")}>{kpi.label}</div>
+                  <kpi.icon className={cx("h-5 w-5 mx-auto mb-2", kpi.highlight ? "text-k-text-h/40" : "text-neutral-200")} />
+                  <div className={cx("text-2xl font-black", kpi.highlight ? "" : "text-k-text-h")}>{kpi.val}</div>
+                  <div className={cx("text-[10px] font-bold uppercase tracking-widest mt-1", kpi.highlight ? "text-k-text-h/40" : "text-k-text-b")}>{kpi.label}</div>
                 </div>
               ))}
             </div>
-            <div className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-              Jornada: <span className="text-obsidian">{summary.empleado.daily_hours}h/día</span>
+            <div className="text-xs font-bold text-k-text-b uppercase tracking-widest">
+              Jornada: <span className="text-k-text-h">{summary.empleado.daily_hours}h/día</span>
             </div>
           </div>
         ) : null}
@@ -354,24 +354,24 @@ export default function ManagerAttendancePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-[32px] border border-neutral-100 shadow-sm flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-k-bg-card p-4 rounded-[32px] border border-k-border shadow-k-card flex-wrap">
         <div>
-          <h1 className="text-xl font-black text-obsidian tracking-tight">
-            Control de Asistencia <span className="text-neutral-400 font-medium ml-2 capitalize">· {dateLabel}</span>
+          <h1 className="text-xl font-black text-k-text-h tracking-tight">
+            Control de Asistencia <span className="text-k-text-b font-medium ml-2 capitalize">· {dateLabel}</span>
           </h1>
         </div>
         <div className="flex items-center gap-3">
           <input
             type="date"
-            className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-bold text-obsidian outline-none focus:ring-2 focus:ring-obsidian/10"
+            className="rounded-xl border border-k-border bg-k-bg-card2 px-3 py-2 text-xs font-bold text-k-text-h outline-none focus:ring-2 focus:ring-obsidian/10"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
           <button
             onClick={loadDay}
-            className="h-9 w-9 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 flex items-center justify-center transition"
+            className="h-9 w-9 rounded-xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 flex items-center justify-center transition"
           >
-            <RefreshCw className={cx("h-4 w-4 text-neutral-400", loading && "animate-spin")} />
+            <RefreshCw className={cx("h-4 w-4 text-k-text-b", loading && "animate-spin")} />
           </button>
         </div>
       </div>
@@ -387,7 +387,7 @@ export default function ManagerAttendancePage() {
             onClick={() => setTab(t.key)}
             className={cx(
               "px-4 py-1.5 rounded-xl text-xs font-bold transition",
-              tab === t.key ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-neutral-600"
+              tab === t.key ? "bg-k-bg-card shadow-k-card text-k-text-h" : "text-k-text-b hover:text-neutral-600"
             )}
           >
             {t.label}
@@ -412,36 +412,36 @@ export default function ManagerAttendancePage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* KPIs Asistencia */}
-                <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex items-center justify-between gap-2">
+                <div className="rounded-[32px] border border-k-border bg-k-bg-card p-6 shadow-k-card flex items-center justify-between gap-2">
                   {[
                     { label: "Presentes", val: checkedIn, pct: Math.round((checkedIn / totalEmps) * 100), icon: Users, numCls: "text-emerald-500" },
-                    { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, numCls: "text-neutral-500" },
+                    { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, numCls: "text-k-text-b" },
                     { label: "En turno", val: onShift, pct: Math.round((onShift / totalEmps) * 100), icon: Clock, numCls: "text-amber-500" },
                   ].map(k => (
-                     <div key={k.label} className="flex-1 text-center border-r border-neutral-100 last:border-0">
+                     <div key={k.label} className="flex-1 text-center border-r border-k-border last:border-0">
                        <k.icon className={`h-5 w-5 mx-auto mb-2 ${k.numCls}`} />
-                       <div className="text-xl font-black text-obsidian flex items-center justify-center gap-1">
-                         {k.val} <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{k.label}</span>
+                       <div className="text-xl font-black text-k-text-h flex items-center justify-center gap-1">
+                         {k.val} <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">{k.label}</span>
                        </div>
-                       <div className="text-[9px] font-bold text-neutral-300 mt-0.5">{k.pct}%</div>
+                       <div className="text-[9px] font-bold text-k-text-b mt-0.5">{k.pct}%</div>
                      </div>
                   ))}
                 </div>
 
                 {/* Resumen del día */}
-                <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex flex-col justify-center gap-3">
-                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-50 px-4 py-2 rounded-xl border border-neutral-100">
-                    <span>Cerrados: <span className="text-obsidian">{closed}</span></span>
-                    <span>Activos: <span className="text-obsidian">{onShift}</span></span>
-                    <span>Sin entrada: <span className="text-obsidian">{absent}</span></span>
+                <div className="rounded-[32px] border border-k-border bg-k-bg-card p-6 shadow-k-card flex flex-col justify-center gap-3">
+                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-k-text-b bg-k-bg-card2 px-4 py-2 rounded-xl border border-k-border">
+                    <span>Cerrados: <span className="text-k-text-h">{closed}</span></span>
+                    <span>Activos: <span className="text-k-text-h">{onShift}</span></span>
+                    <span>Sin entrada: <span className="text-k-text-h">{absent}</span></span>
                   </div>
                   <div className="mt-2 px-2">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">
                       <span>Asistencia Global</span>
-                      <span className="text-obsidian">{Math.round((checkedIn / totalEmps) * 100)}%</span>
+                      <span className="text-k-text-h">{Math.round((checkedIn / totalEmps) * 100)}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-obsidian rounded-full" style={{ width: `${Math.round((checkedIn / totalEmps) * 100)}%` }} />
+                      <div className="h-full bg-k-bg-sidebar rounded-full" style={{ width: `${Math.round((checkedIn / totalEmps) * 100)}%` }} />
                     </div>
                   </div>
                 </div>
@@ -449,22 +449,22 @@ export default function ManagerAttendancePage() {
             )}
 
             {/* Table */}
-            <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden mt-6">
+            <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden mt-6">
               <div className="px-8 py-6 border-b border-neutral-50">
-                <h3 className="text-lg font-black text-obsidian tracking-tight">Registro de Asistencia</h3>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                <h3 className="text-lg font-black text-k-text-h tracking-tight">Registro de Asistencia</h3>
+                <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">
                   {items.length} registros · {employees.length} empleados
                 </p>
               </div>
               {loading ? (
-                <div className="p-16 flex flex-col items-center gap-3 text-neutral-400">
-                  <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+                <div className="p-16 flex flex-col items-center gap-3 text-k-text-b">
+                  <div className="h-10 w-10 border-4 border-k-border border-t-obsidian rounded-full animate-spin" />
                   <span className="text-xs font-bold uppercase tracking-widest">Cargando registros...</span>
                 </div>
               ) : employees.length === 0 ? (
                 <div className="p-16 flex flex-col items-center gap-4 text-center">
                   <Users className="h-12 w-12 text-neutral-100" />
-                  <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Sin nómina (no hay empleados activos)</p>
+                  <p className="text-xs font-bold text-k-text-b uppercase tracking-widest">Sin nómina (no hay empleados activos)</p>
                 </div>
               ) : (isEnabled("newManagementAdmin") && checkedIn === 0 && onShift === 0 && closed === 0) ? (
                 <EmptyState
@@ -487,10 +487,10 @@ export default function ManagerAttendancePage() {
               ) : (
                 <div className="overflow-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-neutral-50/80 border-b border-neutral-50">
+                    <thead className="bg-k-bg-card2/80 border-b border-neutral-50">
                       <tr>
                         {["Empleado", "Entrada", "Salida", "Estado", "Horas", ""].map((h) => (
-                          <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">{h}</th>
+                          <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -501,22 +501,22 @@ export default function ManagerAttendancePage() {
                         const tieneDiaDescanso = item?.status === 'day_off' || (item as any)?.is_rest_day;
 
                         return (
-                          <tr key={emp.id} className="group border-t border-neutral-50 hover:bg-neutral-50/50 transition">
+                          <tr key={emp.id} className="group border-t border-neutral-50 hover:bg-k-bg-card2/50 transition">
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar name={empName} />
                                 <div>
-                                  <div className="text-sm font-bold text-obsidian">{empName}</div>
-                                  {emp.position_title && <div className="text-[10px] text-neutral-400 mt-0.5">{emp.position_title}</div>}
+                                  <div className="text-sm font-bold text-k-text-h">{empName}</div>
+                                  {emp.position_title && <div className="text-[10px] text-k-text-b mt-0.5">{emp.position_title}</div>}
                                 </div>
                               </div>
                             </td>
-                            <td className="px-5 py-4 font-bold text-sm text-obsidian">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
-                            <td className="px-5 py-4 text-sm text-neutral-400">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
+                            <td className="px-5 py-4 font-bold text-sm text-k-text-h">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
+                            <td className="px-5 py-4 text-sm text-k-text-b">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
                             <td className="px-5 py-4">
-                              {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-100 bg-neutral-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-500"><AlertTriangle className="h-2 w-2" /> Ausente</span>}
+                              {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-lg border border-k-border bg-k-bg-card2 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-k-text-b"><AlertTriangle className="h-2 w-2" /> Ausente</span>}
                             </td>
-                            <td className="px-5 py-4 font-black text-sm text-obsidian">
+                            <td className="px-5 py-4 font-black text-sm text-k-text-h">
                               {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
                             </td>
                             <td className="px-5 py-4">
@@ -532,10 +532,10 @@ export default function ManagerAttendancePage() {
                                       ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
                                       : undefined,
                                   })}
-                                  className="h-8 w-8 shrink-0 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center hover:bg-white hover:border-neutral-200 transition"
+                                  className="h-8 w-8 shrink-0 rounded-xl bg-k-bg-card2 border border-k-border flex items-center justify-center hover:bg-k-bg-card hover:border-k-border transition"
                                   title="Ajustar horario"
                                 >
-                                  <Pencil className="h-3.5 w-3.5 text-neutral-400" />
+                                  <Pencil className="h-3.5 w-3.5 text-k-text-b" />
                                 </button>
                                 <button
                                   onClick={() => setDescansoAdmin({
@@ -543,7 +543,7 @@ export default function ManagerAttendancePage() {
                                     empleadoNombre: empName,
                                     tieneDiaDescanso,
                                   })}
-                                  className="h-8 w-8 shrink-0 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center hover:bg-white hover:border-neutral-200 transition text-sm"
+                                  className="h-8 w-8 shrink-0 rounded-xl bg-k-bg-card2 border border-k-border flex items-center justify-center hover:bg-k-bg-card hover:border-k-border transition text-sm"
                                   title="Gestionar día de descanso"
                                 >
                                   🛋️

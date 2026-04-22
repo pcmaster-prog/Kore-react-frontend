@@ -50,38 +50,38 @@ function ProductSelectionModal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-obsidian/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-k-bg-sidebar/50 backdrop-blur-sm"
         onClick={onCancel}
       />
 
       {/* Panel */}
-      <div className="relative bg-white w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-h-[92vh] flex flex-col animate-in-up overflow-hidden">
+      <div className="relative bg-k-bg-card w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-h-[92vh] flex flex-col animate-in-up overflow-hidden">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-neutral-100">
+        <div className="px-6 pt-6 pb-4 border-b border-k-border">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-lg font-black text-obsidian tracking-tight">
+            <h2 className="text-lg font-black text-k-text-h tracking-tight">
               ¿Qué productos necesitas rellenar?
             </h2>
             <button
               onClick={onCancel}
               className="h-9 w-9 rounded-xl bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors shrink-0"
             >
-              <X className="h-4 w-4 text-neutral-500" />
+              <X className="h-4 w-4 text-k-text-b" />
             </button>
           </div>
-          <p className="text-xs text-neutral-400 font-medium mb-4">
+          <p className="text-xs text-k-text-b font-medium mb-4">
             Selecciona solo los productos que vas a rellenar hoy.
           </p>
 
           {/* Buscador */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-k-text-b" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar producto..."
-              className="w-full h-10 pl-10 pr-4 rounded-xl border border-neutral-200 text-sm font-medium text-obsidian outline-none focus:border-obsidian focus:ring-2 focus:ring-obsidian/10 transition-all"
+              className="w-full h-10 pl-10 pr-4 rounded-xl border border-k-border text-sm font-medium text-k-text-h outline-none focus:border-obsidian focus:ring-2 focus:ring-obsidian/10 transition-all"
             />
           </div>
 
@@ -90,13 +90,13 @@ function ProductSelectionModal({
             <button
               type="button"
               onClick={toggleAll}
-              className="text-xs font-bold text-obsidian/70 hover:text-obsidian transition-colors underline underline-offset-2"
+              className="text-xs font-bold text-k-text-h/70 hover:text-k-text-h transition-colors underline underline-offset-2"
             >
               {filteredItems.every((it) => selected[it.id])
                 ? "Deseleccionar todos"
                 : "Seleccionar todos"}
             </button>
-            <span className="text-xs font-bold text-neutral-400">
+            <span className="text-xs font-bold text-k-text-b">
               {totalSelected} de {items.length} seleccionados
             </span>
           </div>
@@ -105,7 +105,7 @@ function ProductSelectionModal({
         {/* Lista de productos */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {filteredItems.length === 0 && (
-            <div className="p-8 text-center text-sm text-neutral-400 font-medium">
+            <div className="p-8 text-center text-sm text-k-text-b font-medium">
               No se encontraron productos
             </div>
           )}
@@ -119,8 +119,8 @@ function ProductSelectionModal({
                 className={cx(
                   "w-full rounded-2xl border p-3 flex items-center gap-3 text-left transition-all active:scale-[0.98]",
                   isChecked
-                    ? "border-obsidian/30 bg-obsidian/5"
-                    : "border-neutral-100 bg-white hover:bg-neutral-50",
+                    ? "border-obsidian/30 bg-k-accent-btn/5"
+                    : "border-k-border bg-k-bg-card hover:bg-k-bg-card2",
                 )}
               >
                 {/* Checkbox */}
@@ -128,15 +128,15 @@ function ProductSelectionModal({
                   className={cx(
                     "flex items-center justify-center h-6 w-6 rounded-lg border-2 shrink-0 transition-all",
                     isChecked
-                      ? "bg-obsidian border-obsidian"
-                      : "border-neutral-300 bg-white",
+                      ? "bg-k-bg-sidebar border-obsidian"
+                      : "border-neutral-300 bg-k-bg-card",
                   )}
                 >
-                  {isChecked && <Check className="h-3.5 w-3.5 text-white" />}
+                  {isChecked && <Check className="h-3.5 w-3.5 text-k-text-h" />}
                 </div>
 
                 {/* Foto */}
-                <div className="h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-neutral-100">
+                <div className="h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-k-border">
                   {item.foto_url ? (
                     <img
                       src={item.foto_url}
@@ -145,7 +145,7 @@ function ProductSelectionModal({
                     />
                   ) : (
                     <div className="h-full w-full bg-neutral-100 flex items-center justify-center">
-                      <Package className="h-4 w-4 text-neutral-400" />
+                      <Package className="h-4 w-4 text-k-text-b" />
                     </div>
                   )}
                 </div>
@@ -153,14 +153,14 @@ function ProductSelectionModal({
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   {item.clave && (
-                    <div className="text-[10px] font-bold text-neutral-400 uppercase">
+                    <div className="text-[10px] font-bold text-k-text-b uppercase">
                       {item.clave}
                     </div>
                   )}
-                  <div className="text-sm font-bold text-obsidian truncate leading-tight">
+                  <div className="text-sm font-bold text-k-text-h truncate leading-tight">
                     {item.nombre}
                   </div>
-                  <div className="text-[10px] font-medium text-neutral-400 uppercase mt-0.5">
+                  <div className="text-[10px] font-medium text-k-text-b uppercase mt-0.5">
                     {UNIDADES[item.unidad] ?? item.unidad}
                   </div>
                 </div>
@@ -170,7 +170,7 @@ function ProductSelectionModal({
         </div>
 
         {/* Footer con botón confirmar */}
-        <div className="p-4 border-t border-neutral-100 bg-white">
+        <div className="p-4 border-t border-k-border bg-k-bg-card">
           <button
             type="button"
             onClick={() => {
@@ -183,8 +183,8 @@ function ProductSelectionModal({
             className={cx(
               "w-full h-14 rounded-2xl text-sm font-black tracking-wide transition-all shadow-md",
               totalSelected > 0
-                ? "bg-obsidian text-white hover:bg-gold active:scale-[0.98]"
-                : "bg-neutral-200 text-neutral-400 cursor-not-allowed",
+                ? "bg-k-accent-btn text-k-accent-btn-text hover:opacity-90 active:scale-[0.98]"
+                : "bg-neutral-200 text-k-text-b cursor-not-allowed",
             )}
           >
             {totalSelected > 0
@@ -335,7 +335,7 @@ export default function GondolaRellenoPage() {
   const statusCfg = orden
     ? (STATUS_CONFIG[orden.status] ?? {
         label: orden.status,
-        color: "bg-neutral-100 text-neutral-600 border-neutral-200",
+        color: "bg-neutral-100 text-neutral-600 border-k-border",
       })
     : null;
   const isReadonly = orden
@@ -345,7 +345,7 @@ export default function GondolaRellenoPage() {
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-7 w-7 border-2 border-neutral-200 border-t-obsidian rounded-full animate-spin" />
+        <div className="h-7 w-7 border-2 border-k-border border-t-obsidian rounded-full animate-spin" />
       </div>
     );
 
@@ -354,7 +354,7 @@ export default function GondolaRellenoPage() {
       <div className="p-6">
         <button
           onClick={() => nav(-1)}
-          className="mb-4 flex items-center gap-2 text-sm font-bold text-neutral-500 hover:text-obsidian transition-colors"
+          className="mb-4 flex items-center gap-2 text-sm font-bold text-k-text-b hover:text-k-text-h transition-colors"
         >
           <ArrowLeft className="h-4 w-4" /> Volver
         </button>
@@ -376,20 +376,20 @@ export default function GondolaRellenoPage() {
       )}
 
       {/* Header fijo */}
-      <div className="sticky top-0 z-10 bg-white border-b border-neutral-100 shadow-sm px-4 py-4">
+      <div className="sticky top-0 z-10 bg-k-bg-card border-b border-k-border shadow-k-card px-4 py-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => nav(-1)}
             className="h-10 w-10 rounded-xl bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors shrink-0"
           >
-            <ArrowLeft className="h-4 w-4 text-obsidian" />
+            <ArrowLeft className="h-4 w-4 text-k-text-h" />
           </button>
           <div className="min-w-0 flex-1">
-            <div className="text-base font-black text-obsidian tracking-tight truncate">
+            <div className="text-base font-black text-k-text-h tracking-tight truncate">
               {orden.gondola.nombre}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-neutral-400 font-medium">
+              <span className="text-xs text-k-text-b font-medium">
                 {totalLlenados}/{totalActive} productos llenados
               </span>
               {statusCfg && (
@@ -408,7 +408,7 @@ export default function GondolaRellenoPage() {
           {!isReadonly && selectedIds && (
             <button
               onClick={() => setShowSelection(true)}
-              className="text-xs font-bold text-obsidian/60 hover:text-obsidian transition-colors underline underline-offset-2 shrink-0"
+              className="text-xs font-bold text-k-text-h/60 hover:text-k-text-h transition-colors underline underline-offset-2 shrink-0"
             >
               Cambiar selección
             </button>
@@ -440,8 +440,8 @@ export default function GondolaRellenoPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-72">
         {activeItems.length === 0 && !showSelection && (
           <div className="flex flex-col items-center justify-center p-12 text-center">
-            <Package className="h-12 w-12 text-neutral-300 mb-4" />
-            <div className="text-sm font-bold text-neutral-400">
+            <Package className="h-12 w-12 text-k-text-b mb-4" />
+            <div className="text-sm font-bold text-k-text-b">
               No hay productos seleccionados
             </div>
           </div>
@@ -456,11 +456,11 @@ export default function GondolaRellenoPage() {
                 "rounded-[24px] border p-4 flex items-center gap-4 transition-all",
                 filled
                   ? "border-emerald-200 bg-emerald-50/60"
-                  : "border-neutral-100 bg-white",
+                  : "border-k-border bg-k-bg-card",
               )}
             >
               {/* Foto */}
-              <div className="h-14 w-14 shrink-0 rounded-2xl overflow-hidden border border-neutral-100">
+              <div className="h-14 w-14 shrink-0 rounded-2xl overflow-hidden border border-k-border">
                 {item.foto_url ? (
                   <img
                     src={item.foto_url}
@@ -469,17 +469,17 @@ export default function GondolaRellenoPage() {
                   />
                 ) : (
                   <div className="h-full w-full bg-neutral-100 flex items-center justify-center">
-                    <Package className="h-6 w-6 text-neutral-400" />
+                    <Package className="h-6 w-6 text-k-text-b" />
                   </div>
                 )}
               </div>
 
               {/* Info + controles */}
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-neutral-400 uppercase">
+                <div className="text-xs font-bold text-k-text-b uppercase">
                   {item.clave}
                 </div>
-                <div className="text-sm font-bold text-obsidian truncate leading-tight">
+                <div className="text-sm font-bold text-k-text-h truncate leading-tight">
                   {item.nombre}
                 </div>
 
@@ -511,7 +511,7 @@ export default function GondolaRellenoPage() {
                       "h-9 w-16 text-center rounded-xl border text-sm font-black outline-none transition-all",
                       filled
                         ? "border-emerald-300 bg-emerald-50 text-emerald-800 focus:border-emerald-500"
-                        : "border-neutral-200 bg-neutral-50 text-obsidian focus:border-obsidian",
+                        : "border-k-border bg-k-bg-card2 text-k-text-h focus:border-obsidian",
                     )}
                   />
 
@@ -520,13 +520,13 @@ export default function GondolaRellenoPage() {
                     type="button"
                     onClick={() => adjustCant(item.id, 1)}
                     disabled={isReadonly}
-                    className="h-9 w-9 rounded-xl bg-obsidian hover:bg-gold active:scale-95 flex items-center justify-center text-xl font-black text-white transition-all disabled:opacity-30"
+                    className="h-9 w-9 rounded-xl bg-k-accent-btn hover:opacity-90 active:scale-95 flex items-center justify-center text-xl font-black text-k-text-h transition-all disabled:opacity-30"
                   >
                     +
                   </button>
 
                   {/* Unidad */}
-                  <span className="ml-1 text-xs font-bold text-neutral-400 uppercase">
+                  <span className="ml-1 text-xs font-bold text-k-text-b uppercase">
                     {UNIDADES[item.unidad] ?? item.unidad}
                   </span>
                 </div>
@@ -538,7 +538,7 @@ export default function GondolaRellenoPage() {
 
       {/* Footer fijo */}
       {!isReadonly && (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-white border-t border-neutral-100 shadow-lg p-4 space-y-3 z-10">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-k-bg-card border-t border-k-border shadow-lg p-4 space-y-3 z-10">
           {/* Evidencia */}
           <EvidenciaUploader onChange={setEvidencia} disabled={submitting} />
 
@@ -549,7 +549,7 @@ export default function GondolaRellenoPage() {
             rows={1}
             placeholder="Notas para el admin (opcional)..."
             disabled={submitting}
-            className="w-full rounded-2xl border border-neutral-200 px-4 py-2.5 text-sm font-medium text-obsidian outline-none focus:border-obsidian focus:ring-2 focus:ring-obsidian/10 transition-all resize-none disabled:opacity-60"
+            className="w-full rounded-2xl border border-k-border px-4 py-2.5 text-sm font-medium text-k-text-h outline-none focus:border-obsidian focus:ring-2 focus:ring-obsidian/10 transition-all resize-none disabled:opacity-60"
           />
 
           {submitErr && (
@@ -565,8 +565,8 @@ export default function GondolaRellenoPage() {
             className={cx(
               "w-full h-14 rounded-2xl text-sm font-black tracking-wide transition-all shadow-md",
               canSubmit && !submitting
-                ? "bg-obsidian text-white hover:bg-gold active:scale-98"
-                : "bg-neutral-200 text-neutral-400 cursor-not-allowed",
+                ? "bg-k-accent-btn text-k-accent-btn-text hover:opacity-90 active:scale-98"
+                : "bg-neutral-200 text-k-text-b cursor-not-allowed",
             )}
           >
             {submitting ? (
@@ -585,7 +585,7 @@ export default function GondolaRellenoPage() {
 
       {/* Readonly banner */}
       {isReadonly && (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-emerald-600 px-6 py-4 text-center text-sm font-bold text-white z-10">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-emerald-600 px-6 py-4 text-center text-sm font-bold text-k-text-h z-10">
           {orden.status === "aprobado"
             ? "✓ Orden Aprobada"
             : "⏳ Orden en revisión"}

@@ -45,7 +45,7 @@ function RoleBadge({ role }: { role: string }) {
       ? "bg-violet-50 text-violet-600 border-violet-100"
       : role === "supervisor"
       ? "bg-blue-50 text-blue-600 border-blue-100"
-      : "bg-neutral-50 text-neutral-500 border-neutral-100";
+      : "bg-k-bg-card2 text-k-text-b border-k-border";
   const label =
     role === "admin" ? "Admin" : role === "supervisor" ? "Supervisor" : "Empleado";
   return (
@@ -180,33 +180,33 @@ function UserModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in-fade">
-      <div className="absolute inset-0 bg-obsidian/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-4xl rounded-[40px] border border-neutral-100 bg-white shadow-2xl overflow-hidden animate-in-up flex flex-col max-h-[90vh]">
+      <div className="absolute inset-0 bg-k-bg-sidebar/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-4xl rounded-[40px] border border-k-border bg-k-bg-card shadow-2xl overflow-hidden animate-in-up flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-neutral-100 bg-neutral-50/50">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-k-border bg-k-bg-card2/50">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm">
-              <UserPlus className="h-6 w-6 text-obsidian" />
+            <div className="h-12 w-12 rounded-2xl bg-k-bg-card border border-k-border flex items-center justify-center shadow-k-card">
+              <UserPlus className="h-6 w-6 text-k-text-h" />
             </div>
             <div>
-              <div className="font-black text-2xl text-obsidian tracking-tight">
+              <div className="font-black text-2xl text-k-text-h tracking-tight">
                 {mode === "create" ? "Nuevo Usuario" : "Editar Usuario"}
               </div>
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+              <div className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">
                 {mode === "create" ? "Configuración de perfil y acceso" : "Modifica los datos del usuario"}
               </div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="h-10 w-10 rounded-2xl border border-neutral-200 bg-white flex items-center justify-center text-neutral-400 hover:bg-neutral-50 hover:text-obsidian transition-colors"
+            className="h-10 w-10 rounded-2xl border border-k-border bg-k-bg-card flex items-center justify-center text-k-text-b hover:bg-k-bg-card2 hover:text-k-text-h transition-colors"
           >
             ✕
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-white">
+        <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-k-bg-card">
           {err && (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700 flex items-center gap-3 mb-6">
               <AlertTriangle className="h-5 w-5" />
@@ -217,16 +217,16 @@ function UserModal({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Columna Izquierda: Acceso */}
             <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
-                <Shield className="h-5 w-5 text-neutral-400" />
-                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Cuenta de Acceso</h3>
+              <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+                <Shield className="h-5 w-5 text-k-text-b" />
+                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Cuenta de Acceso</h3>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Nombre completo *</label>
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Nombre completo *</label>
                   <input
-                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                     placeholder="Ej. Juan Pérez"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -234,10 +234,10 @@ function UserModal({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Correo electrónico *</label>
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Correo electrónico *</label>
                   <input
                     type="email"
-                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                     placeholder="juan@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -245,9 +245,9 @@ function UserModal({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Rol del sistema *</label>
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Rol del sistema *</label>
                   <select
-                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all appearance-none"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all appearance-none"
                     value={role}
                     onChange={(e) => setRole(e.target.value as any)}
                   >
@@ -258,13 +258,13 @@ function UserModal({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">
                     Contraseña {mode === "edit" ? "(dejar vacío para no cambiar)" : "*"}
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
-                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 pr-12 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 pr-12 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                       placeholder={mode === "create" ? "Mínimo 6 caracteres" : "Nueva contraseña (opcional)"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -272,7 +272,7 @@ function UserModal({
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-obsidian text-xs font-bold transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-k-text-b hover:text-k-text-h text-xs font-bold transition-colors"
                     >
                       {showPassword ? "Ocultar" : "Ver"}
                     </button>
@@ -281,16 +281,16 @@ function UserModal({
               </div>
 
               {/* Documentación Oficial */}
-              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100 pt-6">
-                <FileText className="h-5 w-5 text-neutral-400" />
-                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Documentación Oficial</h3>
+              <div className="flex items-center gap-3 pb-2 border-b border-k-border pt-6">
+                <FileText className="h-5 w-5 text-k-text-b" />
+                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Documentación Oficial</h3>
               </div>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">RFC</label>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">RFC</label>
                     <input
-                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                       placeholder="13 caracteres"
                       value={rfc}
                       onChange={(e) => setRfc(e.target.value.toUpperCase())}
@@ -298,9 +298,9 @@ function UserModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">NSS</label>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">NSS</label>
                     <input
-                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                       placeholder="11 dígitos"
                       value={nss}
                       onChange={(e) => setNss(e.target.value.replace(/\D/g, ''))}
@@ -309,8 +309,8 @@ function UserModal({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Expediente (PDF/Imagen)</label>
-                  <label className="flex items-center justify-center w-full min-h-[50px] relative overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-2 hover:bg-neutral-100 transition-colors cursor-pointer group">
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Expediente (PDF/Imagen)</label>
+                  <label className="flex items-center justify-center w-full min-h-[50px] relative overflow-hidden rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-2 hover:bg-neutral-100 transition-colors cursor-pointer group">
                     <input
                       type="file"
                       accept=".pdf,image/*"
@@ -318,14 +318,14 @@ function UserModal({
                       className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                     />
                     <div className="flex items-center gap-2">
-                       <div className="h-8 w-8 rounded-xl bg-white border border-neutral-200 flex flex-col justify-center items-center group-hover:scale-105 transition-transform">
-                          <FileText className="h-4 w-4 text-obsidian" />
+                       <div className="h-8 w-8 rounded-xl bg-k-bg-card border border-k-border flex flex-col justify-center items-center group-hover:scale-105 transition-transform">
+                          <FileText className="h-4 w-4 text-k-text-h" />
                        </div>
                        <div className="flex flex-col text-left">
                           <span className="text-[13px] font-bold text-neutral-700">
                             {expediente ? expediente.name : "Subir archivo"}
                           </span>
-                          <span className="text-[10px] items-center text-neutral-400 font-medium">
+                          <span className="text-[10px] items-center text-k-text-b font-medium">
                             {expediente ? `${(expediente.size / 1024 / 1024).toFixed(2)} MB` : "Click para seleccionar o arrastra"}
                           </span>
                        </div>
@@ -356,57 +356,57 @@ function UserModal({
 
             {/* Columna Derecha: Laboral & Nómina */}
             <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100">
-                <Briefcase className="h-5 w-5 text-neutral-400" />
-                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Datos Laborales</h3>
+              <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+                <Briefcase className="h-5 w-5 text-k-text-b" />
+                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Datos Laborales</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Nº Empleado</label>
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Nº Empleado</label>
                   <input
-                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-bold font-mono text-neutral-600 outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-bold font-mono text-neutral-600 outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                     placeholder="Ej. EMP-001"
                     value={employeeCode}
                     onChange={(e) => setEmployeeCode(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Puesto</label>
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Puesto</label>
                   <input
-                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                     placeholder="Ej. Cajero"
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Fecha de ingreso</label>
+                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Fecha de ingreso</label>
                   <input
                     type="date"
-                    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all text-neutral-600"
+                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all text-neutral-600"
                     value={hiredAt}
                     onChange={(e) => setHiredAt(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 pb-2 border-b border-neutral-100 pt-2">
-                <DollarSign className="h-5 w-5 text-neutral-400" />
-                <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Nómina</h3>
+              <div className="flex items-center gap-3 pb-2 border-b border-k-border pt-2">
+                <DollarSign className="h-5 w-5 text-k-text-b" />
+                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Nómina</h3>
               </div>
 
               <div className="space-y-4">
-                <div className="flex rounded-2xl bg-neutral-100/50 p-1 border border-neutral-100">
+                <div className="flex rounded-2xl bg-neutral-100/50 p-1 border border-k-border">
                   <button
                     onClick={() => setPaymentType("hourly")}
-                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "hourly" ? "bg-white text-obsidian shadow-sm" : "text-neutral-400 hover:text-neutral-600")}
+                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "hourly" ? "bg-k-bg-card text-k-text-h shadow-k-card" : "text-k-text-b hover:text-neutral-600")}
                   >
                     Por Hora
                   </button>
                   <button
                     onClick={() => setPaymentType("daily")}
-                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "daily" ? "bg-white text-obsidian shadow-sm" : "text-neutral-400 hover:text-neutral-600")}
+                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "daily" ? "bg-k-bg-card text-k-text-h shadow-k-card" : "text-k-text-b hover:text-neutral-600")}
                   >
                     Por Día
                   </button>
@@ -414,12 +414,12 @@ function UserModal({
 
                 {paymentType === "hourly" ? (
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Tarifa por hora</label>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Tarifa por hora</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-k-text-b font-bold">$</span>
                       <input
                         type="number" step="0.01" min="0"
-                        className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                        className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                         placeholder="0.00"
                         value={hourlyRate}
                         onChange={(e) => setHourlyRate(e.target.value)}
@@ -428,12 +428,12 @@ function UserModal({
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Tarifa por día</label>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Tarifa por día</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-k-text-b font-bold">$</span>
                       <input
                         type="number" step="0.01" min="0"
-                        className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-neutral-300"
+                        className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
                         placeholder="0.00"
                         value={dailyRate}
                         onChange={(e) => setDailyRate(e.target.value)}
@@ -449,7 +449,7 @@ function UserModal({
         {mode === "create" && (
           <div className="px-8 pb-4">
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 px-5 py-3 text-[11px] font-bold text-emerald-700 flex items-center gap-3">
-              <div className="h-6 w-6 rounded-lg bg-emerald-100 flex items-center justify-center text-xs shadow-sm shadow-emerald-200/50">
+              <div className="h-6 w-6 rounded-lg bg-emerald-100 flex items-center justify-center text-xs shadow-k-card shadow-emerald-200/50">
                 📧
               </div>
               <span>Se enviará automáticamente un correo de bienvenida con las credenciales y documentos configurados.</span>
@@ -458,18 +458,18 @@ function UserModal({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-neutral-100 bg-neutral-50/50">
+        <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-k-border bg-k-bg-card2/50">
           <button
             onClick={onClose}
             disabled={saving}
-            className="rounded-2xl border border-neutral-200 bg-white px-6 py-3 text-sm font-bold text-obsidian hover:bg-neutral-50 transition-colors disabled:opacity-50"
+            className="rounded-2xl border border-k-border bg-k-bg-card px-6 py-3 text-sm font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={!canSave || saving}
-            className="rounded-2xl bg-obsidian px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-neutral-800 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+            className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
           >
             {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             {mode === "create" ? "Crear Usuario" : "Guardar Cambios"}
@@ -499,13 +499,13 @@ function ConfirmToggleModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm rounded-3xl border bg-white shadow-2xl p-6 space-y-4">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border bg-k-bg-card shadow-2xl p-6 space-y-4">
         <div className="text-2xl text-center">{deactivating ? "⚠️" : "✅"}</div>
         <div className="text-center">
           <div className="font-semibold text-base">
             {deactivating ? "Desactivar usuario" : "Activar usuario"}
           </div>
-          <div className="text-sm text-neutral-500 mt-1">
+          <div className="text-sm text-k-text-b mt-1">
             {deactivating
               ? `${user.name} no podrá iniciar sesión hasta que lo reactives.`
               : `${user.name} podrá volver a iniciar sesión.`}
@@ -515,7 +515,7 @@ function ConfirmToggleModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 rounded-xl border border-neutral-200 py-2.5 text-sm font-medium hover:bg-neutral-50 transition"
+            className="flex-1 rounded-xl border border-k-border py-2.5 text-sm font-medium hover:bg-k-bg-card2 transition"
           >
             Cancelar
           </button>
@@ -523,7 +523,7 @@ function ConfirmToggleModal({
             onClick={onConfirm}
             disabled={loading}
             className={cx(
-              "flex-1 rounded-xl py-2.5 text-sm font-medium text-white transition disabled:opacity-50",
+              "flex-1 rounded-xl py-2.5 text-sm font-medium text-k-text-h transition disabled:opacity-50",
               deactivating ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
             )}
           >
@@ -553,11 +553,11 @@ function ConfirmDeleteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm rounded-3xl border bg-white shadow-2xl p-6 space-y-4">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border bg-k-bg-card shadow-2xl p-6 space-y-4">
         <div className="text-2xl text-center">🗑️</div>
         <div className="text-center">
           <div className="font-semibold text-base">Eliminar a {user.name}</div>
-          <div className="text-sm text-neutral-500 mt-1">
+          <div className="text-sm text-k-text-b mt-1">
             Esta acción es permanente. Se eliminarán todos sus registros de asistencia, tareas y evidencias.
           </div>
         </div>
@@ -568,14 +568,14 @@ function ConfirmDeleteModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 rounded-xl border border-neutral-200 py-2.5 text-sm font-medium hover:bg-neutral-50 transition"
+            className="flex-1 rounded-xl border border-k-border py-2.5 text-sm font-medium hover:bg-k-bg-card2 transition"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-700 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
+            className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-700 py-2.5 text-sm font-medium text-k-text-h transition disabled:opacity-50"
           >
             {loading ? "Eliminando..." : "Eliminar permanentemente"}
           </button>
@@ -704,26 +704,26 @@ export default function EmpleadosPage() {
     <>
       <div className="space-y-6">
         {/* ── Hero Header ─────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:px-6 sm:py-5 rounded-[32px] border border-neutral-100 shadow-sm flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-k-bg-card p-4 sm:px-6 sm:py-5 rounded-[32px] border border-k-border shadow-k-card flex-wrap">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-            <h1 className="text-xl font-black text-obsidian tracking-tight flex items-center gap-2">
-              <Users className="h-5 w-5 text-neutral-400" /> Equipo
+            <h1 className="text-xl font-black text-k-text-h tracking-tight flex items-center gap-2">
+              <Users className="h-5 w-5 text-k-text-b" /> Equipo
             </h1>
-            <div className="flex flex-wrap items-center gap-4 sm:border-l border-neutral-100 sm:pl-6">
+            <div className="flex flex-wrap items-center gap-4 sm:border-l border-k-border sm:pl-6">
               <div className="flex items-center gap-2 text-sm font-bold">
-                <span className="text-obsidian">{total}</span>
-                <span className="text-neutral-400 uppercase text-[10px] tracking-widest">Total</span>
+                <span className="text-k-text-h">{total}</span>
+                <span className="text-k-text-b uppercase text-[10px] tracking-widest">Total</span>
               </div>
               <div className="flex items-center gap-2 text-sm font-bold">
                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                 <span className="text-obsidian">{active}</span>
-                 <span className="text-neutral-400 uppercase text-[10px] tracking-widest">Activos</span>
+                 <span className="text-k-text-h">{active}</span>
+                 <span className="text-k-text-b uppercase text-[10px] tracking-widest">Activos</span>
               </div>
               {inactive > 0 && (
                 <div className="flex items-center gap-2 text-sm font-bold">
                    <div className="h-2 w-2 rounded-full bg-rose-500" />
-                   <span className="text-obsidian">{inactive}</span>
-                   <span className="text-neutral-400 uppercase text-[10px] tracking-widest">Inactivos</span>
+                   <span className="text-k-text-h">{inactive}</span>
+                   <span className="text-k-text-b uppercase text-[10px] tracking-widest">Inactivos</span>
                 </div>
               )}
             </div>
@@ -748,16 +748,16 @@ export default function EmpleadosPage() {
         {/* Filtros */}
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-k-text-b" />
             <input
-              className="w-full rounded-2xl border border-neutral-100 bg-white pl-11 pr-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 placeholder:text-neutral-300"
+              className="w-full rounded-2xl border border-k-border bg-k-bg-card pl-11 pr-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 placeholder:text-k-text-b"
               placeholder="Buscar por nombre, email o puesto..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <select
-            className="rounded-2xl border border-neutral-100 bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 text-neutral-600"
+            className="rounded-2xl border border-k-border bg-k-bg-card px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 text-neutral-600"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
           >
@@ -768,7 +768,7 @@ export default function EmpleadosPage() {
           </select>
           <button
             onClick={openCreate}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-obsidian px-5 py-3 text-sm font-bold text-white hover:bg-gold transition shadow-sm h-[46px]"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-k-accent-btn px-5 py-3 text-sm font-bold text-k-text-h hover:opacity-90 transition shadow-k-card h-[46px]"
           >
             <UserPlus className="h-4 w-4" />
             <span className="hidden md:inline">Nuevo Usuario</span>
@@ -784,26 +784,26 @@ export default function EmpleadosPage() {
         )}
 
         {/* Tabla */}
-        <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
           {loading ? (
-            <div className="p-16 flex flex-col items-center gap-3 text-neutral-400">
-              <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+            <div className="p-16 flex flex-col items-center gap-3 text-k-text-b">
+              <div className="h-10 w-10 border-4 border-k-border border-t-obsidian rounded-full animate-spin" />
               <span className="text-xs font-bold uppercase tracking-widest">Cargando equipo...</span>
             </div>
           ) : users.length === 0 ? (
             <div className="p-16 flex flex-col items-center gap-4 text-center">
               <Users className="h-12 w-12 text-neutral-100" />
-              <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">
+              <p className="text-sm font-bold text-k-text-b uppercase tracking-widest">
                 {search || roleFilter ? "Sin resultados para ese filtro" : "Sin usuarios. Crea el primero."}
               </p>
             </div>
           ) : (
             <div className="overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-neutral-50/80 border-b border-neutral-50">
+                <thead className="bg-k-bg-card2/80 border-b border-neutral-50">
                   <tr>
                     {["Usuario", "Rol", "Puesto", "No. Empleado", "Estado", "Acciones"].map((h) => (
-                      <th key={h} className={cx("text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]", h === "No. Empleado" ? "hidden md:table-cell" : "")}>{h}</th>
+                      <th key={h} className={cx("text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]", h === "No. Empleado" ? "hidden md:table-cell" : "")}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -814,25 +814,25 @@ export default function EmpleadosPage() {
                       onDoubleClick={() => openEdit(user)}
                       className={cx(
                         "border-t border-neutral-50 transition cursor-pointer group",
-                        !user.is_active ? "opacity-40" : "hover:bg-neutral-50/50"
+                        !user.is_active ? "opacity-40" : "hover:bg-k-bg-card2/50"
                       )}
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar name={user.name} />
                           <div>
-                            <div className="text-sm font-bold text-obsidian">{user.name} <span className="md:hidden text-[10px] text-neutral-400 font-mono ml-1">{user.employee_code}</span></div>
-                            <div className="text-[10px] text-neutral-400 mt-0.5">{user.email}</div>
+                            <div className="text-sm font-bold text-k-text-h">{user.name} <span className="md:hidden text-[10px] text-k-text-b font-mono ml-1">{user.employee_code}</span></div>
+                            <div className="text-[10px] text-k-text-b mt-0.5">{user.email}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <RoleBadge role={user.role} />
                       </td>
-                      <td className="px-5 py-4 text-sm font-medium text-neutral-500">
+                      <td className="px-5 py-4 text-sm font-medium text-k-text-b">
                         {user.position_title ?? <span className="text-neutral-200">—</span>}
                       </td>
-                      <td className="px-5 py-4 font-mono text-xs font-bold text-neutral-400 hidden md:table-cell">
+                      <td className="px-5 py-4 font-mono text-xs font-bold text-k-text-b hidden md:table-cell">
                         {user.employee_code ?? <span className="text-neutral-200">—</span>}
                       </td>
                       <td className="px-5 py-4">
@@ -840,7 +840,7 @@ export default function EmpleadosPage() {
                           "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
                           user.is_active
                             ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-neutral-50 text-neutral-400 border-neutral-100"
+                            : "bg-k-bg-card2 text-k-text-b border-k-border"
                         )}>
                           <span className={cx(
                             "h-1.5 w-1.5 rounded-full",
@@ -853,10 +853,10 @@ export default function EmpleadosPage() {
                         <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={(e) => { e.stopPropagation(); openEdit(user); }}
-                            className="h-10 w-10 md:h-8 md:w-8 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center hover:bg-white transition"
+                            className="h-10 w-10 md:h-8 md:w-8 rounded-xl bg-k-bg-card2 border border-k-border flex items-center justify-center hover:bg-k-bg-card transition"
                             title="Editar"
                           >
-                            <Pencil className="h-4 w-4 md:h-3.5 md:w-3.5 text-neutral-400" />
+                            <Pencil className="h-4 w-4 md:h-3.5 md:w-3.5 text-k-text-b" />
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setToggleTarget(user); }}
