@@ -475,7 +475,7 @@ export default function EmployeeTasksPage() {
               className={cx(
                 "flex whitespace-nowrap items-center gap-2 px-5 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300 shrink-0",
                 mainTab === t.key
-                  ? "bg-k-accent-btn text-k-accent-btn-text shadow-lg shadow-obsidian/20"
+                  ? "bg-k-bg-sidebar text-white shadow-lg shadow-obsidian/20"
                   : "text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2",
               )}
             >
@@ -507,7 +507,7 @@ export default function EmployeeTasksPage() {
               }
             />
           ) : (
-            <div className="relative rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-k-text-h shadow-lg">
+            <div className="relative rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
               <div className="pointer-events-none absolute inset-0">
                 <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-k-bg-card/[0.03]" />
                 <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-k-bg-card/[0.04]" />
@@ -515,20 +515,20 @@ export default function EmployeeTasksPage() {
               </div>
               <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-bold text-k-text-h/40 uppercase tracking-[0.2em] mb-1">
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
                     Operaciones
                   </p>
                   <h1 className="text-3xl font-black tracking-tight">
                     Mis tareas
                   </h1>
-                  <p className="text-k-text-h/50 text-sm font-medium mt-1">
+                  <p className="text-white/50 text-sm font-medium mt-1">
                     Gestiona tu día: checklist → evidencia → envío a revisión →
                     aprobación.
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-k-bg-card/5 px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-k-card backdrop-blur-md">
-                  <span className="text-k-text-h/50">Total Tareas:</span>
-                  <span className="text-k-text-h text-base">{data?.total ?? 0}</span>
+                  <span className="text-white/50">Total Tareas:</span>
+                  <span className="text-white text-base">{data?.total ?? 0}</span>
                 </div>
               </div>
             </div>
@@ -641,7 +641,7 @@ export default function EmployeeTasksPage() {
                 className={cx(
                   "rounded-xl border px-5 py-2 text-xs font-bold uppercase tracking-widest transition-colors shadow-k-card shrink-0 whitespace-nowrap",
                   !date
-                    ? "bg-k-accent-btn text-k-accent-btn-text border-obsidian"
+                    ? "bg-k-bg-sidebar text-white border-obsidian"
                     : "bg-k-bg-card text-k-text-b border-k-border hover:bg-k-bg-card2",
                 )}
               >

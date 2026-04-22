@@ -104,8 +104,8 @@ export default function EmployeeDashboard() {
   const attendanceNice =
     attendanceState === "checked_in" ? { label: "En turno", cls: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", icon: <CalendarCheck className="h-4 w-4" /> }
     : attendanceState === "on_break" ? { label: "En pausa", cls: "bg-amber-500/20 text-amber-300 border-amber-500/30", icon: <Flame className="h-4 w-4" /> }
-    : attendanceState === "checked_out" ? { label: "Salida registrada", cls: "bg-k-bg-card/10 text-k-text-h/80 border-white/20", icon: <CheckCircle2 className="h-4 w-4" /> }
-    : { label: dash?.attendance?.state ?? "-", cls: "bg-k-bg-card/5 text-k-text-h/50 border-white/10", icon: <AlertTriangle className="h-4 w-4" /> };
+    : attendanceState === "checked_out" ? { label: "Salida registrada", cls: "bg-k-bg-card/10 text-white/80 border-white/20", icon: <CheckCircle2 className="h-4 w-4" /> }
+    : { label: dash?.attendance?.state ?? "-", cls: "bg-k-bg-card/5 text-white/50 border-white/10", icon: <AlertTriangle className="h-4 w-4" /> };
 
   // 2.8 — Contextual status text
   const shiftText =
@@ -170,14 +170,14 @@ export default function EmployeeDashboard() {
           }
         />
       ) : (
-        <div className="relative rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-k-text-h shadow-lg">
+        <div className="relative rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar overflow-hidden px-6 py-8 sm:px-8 sm:py-10 text-white shadow-lg">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-k-bg-card/[0.03]" />
             <div className="absolute bottom-0 left-1/4 h-24 w-48 rounded-full bg-gold/10" />
           </div>
           <div className="relative flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-[10px] font-bold text-k-text-h/40 uppercase tracking-[0.2em] mb-1">Tu Agenda</p>
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Tu Agenda</p>
               <h1 className="text-3xl font-black tracking-tight">Mi día</h1>
             </div>
             <span className={cx("inline-flex items-center gap-2 rounded-2xl border px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-k-card backdrop-blur-md", attendanceNice.cls)}>
@@ -267,7 +267,7 @@ export default function EmployeeDashboard() {
               const canStart = a.status === "assigned";
               const canSubmit = a.status === "in_progress";
               return (
-                <div key={a.id} className={cx("p-5 sm:p-8 transition-colors", idx % 2 === 0 ? "bg-k-bg-card" : "bg-k-bg-card2/30 hover:bg-k-bg-card2")}>
+                <div key={a.id} className={cx("p-5 sm:p-8 transition-colors", idx % 2 === 0 ? "bg-k-bg-card" : "bg-k-bg-card2 hover:bg-k-bg-card2")}>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="min-w-0 flex-1">
                       <div className="text-lg font-black text-k-text-h tracking-tight truncate">{t.title}</div>

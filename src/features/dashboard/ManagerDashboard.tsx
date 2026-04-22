@@ -186,7 +186,7 @@ function AdminDashboard() {
               {/* 2.4 Acciones Rápidas */}
               <button
                 onClick={() => setShowNewTask(true)}
-                className="h-10 px-5 rounded-xl bg-k-accent-btn text-k-accent-btn-text text-sm font-bold
+                className="h-10 px-5 rounded-xl bg-k-bg-sidebar text-white text-sm font-bold
                            hover:opacity-90 transition-all shadow-k-card
                            flex items-center gap-2"
               >
@@ -216,13 +216,13 @@ function AdminDashboard() {
         />
       ) : (
         /* Legacy hero — kept behind feature flag */
-        <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-12 text-k-text-h shadow-2xl shadow-obsidian/20">
+        <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-12 text-white shadow-2xl shadow-obsidian/20">
           <div className="relative z-10 max-w-2xl">
             <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-3 leading-[1.1]">
               Hola, <span className="text-gold-light italic">{userName}</span>.
             </h1>
-            <p className="text-k-text-h/60 text-base font-medium leading-relaxed max-w-lg">
-              <span className="text-k-text-h font-bold">{pending} aprobaciones</span> pendientes
+            <p className="text-white/60 text-base font-medium leading-relaxed max-w-lg">
+              <span className="text-white font-bold">{pending} aprobaciones</span> pendientes
             </p>
           </div>
           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />

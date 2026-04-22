@@ -119,7 +119,7 @@ function ProductSelectionModal({
                 className={cx(
                   "w-full rounded-2xl border p-3 flex items-center gap-3 text-left transition-all active:scale-[0.98]",
                   isChecked
-                    ? "border-obsidian/30 bg-k-accent-btn/5"
+                    ? "border-obsidian/30 bg-k-bg-sidebar/5"
                     : "border-k-border bg-k-bg-card hover:bg-k-bg-card2",
                 )}
               >
@@ -132,7 +132,7 @@ function ProductSelectionModal({
                       : "border-neutral-300 bg-k-bg-card",
                   )}
                 >
-                  {isChecked && <Check className="h-3.5 w-3.5 text-k-text-h" />}
+                  {isChecked && <Check className="h-3.5 w-3.5 text-white" />}
                 </div>
 
                 {/* Foto */}
@@ -520,7 +520,7 @@ export default function GondolaRellenoPage() {
                     type="button"
                     onClick={() => adjustCant(item.id, 1)}
                     disabled={isReadonly}
-                    className="h-9 w-9 rounded-xl bg-k-accent-btn hover:opacity-90 active:scale-95 flex items-center justify-center text-xl font-black text-k-text-h transition-all disabled:opacity-30"
+                    className="h-9 w-9 rounded-xl bg-k-bg-sidebar hover:opacity-90 active:scale-95 flex items-center justify-center text-xl font-black text-white transition-all disabled:opacity-30"
                   >
                     +
                   </button>
@@ -585,7 +585,7 @@ export default function GondolaRellenoPage() {
 
       {/* Readonly banner */}
       {isReadonly && (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-emerald-600 px-6 py-4 text-center text-sm font-bold text-k-text-h z-10">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-emerald-600 px-6 py-4 text-center text-sm font-bold text-white z-10">
           {orden.status === "aprobado"
             ? "✓ Orden Aprobada"
             : "⏳ Orden en revisión"}

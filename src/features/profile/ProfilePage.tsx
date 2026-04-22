@@ -439,7 +439,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Preferencias (NUEVO) */}
-          <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+          <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card">
             <div className="px-6 py-5 border-b border-k-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MonitorSmartphone className="h-4 w-4 text-k-text-b" />

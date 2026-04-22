@@ -296,11 +296,11 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
               ].map((kpi) => (
                 <div key={kpi.label} className={cx(
                   "rounded-[28px] border p-5 text-center",
-                  kpi.highlight ? "bg-k-accent-btn text-k-accent-btn-text border-obsidian" : "bg-k-bg-card2/50 border-k-border"
+                  kpi.highlight ? "bg-k-bg-sidebar text-white border-obsidian" : "bg-k-bg-card2/50 border-k-border"
                 )}>
-                  <kpi.icon className={cx("h-5 w-5 mx-auto mb-2", kpi.highlight ? "text-k-text-h/40" : "text-neutral-200")} />
+                  <kpi.icon className={cx("h-5 w-5 mx-auto mb-2", kpi.highlight ? "text-white/40" : "text-neutral-200")} />
                   <div className={cx("text-2xl font-black", kpi.highlight ? "" : "text-k-text-h")}>{kpi.val}</div>
-                  <div className={cx("text-[10px] font-bold uppercase tracking-widest mt-1", kpi.highlight ? "text-k-text-h/40" : "text-k-text-b")}>{kpi.label}</div>
+                  <div className={cx("text-[10px] font-bold uppercase tracking-widest mt-1", kpi.highlight ? "text-white/40" : "text-k-text-b")}>{kpi.label}</div>
                 </div>
               ))}
             </div>

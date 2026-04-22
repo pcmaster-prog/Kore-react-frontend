@@ -97,7 +97,7 @@ export default function TareasManagerPage() {
                 className={cx(
                   "flex whitespace-nowrap items-center gap-2 px-6 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300 shrink-0",
                   tab === t.key
-                    ? "bg-k-accent-btn text-k-accent-btn-text shadow-lg shadow-obsidian/20"
+                    ? "bg-k-bg-sidebar text-white shadow-lg shadow-obsidian/20"
                     : "text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2",
                 )}
               >

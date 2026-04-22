@@ -469,7 +469,7 @@ function UserModal({
           <button
             onClick={handleSave}
             disabled={!canSave || saving}
-            className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+            className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
           >
             {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             {mode === "create" ? "Crear Usuario" : "Guardar Cambios"}
@@ -523,7 +523,7 @@ function ConfirmToggleModal({
             onClick={onConfirm}
             disabled={loading}
             className={cx(
-              "flex-1 rounded-xl py-2.5 text-sm font-medium text-k-text-h transition disabled:opacity-50",
+              "flex-1 rounded-xl py-2.5 text-sm font-medium text-white transition disabled:opacity-50",
               deactivating ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
             )}
           >
@@ -575,7 +575,7 @@ function ConfirmDeleteModal({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-700 py-2.5 text-sm font-medium text-k-text-h transition disabled:opacity-50"
+            className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-700 py-2.5 text-sm font-medium text-white transition disabled:opacity-50"
           >
             {loading ? "Eliminando..." : "Eliminar permanentemente"}
           </button>
@@ -768,7 +768,7 @@ export default function EmpleadosPage() {
           </select>
           <button
             onClick={openCreate}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-k-accent-btn px-5 py-3 text-sm font-bold text-k-text-h hover:opacity-90 transition shadow-k-card h-[46px]"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-k-accent-btn px-5 py-3 text-sm font-bold text-k-accent-btn-text hover:opacity-90 transition shadow-k-card h-[46px]"
           >
             <UserPlus className="h-4 w-4" />
             <span className="hidden md:inline">Nuevo Usuario</span>

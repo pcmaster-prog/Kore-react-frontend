@@ -70,7 +70,7 @@ function ErrorCard({ message }: { message: string }) {
       <p className="text-sm text-k-text-b mb-6">{message}</p>
       <button
         onClick={() => window.location.reload()}
-        className="h-11 px-6 bg-k-accent-btn text-k-accent-btn-text rounded-xl font-bold text-sm"
+        className="h-11 px-6 bg-k-bg-sidebar text-white rounded-xl font-bold text-sm"
       >
         Reintentar
       </button>
@@ -92,7 +92,7 @@ function KpiCard({ label, value, color, icon, compact = false }: {
 
   if (compact) {
     return (
-      <div className="bg-k-bg-card rounded-[24px] p-4 shadow-sm border border-k-border flex flex-col justify-center">
+      <div className="bg-k-bg-card rounded-[24px] p-4 shadow-k-card border border-k-border flex flex-col justify-center">
         <div className="flex items-center gap-3">
           <div className={cx("h-10 w-10 rounded-[14px] flex items-center justify-center shrink-0", colors[color])}>
             {icon}
@@ -107,7 +107,7 @@ function KpiCard({ label, value, color, icon, compact = false }: {
   }
 
   return (
-    <div className="bg-k-bg-card rounded-[28px] p-6 shadow-sm border border-k-border">
+    <div className="bg-k-bg-card rounded-[28px] p-6 shadow-k-card border border-k-border">
       <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center mb-4", colors[color])}>
         {icon}
       </div>
@@ -197,13 +197,13 @@ export function AssignTaskModal({
         {/* Search */}
         <div className="px-7 pt-5 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-k-text-b" />
             <input
               type="text"
               placeholder="Buscar empleado..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-10 pl-9 pr-3 rounded-xl border border-neutral-200 text-sm outline-none focus:ring-2 focus:ring-obsidian/10 bg-neutral-50/50"
+              className="w-full h-10 pl-9 pr-3 rounded-xl border border-k-border text-sm outline-none focus:ring-2 focus:ring-obsidian/10 bg-k-bg-card2/50"
             />
           </div>
         </div>
@@ -211,7 +211,7 @@ export function AssignTaskModal({
         {/* Employee list */}
         <div className="flex-1 overflow-y-auto px-7 pb-4 space-y-2">
           {filteredWorkload.length === 0 ? (
-            <div className="py-8 text-center text-sm text-neutral-300 font-bold">
+            <div className="py-8 text-center text-sm text-k-text-b font-bold">
               Sin empleados disponibles
             </div>
           ) : (
@@ -222,8 +222,8 @@ export function AssignTaskModal({
                 className={cx(
                   "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                   selectedEmployees.includes(emp.empleado_id)
-                    ? "border-obsidian bg-k-accent-btn/5"
-                    : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
+                    ? "border-obsidian bg-k-bg-sidebar/5"
+                    : "border-k-border hover:border-k-border hover:bg-k-bg-card2"
                 )}
               >
                 {/* Checkbox */}
@@ -234,11 +234,11 @@ export function AssignTaskModal({
                     : "border-neutral-300"
                 )}>
                   {selectedEmployees.includes(emp.empleado_id) && (
-                    <CheckCircle2 className="h-3 w-3 text-k-text-h" />
+                    <CheckCircle2 className="h-3 w-3 text-white" />
                   )}
                 </div>
                 {/* Avatar */}
-                <div className="h-9 w-9 rounded-xl bg-k-accent-btn text-k-accent-btn-text flex items-center justify-center text-xs font-black shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-black shrink-0">
                   {emp.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}
                 </div>
                 {/* Info */}
@@ -264,7 +264,7 @@ export function AssignTaskModal({
         <div className="px-7 pb-7 pt-4 border-t border-k-border flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 h-12 rounded-2xl border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition"
+            className="flex-1 h-12 rounded-2xl border border-k-border text-sm font-bold text-neutral-600 hover:bg-k-bg-card2 transition"
           >
             Cancelar
           </button>
@@ -374,13 +374,13 @@ export function AssignTemplateModal({
         {/* Search */}
         <div className="px-7 pt-5 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-k-text-b" />
             <input
               type="text"
               placeholder="Buscar empleado..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-10 pl-9 pr-3 rounded-xl border border-neutral-200 text-sm outline-none focus:ring-2 focus:ring-obsidian/10 bg-neutral-50/50"
+              className="w-full h-10 pl-9 pr-3 rounded-xl border border-k-border text-sm outline-none focus:ring-2 focus:ring-obsidian/10 bg-k-bg-card2/50"
             />
           </div>
         </div>
@@ -388,7 +388,7 @@ export function AssignTemplateModal({
         {/* Employee list */}
         <div className="flex-1 overflow-y-auto px-7 pb-4 space-y-2">
           {filteredWorkload.length === 0 ? (
-            <div className="py-8 text-center text-sm text-neutral-300 font-bold">Sin empleados disponibles</div>
+            <div className="py-8 text-center text-sm text-k-text-b font-bold">Sin empleados disponibles</div>
           ) : (
             filteredWorkload.map(emp => (
               <div
@@ -397,17 +397,17 @@ export function AssignTemplateModal({
                 className={cx(
                   "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                   selectedEmployees.includes(emp.empleado_id)
-                    ? "border-obsidian bg-k-accent-btn/5"
-                    : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
+                    ? "border-obsidian bg-k-bg-sidebar/5"
+                    : "border-k-border hover:border-k-border hover:bg-k-bg-card2"
                 )}
               >
                 <div className={cx(
                   "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
                   selectedEmployees.includes(emp.empleado_id) ? "bg-k-bg-sidebar border-obsidian" : "border-neutral-300"
                 )}>
-                  {selectedEmployees.includes(emp.empleado_id) && <CheckCircle2 className="h-3 w-3 text-k-text-h" />}
+                  {selectedEmployees.includes(emp.empleado_id) && <CheckCircle2 className="h-3 w-3 text-white" />}
                 </div>
-                <div className="h-9 w-9 rounded-xl bg-k-accent-btn text-k-accent-btn-text flex items-center justify-center text-xs font-black shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-black shrink-0">
                   {emp.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -433,7 +433,7 @@ export function AssignTemplateModal({
 
         {/* Footer */}
         <div className="px-7 pb-7 pt-4 border-t border-k-border flex gap-3">
-          <button onClick={onClose} className="flex-1 h-12 rounded-2xl border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition">
+          <button onClick={onClose} className="flex-1 h-12 rounded-2xl border border-k-border text-sm font-bold text-neutral-600 hover:bg-k-bg-card2 transition">
             Cancelar
           </button>
           <button
@@ -477,7 +477,7 @@ export function TaskDetailModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in-fade">
       <div className="bg-k-bg-card rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in-up">
-        <div className="p-6 border-b border-k-border flex items-start justify-between bg-neutral-50/50">
+        <div className="p-6 border-b border-k-border flex items-start justify-between bg-k-bg-card2/50">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase">
@@ -596,7 +596,7 @@ export function OpenTasksPanel({
 
   return (
     <div className={cx(
-      "bg-k-bg-card shadow-sm border border-k-border flex flex-col transition-all overflow-hidden",
+      "bg-k-bg-card shadow-k-card border border-k-border flex flex-col transition-all overflow-hidden",
       panelOpen ? "rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 min-h-[500px] lg:min-h-[600px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6"
     )}>
       <div className={cx("flex items-center justify-between", panelOpen ? "mb-4" : "")}>
@@ -608,7 +608,7 @@ export function OpenTasksPanel({
             <h2 className="text-lg lg:text-xl font-black text-k-text-h tracking-tight">Monitoreo de Tareas</h2>
             {panelOpen && <p className="text-xs text-k-text-b mt-0.5">Seguimiento de tareas activas</p>}
           </div>
-          {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
+          {panelOpen ? <ChevronUp className="h-5 w-5 text-k-text-b" /> : <ChevronDown className="h-5 w-5 text-k-text-b" />}
         </div>
         <div className="flex items-center gap-2">
           {!loading && tasks.length > 0 && (
@@ -635,8 +635,8 @@ export function OpenTasksPanel({
       {panelOpen && (
         <>
           <div className="flex items-center gap-2 mb-4 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-k-border shrink-0 self-start">
-            <button onClick={() => setTab("in_progress")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "in_progress" ? "bg-k-bg-card shadow-sm text-amber-600" : "text-k-text-b hover:text-amber-500")}>En Proceso</button>
-        <button onClick={() => setTab("overdue")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "overdue" ? "bg-k-bg-card shadow-sm text-rose-600" : "text-k-text-b hover:text-rose-500")}>Vencidas</button>
+            <button onClick={() => setTab("in_progress")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "in_progress" ? "bg-k-bg-card shadow-k-card text-amber-600" : "text-k-text-b hover:text-amber-500")}>En Proceso</button>
+        <button onClick={() => setTab("overdue")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "overdue" ? "bg-k-bg-card shadow-k-card text-rose-600" : "text-k-text-b hover:text-rose-500")}>Vencidas</button>
       </div>
 
       {loading ? (
@@ -646,10 +646,10 @@ export function OpenTasksPanel({
       ) : tasks.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center">
           <ClipboardList className="h-8 w-8 text-neutral-200 mx-auto mb-3" />
-          <p className="text-sm font-bold text-neutral-300">
+          <p className="text-sm font-bold text-k-text-b">
              {tab === "in_progress" ? "No hay tareas en proceso" : "No hay tareas vencidas"}
           </p>
-          <p className="text-xs text-neutral-300 mb-4">Todo está bajo control</p>
+          <p className="text-xs text-k-text-b mb-4">Todo está bajo control</p>
         </div>
       ) : (
         <div className="space-y-2 flex-1 overflow-y-auto pr-1 pb-4">
@@ -657,7 +657,7 @@ export function OpenTasksPanel({
             <div
               key={t.id}
               onClick={() => onTaskClick(t)}
-              className="flex items-center gap-3 p-4 rounded-2xl border border-k-border cursor-pointer hover:border-obsidian/20 hover:bg-neutral-50 transition group shrink-0"
+              className="flex items-center gap-3 p-4 rounded-2xl border border-k-border cursor-pointer hover:border-obsidian/20 hover:bg-k-bg-card2 transition group shrink-0"
             >
               <div className={cx(
                 "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
@@ -683,7 +683,7 @@ export function OpenTasksPanel({
                   {PRIORITY_LABELS[t.priority] || t.priority}
                 </span>
               )}
-              <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-k-text-b transition shrink-0" />
+              <ChevronRight className="h-4 w-4 text-k-text-b group-hover:text-k-text-b transition shrink-0" />
             </div>
           ))}
         </div>
@@ -775,7 +775,7 @@ export function AvailableTasksPanel({
 
   return (
     <div className={cx(
-      "bg-k-bg-card shadow-sm border border-k-border flex flex-col transition-all overflow-hidden h-full",
+      "bg-k-bg-card shadow-k-card border border-k-border flex flex-col transition-all overflow-hidden h-full",
       panelOpen ? "rounded-[40px] p-8 min-h-[400px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6 min-h-0"
     )}>
       {/* Header */}
@@ -790,20 +790,20 @@ export function AvailableTasksPanel({
               <div className="flex items-center gap-2 mt-2 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-k-border">
                 <button 
                   onClick={(e) => { e.stopPropagation(); setTab("templates"); setSelected(new Set()); }}
-                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "templates" ? "bg-k-bg-card shadow-sm text-k-text-h" : "text-k-text-b hover:text-k-text-h")}
+                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "templates" ? "bg-k-bg-card shadow-k-card text-k-text-h" : "text-k-text-b hover:text-k-text-h")}
                 >
                   Plantillas
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); setTab("routines"); setSelected(new Set()); }}
-                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "routines" ? "bg-k-bg-card shadow-sm text-k-text-h" : "text-k-text-b hover:text-k-text-h")}
+                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "routines" ? "bg-k-bg-card shadow-k-card text-k-text-h" : "text-k-text-b hover:text-k-text-h")}
                 >
                   Rutinas
                 </button>
               </div>
             )}
           </div>
-          {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
+          {panelOpen ? <ChevronUp className="h-5 w-5 text-k-text-b" /> : <ChevronDown className="h-5 w-5 text-k-text-b" />}
         </div>
         <div className="flex items-center gap-2">
           {selected.size > 0 && (
@@ -818,7 +818,7 @@ export function AvailableTasksPanel({
           {onNewTask && (
             <button
               onClick={onNewTask}
-              className="h-8 px-3 rounded-xl border border-neutral-200 text-k-text-h text-xs font-bold hover:bg-neutral-50 transition flex items-center gap-1.5"
+              className="h-8 px-3 rounded-xl border border-k-border text-k-text-h text-xs font-bold hover:bg-k-bg-card2 transition flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               Nueva
@@ -832,13 +832,13 @@ export function AvailableTasksPanel({
       {/* Search */}
       {!loading && items.length > 3 && (
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-300" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-k-text-b" />
           <input
             type="text"
             placeholder={`Buscar ${tab === "templates" ? "plantilla" : "rutina"}...`}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 pl-8 pr-3 rounded-xl border border-neutral-200 text-xs outline-none focus:ring-2 focus:ring-obsidian/10 bg-neutral-50/50"
+            className="w-full h-9 pl-8 pr-3 rounded-xl border border-k-border text-xs outline-none focus:ring-2 focus:ring-obsidian/10 bg-k-bg-card2/50"
           />
         </div>
       )}
@@ -850,12 +850,12 @@ export function AvailableTasksPanel({
       ) : items.length === 0 ? (
         <div className="py-8 text-center">
           <ClipboardList className="h-10 w-10 text-neutral-200 mx-auto mb-3" />
-          <p className="text-sm font-bold text-neutral-300 mb-1">Sin {tab === "templates" ? "plantillas" : "rutinas"} configuradas</p>
-          <p className="text-xs text-neutral-300 mb-4">Ve a Catálogo para crear plantillas de tareas</p>
+          <p className="text-sm font-bold text-k-text-b mb-1">Sin {tab === "templates" ? "plantillas" : "rutinas"} configuradas</p>
+          <p className="text-xs text-k-text-b mb-4">Ve a Catálogo para crear plantillas de tareas</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-6 text-center">
-          <p className="text-sm font-bold text-neutral-300">¡Al día!</p>
+          <p className="text-sm font-bold text-k-text-b">¡Al día!</p>
           <p className="text-xs text-k-text-b mt-1">Ya se asignaron todas las tareas de este tipo o no hay resultados.</p>
         </div>
       ) : (
@@ -870,8 +870,8 @@ export function AvailableTasksPanel({
               className={cx(
                 "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                 selected.has(id)
-                  ? "border-obsidian bg-k-accent-btn/5"
-                  : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
+                  ? "border-obsidian bg-k-bg-sidebar/5"
+                  : "border-k-border hover:border-k-border hover:bg-k-bg-card2"
               )}
             >
               {/* Checkbox */}
@@ -879,7 +879,7 @@ export function AvailableTasksPanel({
                 "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
                 selected.has(id) ? "bg-k-bg-sidebar border-obsidian" : "border-neutral-300"
               )}>
-                {selected.has(id) && <CheckCircle2 className="h-3 w-3 text-k-text-h" />}
+                {selected.has(id) && <CheckCircle2 className="h-3 w-3 text-white" />}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-k-text-h truncate">{title}</div>
@@ -940,7 +940,7 @@ function PendingReviewCard({
   }
 
   return (
-    <div className="bg-k-bg-card rounded-[40px] p-8 shadow-sm border border-k-border">
+    <div className="bg-k-bg-card rounded-[40px] p-8 shadow-k-card border border-k-border">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-black text-k-text-h tracking-tight">Pendientes de Revisión</h2>
@@ -979,7 +979,7 @@ function PendingReviewCard({
             {rejectingId === item.assignment_id ? (
               <div className="space-y-2">
                 <textarea
-                  className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs resize-none outline-none focus:ring-2 focus:ring-black/10"
+                  className="w-full rounded-xl border border-k-border px-3 py-2 text-xs resize-none outline-none focus:ring-2 focus:ring-black/10"
                   rows={2}
                   placeholder="Motivo del rechazo..."
                   value={rejectNote}
@@ -988,14 +988,14 @@ function PendingReviewCard({
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setRejectingId(null); setRejectNote(""); }}
-                    className="flex-1 h-8 rounded-xl border border-neutral-200 text-xs font-bold text-k-text-b hover:bg-neutral-50 transition"
+                    className="flex-1 h-8 rounded-xl border border-k-border text-xs font-bold text-k-text-b hover:bg-k-bg-card2 transition"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={() => handleReject(item.assignment_id)}
                     disabled={!rejectNote.trim() || reviewingId === item.assignment_id}
-                    className="flex-1 h-8 rounded-xl bg-rose-500 text-k-text-h text-xs font-bold hover:bg-rose-600 transition disabled:opacity-50"
+                    className="flex-1 h-8 rounded-xl bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition disabled:opacity-50"
                   >
                     Confirmar rechazo
                   </button>
@@ -1006,7 +1006,7 @@ function PendingReviewCard({
                 <button
                   onClick={() => handleApprove(item.assignment_id)}
                   disabled={reviewingId === item.assignment_id}
-                  className="flex-1 h-9 rounded-xl bg-emerald-500 text-k-text-h text-xs font-bold hover:bg-emerald-600 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="flex-1 h-9 rounded-xl bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" /> Aprobar
                 </button>
@@ -1018,7 +1018,7 @@ function PendingReviewCard({
                 </button>
                 <a
                   href="/app/manager/tareas"
-                  className="h-9 w-9 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
+                  className="h-9 w-9 rounded-xl border border-k-border flex items-center justify-center hover:bg-k-bg-card2 transition"
                   title="Ver detalle"
                 >
                   <Eye className="h-3.5 w-3.5 text-k-text-b" />
@@ -1056,7 +1056,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
 
   return (
     <div className={cx(
-      "bg-k-bg-card shadow-sm border border-k-border flex flex-col transition-all overflow-hidden h-full",
+      "bg-k-bg-card shadow-k-card border border-k-border flex flex-col transition-all overflow-hidden h-full",
       panelOpen ? "rounded-[40px] p-8 min-h-[400px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6 min-h-0"
     )}>
       <div className={cx("flex items-center justify-between", panelOpen ? "mb-6" : "")}>
@@ -1068,9 +1068,9 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
             <h2 className="text-xl font-black text-k-text-h tracking-tight">Carga del Equipo</h2>
             {panelOpen && <p className="text-xs text-k-text-b mt-0.5">Minutos asignados en tareas activas</p>}
           </div>
-          {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
+          {panelOpen ? <ChevronUp className="h-5 w-5 text-k-text-b" /> : <ChevronDown className="h-5 w-5 text-k-text-b" />}
         </div>
-        <Users className="h-5 w-5 text-neutral-300 hidden md:block" />
+        <Users className="h-5 w-5 text-k-text-b hidden md:block" />
       </div>
 
       {panelOpen && (
@@ -1083,10 +1083,10 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
             .map(emp => (
               <div key={emp.empleado_id} className="rounded-2xl border border-k-border overflow-hidden">
                 <div
-                  className="flex items-center gap-3 p-3 cursor-pointer hover:bg-neutral-50 transition"
+                  className="flex items-center gap-3 p-3 cursor-pointer hover:bg-k-bg-card2 transition"
                   onClick={() => setExpanded(expanded === emp.empleado_id ? null : emp.empleado_id)}
                 >
-                  <div className="h-9 w-9 rounded-xl bg-k-accent-btn text-k-accent-btn-text flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-bold shrink-0">
                     {emp.full_name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1113,8 +1113,8 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
                   </div>
                   {emp.assignments.length > 0 && (
                     expanded === emp.empleado_id
-                      ? <ChevronUp className="h-4 w-4 text-neutral-300 shrink-0" />
-                      : <ChevronDown className="h-4 w-4 text-neutral-300 shrink-0" />
+                      ? <ChevronUp className="h-4 w-4 text-k-text-b shrink-0" />
+                      : <ChevronDown className="h-4 w-4 text-k-text-b shrink-0" />
                   )}
                 </div>
 
@@ -1147,7 +1147,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
                           "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
                           a.status === "in_progress"
                             ? "bg-blue-50 text-blue-600 border-blue-100"
-                            : "bg-neutral-50 text-k-text-b border-k-border"
+                            : "bg-k-bg-card2 text-k-text-b border-k-border"
                         )}>
                           {a.status === "in_progress" ? "En proceso" : "Asignada"}
                         </span>
@@ -1226,7 +1226,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
     <div className="space-y-6 animate-in-up">
 
       {/* 1 · Hero */}
-      <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-10 text-k-text-h shadow-2xl shadow-obsidian/20">
+      <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-10 text-white shadow-2xl shadow-obsidian/20">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-k-bg-card/10 text-[10px] font-bold tracking-[0.2em] uppercase mb-4">
             <Zap className="h-3 w-3" />
@@ -1235,9 +1235,9 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
           <h1 className="text-3xl lg:text-4xl font-black tracking-tight mb-2">
             Hola, <span className="italic">{userName}</span>.
           </h1>
-          <p className="text-k-text-h/60 text-base">
-            <span className="text-k-text-h font-bold">{data.kpi.pending_review}</span> en revisión ·{" "}
-            <span className="text-k-text-h font-bold">{data.kpi.active_tasks}</span> activas ahora
+          <p className="text-white/60 text-base">
+            <span className="text-white font-bold">{data.kpi.pending_review}</span> en revisión ·{" "}
+            <span className="text-white font-bold">{data.kpi.active_tasks}</span> activas ahora
           </p>
         </div>
         <div className="absolute -top-16 -right-16 w-72 h-72 bg-k-bg-card/5 rounded-full blur-[80px]" />
@@ -1281,8 +1281,8 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
 
       {/* 6 · Mis Góndolas (si el supervisor tiene órdenes asignadas) */}
       {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length > 0 && (
-        <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-sm overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between gap-4">
+        <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-5 w-5 text-amber-500" />
@@ -1304,7 +1304,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
                       "inline-flex items-center rounded-full border px-2 py-0.5 text-xs",
                       o.status === 'rechazado' ? "bg-rose-50 text-rose-800 border-rose-200" :
                       o.status === 'en_proceso' ? "bg-amber-50 text-amber-800 border-amber-200" :
-                      "bg-neutral-50 text-neutral-700 border-neutral-200"
+                      "bg-k-bg-card2 text-neutral-700 border-k-border"
                     )}>
                       {o.status === 'rechazado' ? 'Rechazado' : o.status === 'en_proceso' ? 'En proceso' : 'Pendiente'}
                     </span>

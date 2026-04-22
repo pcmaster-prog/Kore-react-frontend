@@ -203,7 +203,7 @@ function AbsencePanel() {
             <button
               type="submit"
               disabled={sending || !date || motivo.trim().length < 10}
-              className="inline-flex items-center gap-2 rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h hover:opacity-90 transition disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text hover:opacity-90 transition disabled:opacity-40"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {sending ? "Enviando..." : "Enviar Solicitud"}
@@ -489,7 +489,7 @@ export default function EmployeeAttendancePage() {
       ) : (
         <>
           {/* Hero state card */}
-          <div className="rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar p-6 sm:p-8 text-k-text-h relative overflow-hidden">
+          <div className="rounded-[32px] sm:rounded-[40px] bg-k-bg-sidebar p-6 sm:p-8 text-white relative overflow-hidden">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-k-bg-card/[0.03]" />
               <div className="absolute bottom-0 left-1/3 h-16 w-32 rounded-full bg-gold/10" />
@@ -501,15 +501,15 @@ export default function EmployeeAttendancePage() {
                   {stateConf.label}
                 </div>
                 <div className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums">{isEnabled("newManagementEmployee") ? minutesToHHMM(liveMinutes) : minutesToHHMM(todayMinutes)}</div>
-                <div className="text-k-text-h/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
+                <div className="text-white/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
               </div>
               <div className="flex gap-8 sm:gap-0 sm:flex-col text-left sm:text-right sm:space-y-3 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
                 <div>
-                  <div className="text-[10px] font-bold text-k-text-h/30 uppercase tracking-widest">Entrada</div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Entrada</div>
                   <div className="text-lg font-black">{formatTime(dayInfo?.first_check_in_at)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-k-text-h/30 uppercase tracking-widest">Salida</div>
+                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Salida</div>
                   <div className="text-lg font-black">{formatTime(dayInfo?.last_check_out_at)}</div>
                 </div>
                 {/* Retardo de hoy */}

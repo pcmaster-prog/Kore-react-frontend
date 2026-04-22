@@ -172,7 +172,7 @@ function HorariosTab() {
           <h2 className="text-xl font-black text-k-text-h tracking-tight">Esquema Operativo</h2>
           <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Horarios laborables y tolerancias</p>
         </div>
-        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
+        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
           {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Clock className="h-4 w-4" />}
           Guardar Cambios
         </button>
@@ -220,7 +220,7 @@ function HorariosTab() {
                 <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">Cierre Automático</span>
                 <div className="group relative">
                   <HelpCircle className="h-4 w-4 text-k-text-b hover:text-k-text-h transition-colors cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-k-accent-btn text-k-accent-btn-text text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-k-bg-sidebar text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
                     Cierra automáticamente los días abiertos de los empleados.
                   </div>
                 </div>
@@ -417,7 +417,7 @@ function ModulosTab() {
                           </div>
                         </button>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-xl border border-obsidian bg-k-accent-btn text-k-accent-btn-text px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1.5 rounded-xl border border-obsidian bg-k-bg-sidebar text-white px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider">
                           🛡️ Core Activo
                         </span>
                       )}
@@ -472,7 +472,7 @@ function RedTab() {
           <h2 className="text-xl font-black text-k-text-h tracking-tight">Geocerca Virtual & Redes</h2>
           <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Seguridad de accesos e IPs</p>
         </div>
-        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-text-h shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
+        <button onClick={handleSave} disabled={saving} className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2">
           {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Shield className="h-4 w-4" />}
           Blindar Red
         </button>
@@ -617,7 +617,7 @@ function DocumentosTab() {
 
         <div className="p-6 md:p-10 space-y-8">
           {/* Zona de upload */}
-          <div className="rounded-[32px] border-2 border-dashed border-k-border bg-k-bg-card2/30 p-10 text-center group hover:border-obsidian/20 transition-all">
+          <div className="rounded-[32px] border-2 border-dashed border-k-border bg-k-bg-card2 p-10 text-center group hover:border-obsidian/20 transition-all">
             <div className="h-20 w-20 rounded-[28px] bg-k-bg-card border border-k-border flex items-center justify-center shadow-k-card mx-auto mb-6 group-hover:scale-110 transition-transform">
               <FileText className="h-10 w-10 text-k-text-b" />
             </div>
@@ -770,7 +770,7 @@ function NotificacionesTab() {
             <button
               onClick={handleTest}
               disabled={sending}
-              className="w-full rounded-2xl bg-k-accent-btn px-8 py-4 text-sm font-bold text-k-text-h shadow-xl hover:opacity-90 hover:shadow-obsidian/20 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+              className="w-full rounded-2xl bg-k-accent-btn px-8 py-4 text-sm font-bold text-k-accent-btn-text shadow-xl hover:opacity-90 hover:shadow-obsidian/20 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
             >
               {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               {sending ? "Enviando..." : "Realizar Prueba"}
@@ -873,7 +873,7 @@ export default function ConfiguracionPage() {
               >
                 <div className="flex items-center gap-3">
                   <div className={cx(
-                    "h-8 w-8 rounded-xl flex items-center justify-center text-k-text-h shadow-inner",
+                    "h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-inner",
                     activeGroup === group.key ? "bg-k-bg-sidebar" : "bg-neutral-300"
                   )}>
                     {group.icon}
@@ -893,11 +893,11 @@ export default function ConfiguracionPage() {
                         onClick={() => handleTabClick(item)}
                         className={cx(
                           "w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs font-bold transition-all",
-                          isActive ? "bg-k-accent-btn text-k-accent-btn-text" : "text-k-text-b hover:bg-neutral-100 hover:text-k-text-h"
+                          isActive ? "bg-k-bg-sidebar text-white" : "text-k-text-b hover:bg-neutral-100 hover:text-k-text-h"
                         )}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className={isActive ? "text-k-text-h/70" : "text-k-text-b"}>{item.icon}</span>
+                          <span className={isActive ? "text-white/70" : "text-k-text-b"}>{item.icon}</span>
                           {item.label}
                         </div>
                         {isActive && <ChevronRight className="h-3.5 w-3.5" />}
