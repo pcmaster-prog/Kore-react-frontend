@@ -63,6 +63,7 @@ export default function KpiCard({
   forceShow = false,
   trend,
   sub,
+  compact = false,
 }: KpiCardProps) {
   // Hide when value is 0 and not forced to show
   if (hideIfZero && value === 0 && !forceShow) {
@@ -70,6 +71,24 @@ export default function KpiCard({
   }
 
   const tokens = colorTokens[color];
+
+  if (compact) {
+    return (
+      <div className={`rounded-[24px] border p-4 shadow-sm transition-all duration-300 hover:shadow-md group flex flex-col justify-center ${tokens.bg} ${tokens.border}`}>
+        <div className="flex items-center gap-3">
+          {Icon && (
+            <div className={`h-10 w-10 shrink-0 rounded-[14px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${tokens.iconBg}`}>
+              <Icon className="h-5 w-5" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className={`text-2xl font-black tracking-tighter leading-none ${tokens.text}`}>{value}</div>
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em] truncate mt-1">{label}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

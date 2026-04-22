@@ -12,7 +12,7 @@ import {
 } from "./api";
 import {
   Users, UserPlus, CheckCircle2, AlertTriangle,
-  Search, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign, FileText
+  Search, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign, FileText, Pencil
 } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -704,25 +704,11 @@ export default function EmpleadosPage() {
     <>
       <div className="space-y-6">
         {/* ── Hero Header ─────────────────────────────────────────────── */}
-        <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-8 text-white">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
-            <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
-            <div className="absolute bottom-0 left-1/2 h-16 w-48 rounded-full bg-gold/10" />
-          </div>
-          <div className="relative flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Recursos Humanos</p>
-              <h1 className="text-3xl font-black tracking-tight">Equipo</h1>
-              <p className="text-white/50 text-sm mt-1">Gestiona las cuentas de acceso y perfiles del equipo.</p>
-            </div>
-            <button
-              onClick={openCreate}
-              className="inline-flex items-center gap-2 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 px-5 py-3 text-sm font-bold text-white transition"
-            >
-              <UserPlus className="h-4 w-4" />
-              Nuevo Usuario
-            </button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-[32px] border border-neutral-100 shadow-sm flex-wrap">
+          <div>
+            <h1 className="text-xl font-black text-obsidian tracking-tight">
+              Equipo <span className="text-neutral-400 font-medium ml-2">· {total} usuarios</span>
+            </h1>
           </div>
         </div>
 
@@ -742,20 +728,31 @@ export default function EmpleadosPage() {
         )}
 
         {/* KPIs */}
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "Total Equipo", val: total, icon: Users, iconBg: "bg-neutral-100 text-neutral-500" },
-            { label: "Activos", val: active, icon: CheckCircle2, iconBg: "bg-emerald-100 text-emerald-600", numCls: "text-emerald-600" },
-            { label: "Inactivos", val: inactive, icon: UserX, iconBg: "bg-rose-50 text-rose-400", numCls: inactive > 0 ? "text-rose-500" : "text-neutral-300" },
-          ].map((k) => (
-            <div key={k.label} className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm">
-              <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center mb-4", k.iconBg)}>
-                <k.icon className="h-5 w-5" />
-              </div>
-              <div className={cx("text-3xl font-black tracking-tight", k.numCls ?? "text-obsidian")}>{k.val}</div>
-              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">{k.label}</div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 gap-4">
+          <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+             <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-neutral-100 text-neutral-500 flex items-center justify-center">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-obsidian tracking-tight">{total} <span className="text-sm text-neutral-400 font-bold ml-1 uppercase tracking-widest">Empleados</span></div>
+                </div>
+             </div>
+             <div className="flex gap-4 border-t md:border-t-0 md:border-l border-neutral-100 pt-4 md:pt-0 md:pl-6">
+                <div className="flex items-center gap-2 text-sm font-bold">
+                   <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                   <span className="text-obsidian">{active}</span>
+                   <span className="text-neutral-400">Activos</span>
+                </div>
+                {inactive > 0 && (
+                  <div className="flex items-center gap-2 text-sm font-bold">
+                     <div className="h-2 w-2 rounded-full bg-rose-500" />
+                     <span className="text-obsidian">{inactive}</span>
+                     <span className="text-neutral-400">Inactivos</span>
+                  </div>
+                )}
+             </div>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -779,6 +776,14 @@ export default function EmpleadosPage() {
             <option value="supervisor">Supervisor</option>
             <option value="empleado">Empleado</option>
           </select>
+          <button
+            onClick={openCreate}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-obsidian px-5 py-3 text-sm font-bold text-white hover:bg-gold transition shadow-sm h-[46px]"
+          >
+            <UserPlus className="h-4 w-4" />
+            <span className="hidden md:inline">Nuevo Usuario</span>
+            <span className="md:hidden">Nuevo</span>
+          </button>
         </div>
 
         {/* Error */}
@@ -808,7 +813,7 @@ export default function EmpleadosPage() {
                 <thead className="bg-neutral-50/80 border-b border-neutral-50">
                   <tr>
                     {["Usuario", "Rol", "Puesto", "No. Empleado", "Estado", "Acciones"].map((h) => (
-                      <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">{h}</th>
+                      <th key={h} className={cx("text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]", h === "No. Empleado" ? "hidden md:table-cell" : "")}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -818,7 +823,7 @@ export default function EmpleadosPage() {
                       key={user.id} 
                       onDoubleClick={() => openEdit(user)}
                       className={cx(
-                        "border-t border-neutral-50 transition cursor-pointer",
+                        "border-t border-neutral-50 transition cursor-pointer group",
                         !user.is_active ? "opacity-40" : "hover:bg-neutral-50/50"
                       )}
                     >
@@ -826,7 +831,7 @@ export default function EmpleadosPage() {
                         <div className="flex items-center gap-3">
                           <Avatar name={user.name} />
                           <div>
-                            <div className="text-sm font-bold text-obsidian">{user.name}</div>
+                            <div className="text-sm font-bold text-obsidian">{user.name} <span className="md:hidden text-[10px] text-neutral-400 font-mono ml-1">{user.employee_code}</span></div>
                             <div className="text-[10px] text-neutral-400 mt-0.5">{user.email}</div>
                           </div>
                         </div>
@@ -837,7 +842,7 @@ export default function EmpleadosPage() {
                       <td className="px-5 py-4 text-sm font-medium text-neutral-500">
                         {user.position_title ?? <span className="text-neutral-200">—</span>}
                       </td>
-                      <td className="px-5 py-4 font-mono text-xs font-bold text-neutral-400">
+                      <td className="px-5 py-4 font-mono text-xs font-bold text-neutral-400 hidden md:table-cell">
                         {user.employee_code ?? <span className="text-neutral-200">—</span>}
                       </td>
                       <td className="px-5 py-4">
@@ -855,27 +860,34 @@ export default function EmpleadosPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => setToggleTarget(user)}
+                            onClick={(e) => { e.stopPropagation(); openEdit(user); }}
+                            className="h-10 w-10 md:h-8 md:w-8 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center hover:bg-white transition"
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4 md:h-3.5 md:w-3.5 text-neutral-400" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setToggleTarget(user); }}
                             className={cx(
-                              "h-8 w-8 rounded-xl border flex items-center justify-center transition",
+                              "h-10 w-10 md:h-8 md:w-8 rounded-xl border flex items-center justify-center transition",
                               user.is_active
-                                ? "border-rose-100 text-rose-400 hover:bg-rose-50"
-                                : "border-emerald-100 text-emerald-500 hover:bg-emerald-50"
+                                ? "border-rose-100 text-rose-400 bg-rose-50 hover:bg-rose-100"
+                                : "border-emerald-100 text-emerald-500 bg-emerald-50 hover:bg-emerald-100"
                             )}
                             title={user.is_active ? "Desactivar" : "Activar"}
                           >
                             {user.is_active
-                              ? <UserX className="h-3.5 w-3.5" />
-                              : <UserCheck className="h-3.5 w-3.5" />}
+                              ? <UserX className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                              : <UserCheck className="h-4 w-4 md:h-3.5 md:w-3.5" />}
                           </button>
                           <button
-                            onClick={() => setDeleteTarget(user)}
-                            className="h-8 w-8 rounded-xl border border-rose-100 text-rose-400 flex items-center justify-center hover:bg-rose-50 transition"
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(user); }}
+                            className="h-10 w-10 md:h-8 md:w-8 rounded-xl border border-rose-100 bg-rose-50 text-rose-400 flex items-center justify-center hover:bg-rose-100 transition"
                             title="Eliminar"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
                           </button>
                         </div>
                       </td>

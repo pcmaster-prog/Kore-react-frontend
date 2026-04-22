@@ -61,7 +61,6 @@ export default function TareasManagerPage() {
       {useNewLayout ? (
         <PageHeader
           title="Gestión de Tareas"
-          subtitle="Supervisa la ejecución, configura plantillas y programa rutinas automáticas."
           actions={
             tab === "tareas" && (
               <button
@@ -80,13 +79,9 @@ export default function TareasManagerPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian/5 text-[10px] font-bold tracking-widest uppercase text-obsidian/40 mb-2">
               Operations Module
             </div>
-            <h1 className="text-3xl font-black text-obsidian tracking-tight">
+            <h1 className="text-3xl font-black text-obsidian tracking-tight mb-4">
               Gestión de Tareas
             </h1>
-            <p className="text-sm text-neutral-400 mt-1 max-w-lg">
-              Supervisa la ejecución, configura plantillas y programa rutinas
-              automáticas para tu equipo.
-            </p>
           </div>
         </div>
       )}

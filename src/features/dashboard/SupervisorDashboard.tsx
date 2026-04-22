@@ -80,8 +80,8 @@ function ErrorCard({ message }: { message: string }) {
 
 // ─── KPI Card ───────────────────────────────────────────────────────────────
 
-function KpiCard({ label, value, color, icon }: {
-  label: string; value: number; color: string; icon: React.ReactNode;
+function KpiCard({ label, value, color, icon, compact = false }: {
+  label: string; value: number; color: string; icon: React.ReactNode; compact?: boolean;
 }) {
   const colors: Record<string, string> = {
     amber:   "bg-amber-50 text-amber-600",
@@ -89,6 +89,23 @@ function KpiCard({ label, value, color, icon }: {
     emerald: "bg-emerald-50 text-emerald-600",
     rose:    "bg-rose-50 text-rose-600",
   };
+
+  if (compact) {
+    return (
+      <div className="bg-white rounded-[24px] p-4 shadow-sm border border-neutral-100/50 flex flex-col justify-center">
+        <div className="flex items-center gap-3">
+          <div className={cx("h-10 w-10 rounded-[14px] flex items-center justify-center shrink-0", colors[color])}>
+            {icon}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-2xl font-black text-obsidian leading-none">{value}</div>
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em] truncate mt-1">{label}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-[28px] p-6 shadow-sm border border-neutral-100/50">
       <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center mb-4", colors[color])}>
@@ -577,7 +594,7 @@ export function OpenTasksPanel({
   }, [refreshKey, tab]);
 
   return (
-    <div className="bg-white rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 shadow-sm border border-neutral-100/50 flex flex-col h-[400px]">
+    <div className="bg-white rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 shadow-sm border border-neutral-100/50 flex flex-col min-h-[500px] lg:min-h-[600px]">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg lg:text-xl font-black text-obsidian tracking-tight">Monitoreo de Tareas</h2>
@@ -623,7 +640,7 @@ export function OpenTasksPanel({
           <p className="text-xs text-neutral-300 mb-4">Todo está bajo control</p>
         </div>
       ) : (
-        <div className="space-y-2 flex-1 overflow-y-auto pr-1">
+        <div className="space-y-2 flex-1 overflow-y-auto pr-1 pb-4">
           {tasks.map(t => (
             <div
               key={t.id}
@@ -742,7 +759,7 @@ export function AvailableTasksPanel({
   });
 
   return (
-    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 flex flex-col">
+    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 flex flex-col h-full min-h-[400px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
@@ -814,7 +831,7 @@ export function AvailableTasksPanel({
           <p className="text-xs text-neutral-400 mt-1">Ya se asignaron todas las tareas de este tipo o no hay resultados.</p>
         </div>
       ) : (
-        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
           {filtered.map((t: any) => {
             const id = t.id;
             const title = t.title || t.name;
@@ -1006,7 +1023,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
   }
 
   return (
-    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
+    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 h-full min-h-[400px] flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-black text-obsidian tracking-tight">Carga del Equipo</h2>
@@ -1015,7 +1032,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
         <Users className="h-5 w-5 text-neutral-300" />
       </div>
 
-      <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 flex-1">
         {workload.length === 0 ? (
           <div className="py-8 text-center text-sm text-neutral-400">No hay empleados activos</div>
         ) : (
@@ -1184,10 +1201,10 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       </div>
 
       {/* 2 · KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiCard label="En Revisión"   value={data.kpi.pending_review}   color="amber"   icon={<Star className="h-5 w-5" />} />
-        <KpiCard label="Tareas Activas" value={data.kpi.active_tasks}    color="blue"    icon={<ClipboardList className="h-5 w-5" />} />
-        <KpiCard label="Completadas Hoy" value={data.kpi.completed_today} color="emerald" icon={<CheckCircle2 className="h-5 w-5" />} />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <KpiCard label="En Revisión"   value={data.kpi.pending_review}   color="amber"   icon={<Star className="h-5 w-5" />} compact />
+        <KpiCard label="Tareas Activas" value={data.kpi.active_tasks}    color="blue"    icon={<ClipboardList className="h-5 w-5" />} compact />
+        <KpiCard label="Completadas Hoy" value={data.kpi.completed_today} color="emerald" icon={<CheckCircle2 className="h-5 w-5" />} compact />
       </div>
 
       {/* 3 · Tareas Abiertas (full width) */}

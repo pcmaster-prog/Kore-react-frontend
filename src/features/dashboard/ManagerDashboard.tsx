@@ -20,7 +20,7 @@ import SupervisorDashboard from "./SupervisorDashboard";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   AlertTriangle, CheckCircle2, Clock, ClipboardList,
-  CalendarCheck, PlusCircle, FileText, ArrowRight,
+  CalendarCheck, PlusCircle, FileText, ArrowRight, ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isEnabled } from "@/lib/featureFlags";
@@ -48,18 +48,8 @@ type ManagerDash = {
   attendance?: AttendanceSnap;
 };
 
-// ─── Mock Activity Log (0.1 — PENDIENTE BACKEND) ────────────────────────────
-type ActivityItem = { id: number; text: string; time: string };
-
-function getMockActivity(): ActivityItem[] {
-  return [
-    { id: 1, text: "Tarea 'Limpieza pasillo 3' completada por Carlos", time: "Hace 12 min" },
-    { id: 2, text: "Nueva tarea asignada a equipo de piso", time: "Hace 25 min" },
-    { id: 3, text: "Nómina del período 1-15 Abr generada", time: "Hace 1h" },
-    { id: 4, text: "Empleado Juan Pérez marcó entrada", time: "Hace 2h" },
-    { id: 5, text: "Rutina 'Apertura tienda' ejecutada", time: "Hace 3h" },
-  ];
-}
+// ─── Activity feed types ────────────────────────────────────────────────────────────
+type ActivityItem = { id: string | number; text: string; time: string };
 
 // ─── Admin Dashboard (Fase 2 Refactored) ─────────────────────────────────────
 
@@ -85,6 +75,8 @@ function AdminDashboard() {
   });
   const [showNewTask, setShowNewTask] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -94,7 +86,7 @@ function AdminDashboard() {
       try {
         const res = await api.get("/dashboard/manager");
         if (alive) setData(res.data?.data ?? res.data ?? {});
-      } catch (e: any) {
+      } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (alive) { setErr(e?.response?.data?.message ?? "No se pudo cargar el dashboard"); setData({}); }
       }
       try {
@@ -108,6 +100,33 @@ function AdminDashboard() {
           setWorkload(Array.isArray(w) ? w : w ? Object.values(w) : []);
         }
       } catch { if (alive) setWorkload([]); }
+      try {
+        const res = await api.get("/activity-logs", { params: { per_page: 5 } });
+        if (alive) {
+          const raw = res.data?.data ?? res.data ?? [];
+          const adapted = raw.map((i: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+             let text = i.action;
+             if (i.action.startsWith("task.bulk_created")) text = `Tareas creadas: ${i.meta?.task_title ?? i.meta?.template_title ?? "plantilla"}`;
+             else if (i.action.startsWith("task.bulk_reused")) text = `Rutina reutilizada: ${i.meta?.task_title ?? i.meta?.template_title ?? "rutina"}`;
+             else if (i.action.startsWith("task.status_changed")) text = `Estado cambiado: ${i.meta?.task_title ?? "tarea"}`;
+             else if (i.action.startsWith("task.approved")) text = `Tarea aprobada: ${i.meta?.task_title ?? "tarea"}`;
+             else if (i.action.startsWith("task.rejected")) text = `Tarea rechazada: ${i.meta?.task_title ?? "tarea"}`;
+             else if (i.action.startsWith("evidence.uploaded")) text = `Evidencia subida: ${i.meta?.task_title ?? "tarea"}`;
+             else if (i.action.startsWith("checklist.updated")) text = `Checklist actualizado: ${i.meta?.task_title ?? "tarea"}`;
+             else if (i.action.startsWith("attendance.check_in")) text = `Entrada registrada: ${i.meta?.employee_name ?? "Empleado"}`;
+             else if (i.action.startsWith("attendance.check_out")) text = `Salida registrada: ${i.meta?.employee_name ?? "Empleado"}`;
+             else if (i.action.startsWith("attendance.break_start")) text = `Pausa iniciada: ${i.meta?.employee_name ?? "Empleado"}`;
+             else if (i.action.startsWith("attendance.break_end")) text = `Pausa reanudada: ${i.meta?.employee_name ?? "Empleado"}`;
+             else if (i.action.startsWith("user.created")) text = `Usuario creado: ${i.meta?.user_name ?? "Nuevo"}`;
+             else text = i.action.replace(/\./g, " ").replace(/_/g, " ");
+  
+             const timeStr = new Date(i.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+             
+             return { id: i.id, text, time: `a las ${timeStr}` };
+          });
+          setActivityFeed(adapted);
+        }
+      } catch { /* silent */ }
       if (alive) setLoading(false);
     })();
     return () => { alive = false; };
@@ -145,16 +164,15 @@ function AdminDashboard() {
   }
 
   // ─── Compute header badge ───────────────────────────────────────────────────
-  const headerBadge = pending === 0
-    ? { text: "Todo bajo control ✓", variant: "success" as const }
-    : { text: `${pending} pendientes`, variant: "danger" as const };
+  // const headerBadge = pending === 0
+  //   ? { text: "Todo bajo control ✓", variant: "success" as const }
+  //   : { text: `${pending} pendientes`, variant: "danger" as const };
 
   const todayFull = new Date().toLocaleDateString("es-MX", {
     weekday: "long", day: "numeric", month: "long",
   });
 
-  // ─── Activity feed (mock — PENDIENTE BACKEND) ──────────────────────────────
-  const activityFeed = getMockActivity();
+  // ─── Activity feed is now fetched in the useEffect above ───────────────────
 
   return (
     <div className="space-y-6 animate-in-up">
@@ -162,9 +180,7 @@ function AdminDashboard() {
       {/* ── 2.1 · Header Unificado Inteligente ─────────────────────── */}
       {useNewLayout ? (
         <PageHeader
-          title="Dashboard"
-          subtitle={`Buenos días, ${userName} · ${todayFull}`}
-          badge={headerBadge}
+          title={`Buenos días, ${userName} · ${todayFull}`}
           actions={
             <>
               {/* 2.4 Acciones Rápidas */}
@@ -214,13 +230,38 @@ function AdminDashboard() {
         </div>
       )}
 
+      {/* ── Fila de Métricas Rápidas (Completadas + Asistencia) ───── */}
+      {useNewLayout && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-neutral-100 shadow-sm shrink-0">
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <span className="text-sm font-bold text-obsidian">
+              Completadas hoy: {data?.today?.completed ?? 0}
+            </span>
+          </div>
+
+          {data?.attendance && (
+            <button
+              onClick={() => nav("/app/manager/asistencia")}
+              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-neutral-100 shadow-sm
+                         hover:shadow-md hover:bg-neutral-50 transition-all group shrink-0 text-left"
+            >
+              <CalendarCheck className="h-5 w-5 text-blue-500" />
+              <span className="text-sm font-bold text-obsidian">
+                {data.attendance.checked_in}/{data.attendance.employees_total} presentes hoy
+              </span>
+              <ArrowRight className="h-4 w-4 text-neutral-300 group-hover:text-neutral-500 group-hover:translate-x-0.5 transition-all ml-1" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ── 2.2 · KPIs (ocultos en 0) ──────────────────────────────── */}
       {useNewLayout ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard label="Abiertas"    value={k.open ?? 0}        icon={ClipboardList} color="blue"   sub="Tareas pendientes"  />
-          <KpiCard label="En Proceso"  value={k.in_progress ?? 0} icon={Clock}         color="yellow" sub="Ejecutándose ahora"  />
-          <KpiCard label="Completadas" value={k.completed ?? 0}   icon={CheckCircle2}  color="green"  sub="Total este mes"      forceShow />
-          <KpiCard label="Vencidas"    value={k.overdue ?? 0}     icon={AlertTriangle} color="red"    sub="Urgente atención"    />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <KpiCard label="Abiertas"    value={k.open ?? 0}        icon={ClipboardList} color="blue"   sub="Tareas pendientes"  compact />
+          <KpiCard label="En Proceso"  value={k.in_progress ?? 0} icon={Clock}         color="yellow" sub="Ejecutándose ahora"  compact />
+          <KpiCard label="Vencidas"    value={k.overdue ?? 0}     icon={AlertTriangle} color="red"    sub="Urgente atención"    compact />
         </div>
       ) : (
         /* Legacy full grid */
@@ -258,51 +299,44 @@ function AdminDashboard() {
 
       {/* ── 2.5 · Feed de Actividad Reciente (PENDIENTE BACKEND) ── */}
       {useNewLayout && (
-        <div className="bg-white rounded-[28px] p-6 shadow-sm border border-neutral-100/50">
-          <div className="flex items-center justify-between mb-5">
+        <div className="bg-white rounded-[28px] shadow-sm border border-neutral-100/50 overflow-hidden">
+          <button 
+            onClick={() => setActivityOpen(!activityOpen)}
+            className="w-full p-6 flex items-center justify-between hover:bg-neutral-50 transition-colors"
+          >
             <h3 className="text-lg font-black text-obsidian tracking-tight">
               Actividad Reciente
             </h3>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider border border-amber-100">
-              ⚡ Pendiente Backend
-            </span>
-          </div>
-          <div className="space-y-3">
-            {activityFeed.map(item => (
-              <div
-                key={item.id}
-                className="flex items-start gap-3 p-3 rounded-2xl hover:bg-neutral-50 transition-colors group"
-              >
-                <div className="h-8 w-8 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 group-hover:bg-neutral-200 transition-colors">
-                  <ClipboardList className="h-4 w-4 text-neutral-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-neutral-700 truncate">{item.text}</div>
-                  <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5">{item.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+            <ChevronDown className={cx("h-5 w-5 text-neutral-400 transition-transform duration-300", activityOpen ? "rotate-180" : "rotate-0")} />
+          </button>
+          
+          {activityOpen && (
+            <div className="p-6 pt-0 space-y-3 border-t border-neutral-50 animate-in-fade">
+              {activityFeed.length > 0 ? (
+                activityFeed.map(item => (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-3 p-3 rounded-2xl hover:bg-neutral-50 transition-colors group"
+                  >
+                    <div className="h-8 w-8 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 group-hover:bg-neutral-200 transition-colors">
+                      <ClipboardList className="h-4 w-4 text-neutral-400" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="text-sm font-medium text-neutral-700 truncate">{item.text}</div>
+                      <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-0.5">{item.time}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-neutral-400 text-center py-4">No hay actividad reciente</div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {/* ── 2.3 · Asistencia: Link en vez de card (cuando newLayout) ─ */}
-      {useNewLayout ? (
-        /* Just a quick action link — attendance card removed from dashboard */
-        data?.attendance && (
-          <button
-            onClick={() => nav("/app/manager/asistencia")}
-            className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-neutral-100 shadow-sm
-                       hover:shadow-md hover:bg-neutral-50 transition-all group w-full sm:w-auto text-left"
-          >
-            <CalendarCheck className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm font-bold text-obsidian">
-              {data.attendance.checked_in}/{data.attendance.employees_total} presentes hoy
-            </span>
-            <ArrowRight className="h-4 w-4 text-neutral-300 group-hover:text-neutral-500 group-hover:translate-x-0.5 transition-all ml-auto" />
-          </button>
-        )
-      ) : (
+      {!useNewLayout && (
         /* Legacy attendance card */
         data?.attendance && (
           <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50 max-w-sm">
@@ -399,6 +433,7 @@ function AdminDashboard() {
 }
 
 // ─── Legacy StatCard (for feature flag fallback) ─────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function LegacyStatCard({ label, value, icon: Icon, colorClass, sub }: any) {
   return (
     <div className="bg-white rounded-[28px] p-5 shadow-sm border border-neutral-100/50 flex flex-col justify-between group hover:shadow-lg transition-all duration-300">

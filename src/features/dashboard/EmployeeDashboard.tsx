@@ -208,13 +208,13 @@ export default function EmployeeDashboard() {
           description="Disfruta tu día · No tienes tareas pendientes"
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {useNew ? (
             <>
-              <KpiCard label="Asignadas"   value={counts.open}        icon={ClipboardList} color="blue"   sub="Listas para iniciar" />
-              <KpiCard label="En progreso" value={counts.in_progress} icon={PlayCircle}    color="yellow" sub="Trabajándose" />
-              <KpiCard label="En revisión" value={counts.pending}     icon={AlertTriangle} color="purple" sub="Esperando aprobación" />
-              <KpiCard label="Góndolas"    value={gondolasActivas.length} icon={LayoutGrid} color="yellow" sub="Por rellenar" />
+              <KpiCard label="Asignadas"   value={counts.open}        icon={ClipboardList} color="blue"   sub="Listas para iniciar" compact />
+              <KpiCard label="En progreso" value={counts.in_progress} icon={PlayCircle}    color="yellow" sub="Trabajándose" compact />
+              <KpiCard label="En revisión" value={counts.pending}     icon={AlertTriangle} color="purple" sub="Esperando aprobación" compact />
+              <KpiCard label="Góndolas"    value={gondolasActivas.length} icon={LayoutGrid} color="yellow" sub="Por rellenar" compact />
             </>
           ) : (
             <>

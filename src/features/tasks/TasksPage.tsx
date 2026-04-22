@@ -226,10 +226,9 @@ export default function TasksPage() {
   const [rejectNote, setRejectNote] = useState<string>("");
   const [actionBusy, setActionBusy] = useState<string | null>(null);
 
-  // Cargar aprobaciones cuando cambia la pestaña o la página
+  // Cargar aprobaciones independientemente del tab para el badge
   useEffect(() => {
     let alive = true;
-    if (tab !== "aprobaciones") return;
 
     (async () => {
       setApLoading(true);
@@ -249,7 +248,7 @@ export default function TasksPage() {
     return () => {
       alive = false;
     };
-  }, [tab, apPage]);
+  }, [apPage]);
 
   // ===== Helpers =====
 
@@ -358,39 +357,6 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6">
-      {/* Internal Tabs - Segmented Style */}
-      <div className="flex p-1 bg-neutral-100/50 border border-neutral-100 rounded-2xl w-fit">
-        <button
-          className={cx(
-            "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all",
-            tab === "tareas"
-              ? "bg-white text-obsidian shadow-sm"
-              : "text-neutral-400 hover:text-neutral-600",
-          )}
-          onClick={() => setTab("tareas")}
-        >
-          <Zap className="h-3.5 w-3.5" />
-          Listado de Tareas
-        </button>
-        <button
-          className={cx(
-            "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all",
-            tab === "aprobaciones"
-              ? "bg-white text-obsidian shadow-sm"
-              : "text-neutral-400 hover:text-neutral-600",
-          )}
-          onClick={() => setTab("aprobaciones")}
-        >
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          Aprobaciones Pendientes
-          {apData?.total ? (
-            <span className="ml-1 px-1.5 py-0.5 rounded-md bg-rose-500 text-white text-[10px]">
-              {apData.total}
-            </span>
-          ) : null}
-        </button>
-      </div>
-
       {tab === "tareas" ? (
         <div className="space-y-6 animate-in-fade">
           {/* Top Actions & Filters Row */}
@@ -439,6 +405,16 @@ export default function TasksPage() {
                   }}
                 />
               </div>
+
+              {apData && apData.total > 0 && (
+                <button
+                  onClick={() => setTab("aprobaciones")}
+                  className="h-11 px-4 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-amber-100 transition-colors"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Aprobaciones ({apData.total})
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-4 border-t md:border-t-0 border-neutral-100 pt-3 md:pt-0 pl-2">
@@ -466,10 +442,11 @@ export default function TasksPage() {
 
               <div className="h-8 w-px bg-neutral-100 hidden md:block" />
 
-              <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100">
-                <span className="text-obsidian">{data?.total ?? 0}</span> TAREAS
-                TOTALES
-              </div>
+              {(data?.total ?? 0) > 0 ? (
+                <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                  <span className="text-obsidian">{data?.total}</span> tareas totales
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -532,12 +509,17 @@ export default function TasksPage() {
                   <ClipboardList className="h-8 w-8 text-neutral-300" />
                 </div>
                 <p className="text-xs font-black text-obsidian uppercase tracking-widest mb-2">
-                  No hay tareas que mostrar
+                  No hay tareas activas
                 </p>
-                <p className="text-[11px] font-bold text-neutral-400 capitalize tracking-wide max-w-xs mx-auto text-center leading-relaxed">
-                  Modifica los filtros de búsqueda o asigna nuevas tareas desde
-                  el catálogo.
+                <p className="text-[11px] font-bold text-neutral-400 capitalize tracking-wide max-w-xs mx-auto text-center leading-relaxed mb-4">
+                  Prueba cambiando los filtros o crea una nueva tarea.
                 </p>
+                <button
+                  className="h-10 px-5 rounded-xl bg-obsidian text-sm font-bold text-white shadow-sm hover:bg-neutral-800 transition-all inline-flex items-center gap-2"
+                  onClick={() => window.dispatchEvent(new CustomEvent("kore-new-task"))}
+                >
+                  + Nueva Tarea
+                </button>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -904,6 +886,12 @@ export default function TasksPage() {
         <div className="space-y-6 animate-in-fade">
           <div className="bg-white border border-neutral-100/50 rounded-[32px] p-6 shadow-sm flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => setTab("tareas")}
+                className="h-10 w-10 rounded-2xl bg-neutral-50 flex items-center justify-center text-neutral-400 hover:text-obsidian hover:bg-neutral-100 transition-colors"
+              >
+                &larr;
+              </button>
               <div className="h-12 w-12 rounded-[20px] bg-amber-50 text-amber-500 flex items-center justify-center">
                 <Clock className="h-6 w-6" />
               </div>

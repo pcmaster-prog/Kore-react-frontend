@@ -34,16 +34,16 @@ function Avatar({ name, url, onUpload }: { name: string; url?: string | null; on
   return (
     <div className="relative group">
       {url ? (
-        <img src={url} alt={name} className="h-28 w-28 rounded-[28px] object-cover border-4 border-white shadow-lg" />
+        <img src={url} alt={name} className="h-20 w-20 rounded-[24px] object-cover border-2 border-white shadow-lg" />
       ) : (
-        <div className="h-28 w-28 rounded-[28px] bg-obsidian text-white font-black text-3xl flex items-center justify-center border-4 border-white shadow-lg">
+        <div className="h-20 w-20 rounded-[24px] bg-obsidian text-white font-black text-2xl flex items-center justify-center border-2 border-white shadow-lg">
           {initials}
         </div>
       )}
       {onUpload && (
-        <label className="absolute inset-0 bg-black/40 rounded-[28px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-          <Camera className="h-6 w-6 text-white mb-1" />
-          <span className="text-[9px] font-bold text-white uppercase tracking-widest">Cambiar</span>
+        <label className="absolute inset-0 bg-black/40 rounded-[24px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+          <Camera className="h-5 w-5 text-white mb-1" />
+          <span className="text-[8px] font-bold text-white uppercase tracking-widest">Cambiar</span>
           <input type="file" accept="image/*" className="hidden" onChange={onUpload} />
         </label>
       )}
@@ -180,6 +180,14 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   }
 
+  async function updatePreferenceBackend(key: string, value: any) {
+    try {
+      await api.put("/users/preferences", { [key]: value });
+    } catch (e) {
+      console.error("Error saving preference", e);
+    }
+  }
+
   function toggleTheme(newTheme: string) {
     setPreferences(p => ({ ...p, theme: newTheme }));
     localStorage.setItem("kore_prefs_theme", newTheme);
@@ -194,17 +202,30 @@ export default function ProfilePage() {
         document.documentElement.classList.remove("dark");
       }
     }
+    showToast("ok", "Tema actualizado");
+    updatePreferenceBackend("theme", newTheme);
   }
 
-  function toggleNotifications() {
+  async function toggleNotifications() {
     const next = !preferences.notifications;
+    
+    if (next && "Notification" in window) {
+      if (Notification.permission !== "granted") {
+        await Notification.requestPermission();
+      }
+    }
+
     setPreferences(p => ({ ...p, notifications: next }));
     localStorage.setItem("kore_prefs_notif", String(next));
+    showToast("ok", next ? "Notificaciones habilitadas" : "Notificaciones deshabilitadas");
+    updatePreferenceBackend("notifications_enabled", next);
   }
 
   function changeLanguage(lang: string) {
     setPreferences(p => ({ ...p, language: lang }));
     localStorage.setItem("kore_prefs_lang", lang);
+    showToast("ok", "Idioma actualizado");
+    updatePreferenceBackend("language", lang);
   }
 
   const roleLabel =
@@ -258,21 +279,29 @@ export default function ProfilePage() {
         {/* ── Left Column: Employee Card ── */}
         <div className="space-y-4">
           {/* Profile Card */}
-          <div className="rounded-[40px] bg-obsidian p-8 text-white text-center shadow-sm overflow-hidden relative">
+          <div className="rounded-[32px] bg-obsidian p-6 text-white shadow-sm overflow-hidden relative">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/[0.03]" />
               <div className="absolute bottom-0 left-0 h-20 w-32 rounded-full bg-gold/10" />
             </div>
-            <div className="relative">
-              <div className="flex justify-center mb-5">
+            <div className="relative flex items-center gap-5">
+              <div className="flex-shrink-0">
                 <Avatar name={profile.full_name} url={avatarLocal || profile.avatar_url} onUpload={handleAvatarUpload} />
               </div>
-              <div className="font-black text-xl tracking-tight">{profile.full_name}</div>
-              <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-2">{profile.position_title ?? roleLabel}</div>
+              <div className="min-w-0">
+                <div className="font-black text-xl tracking-tight truncate">{profile.full_name}</div>
+                <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-1 truncate">{profile.position_title ?? roleLabel}</div>
 
-              <div className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-white/10 border border-white/10 px-4 py-2 text-xs font-bold">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                Activo
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-[10px] font-bold text-emerald-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                    Activo
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 px-3 py-1.5 text-[10px] font-bold text-white max-w-full">
+                    <Mail className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{profile.email}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

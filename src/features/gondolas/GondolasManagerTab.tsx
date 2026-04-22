@@ -180,27 +180,27 @@ export default function GondolasManagerTab() {
       {/* Sub-header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Tabs */}
-        <div className="flex p-1.5 bg-white border border-neutral-100 rounded-[28px] shadow-sm w-fit">
+        <div className="flex p-1 bg-neutral-100/50 border border-neutral-100 rounded-2xl w-fit">
           {[
             {
               key: "gondolas",
               label: "Góndolas",
-              icon: <LayoutGrid className="h-4 w-4" />,
+              icon: <LayoutGrid className="h-3.5 w-3.5" />,
             },
             {
               key: "ordenes",
               label: "Órdenes",
-              icon: <ClipboardList className="h-4 w-4" />,
+              icon: <ClipboardList className="h-3.5 w-3.5" />,
             },
           ].map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key as InnerTab)}
               className={cx(
-                "flex items-center gap-2 px-5 py-2.5 rounded-[22px] text-sm font-bold transition-all duration-300",
+                "flex items-center gap-2 px-4 h-8 rounded-xl text-xs font-bold transition-all duration-300",
                 tab === t.key
-                  ? "bg-obsidian text-white shadow-lg shadow-obsidian/20"
-                  : "text-neutral-400 hover:text-obsidian hover:bg-neutral-50",
+                  ? "bg-white text-obsidian shadow-sm"
+                  : "text-neutral-400 hover:text-obsidian hover:bg-white",
               )}
             >
               {t.icon} {t.label}

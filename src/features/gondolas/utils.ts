@@ -10,19 +10,19 @@ export const UNIDADES: Record<string, string> = {
 export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   pendiente: {
     label: "Pendiente",
-    color: "bg-neutral-100 text-neutral-600 border-neutral-200",
+    color: "bg-amber-100 text-amber-700 border-amber-200",
   },
   en_proceso: {
     label: "En proceso",
-    color: "bg-blue-100 text-blue-700 border-blue-200",
+    color: "bg-indigo-100 text-indigo-700 border-indigo-200",
   },
   completado: {
     label: "Completado",
-    color: "bg-amber-100 text-amber-700 border-amber-200",
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
   },
   aprobado: {
     label: "Aprobado",
-    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    color: "bg-blue-100 text-blue-700 border-blue-200",
   },
   rechazado: {
     label: "Rechazado",

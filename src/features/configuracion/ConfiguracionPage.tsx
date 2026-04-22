@@ -39,7 +39,7 @@ function RolesTab() {
           <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Niveles de permisos y visibilidad</p>
         </div>
       </div>
-      <div className="p-8 space-y-6">
+      <div className="p-6 md:p-10 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {roles.map((r) => (
             <div key={r.key} className="rounded-[28px] border border-neutral-100 bg-white overflow-hidden hover:shadow-lg hover:shadow-obsidian/5 transition-all group">
@@ -84,7 +84,7 @@ function TarifasTab() {
         <h2 className="text-xl font-black text-obsidian tracking-tight">Tarifas y Remuneración</h2>
         <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Gestión financiera de recursos humanos</p>
       </div>
-      <div className="p-16 flex flex-col items-center justify-center text-center">
+      <div className="p-6 md:p-10 flex flex-col items-center justify-center text-center">
         <div className="h-20 w-20 rounded-[24px] bg-gradient-to-tr from-emerald-100 to-emerald-50 border border-emerald-200 flex items-center justify-center shadow-inner mb-6">
           <DollarSign className="h-10 w-10 text-emerald-600" />
         </div>
@@ -178,7 +178,7 @@ function HorariosTab() {
         </button>
       </div>
       
-      <div className="p-8 space-y-6">
+      <div className="p-6 md:p-10 space-y-6">
         {saved && (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5" /> Configuración global de horarios actualizada.
@@ -296,6 +296,9 @@ function HorariosTab() {
           <div className="flex items-center gap-3 pb-4 mb-4 border-b border-neutral-50">
             <CalendarDays className="h-5 w-5 text-blue-500" />
             <h3 className="text-sm font-bold text-obsidian uppercase tracking-widest">Vista Previa de la Semana</h3>
+            <span className="ml-auto text-[10px] font-bold text-neutral-400 bg-neutral-50 px-2.5 py-1 rounded-xl">
+              {lateTolerance} min de tolerancia
+            </span>
           </div>
           <div className="flex overflow-x-auto gap-2 pb-2 custom-scrollbar">
             {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((_, i) => {
@@ -413,7 +416,7 @@ function ModulosTab() {
         <h2 className="text-xl font-black text-obsidian tracking-tight">Capacidades del Ecosistema</h2>
         <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Activa las herramientas de la suite kore</p>
       </div>
-      <div className="p-8">
+      <div className="p-6 md:p-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {MODS.map((m) => {
             const mod = modules.find(x => x.key === m.key);
@@ -436,13 +439,13 @@ function ModulosTab() {
                           onClick={() => toggle(m.key)}
                           disabled={saving === m.key}
                           className={cx(
-                            "h-8 w-14 rounded-full transition-all flex items-center px-1 border",
+                            "h-6 w-11 rounded-full transition-all flex items-center px-0.5 border",
                             active ? "bg-emerald-500 border-emerald-600 shadow-inner" : "bg-neutral-200 border-neutral-300"
                           )}
                         >
                           <div className={cx(
-                            "h-6 w-6 rounded-full bg-white transition-transform duration-300 shadow flex flex-col items-center justify-center",
-                            active ? "translate-x-6" : "translate-x-0"
+                            "h-5 w-5 rounded-full bg-white transition-transform duration-300 shadow flex flex-col items-center justify-center",
+                            active ? "translate-x-5" : "translate-x-0"
                           )}>
                             {saving === m.key && <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />}
                           </div>
@@ -509,14 +512,14 @@ function RedTab() {
         </button>
       </div>
 
-      <div className="p-8 space-y-6">
+      <div className="p-6 md:p-10 space-y-6">
         {saved && (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5" /> Reglas de red aplicadas correctamente.
           </div>
         )}
         
-        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-8 space-y-6">
+        <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 md:p-8 space-y-6">
           <div className="flex items-center gap-4 pb-4 border-b border-neutral-100">
             <div className="h-12 w-12 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm">
               <Wifi className="h-6 w-6 text-neutral-400" />
@@ -646,7 +649,7 @@ function DocumentosTab() {
           </div>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div className="p-6 md:p-10 space-y-8">
           {/* Zona de upload */}
           <div className="rounded-[32px] border-2 border-dashed border-neutral-100 bg-neutral-50/30 p-10 text-center group hover:border-obsidian/20 transition-all">
             <div className="h-20 w-20 rounded-[28px] bg-white border border-neutral-100 flex items-center justify-center shadow-sm mx-auto mb-6 group-hover:scale-110 transition-transform">
@@ -777,7 +780,7 @@ function NotificacionesTab() {
         <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Verificación y estado de alertas push</p>
       </div>
       
-      <div className="p-8 space-y-8">
+      <div className="p-6 md:p-10 space-y-8">
         {result && (
           <div className={cx(
             "rounded-2xl border px-5 py-4 text-sm font-bold flex items-center gap-3 animate-in-fade",
@@ -789,7 +792,7 @@ function NotificacionesTab() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-8 flex flex-col items-center text-center">
+          <div className="rounded-[28px] border border-neutral-100 bg-neutral-50/50 p-6 md:p-8 flex flex-col items-center text-center">
             <div className="h-16 w-16 rounded-2xl bg-white border border-neutral-100 flex items-center justify-center shadow-sm mb-6">
               <Bell className="h-8 w-8 text-obsidian" />
             </div>

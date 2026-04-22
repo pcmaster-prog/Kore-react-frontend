@@ -220,14 +220,14 @@ function StatusBadge({ item }: { item: ByDateItem }) {
   const checkedIn = !!item.first_check_in_at;
   const closed = item.status === "closed" || !!item.last_check_out_at;
   if ((item as any).is_rest_day || (item as any).state === "rest")
-    return <span className="inline-flex items-center gap-1.5 rounded-xl border border-sky-100 bg-sky-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-600">Descanso</span>;
+    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-100 bg-sky-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-600">Descanso</span>;
   if (!checkedIn)
-    return <span className="inline-flex items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-500"><span className="h-1.5 w-1.5 rounded-full bg-rose-400" />Ausente</span>;
+    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-100 bg-neutral-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-500"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />Ausente</span>;
   if (closed)
-    return <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Presente</span>;
+    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Presente</span>;
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-600">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />En curso
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />En turno
     </span>
   );
 }
@@ -349,37 +349,30 @@ export default function ManagerAttendancePage() {
   const totalEmps = employees.length || 1;
 
   const dateLabel = new Date(date + "T12:00:00").toLocaleDateString("es-MX", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    weekday: "long", day: "numeric", month: "long",
   });
 
   return (
     <div className="space-y-6">
-      <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-8 text-white">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
-          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
-          <div className="absolute bottom-0 left-1/3 h-20 w-40 rounded-full bg-gold/10" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-[32px] border border-neutral-100 shadow-sm flex-wrap">
+        <div>
+          <h1 className="text-xl font-black text-obsidian tracking-tight">
+            Control de Asistencia <span className="text-neutral-400 font-medium ml-2 capitalize">· {dateLabel}</span>
+          </h1>
         </div>
-        <div className="relative flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Gestión de Personal</p>
-            <h1 className="text-3xl font-black tracking-tight">Control de Asistencia</h1>
-            <p className="text-white/50 text-sm mt-1 capitalize">{dateLabel}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="date"
-              className="rounded-2xl bg-white/10 border border-white/20 px-4 py-2.5 text-sm font-medium text-white outline-none focus:ring-2 focus:ring-white/20 [color-scheme:dark]"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-            <button
-              onClick={loadDay}
-              className="h-10 w-10 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 flex items-center justify-center transition"
-            >
-              <RefreshCw className="h-4 w-4 text-white" />
-            </button>
-          </div>
+        <div className="flex items-center gap-3">
+          <input
+            type="date"
+            className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-bold text-obsidian outline-none focus:ring-2 focus:ring-obsidian/10"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+          <button
+            onClick={loadDay}
+            className="h-9 w-9 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 flex items-center justify-center transition"
+          >
+            <RefreshCw className={cx("h-4 w-4 text-neutral-400", loading && "animate-spin")} />
+          </button>
         </div>
       </div>
 
@@ -417,21 +410,41 @@ export default function ManagerAttendancePage() {
                 description="El equipo aún no marca entrada."
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { label: "Presentes", val: checkedIn, pct: Math.round((checkedIn / totalEmps) * 100), icon: Users, iconBg: "bg-emerald-100 text-emerald-600", numCls: "text-emerald-600" },
-                  { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, iconBg: "bg-rose-50 text-rose-400", numCls: "text-rose-500" },
-                  { label: "En turno", val: onShift, pct: Math.round((onShift / totalEmps) * 100), icon: Clock, iconBg: "bg-amber-100 text-amber-600", numCls: "text-amber-600" },
-                ].map((k) => (
-                  <div key={k.label} className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex flex-col">
-                    <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center mb-4", k.iconBg)}>
-                      <k.icon className="h-5 w-5" />
-                    </div>
-                    <div className={cx("text-4xl font-black tracking-tight", k.numCls)}>{k.val}</div>
-                    <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">{k.label}</div>
-                    <div className="text-xs font-bold text-neutral-300 mt-0.5">{k.pct}% del personal</div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* KPIs Asistencia */}
+                <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex items-center justify-between gap-2">
+                  {[
+                    { label: "Presentes", val: checkedIn, pct: Math.round((checkedIn / totalEmps) * 100), icon: Users, numCls: "text-emerald-500" },
+                    { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, numCls: "text-neutral-500" },
+                    { label: "En turno", val: onShift, pct: Math.round((onShift / totalEmps) * 100), icon: Clock, numCls: "text-amber-500" },
+                  ].map(k => (
+                     <div key={k.label} className="flex-1 text-center border-r border-neutral-100 last:border-0">
+                       <k.icon className={`h-5 w-5 mx-auto mb-2 ${k.numCls}`} />
+                       <div className="text-xl font-black text-obsidian flex items-center justify-center gap-1">
+                         {k.val} <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{k.label}</span>
+                       </div>
+                       <div className="text-[9px] font-bold text-neutral-300 mt-0.5">{k.pct}%</div>
+                     </div>
+                  ))}
+                </div>
+
+                {/* Resumen del día */}
+                <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm flex flex-col justify-center gap-3">
+                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-neutral-400 bg-neutral-50 px-4 py-2 rounded-xl border border-neutral-100">
+                    <span>Cerrados: <span className="text-obsidian">{closed}</span></span>
+                    <span>Activos: <span className="text-obsidian">{onShift}</span></span>
+                    <span>Sin entrada: <span className="text-obsidian">{absent}</span></span>
                   </div>
-                ))}
+                  <div className="mt-2 px-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">
+                      <span>Asistencia Global</span>
+                      <span className="text-obsidian">{Math.round((checkedIn / totalEmps) * 100)}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-obsidian rounded-full" style={{ width: `${Math.round((checkedIn / totalEmps) * 100)}%` }} />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -501,13 +514,13 @@ export default function ManagerAttendancePage() {
                             <td className="px-5 py-4 font-bold text-sm text-obsidian">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
                             <td className="px-5 py-4 text-sm text-neutral-400">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
                             <td className="px-5 py-4">
-                              {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-600"><AlertTriangle className="h-2.5 w-2.5" /> Faltante</span>}
+                              {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-100 bg-neutral-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-500"><AlertTriangle className="h-2 w-2" /> Ausente</span>}
                             </td>
                             <td className="px-5 py-4 font-black text-sm text-obsidian">
                               {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
                             </td>
                             <td className="px-5 py-4">
-                              <div className="flex gap-2">
+                              <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                 <button
                                   onClick={() => setAjustando({
                                     empleadoId: emp.id,
@@ -519,7 +532,7 @@ export default function ManagerAttendancePage() {
                                       ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
                                       : undefined,
                                   })}
-                                  className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
+                                  className="h-8 w-8 shrink-0 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center hover:bg-white hover:border-neutral-200 transition"
                                   title="Ajustar horario"
                                 >
                                   <Pencil className="h-3.5 w-3.5 text-neutral-400" />
@@ -530,7 +543,7 @@ export default function ManagerAttendancePage() {
                                     empleadoNombre: empName,
                                     tieneDiaDescanso,
                                   })}
-                                  className="h-8 w-8 shrink-0 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition text-sm mb-0.5"
+                                  className="h-8 w-8 shrink-0 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center hover:bg-white hover:border-neutral-200 transition text-sm"
                                   title="Gestionar día de descanso"
                                 >
                                   🛋️
@@ -546,25 +559,7 @@ export default function ManagerAttendancePage() {
               )}
             </div>
 
-          {/* Bottom summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm">
-              <h4 className="text-sm font-black text-obsidian tracking-tight mb-5">Resumen del Día</h4>
-              <div className="space-y-2">
-                {[
-                  { label: "Turnos cerrados", val: closed, cls: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100" },
-                  { label: "En turno activo", val: onShift, cls: "text-amber-600", bg: "bg-amber-50 border-amber-100" },
-                  { label: "Sin entrada", val: absent, cls: "text-rose-500", bg: "bg-rose-50 border-rose-100" },
-                  { label: "Asistencia", val: `${Math.round((checkedIn / totalEmps) * 100)}%`, cls: "text-obsidian", bg: "bg-obsidian/5 border-neutral-100" },
-                ].map((row) => (
-                  <div key={row.label} className={cx("flex items-center justify-between rounded-2xl border px-4 py-3", row.bg)}>
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">{row.label}</span>
-                    <span className={cx("text-lg font-black", row.cls)}>{row.val}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+
         </>
       ) : tab === "weekly" ? (
         <WeeklyPanel employees={employees} date={date} />

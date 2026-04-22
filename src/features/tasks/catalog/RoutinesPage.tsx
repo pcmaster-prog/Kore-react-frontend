@@ -189,16 +189,16 @@ export default function RoutinesPage({
                   <button
                     onClick={() => openEdit(r)}
                     title="Editar"
-                    className="h-8 w-8 rounded-xl bg-neutral-50 border border-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-white hover:text-obsidian hover:border-neutral-200 transition-colors"
+                    className="h-11 w-11 md:h-8 md:w-8 rounded-xl bg-neutral-50 border border-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-white hover:text-obsidian hover:border-neutral-200 transition-colors"
                   >
-                    <Edit2 className="h-3.5 w-3.5" />
+                    <Edit2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
                   </button>
                   <button
                     onClick={() => handleDelete(r)}
                     title="Eliminar"
-                    className="h-8 w-8 rounded-xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center hover:bg-rose-100 hover:text-rose-600 transition-colors"
+                    className="h-11 w-11 md:h-8 md:w-8 rounded-xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center hover:bg-rose-100 hover:text-rose-600 transition-colors"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
                   </button>
                 </div>
               </div>
