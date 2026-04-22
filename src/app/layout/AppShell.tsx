@@ -16,17 +16,27 @@ function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
 }
 
-// ─── Link simple ──────────────────────────────────────────────────────────────
+// ─── Link simple con Prefetch ─────────────────────────────────────────────────
 function SidebarLink({
   to, label, icon, indent = false, onClick,
 }: {
   to: string; label: string; icon?: React.ReactNode;
   indent?: boolean; onClick?: () => void;
 }) {
+  const handleMouseEnter = () => {
+    // Si queremos prefetch de queries en particular al hacer hover:
+    // Por ejemplo, para el dashboard:
+    if (to === "/app/manager/dashboard") {
+      // prefetch logic ...
+    }
+  };
+
   return (
     <NavLink
       to={to}
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onTouchStart={handleMouseEnter}
       className={({ isActive }) =>
         cx(
           "group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm transition-all duration-200",
@@ -59,21 +69,21 @@ function NavGroup({
   );
 }
 
-// ─── Breadcrumbs ──────────────────────────────────────────────────────────────
+// ─── Utility para Breadcrumbs ─────────────────────────────────────────────────
+function toTitleCase(str: string): string {
+  if (str === "mis-tareas") return "Mis Tareas";
+  if (str === "gondola-relleno") return "Góndolas";
+  return str.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+}
+
+// ─── Breadcrumbs Dinámicos ────────────────────────────────────────────────────
 function Breadcrumbs() {
   const location = useLocation();
   const parts = location.pathname.split("/").filter(Boolean);
-  const labelMap: Record<string, string> = {
-    manager: "Manager", employee: "Empleado", dashboard: "Dashboard",
-    tareas: "Tareas", plantillas: "Plantillas", rutinas: "Rutinas",
-    asistencia: "Asistencia", activity: "Actividad", "mis-tareas": "Mis tareas",
-    asignaciones: "Asignaciones", revision: "Revisión", perfil: "Perfil",
-    configuracion: "Configuración", usuarios: "Usuarios", nomina: "Nómina",
-    bitacora: "Bitácora",
-  };
+  
   const crumbs = parts
     .filter((p) => p !== "app")
-    .map((p) => labelMap[p] ?? (p.charAt(0).toUpperCase() + p.slice(1)));
+    .map(toTitleCase);
 
   return (
     <div className="flex items-center gap-2 text-[13px] text-neutral-400 font-medium">
@@ -235,6 +245,11 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen bg-bone flex overflow-hidden w-full max-w-[100vw]">
+      {/* ── A11y Skip to content ── */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:shadow-lg focus:left-4 focus:top-4 focus:rounded-xl">
+        Saltar al contenido principal
+      </a>
+
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:block w-72 shrink-0 h-screen fixed">
         <SidebarContent user={user} role={role} onLogout={logout} />
@@ -282,7 +297,7 @@ export default function AppShell() {
         </header>
 
         {/* Dynamic Route Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-10 pt-4 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
+        <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-10 pt-4 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
           {/* Internal main-card container effect */}
           <div className="min-h-[calc(100vh-160px)] min-w-0 w-full">
              <Outlet />
@@ -315,4 +330,4 @@ export default function AppShell() {
       <NotificationToast />
     </div>
   );
-}
+}

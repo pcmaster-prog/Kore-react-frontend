@@ -252,9 +252,12 @@ export async function updateMyChecklistItem(
 }
 
 // ===== EMPLEADO: EVIDENCIAS =====
+import { compressImage } from "@/lib/imageCompression";
+
 export async function uploadEvidence(file: File, meta?: any) {
+  const compressedFile = await compressImage(file);
   const fd = new FormData();
-  fd.append("file", file);
+  fd.append("file", compressedFile);
   if (meta !== undefined) {
     fd.append("meta", typeof meta === "string" ? meta : JSON.stringify(meta));
   }

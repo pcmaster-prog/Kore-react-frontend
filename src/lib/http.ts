@@ -1,31 +1,54 @@
 import axios from "axios";
+import { useAuthStore } from "@/features/auth/authStore";
 
 const baseURL =
   import.meta.env.VITE_API_URL ??
   'https://kore-laravel-backend-production.up.railway.app/api/v1';
 
+// URL base del backend (sin /api/v1) para CSRF cookie
+const backendOrigin = baseURL.replace(/\/api\/v1\/?$/, '');
+
 const api = axios.create({
   baseURL,
-  headers: { 
+  withCredentials: true, // Necesario para cookies CSRF de Sanctum
+  headers: {
     "Content-Type": "application/json",
-    "Accept-Language": "es" 
+    "Accept-Language": "es",
   },
 });
 
+// ─── CSRF: obtener cookie antes de requests que lo requieran ────────────────
+export async function fetchCsrfCookie(): Promise<void> {
+  await axios.get(`${backendOrigin}/sanctum/csrf-cookie`, {
+    withCredentials: true,
+  });
+}
+
+// ─── Request interceptor: adjuntar token + verificar expiración ────────────
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("kore_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const { token, isTokenExpired, logout } = useAuthStore.getState();
+
+  if (token) {
+    // Si el token expiró, limpiar y redirigir
+    if (isTokenExpired()) {
+      logout();
+      window.dispatchEvent(new CustomEvent("kore:unauthorized"));
+      return Promise.reject(new axios.Cancel("Token expirado"));
+    }
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 });
 
+// ─── Response interceptor: manejar 401 ────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
 
     if (status === 401) {
-      localStorage.removeItem("kore_token");
-      localStorage.removeItem("kore_user");
+      useAuthStore.getState().logout();
       window.dispatchEvent(new CustomEvent("kore:unauthorized"));
     }
 

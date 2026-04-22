@@ -1,43 +1,51 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { RequireAuth } from "./guards/RequireAuth";
 import { RequireRole } from "./guards/RequireRole";
 import AppShell from "./layout/AppShell";
+import PageSkeleton from "@/components/PageSkeleton";
 
-
+// Vistas inmediatas (no lazy)
 import LoginPage from "@/features/auth/LoginPage";
 import RegisterPage from "@/features/auth/RegisterPage";
 
+// ─── Lazy Loaded Components ──────────────────────────────────────────────────
 // Dashboards
-import ManagerDashboard from "@/features/dashboard/ManagerDashboard";
-import EmployeeDashboard from "@/features/dashboard/EmployeeDashboard";
+const ManagerDashboard = lazy(() => import("@/features/dashboard/ManagerDashboard"));
+const EmployeeDashboard = lazy(() => import("@/features/dashboard/EmployeeDashboard"));
 
 // Tareas
-import TasksPageEmployee from "@/features/tasks/EmployeeTasksPage";
-import TareasManagerPage from "@/features/tasks/TareasManagerPage";
-import RoutineDetailPage from "@/features/tasks/catalog/RoutineDetailPage";
+const TasksPageEmployee = lazy(() => import("@/features/tasks/EmployeeTasksPage"));
+const TareasManagerPage = lazy(() => import("@/features/tasks/TareasManagerPage"));
+const RoutineDetailPage = lazy(() => import("@/features/tasks/catalog/RoutineDetailPage"));
 
 // Bitácora
-import BitacoraPage from "@/features/bitacora/BitacoraPage";
+const BitacoraPage = lazy(() => import("@/features/bitacora/BitacoraPage"));
 
 // Asistencia
-import EmployeeAttendancePage from "@/features/attendance/EmployeeAttendancePage";
-import ManagerAttendancePage from "@/features/attendance/ManagerAttendancePage";
+const EmployeeAttendancePage = lazy(() => import("@/features/attendance/EmployeeAttendancePage"));
+const ManagerAttendancePage = lazy(() => import("@/features/attendance/ManagerAttendancePage"));
 
-// Perfil
-import ProfilePage from "@/features/profile/ProfilePage";
-import EmpleadosPage from "@/features/employees/EmpleadosPage";
+// Perfil / Empleados
+const ProfilePage = lazy(() => import("@/features/profile/ProfilePage"));
+const EmpleadosPage = lazy(() => import("@/features/employees/EmpleadosPage"));
 
-//Configuracion
-import ConfiguracionPage from "@/features/configuracion/ConfiguracionPage";
+// Configuración
+const ConfiguracionPage = lazy(() => import("@/features/configuracion/ConfiguracionPage"));
 
-//Nomina
-import NominaPage from "@/features/nomina/NominaPage";
+// Nómina
+const NominaPage = lazy(() => import("@/features/nomina/NominaPage"));
 
 // Góndolas
-import GondolaRellenoPage from "@/features/gondolas/GondolaRellenoPage";
+const GondolaRellenoPage = lazy(() => import("@/features/gondolas/GondolaRellenoPage"));
 
 // Semáforo
-import SemaforoSupervisorPage from "@/features/semaforo/SemaforoSupervisorPage";
+const SemaforoSupervisorPage = lazy(() => import("@/features/semaforo/SemaforoSupervisorPage"));
+
+// Wrapper para Suspense
+function Suspended({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>;
+}
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -60,7 +68,7 @@ export const router = createBrowserRouter([
         path: "manager/dashboard",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
-            <ManagerDashboard />
+            <Suspended><ManagerDashboard /></Suspended>
           </RequireRole>
         ),
       },
@@ -68,7 +76,7 @@ export const router = createBrowserRouter([
         path: "manager/tareas",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
-            <TareasManagerPage />
+            <Suspended><TareasManagerPage /></Suspended>
           </RequireRole>
         ),
       },
@@ -76,16 +84,15 @@ export const router = createBrowserRouter([
         path: "manager/bitacora",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
-            <BitacoraPage />
+            <Suspended><BitacoraPage /></Suspended>
           </RequireRole>
         ),
       },
       {
-        // Detalle de rutina sigue siendo ruta propia
         path: "manager/tareas/rutinas/:id",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
-            <RoutineDetailPage />
+            <Suspended><RoutineDetailPage /></Suspended>
           </RequireRole>
         ),
       },
@@ -93,7 +100,7 @@ export const router = createBrowserRouter([
         path: "manager/asistencia",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
-            <ManagerAttendancePage />
+            <Suspended><ManagerAttendancePage /></Suspended>
           </RequireRole>
         ),
       },
@@ -101,16 +108,15 @@ export const router = createBrowserRouter([
         path: "manager/usuarios",
         element: (
           <RequireRole allow={["admin"]}>
-            <EmpleadosPage />
+            <Suspended><EmpleadosPage /></Suspended>
           </RequireRole>
         ),
       },
-      // Solo admin:
       {
         path: "manager/configuracion",
         element: (
           <RequireRole allow={["admin"]}>
-            <ConfiguracionPage />
+            <Suspended><ConfiguracionPage /></Suspended>
           </RequireRole>
         ),
       },
@@ -118,7 +124,7 @@ export const router = createBrowserRouter([
         path: "manager/nomina",
         element: (
           <RequireRole allow={["admin"]}>
-            <NominaPage />
+            <Suspended><NominaPage /></Suspended>
           </RequireRole>
         ),
       },
@@ -126,7 +132,7 @@ export const router = createBrowserRouter([
         path: "manager/semaforo",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
-            <SemaforoSupervisorPage />
+            <Suspended><SemaforoSupervisorPage /></Suspended>
           </RequireRole>
         ),
       },
@@ -136,7 +142,7 @@ export const router = createBrowserRouter([
         path: "employee/dashboard",
         element: (
           <RequireRole allow={["empleado"]}>
-            <EmployeeDashboard />
+            <Suspended><EmployeeDashboard /></Suspended>
           </RequireRole>
         ),
       },
@@ -144,7 +150,7 @@ export const router = createBrowserRouter([
         path: "employee/mis-tareas/asignaciones",
         element: (
           <RequireRole allow={["empleado"]}>
-            <TasksPageEmployee />
+            <Suspended><TasksPageEmployee /></Suspended>
           </RequireRole>
         ),
       },
@@ -152,7 +158,7 @@ export const router = createBrowserRouter([
         path: "employee/asistencia",
         element: (
           <RequireAuth>
-            <EmployeeAttendancePage />
+            <Suspended><EmployeeAttendancePage /></Suspended>
           </RequireAuth>
         ),
       },
@@ -160,7 +166,7 @@ export const router = createBrowserRouter([
         path: "employee/gondola-relleno/:ordenId",
         element: (
           <RequireAuth>
-            <GondolaRellenoPage />
+            <Suspended><GondolaRellenoPage /></Suspended>
           </RequireAuth>
         ),
       },
@@ -170,7 +176,7 @@ export const router = createBrowserRouter([
         path: "perfil",
         element: (
           <RequireAuth>
-            <ProfilePage />
+            <Suspended><ProfilePage /></Suspended>
           </RequireAuth>
         ),
       },

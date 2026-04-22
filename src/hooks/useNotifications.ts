@@ -5,6 +5,7 @@ import { auth } from '@/features/auth/store';
 
 export function useNotifications() {
   const tokenRef = useRef<string | null>(null);
+  const unsubRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const { user } = auth.get();
@@ -27,22 +28,30 @@ export function useNotifications() {
       }
     }
 
+    async function setupListener() {
+      try {
+        // onForegroundMessage es ahora async (lazy-load de Firebase Messaging)
+        const unsub = await onForegroundMessage((payload) => {
+          const { title, body } = payload.notification ?? {};
+          if (!title) return;
+
+          // Mostrar toast en la app
+          window.dispatchEvent(new CustomEvent('kore-notification', {
+            detail: { title, body, data: payload.data }
+          }));
+        });
+        unsubRef.current = unsub;
+      } catch (err) {
+        console.warn('Error configurando listener de notificaciones:', err);
+      }
+    }
+
     setup();
-
-    // Escuchar notificaciones en primer plano (app abierta)
-    const unsub = onForegroundMessage((payload) => {
-      const { title, body } = payload.notification ?? {};
-      if (!title) return;
-
-      // Mostrar toast en la app
-      window.dispatchEvent(new CustomEvent('kore-notification', {
-        detail: { title, body, data: payload.data }
-      }));
-    });
+    setupListener();
 
     // Limpiar token al cerrar sesión
     return () => {
-      unsub();
+      unsubRef.current?.();
       if (tokenRef.current) {
         api.delete('/fcm/token', { data: { token: tokenRef.current } })
           .catch(() => {});
