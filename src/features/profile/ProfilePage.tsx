@@ -55,10 +55,10 @@ function Avatar({ name, url, onUpload }: { name: string; url?: string | null; on
 function InfoField({ label, value, icon, placeholder }: { label: string; value?: string | null; icon?: React.ReactNode; placeholder?: string }) {
   return (
     <div>
-      <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">{label}</div>
-      <div className="rounded-2xl border border-neutral-100 bg-neutral-50/50 px-4 py-3 text-sm font-medium text-obsidian flex items-center gap-3">
-        {icon && <span className="text-neutral-300 shrink-0">{icon}</span>}
-        {value || <span className="text-neutral-300 italic">{placeholder ?? "—"}</span>}
+      <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-2">{label}</div>
+      <div className="rounded-2xl border border-k-border bg-k-bg-card2 px-4 py-3 text-sm font-medium text-k-text-h flex items-center gap-3">
+        {icon && <span className="text-k-text-b shrink-0">{icon}</span>}
+        {value || <span className="text-k-text-b italic">{placeholder ?? "—"}</span>}
       </div>
     </div>
   );
@@ -261,7 +261,7 @@ export default function ProfilePage() {
         {/* ── Left Column: Employee Card ── */}
         <div className="space-y-4">
           {/* Profile Card */}
-          <div className="rounded-[32px] bg-obsidian p-6 text-white shadow-sm overflow-hidden relative">
+          <div className="rounded-[32px] bg-k-bg-sidebar p-6 text-k-sb-text shadow-k-card overflow-hidden relative">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/[0.03]" />
               <div className="absolute bottom-0 left-0 h-20 w-32 rounded-full bg-gold/10" />
@@ -271,8 +271,8 @@ export default function ProfilePage() {
                 <Avatar name={profile.full_name} url={avatarLocal || profile.avatar_url} onUpload={handleAvatarUpload} />
               </div>
               <div className="min-w-0">
-                <div className="font-black text-xl tracking-tight truncate">{profile.full_name}</div>
-                <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mt-1 truncate">{profile.position_title ?? roleLabel}</div>
+                <div className="font-black text-xl tracking-tight truncate text-k-sb-active">{profile.full_name}</div>
+                <div className="text-[10px] font-bold text-k-sb-text uppercase tracking-[0.2em] mt-1 truncate">{profile.position_title ?? roleLabel}</div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
                   <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-[10px] font-bold text-emerald-300">
@@ -288,12 +288,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-[32px] border border-neutral-100 bg-white p-6 shadow-sm">
+          <div className="rounded-[32px] border border-k-border bg-k-bg-card p-6 shadow-k-card">
             <div className="flex items-center gap-2 mb-4">
-              <MonitorSmartphone className="h-4 w-4 text-neutral-300" />
-              <span className="text-sm font-black text-obsidian tracking-tight">Actividad Reciente</span>
+              <MonitorSmartphone className="h-4 w-4 text-k-text-b" />
+              <span className="text-sm font-black text-k-text-h tracking-tight">Actividad Reciente</span>
             </div>
-            <div className="text-xs font-medium text-neutral-500 leading-relaxed">
+            <div className="text-xs font-medium text-k-text-b leading-relaxed">
               Último acceso: hoy a las {new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })} desde {navigator.userAgent.includes("Chrome") ? "Chrome" : "Navegador"} / {navigator.platform.includes("Win") ? "Windows" : "Sistema OS"}.
             </div>
           </div>
@@ -301,16 +301,16 @@ export default function ProfilePage() {
 
         {/* ── Center Column: Personal Info ── */}
         <div className="space-y-4">
-          <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-            <div className="px-8 py-6 border-b border-neutral-50 flex items-center justify-between">
+          <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+            <div className="px-8 py-6 border-b border-k-border flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-obsidian tracking-tight">Información Personal</h2>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Datos de contacto y cuenta</p>
+                <h2 className="text-xl font-black text-k-text-h tracking-tight">Información Personal</h2>
+                <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">Datos de contacto y cuenta</p>
               </div>
               {!editing ? (
                 <button
                   onClick={startEdit}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-neutral-100 px-4 py-2 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-k-border px-4 py-2 text-xs font-bold text-k-text-b hover:bg-k-bg-card2 transition"
                 >
                   <Pencil className="h-3.5 w-3.5" />Editar
                 </button>
@@ -318,14 +318,14 @@ export default function ProfilePage() {
                 <div className="flex gap-2">
                   <button
                     onClick={cancelEdit}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-100 px-3 py-2 text-xs font-bold text-neutral-400 hover:bg-neutral-50 transition"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-k-border px-3 py-2 text-xs font-bold text-k-text-b hover:bg-k-bg-card2 transition"
                   >
                     <X className="h-3.5 w-3.5" />Cancelar
                   </button>
                   <button
                     onClick={saveEdit}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-obsidian px-4 py-2 text-xs font-bold text-white hover:bg-gold transition disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-k-accent-btn px-4 py-2 text-xs font-bold text-k-accent-btn-text hover:opacity-90 transition disabled:opacity-50"
                   >
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                     Guardar
@@ -385,10 +385,10 @@ export default function ProfilePage() {
         {/* ── Right Column: Employment Details ── */}
         <div className="space-y-4">
           {/* Employment Header */}
-          <div className="rounded-[32px] bg-bone border border-neutral-100 overflow-hidden shadow-sm">
-            <div className="bg-obsidian px-6 py-5 text-white rounded-t-[32px]">
-              <div className="text-sm font-black tracking-tight">Datos Laborales</div>
-              <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Información corporativa</div>
+          <div className="rounded-[32px] border border-k-border overflow-hidden shadow-k-card">
+            <div className="bg-k-bg-sidebar px-6 py-5 text-k-sb-text rounded-t-[32px]">
+              <div className="text-sm font-black tracking-tight text-k-sb-active">Datos Laborales</div>
+              <div className="text-[10px] font-bold text-k-sb-text uppercase tracking-widest mt-1">Información corporativa</div>
             </div>
             <div className="p-6 space-y-5">
               <div>
@@ -439,20 +439,20 @@ export default function ProfilePage() {
           </div>
 
           {/* Preferencias (NUEVO) */}
-          <div className="rounded-[32px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-neutral-50 flex items-center justify-between">
+          <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+            <div className="px-6 py-5 border-b border-k-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MonitorSmartphone className="h-4 w-4 text-neutral-300" />
-                <span className="text-sm font-black text-obsidian tracking-tight">Preferencias</span>
+                <MonitorSmartphone className="h-4 w-4 text-k-text-b" />
+                <span className="text-sm font-black text-k-text-h tracking-tight">Preferencias</span>
               </div>
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Bell className="h-4 w-4 text-neutral-400" />
+                  <Bell className="h-4 w-4 text-k-text-b" />
                   <div>
-                    <div className="text-xs font-bold text-obsidian">Notificaciones Push</div>
-                    <div className="text-[10px] text-neutral-400">Recibir alertas locales</div>
+                    <div className="text-xs font-bold text-k-text-h">Notificaciones Push</div>
+                    <div className="text-[10px] text-k-text-b">Recibir alertas locales</div>
                   </div>
                 </div>
                 <button
@@ -460,7 +460,7 @@ export default function ProfilePage() {
                   onClick={toggleNotifications}
                   className={cx(
                     "h-6 w-11 rounded-full transition-all flex items-center px-0.5 border",
-                    preferences.notifications ? "bg-emerald-500 border-emerald-600" : "bg-neutral-200 border-neutral-300"
+                    preferences.notifications ? "bg-k-accent-btn border-k-accent-btn" : "bg-k-bg-card2 border-k-border"
                   )}
                 >
                   <div className={cx(
@@ -496,16 +496,16 @@ export default function ProfilePage() {
           </div>
 
           {/* Change Password Section */}
-          <div className="rounded-[32px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
             <button 
               onClick={() => setSecurityExpanded(!securityExpanded)}
-              className="w-full px-6 py-5 flex items-center justify-between hover:bg-neutral-50 transition-colors"
+              className="w-full px-6 py-5 flex items-center justify-between hover:bg-k-bg-card2 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <Key className="h-4 w-4 text-neutral-400" />
-                <span className="text-sm font-black text-obsidian tracking-tight">Seguridad</span>
+                <Key className="h-4 w-4 text-k-text-b" />
+                <span className="text-sm font-black text-k-text-h tracking-tight">Seguridad</span>
               </div>
-              <ChevronDown className={cx("h-4 w-4 text-neutral-400 transition-transform", securityExpanded ? "rotate-180" : "rotate-0")} />
+              <ChevronDown className={cx("h-4 w-4 text-k-text-b transition-transform", securityExpanded ? "rotate-180" : "rotate-0")} />
             </button>
 
             {securityExpanded && (

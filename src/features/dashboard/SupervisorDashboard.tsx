@@ -24,7 +24,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   urgent: "bg-rose-100 text-rose-700",
   high:   "bg-orange-100 text-orange-700",
   medium: "bg-amber-100 text-amber-700",
-  low:    "bg-neutral-100 text-neutral-500",
+  low:    "bg-neutral-100 text-k-text-b",
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -53,7 +53,7 @@ function LoadingSpinner() {
   return (
     <div className="flex flex-col items-center justify-center p-20 space-y-4">
       <div className="h-12 w-12 border-4 border-obsidian/10 border-t-obsidian rounded-full animate-spin" />
-      <div className="text-[11px] font-bold text-obsidian/40 uppercase tracking-widest animate-pulse">
+      <div className="text-[11px] font-bold text-k-text-h/40 uppercase tracking-widest animate-pulse">
         Cargando...
       </div>
     </div>
@@ -62,15 +62,15 @@ function LoadingSpinner() {
 
 function ErrorCard({ message }: { message: string }) {
   return (
-    <div className="rounded-[32px] bg-white border border-rose-100 p-8 text-center max-w-md mx-auto mt-10">
+    <div className="rounded-[32px] bg-k-bg-card border border-rose-100 p-8 text-center max-w-md mx-auto mt-10">
       <div className="h-16 w-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
         <XCircle className="h-8 w-8" />
       </div>
-      <h2 className="text-xl font-black text-obsidian mb-2">Error</h2>
-      <p className="text-sm text-neutral-500 mb-6">{message}</p>
+      <h2 className="text-xl font-black text-k-text-h mb-2">Error</h2>
+      <p className="text-sm text-k-text-b mb-6">{message}</p>
       <button
         onClick={() => window.location.reload()}
-        className="h-11 px-6 bg-obsidian text-white rounded-xl font-bold text-sm"
+        className="h-11 px-6 bg-k-bg-sidebar text-white rounded-xl font-bold text-sm"
       >
         Reintentar
       </button>
@@ -92,14 +92,14 @@ function KpiCard({ label, value, color, icon, compact = false }: {
 
   if (compact) {
     return (
-      <div className="bg-white rounded-[24px] p-4 shadow-sm border border-neutral-100/50 flex flex-col justify-center">
+      <div className="bg-k-bg-card rounded-[24px] p-4 shadow-sm border border-k-border flex flex-col justify-center">
         <div className="flex items-center gap-3">
           <div className={cx("h-10 w-10 rounded-[14px] flex items-center justify-center shrink-0", colors[color])}>
             {icon}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-2xl font-black text-obsidian leading-none">{value}</div>
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em] truncate mt-1">{label}</div>
+            <div className="text-2xl font-black text-k-text-h leading-none">{value}</div>
+            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] truncate mt-1">{label}</div>
           </div>
         </div>
       </div>
@@ -107,12 +107,12 @@ function KpiCard({ label, value, color, icon, compact = false }: {
   }
 
   return (
-    <div className="bg-white rounded-[28px] p-6 shadow-sm border border-neutral-100/50">
+    <div className="bg-k-bg-card rounded-[28px] p-6 shadow-sm border border-k-border">
       <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center mb-4", colors[color])}>
         {icon}
       </div>
-      <div className="text-2xl font-black text-obsidian">{value}</div>
-      <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wide mt-1">{label}</div>
+      <div className="text-2xl font-black text-k-text-h">{value}</div>
+      <div className="text-[11px] font-bold text-k-text-b uppercase tracking-wide mt-1">{label}</div>
     </div>
   );
 }
@@ -161,31 +161,31 @@ export function AssignTaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl max-h-[88vh] flex flex-col">
+      <div className="bg-k-bg-card rounded-[32px] w-full max-w-md shadow-2xl max-h-[88vh] flex flex-col">
 
         {/* Header */}
-        <div className="px-7 pt-7 pb-5 border-b border-neutral-100">
-          <h2 className="text-lg font-black text-obsidian">Asignar Tarea</h2>
+        <div className="px-7 pt-7 pb-5 border-b border-k-border">
+          <h2 className="text-lg font-black text-k-text-h">Asignar Tarea</h2>
           {isSingle ? (
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm font-bold text-obsidian truncate">{tasks[0].title}</span>
+              <span className="text-sm font-bold text-k-text-h truncate">{tasks[0].title}</span>
             </div>
           ) : (
             <div className="mt-2">
-              <p className="text-sm font-bold text-obsidian">
+              <p className="text-sm font-bold text-k-text-h">
                 {tasks.length} tareas seleccionadas
               </p>
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {tasks.slice(0, 4).map(t => (
                   <span
                     key={t.id}
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-obsidian/5 text-obsidian/60 border border-obsidian/10 truncate max-w-[140px]"
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-k-bg-sidebar/5 text-k-text-h/60 border border-obsidian/10 truncate max-w-[140px]"
                   >
                     {t.title}
                   </span>
                 ))}
                 {tasks.length > 4 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-400">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-k-text-b">
                     +{tasks.length - 4} más
                   </span>
                 )}
@@ -222,15 +222,15 @@ export function AssignTaskModal({
                 className={cx(
                   "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                   selectedEmployees.includes(emp.empleado_id)
-                    ? "border-obsidian bg-obsidian/5"
-                    : "border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50"
+                    ? "border-obsidian bg-k-bg-sidebar/5"
+                    : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
                 )}
               >
                 {/* Checkbox */}
                 <div className={cx(
                   "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
                   selectedEmployees.includes(emp.empleado_id)
-                    ? "bg-obsidian border-obsidian"
+                    ? "bg-k-bg-sidebar border-obsidian"
                     : "border-neutral-300"
                 )}>
                   {selectedEmployees.includes(emp.empleado_id) && (
@@ -238,13 +238,13 @@ export function AssignTaskModal({
                   )}
                 </div>
                 {/* Avatar */}
-                <div className="h-9 w-9 rounded-xl bg-obsidian text-white flex items-center justify-center text-xs font-black shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-black shrink-0">
                   {emp.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}
                 </div>
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-obsidian truncate">{emp.full_name}</div>
-                  <div className="text-xs text-neutral-400">
+                  <div className="text-sm font-bold text-k-text-h truncate">{emp.full_name}</div>
+                  <div className="text-xs text-k-text-b">
                     {emp.task_count} tarea{emp.task_count !== 1 ? "s" : ""} · {emp.total_hours}h asignadas
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export function AssignTaskModal({
         </div>
 
         {/* Footer */}
-        <div className="px-7 pb-7 pt-4 border-t border-neutral-100 flex gap-3">
+        <div className="px-7 pb-7 pt-4 border-t border-k-border flex gap-3">
           <button
             onClick={onClose}
             className="flex-1 h-12 rounded-2xl border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition"
@@ -271,7 +271,7 @@ export function AssignTaskModal({
           <button
             onClick={handleAssign}
             disabled={selectedEmployees.length === 0 || assigning}
-            className="flex-1 h-12 rounded-2xl bg-obsidian text-white text-sm font-bold hover:bg-gold transition disabled:opacity-40"
+            className="flex-1 h-12 rounded-2xl bg-k-bg-sidebar text-white text-sm font-bold hover:bg-gold transition disabled:opacity-40"
           >
             {assigning
               ? "Asignando..."
@@ -335,14 +335,14 @@ export function AssignTemplateModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl max-h-[88vh] flex flex-col">
+      <div className="bg-k-bg-card rounded-[32px] w-full max-w-md shadow-2xl max-h-[88vh] flex flex-col">
 
         {/* Header */}
-        <div className="px-7 pt-7 pb-5 border-b border-neutral-100">
-          <h2 className="text-lg font-black text-obsidian">Asignar Plantilla</h2>
+        <div className="px-7 pt-7 pb-5 border-b border-k-border">
+          <h2 className="text-lg font-black text-k-text-h">Asignar Plantilla</h2>
           {templates.length === 1 ? (
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm font-bold text-obsidian truncate">{templates[0].title}</span>
+              <span className="text-sm font-bold text-k-text-h truncate">{templates[0].title}</span>
               {templates[0].priority && (
                 <span className={cx(
                   "text-[10px] font-bold px-2 py-0.5 rounded-full",
@@ -354,15 +354,15 @@ export function AssignTemplateModal({
             </div>
           ) : (
             <div className="mt-2">
-              <p className="text-sm font-bold text-obsidian">{templates.length} plantillas seleccionadas</p>
+              <p className="text-sm font-bold text-k-text-h">{templates.length} plantillas seleccionadas</p>
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {templates.slice(0, 4).map(t => (
-                  <span key={t.id} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-obsidian/5 text-obsidian/60 border border-obsidian/10 truncate max-w-[140px]">
+                  <span key={t.id} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-k-bg-sidebar/5 text-k-text-h/60 border border-obsidian/10 truncate max-w-[140px]">
                     {t.title}
                   </span>
                 ))}
                 {templates.length > 4 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-400">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-k-text-b">
                     +{templates.length - 4} más
                   </span>
                 )}
@@ -397,22 +397,22 @@ export function AssignTemplateModal({
                 className={cx(
                   "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                   selectedEmployees.includes(emp.empleado_id)
-                    ? "border-obsidian bg-obsidian/5"
-                    : "border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50"
+                    ? "border-obsidian bg-k-bg-sidebar/5"
+                    : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
                 )}
               >
                 <div className={cx(
                   "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
-                  selectedEmployees.includes(emp.empleado_id) ? "bg-obsidian border-obsidian" : "border-neutral-300"
+                  selectedEmployees.includes(emp.empleado_id) ? "bg-k-bg-sidebar border-obsidian" : "border-neutral-300"
                 )}>
                   {selectedEmployees.includes(emp.empleado_id) && <CheckCircle2 className="h-3 w-3 text-white" />}
                 </div>
-                <div className="h-9 w-9 rounded-xl bg-obsidian text-white flex items-center justify-center text-xs font-black shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-black shrink-0">
                   {emp.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-obsidian truncate">{emp.full_name}</div>
-                  <div className="text-xs text-neutral-400">
+                  <div className="text-sm font-bold text-k-text-h truncate">{emp.full_name}</div>
+                  <div className="text-xs text-k-text-b">
                     {emp.task_count} tarea{emp.task_count !== 1 ? "s" : ""} · {emp.total_hours}h asignadas
                   </div>
                 </div>
@@ -432,14 +432,14 @@ export function AssignTemplateModal({
         )}
 
         {/* Footer */}
-        <div className="px-7 pb-7 pt-4 border-t border-neutral-100 flex gap-3">
+        <div className="px-7 pb-7 pt-4 border-t border-k-border flex gap-3">
           <button onClick={onClose} className="flex-1 h-12 rounded-2xl border border-neutral-200 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition">
             Cancelar
           </button>
           <button
             onClick={handleAssign}
             disabled={selectedEmployees.length === 0 || assigning}
-            className="flex-1 h-12 rounded-2xl bg-obsidian text-white text-sm font-bold hover:bg-gold transition disabled:opacity-40"
+            className="flex-1 h-12 rounded-2xl bg-k-bg-sidebar text-white text-sm font-bold hover:bg-gold transition disabled:opacity-40"
           >
             {assigning ? "Asignando..." : `Asignar a ${selectedEmployees.length || ""} empleado${selectedEmployees.length !== 1 ? "s" : ""}`}
           </button>
@@ -476,8 +476,8 @@ export function TaskDetailModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in-fade">
-      <div className="bg-white rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in-up">
-        <div className="p-6 border-b border-neutral-100 flex items-start justify-between bg-neutral-50/50">
+      <div className="bg-k-bg-card rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden animate-in-up">
+        <div className="p-6 border-b border-k-border flex items-start justify-between bg-neutral-50/50">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase">
@@ -492,25 +492,25 @@ export function TaskDetailModal({
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-black text-obsidian leading-tight pr-4">{task.title}</h2>
+            <h2 className="text-xl font-black text-k-text-h leading-tight pr-4">{task.title}</h2>
           </div>
-          <button onClick={onClose} className="h-8 w-8 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-neutral-200 transition shrink-0">
+          <button onClick={onClose} className="h-8 w-8 rounded-full bg-neutral-100 text-k-text-b flex items-center justify-center hover:bg-neutral-200 transition shrink-0">
             <XCircle className="h-5 w-5" />
           </button>
         </div>
 
         <div className="p-6">
           <div className="mb-4">
-            <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest mb-3">Empleados Asignados</h3>
+            <h3 className="text-xs font-black text-k-text-b uppercase tracking-widest mb-3">Empleados Asignados</h3>
             {(!task.assignees || task.assignees.length === 0) ? (
-              <p className="text-sm text-neutral-500 italic">No hay empleados asignados a esta tarea.</p>
+              <p className="text-sm text-k-text-b italic">No hay empleados asignados a esta tarea.</p>
             ) : (
               <div className="space-y-3">
                 {task.assignees.map(a => {
                   const empName = a.empleado?.user?.name || a.empleado?.full_name || "Desconocido";
                   const pct = a.progress?.pct ?? 0;
                   return (
-                    <div key={a.id} className="flex items-center gap-3 p-3 rounded-2xl border border-neutral-100 bg-white">
+                    <div key={a.id} className="flex items-center gap-3 p-3 rounded-2xl border border-k-border bg-k-bg-card">
                        <div className="h-10 w-10 relative shrink-0">
                          <svg className="h-10 w-10 -rotate-90" viewBox="0 0 40 40">
                            <circle cx="20" cy="20" r="16" fill="none" stroke="#f3f4f6" strokeWidth="4" />
@@ -521,13 +521,13 @@ export function TaskDetailModal({
                              strokeDasharray={`${(pct / 100) * 100.5} 100.5`}
                            />
                          </svg>
-                         <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-obsidian">
+                         <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-k-text-h">
                            {pct}%
                          </span>
                        </div>
                        <div className="flex-1 min-w-0">
-                         <div className="text-sm font-bold text-obsidian truncate">{empName}</div>
-                         <div className="text-[10px] font-bold uppercase text-neutral-400 mt-0.5">
+                         <div className="text-sm font-bold text-k-text-h truncate">{empName}</div>
+                         <div className="text-[10px] font-bold uppercase text-k-text-b mt-0.5">
                            {a.status === 'in_progress' ? 'En proceso' : a.status === 'done' ? 'Terminado' : 'Asignado'}
                          </div>
                        </div>
@@ -596,7 +596,7 @@ export function OpenTasksPanel({
 
   return (
     <div className={cx(
-      "bg-white shadow-sm border border-neutral-100/50 flex flex-col transition-all overflow-hidden",
+      "bg-k-bg-card shadow-sm border border-k-border flex flex-col transition-all overflow-hidden",
       panelOpen ? "rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 min-h-[500px] lg:min-h-[600px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6"
     )}>
       <div className={cx("flex items-center justify-between", panelOpen ? "mb-4" : "")}>
@@ -605,8 +605,8 @@ export function OpenTasksPanel({
           onClick={() => setPanelOpen(!panelOpen)}
         >
           <div>
-            <h2 className="text-lg lg:text-xl font-black text-obsidian tracking-tight">Monitoreo de Tareas</h2>
-            {panelOpen && <p className="text-xs text-neutral-400 mt-0.5">Seguimiento de tareas activas</p>}
+            <h2 className="text-lg lg:text-xl font-black text-k-text-h tracking-tight">Monitoreo de Tareas</h2>
+            {panelOpen && <p className="text-xs text-k-text-b mt-0.5">Seguimiento de tareas activas</p>}
           </div>
           {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
         </div>
@@ -623,7 +623,7 @@ export function OpenTasksPanel({
           {onNewTask && (
             <button
               onClick={onNewTask}
-              className="h-8 px-3 rounded-xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-1.5"
+              className="h-8 px-3 rounded-xl bg-k-bg-sidebar text-white text-xs font-bold hover:bg-gold transition flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               Nueva
@@ -634,9 +634,9 @@ export function OpenTasksPanel({
 
       {panelOpen && (
         <>
-          <div className="flex items-center gap-2 mb-4 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100 shrink-0 self-start">
-            <button onClick={() => setTab("in_progress")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "in_progress" ? "bg-white shadow-sm text-amber-600" : "text-neutral-400 hover:text-amber-500")}>En Proceso</button>
-        <button onClick={() => setTab("overdue")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "overdue" ? "bg-white shadow-sm text-rose-600" : "text-neutral-400 hover:text-rose-500")}>Vencidas</button>
+          <div className="flex items-center gap-2 mb-4 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-k-border shrink-0 self-start">
+            <button onClick={() => setTab("in_progress")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "in_progress" ? "bg-k-bg-card shadow-sm text-amber-600" : "text-k-text-b hover:text-amber-500")}>En Proceso</button>
+        <button onClick={() => setTab("overdue")} className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "overdue" ? "bg-k-bg-card shadow-sm text-rose-600" : "text-k-text-b hover:text-rose-500")}>Vencidas</button>
       </div>
 
       {loading ? (
@@ -657,7 +657,7 @@ export function OpenTasksPanel({
             <div
               key={t.id}
               onClick={() => onTaskClick(t)}
-              className="flex items-center gap-3 p-4 rounded-2xl border border-neutral-100 cursor-pointer hover:border-obsidian/20 hover:bg-neutral-50 transition group shrink-0"
+              className="flex items-center gap-3 p-4 rounded-2xl border border-k-border cursor-pointer hover:border-obsidian/20 hover:bg-neutral-50 transition group shrink-0"
             >
               <div className={cx(
                 "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
@@ -667,8 +667,8 @@ export function OpenTasksPanel({
                 {tab === "in_progress" ? <Zap className="h-4 w-4" /> : <ClipboardList className="h-4 w-4" />}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-obsidian truncate">{t.title}</div>
-                <div className="text-xs text-neutral-400 mt-0.5 truncate">
+                <div className="text-sm font-bold text-k-text-h truncate">{t.title}</div>
+                <div className="text-xs text-k-text-b mt-0.5 truncate">
                   {t.assignees && t.assignees.length > 0 
                      ? `Asignada a ${t.assignees.length} empleado(s)` 
                      : "Sin asignar"}
@@ -683,7 +683,7 @@ export function OpenTasksPanel({
                   {PRIORITY_LABELS[t.priority] || t.priority}
                 </span>
               )}
-              <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-neutral-500 transition shrink-0" />
+              <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-k-text-b transition shrink-0" />
             </div>
           ))}
         </div>
@@ -775,7 +775,7 @@ export function AvailableTasksPanel({
 
   return (
     <div className={cx(
-      "bg-white shadow-sm border border-neutral-100/50 flex flex-col transition-all overflow-hidden h-full",
+      "bg-k-bg-card shadow-sm border border-k-border flex flex-col transition-all overflow-hidden h-full",
       panelOpen ? "rounded-[40px] p-8 min-h-[400px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6 min-h-0"
     )}>
       {/* Header */}
@@ -785,18 +785,18 @@ export function AvailableTasksPanel({
           onClick={() => setPanelOpen(!panelOpen)}
         >
           <div>
-            <h2 className="text-xl font-black text-obsidian tracking-tight">Tareas Disponibles</h2>
+            <h2 className="text-xl font-black text-k-text-h tracking-tight">Tareas Disponibles</h2>
             {panelOpen && (
-              <div className="flex items-center gap-2 mt-2 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-neutral-100">
+              <div className="flex items-center gap-2 mt-2 p-1 bg-neutral-100/50 rounded-xl inline-flex border border-k-border">
                 <button 
                   onClick={(e) => { e.stopPropagation(); setTab("templates"); setSelected(new Set()); }}
-                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "templates" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
+                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "templates" ? "bg-k-bg-card shadow-sm text-k-text-h" : "text-k-text-b hover:text-k-text-h")}
                 >
                   Plantillas
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); setTab("routines"); setSelected(new Set()); }}
-                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "routines" ? "bg-white shadow-sm text-obsidian" : "text-neutral-400 hover:text-obsidian")}
+                  className={cx("px-3 py-1.5 text-xs font-bold rounded-lg transition-colors", tab === "routines" ? "bg-k-bg-card shadow-sm text-k-text-h" : "text-k-text-b hover:text-k-text-h")}
                 >
                   Rutinas
                 </button>
@@ -809,7 +809,7 @@ export function AvailableTasksPanel({
           {selected.size > 0 && (
             <button
               onClick={handleAssign}
-              className="h-9 px-4 rounded-2xl bg-obsidian text-white text-xs font-bold hover:bg-gold transition flex items-center gap-2"
+              className="h-9 px-4 rounded-2xl bg-k-bg-sidebar text-white text-xs font-bold hover:bg-gold transition flex items-center gap-2"
             >
               <Plus className="h-3.5 w-3.5" />
               Asignar {tab === "templates" ? `(${selected.size})` : ''}
@@ -818,7 +818,7 @@ export function AvailableTasksPanel({
           {onNewTask && (
             <button
               onClick={onNewTask}
-              className="h-8 px-3 rounded-xl border border-neutral-200 text-obsidian text-xs font-bold hover:bg-neutral-50 transition flex items-center gap-1.5"
+              className="h-8 px-3 rounded-xl border border-neutral-200 text-k-text-h text-xs font-bold hover:bg-neutral-50 transition flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               Nueva
@@ -856,7 +856,7 @@ export function AvailableTasksPanel({
       ) : filtered.length === 0 ? (
         <div className="py-6 text-center">
           <p className="text-sm font-bold text-neutral-300">¡Al día!</p>
-          <p className="text-xs text-neutral-400 mt-1">Ya se asignaron todas las tareas de este tipo o no hay resultados.</p>
+          <p className="text-xs text-k-text-b mt-1">Ya se asignaron todas las tareas de este tipo o no hay resultados.</p>
         </div>
       ) : (
         <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
@@ -870,24 +870,24 @@ export function AvailableTasksPanel({
               className={cx(
                 "flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition",
                 selected.has(id)
-                  ? "border-obsidian bg-obsidian/5"
-                  : "border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50"
+                  ? "border-obsidian bg-k-bg-sidebar/5"
+                  : "border-k-border hover:border-neutral-200 hover:bg-neutral-50"
               )}
             >
               {/* Checkbox */}
               <div className={cx(
                 "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition",
-                selected.has(id) ? "bg-obsidian border-obsidian" : "border-neutral-300"
+                selected.has(id) ? "bg-k-bg-sidebar border-obsidian" : "border-neutral-300"
               )}>
                 {selected.has(id) && <CheckCircle2 className="h-3 w-3 text-white" />}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-obsidian truncate">{title}</div>
+                <div className="text-sm font-bold text-k-text-h truncate">{title}</div>
                 {t.estimated_minutes && (
-                  <div className="text-xs text-neutral-400">⏱ {t.estimated_minutes} min</div>
+                  <div className="text-xs text-k-text-b">⏱ {t.estimated_minutes} min</div>
                 )}
                 {t.recurrence && (
-                   <div className="text-xs text-neutral-400 capitalize">Recurrencia {t.recurrence}</div>
+                   <div className="text-xs text-k-text-b capitalize">Recurrencia {t.recurrence}</div>
                 )}
               </div>
               {t.priority && (
@@ -940,11 +940,11 @@ function PendingReviewCard({
   }
 
   return (
-    <div className="bg-white rounded-[40px] p-8 shadow-sm border border-neutral-100/50">
+    <div className="bg-k-bg-card rounded-[40px] p-8 shadow-sm border border-k-border">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-black text-obsidian tracking-tight">Pendientes de Revisión</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">
+          <h2 className="text-xl font-black text-k-text-h tracking-tight">Pendientes de Revisión</h2>
+          <p className="text-xs text-k-text-b mt-0.5">
             {items.length} tarea{items.length !== 1 ? "s" : ""} esperando aprobación
           </p>
         </div>
@@ -954,7 +954,7 @@ function PendingReviewCard({
       </div>
       <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
         {items.map(item => (
-          <div key={item.assignment_id} className="rounded-2xl border border-neutral-100 p-4">
+          <div key={item.assignment_id} className="rounded-2xl border border-k-border p-4">
             <div className="flex items-start gap-2 mb-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -965,14 +965,14 @@ function PendingReviewCard({
                     {item.priority}
                   </span>
                 </div>
-                <div className="text-sm font-bold text-obsidian truncate">{item.task_title}</div>
-                <div className="text-xs text-neutral-400 mt-0.5">
+                <div className="text-sm font-bold text-k-text-h truncate">{item.task_title}</div>
+                <div className="text-xs text-k-text-b mt-0.5">
                   👤 {item.empleado_name}
                   {item.done_at && (
                     <> · {new Date(item.done_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</>
                   )}
                 </div>
-                {item.note && <div className="text-xs text-neutral-500 mt-1 italic">"{item.note}"</div>}
+                {item.note && <div className="text-xs text-k-text-b mt-1 italic">"{item.note}"</div>}
               </div>
             </div>
 
@@ -988,7 +988,7 @@ function PendingReviewCard({
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setRejectingId(null); setRejectNote(""); }}
-                    className="flex-1 h-8 rounded-xl border border-neutral-200 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition"
+                    className="flex-1 h-8 rounded-xl border border-neutral-200 text-xs font-bold text-k-text-b hover:bg-neutral-50 transition"
                   >
                     Cancelar
                   </button>
@@ -1021,7 +1021,7 @@ function PendingReviewCard({
                   className="h-9 w-9 rounded-xl border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 transition"
                   title="Ver detalle"
                 >
-                  <Eye className="h-3.5 w-3.5 text-neutral-400" />
+                  <Eye className="h-3.5 w-3.5 text-k-text-b" />
                 </a>
               </div>
             )}
@@ -1056,7 +1056,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
 
   return (
     <div className={cx(
-      "bg-white shadow-sm border border-neutral-100/50 flex flex-col transition-all overflow-hidden h-full",
+      "bg-k-bg-card shadow-sm border border-k-border flex flex-col transition-all overflow-hidden h-full",
       panelOpen ? "rounded-[40px] p-8 min-h-[400px]" : "rounded-[24px] p-4 lg:px-8 lg:py-6 min-h-0"
     )}>
       <div className={cx("flex items-center justify-between", panelOpen ? "mb-6" : "")}>
@@ -1065,8 +1065,8 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
           onClick={() => setPanelOpen(!panelOpen)}
         >
           <div>
-            <h2 className="text-xl font-black text-obsidian tracking-tight">Carga del Equipo</h2>
-            {panelOpen && <p className="text-xs text-neutral-400 mt-0.5">Minutos asignados en tareas activas</p>}
+            <h2 className="text-xl font-black text-k-text-h tracking-tight">Carga del Equipo</h2>
+            {panelOpen && <p className="text-xs text-k-text-b mt-0.5">Minutos asignados en tareas activas</p>}
           </div>
           {panelOpen ? <ChevronUp className="h-5 w-5 text-neutral-300" /> : <ChevronDown className="h-5 w-5 text-neutral-300" />}
         </div>
@@ -1076,22 +1076,22 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
       {panelOpen && (
         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 flex-1">
         {workload.length === 0 ? (
-          <div className="py-8 text-center text-sm text-neutral-400">No hay empleados activos</div>
+          <div className="py-8 text-center text-sm text-k-text-b">No hay empleados activos</div>
         ) : (
           workload
             .sort((a, b) => a.total_minutes - b.total_minutes)
             .map(emp => (
-              <div key={emp.empleado_id} className="rounded-2xl border border-neutral-100 overflow-hidden">
+              <div key={emp.empleado_id} className="rounded-2xl border border-k-border overflow-hidden">
                 <div
                   className="flex items-center gap-3 p-3 cursor-pointer hover:bg-neutral-50 transition"
                   onClick={() => setExpanded(expanded === emp.empleado_id ? null : emp.empleado_id)}
                 >
-                  <div className="h-9 w-9 rounded-xl bg-obsidian text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="h-9 w-9 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center text-xs font-bold shrink-0">
                     {emp.full_name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-obsidian truncate">{emp.full_name}</span>
+                      <span className="text-sm font-bold text-k-text-h truncate">{emp.full_name}</span>
                       <span className={cx(
                         "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide shrink-0",
                         WORKLOAD_COLORS[emp.workload_level]
@@ -1106,7 +1106,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
                           style={{ width: `${Math.min((emp.total_minutes / 480) * 100, 100)}%` }}
                         />
                       </div>
-                      <span className="text-[11px] font-bold text-neutral-400 shrink-0">
+                      <span className="text-[11px] font-bold text-k-text-b shrink-0">
                         {fmt(emp.total_minutes)} · {emp.task_count} t
                       </span>
                     </div>
@@ -1119,7 +1119,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
                 </div>
 
                 {expanded === emp.empleado_id && emp.assignments.length > 0 && (
-                  <div className="border-t border-neutral-100 divide-y divide-neutral-50">
+                  <div className="border-t border-k-border divide-y divide-neutral-50">
                     {emp.assignments.map(a => (
                       <div key={a.assignment_id} className="px-4 py-2.5 flex items-center gap-3">
                         <div className="shrink-0 relative h-8 w-8">
@@ -1132,13 +1132,13 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
                               strokeDasharray={`${(a.progress.pct / 100) * 75.4} 75.4`}
                             />
                           </svg>
-                          <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-obsidian">
+                          <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-k-text-h">
                             {a.progress.pct}%
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-obsidian truncate">{a.task_title}</div>
-                          <div className="text-[10px] text-neutral-400">
+                          <div className="text-xs font-bold text-k-text-h truncate">{a.task_title}</div>
+                          <div className="text-[10px] text-k-text-b">
                             {fmt(a.estimated_minutes)}
                             {a.progress.type === "checklist" && ` · ${a.progress.done}/${a.progress.total} pasos`}
                           </div>
@@ -1147,7 +1147,7 @@ export function WorkloadCard({ workload }: { workload: EmployeeWorkload[] }) {
                           "text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0",
                           a.status === "in_progress"
                             ? "bg-blue-50 text-blue-600 border-blue-100"
-                            : "bg-neutral-50 text-neutral-500 border-neutral-100"
+                            : "bg-neutral-50 text-k-text-b border-k-border"
                         )}>
                           {a.status === "in_progress" ? "En proceso" : "Asignada"}
                         </span>
@@ -1226,9 +1226,9 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
     <div className="space-y-6 animate-in-up">
 
       {/* 1 · Hero */}
-      <div className="relative overflow-hidden bg-obsidian rounded-[40px] p-8 lg:p-10 text-white shadow-2xl shadow-obsidian/20">
+      <div className="relative overflow-hidden bg-k-bg-sidebar rounded-[40px] p-8 lg:p-10 text-white shadow-2xl shadow-obsidian/20">
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-[10px] font-bold tracking-[0.2em] uppercase mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-k-bg-card/10 text-[10px] font-bold tracking-[0.2em] uppercase mb-4">
             <Zap className="h-3 w-3" />
             Panel de Supervisión
           </div>
@@ -1240,7 +1240,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
             <span className="text-white font-bold">{data.kpi.active_tasks}</span> activas ahora
           </p>
         </div>
-        <div className="absolute -top-16 -right-16 w-72 h-72 bg-white/5 rounded-full blur-[80px]" />
+        <div className="absolute -top-16 -right-16 w-72 h-72 bg-k-bg-card/5 rounded-full blur-[80px]" />
       </div>
 
       {/* 2 · KPIs */}
@@ -1281,14 +1281,14 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
 
       {/* 6 · Mis Góndolas (si el supervisor tiene órdenes asignadas) */}
       {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length > 0 && (
-        <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-neutral-50 bg-neutral-50/50 flex items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-5 w-5 text-amber-500" />
-                <div className="text-xl font-black text-obsidian tracking-tight">Mis Góndolas por rellenar</div>
+                <div className="text-xl font-black text-k-text-h tracking-tight">Mis Góndolas por rellenar</div>
               </div>
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+              <div className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">
                 {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length} orden(es) activa(s)
               </div>
             </div>
@@ -1299,7 +1299,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xl">🛒</span>
-                    <div className="text-lg font-black text-obsidian tracking-tight truncate">{o.gondola?.nombre}</div>
+                    <div className="text-lg font-black text-k-text-h tracking-tight truncate">{o.gondola?.nombre}</div>
                     <span className={cx(
                       "inline-flex items-center rounded-full border px-2 py-0.5 text-xs",
                       o.status === 'rechazado' ? "bg-rose-50 text-rose-800 border-rose-200" :
@@ -1309,7 +1309,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
                       {o.status === 'rechazado' ? 'Rechazado' : o.status === 'en_proceso' ? 'En proceso' : 'Pendiente'}
                     </span>
                   </div>
-                  <div className="text-sm text-neutral-500">{o.items?.length ?? 0} productos</div>
+                  <div className="text-sm text-k-text-b">{o.items?.length ?? 0} productos</div>
                   {o.status === 'rechazado' && o.notas_rechazo && (
                     <div className="mt-2 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 text-xs text-rose-700 font-medium">
                       Motivo: {o.notas_rechazo}
@@ -1318,7 +1318,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
                 </div>
                 <button
                   onClick={() => nav(`/app/employee/gondola-relleno/${o.id}`)}
-                  className="w-full lg:w-auto rounded-2xl bg-obsidian text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                  className="w-full lg:w-auto rounded-2xl bg-k-bg-sidebar text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
                 >
                   {o.status === 'en_proceso' ? '→ Continuar' : o.status === 'rechazado' ? '↩ Volver a completar' : '▶ Iniciar relleno'}
                 </button>

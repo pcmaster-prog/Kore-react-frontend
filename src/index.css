@@ -4,8 +4,43 @@
   --color-obsidian: #313852;
   --color-bone: #F7F4EB;
   --color-bone-darker: #ECE8D9;
-  --color-gold: #453713;
+  --color-gold: #FFC840;
   --color-gold-light: #D9CDB0;
+  
+  /* Theme tokens mapped directly for v4 */
+  --color-k-bg-page: var(--bg-page);
+  --color-k-bg-sidebar: var(--bg-sidebar);
+  --color-k-bg-sidebar-hover: var(--bg-sidebar-hover);
+  --color-k-bg-card: var(--bg-card);
+  --color-k-bg-card2: var(--bg-card2);
+
+  --color-k-text-h: var(--text-h);
+  --color-k-text-b: var(--text-b);
+  --color-k-sb-text: var(--sb-text);
+  --color-k-sb-active: var(--sb-active);
+
+  --color-k-accent-btn: var(--accent-btn);
+  --color-k-accent-btn-text: var(--accent-btn-text);
+  --color-k-sb-active-bg: var(--sb-active-bg);
+
+  --color-k-badge-p-bg: var(--badge-p-bg);
+  --color-k-badge-p-c: var(--badge-p-c);
+  --color-k-badge-a-bg: var(--badge-a-bg);
+  --color-k-badge-a-c: var(--badge-a-c);
+  --color-k-badge-b-bg: var(--badge-b-bg);
+  --color-k-badge-b-c: var(--badge-b-c);
+
+  --color-k-bar1: var(--bar1);
+  --color-k-bar2: var(--bar2);
+  --color-k-bar3: var(--bar3);
+
+  --color-k-dot1: var(--dot1);
+  --color-k-dot2: var(--dot2);
+  --color-k-dot3: var(--dot3);
+
+  --color-k-border: var(--border);
+
+  --shadow-k-card: var(--shadow);
 }
 
 @layer base {
