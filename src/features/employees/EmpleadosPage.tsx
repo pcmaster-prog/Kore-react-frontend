@@ -800,7 +800,7 @@ export default function EmpleadosPage() {
           ) : (
             <div className="overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-k-bg-card2/80 border-b border-neutral-50">
+                <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
                     {["Usuario", "Rol", "Puesto", "No. Empleado", "Estado", "Acciones"].map((h) => (
                       <th key={h} className={cx("text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]", h === "No. Empleado" ? "hidden md:table-cell" : "")}>{h}</th>
@@ -813,7 +813,7 @@ export default function EmpleadosPage() {
                       key={user.id} 
                       onDoubleClick={() => openEdit(user)}
                       className={cx(
-                        "border-t border-neutral-50 transition cursor-pointer group",
+                        "border-t border-k-border transition cursor-pointer group",
                         !user.is_active ? "opacity-40" : "hover:bg-k-bg-card2/50"
                       )}
                     >

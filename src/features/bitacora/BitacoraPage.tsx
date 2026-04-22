@@ -145,16 +145,16 @@ function CriteriosModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg bg-white rounded-[32px] shadow-2xl overflow-hidden">
+      <div className="relative z-10 w-full max-w-lg bg-k-bg-card rounded-[32px] shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-7 py-6 border-b border-neutral-100 bg-neutral-50/70">
+        <div className="flex items-center justify-between px-7 py-6 border-b border-k-border bg-k-bg-card2/70">
           <div>
-            <div className="font-black text-xl text-obsidian">Criterios de Evaluación</div>
-            <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+            <div className="font-black text-xl text-k-text-h">Criterios de Evaluación</div>
+            <div className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">
               Configura los parámetros de evaluación del equipo
             </div>
           </div>
-          <button onClick={onClose} className="h-9 w-9 rounded-xl flex items-center justify-center border border-neutral-100 hover:bg-neutral-100 transition-colors">
+          <button onClick={onClose} className="h-9 w-9 rounded-xl flex items-center justify-center border border-k-border hover:bg-neutral-100 transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -164,13 +164,13 @@ function CriteriosModal({
           {local.map(c => (
             <div key={c.id} className={cx(
               "flex items-center gap-3 p-3 rounded-2xl border transition-all",
-              c.activo ? "bg-white border-neutral-100" : "bg-neutral-50 border-neutral-100 opacity-50"
+              c.activo ? "bg-k-bg-card border-k-border" : "bg-k-bg-card2 border-k-border opacity-50"
             )}>
               <button
                 onClick={() => toggleActivo(c.id)}
                 className={cx(
                   "h-5 w-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                  c.activo ? "bg-obsidian border-obsidian" : "border-neutral-200 bg-white"
+                  c.activo ? "bg-k-bg-sidebar border-obsidian" : "border-k-border bg-k-bg-card"
                 )}
               >
                 {c.activo && <CheckCircle2 className="h-3 w-3 text-white" />}
@@ -186,7 +186,7 @@ function CriteriosModal({
               </span>
               <button
                 onClick={() => removeCriterio(c.id)}
-                className="h-7 w-7 rounded-xl flex items-center justify-center text-neutral-300 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                className="h-7 w-7 rounded-xl flex items-center justify-center text-k-text-b hover:text-rose-500 hover:bg-rose-50 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -195,26 +195,26 @@ function CriteriosModal({
         </div>
 
         {/* Agregar nuevo */}
-        <div className="px-6 pb-4 border-t border-neutral-100 pt-4">
+        <div className="px-6 pb-4 border-t border-k-border pt-4">
           <div className="flex gap-2">
             <input
               value={newLabel}
               onChange={e => setNewLabel(e.target.value)}
               onKeyDown={e => e.key === "Enter" && addCriterio()}
               placeholder="Nuevo criterio..."
-              className="flex-1 rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-obsidian/10"
+              className="flex-1 rounded-xl border border-k-border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-obsidian/10"
             />
             <select
               value={newTipo}
               onChange={e => setNewTipo(e.target.value as "positivo" | "negativo")}
-              className="rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-obsidian/10"
+              className="rounded-xl border border-k-border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-obsidian/10"
             >
               <option value="positivo">Pos.</option>
               <option value="negativo">Neg.</option>
             </select>
             <button
               onClick={addCriterio}
-              className="h-10 w-10 rounded-xl bg-obsidian text-white flex items-center justify-center hover:bg-obsidian/90 transition-colors"
+              className="h-10 w-10 rounded-xl bg-k-bg-sidebar text-white flex items-center justify-center hover:bg-k-bg-sidebar/90 transition-colors"
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -222,7 +222,7 @@ function CriteriosModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="mt-4 w-full h-11 rounded-xl bg-obsidian text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-obsidian/90 transition-colors disabled:opacity-60"
+            className="mt-4 w-full h-11 rounded-xl bg-k-bg-sidebar text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-k-bg-sidebar/90 transition-colors disabled:opacity-60"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Guardar criterios
@@ -275,17 +275,17 @@ function EmployeeRow({
   const negativos = criterios.filter(c => c.tipo === "negativo" && c.activo);
 
   return (
-    <div className="rounded-[24px] border border-neutral-100 bg-white overflow-hidden shadow-sm">
+    <div className="rounded-[24px] border border-k-border bg-k-bg-card overflow-hidden shadow-k-card">
       {/* Resumen colapsable */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-neutral-50/70 transition-colors text-left"
+        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-k-bg-card2/70 transition-colors text-left"
       >
         <Avatar name={empName} />
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-sm text-obsidian truncate">{empName}</div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">{empPosition}</div>
+          <div className="font-bold text-sm text-k-text-h truncate">{empName}</div>
+          <div className="text-[11px] text-k-text-b mt-0.5">{empPosition}</div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           {/* Badge incidencia */}
@@ -300,43 +300,43 @@ function EmployeeRow({
           {/* Estrellas */}
           <StarRating value={evalData.rating} onChange={v => onEvalChange({ rating: v })} />
           {/* Tiempo */}
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-neutral-500 bg-neutral-50 border border-neutral-100 px-2.5 py-1 rounded-xl">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-k-text-b bg-k-bg-card2 border border-k-border px-2.5 py-1 rounded-xl">
             <Clock className="h-3 w-3" />
             {minutesToHHMM(workedMin)}
           </div>
-          {showDetail ? <ChevronUp className="h-4 w-4 text-neutral-400" /> : <ChevronDown className="h-4 w-4 text-neutral-400" />}
+          {showDetail ? <ChevronUp className="h-4 w-4 text-k-text-b" /> : <ChevronDown className="h-4 w-4 text-k-text-b" />}
         </div>
       </button>
 
       {/* Detalle expandido */}
       {showDetail && (
-        <div className="border-t border-neutral-100 p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="border-t border-k-border p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Tareas del día */}
           <div>
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3">Tareas realizadas</div>
+            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-3">Tareas realizadas</div>
             {tasks.length === 0 ? (
-              <div className="text-xs text-neutral-300 italic py-2">Sin tareas asignadas este día</div>
+              <div className="text-xs text-k-text-b italic py-2">Sin tareas asignadas este día</div>
             ) : (
               <div className="space-y-1.5">
                 {tasks.map(t => (
-                  <div key={t.id} className="flex items-center justify-between gap-2 text-sm py-1.5 border-b border-neutral-50 last:border-0">
+                  <div key={t.id} className="flex items-center justify-between gap-2 text-sm py-1.5 border-b border-k-border last:border-0">
                     <span className="flex-1 text-neutral-700 font-medium truncate">{t.title}</span>
                     <span className={cx(
                       "text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wide flex-shrink-0",
                       t.status === "completed" ? "bg-emerald-50 text-emerald-600" :
                       t.status === "in_progress" ? "bg-amber-50 text-amber-600" :
-                      "bg-neutral-50 text-neutral-400"
+                      "bg-k-bg-card2 text-k-text-b"
                     )}>
                       {t.status === "completed" ? "✓" : t.status === "in_progress" ? "En proceso" : "Pendiente"}
                     </span>
                     {(t as any).estimated_minutes && (
-                      <span className="text-[11px] text-neutral-400 flex-shrink-0">
+                      <span className="text-[11px] text-k-text-b flex-shrink-0">
                         {minutesToHHMM((t as any).estimated_minutes)}
                       </span>
                     )}
                   </div>
                 ))}
-                <div className="flex items-center justify-between pt-2 font-bold text-sm text-obsidian border-t border-neutral-100 mt-1">
+                <div className="flex items-center justify-between pt-2 font-bold text-sm text-k-text-h border-t border-k-border mt-1">
                   <span>Total</span>
                   <span>{minutesToHHMM(workedMin)}</span>
                 </div>
@@ -346,7 +346,7 @@ function EmployeeRow({
 
           {/* Evaluación del admin */}
           <div>
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3">Evaluación del Admin</div>
+            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-3">Evaluación del Admin</div>
             <div className="space-y-2">
               {[...negativos, ...positivos].map(c => (
                 <label key={c.id} className="flex items-center gap-3 cursor-pointer group">
@@ -355,8 +355,8 @@ function EmployeeRow({
                     className={cx(
                       "h-5 w-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all",
                       evalData.checks[c.id]
-                        ? "bg-obsidian border-obsidian"
-                        : "border-neutral-200 bg-white group-hover:border-neutral-300"
+                        ? "bg-k-bg-sidebar border-obsidian"
+                        : "border-k-border bg-k-bg-card group-hover:border-neutral-300"
                     )}
                   >
                     {evalData.checks[c.id] && <CheckCircle2 className="h-3 w-3 text-white" />}
@@ -376,7 +376,7 @@ function EmployeeRow({
 
             {/* Calificación */}
             <div className="mt-4 flex items-center gap-2">
-              <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">Calificación:</span>
+              <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">Calificación:</span>
               <StarRating value={evalData.rating} onChange={v => !isExporting && onEvalChange({ rating: v })} />
             </div>
 
@@ -387,10 +387,10 @@ function EmployeeRow({
                 onChange={e => onEvalChange({ note: e.target.value })}
                 placeholder="Observaciones del admin sobre este empleado..."
                 rows={3}
-                className="mt-3 w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
+                className="mt-3 w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-k-text-b"
               />
             ) : evalData.note ? (
-              <div className="mt-3 rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-700 whitespace-pre-wrap">
+              <div className="mt-3 rounded-xl bg-k-bg-card2 px-4 py-3 text-sm text-neutral-700 whitespace-pre-wrap">
                 {evalData.note}
               </div>
             ) : null}
@@ -532,11 +532,11 @@ export default function BitacoraPage() {
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="h-11 rounded-xl border-2 border-neutral-200 bg-white px-4 text-sm font-black outline-none focus:border-obsidian focus:ring-4 focus:ring-obsidian/10 shadow-sm transition-all"
+                  className="h-11 rounded-xl border-2 border-k-border bg-k-bg-card px-4 text-sm font-black outline-none focus:border-obsidian focus:ring-4 focus:ring-obsidian/10 shadow-k-card transition-all"
                 />
                 <button
                   onClick={() => setShowCriteriosModal(true)}
-                  className="h-11 px-4 rounded-xl border-2 border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+                  className="h-11 px-4 rounded-xl border-2 border-k-border bg-k-bg-card text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-k-bg-card2 transition-colors shadow-k-card"
                 >
                   <Settings2 className="h-4 w-4" />
                   Criterios
@@ -546,7 +546,7 @@ export default function BitacoraPage() {
                     const subject = encodeURIComponent(`Bitácora del Día - ${date}`);
                     window.open(`mailto:?subject=${subject}`);
                   }}
-                  className="h-11 px-4 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+                  className="h-11 px-4 rounded-xl border border-k-border bg-k-bg-card text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-k-bg-card2 transition-colors shadow-k-card"
                 >
                   <Mail className="h-4 w-4" />
                   Email
@@ -556,7 +556,7 @@ export default function BitacoraPage() {
                     navigator.clipboard.writeText(window.location.href);
                     alert("Enlace copiado al portapapeles");
                   }}
-                  className="h-11 px-4 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+                  className="h-11 px-4 rounded-xl border border-k-border bg-k-bg-card text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-k-bg-card2 transition-colors shadow-k-card"
                 >
                   <Share2 className="h-4 w-4" />
                   Compartir
@@ -564,7 +564,7 @@ export default function BitacoraPage() {
                 <button
                   onClick={handleExportPDF}
                   disabled={exporting || loading}
-                  className="h-11 px-5 rounded-xl bg-obsidian text-white text-sm font-bold flex items-center gap-2 hover:bg-obsidian/90 transition-colors shadow-sm disabled:opacity-60"
+                  className="h-11 px-5 rounded-xl bg-k-bg-sidebar text-white text-sm font-bold flex items-center gap-2 hover:bg-k-bg-sidebar/90 transition-colors shadow-k-card disabled:opacity-60"
                 >
                   {exporting
                     ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -578,19 +578,19 @@ export default function BitacoraPage() {
       ) : (
         <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-black text-obsidian tracking-tight">Bitácora del Día</h1>
-            <p className="text-sm text-neutral-400 mt-1 capitalize">{formatFechaLarga(date)}</p>
+            <h1 className="text-2xl font-black text-k-text-h tracking-tight">Bitácora del Día</h1>
+            <p className="text-sm text-k-text-b mt-1 capitalize">{formatFechaLarga(date)}</p>
           </div>
           <div className="flex items-center gap-3">
             <input
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="h-10 rounded-xl border border-neutral-200 bg-white px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 shadow-sm"
+              className="h-10 rounded-xl border border-k-border bg-k-bg-card px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 shadow-k-card"
             />
             <button
               onClick={() => setShowCriteriosModal(true)}
-              className="h-10 px-4 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-sm"
+              className="h-10 px-4 rounded-xl border border-k-border bg-k-bg-card text-sm font-bold text-neutral-600 flex items-center gap-2 hover:bg-k-bg-card2 transition-colors shadow-k-card"
             >
               <Settings2 className="h-4 w-4" />
               Criterios
@@ -598,7 +598,7 @@ export default function BitacoraPage() {
             <button
               onClick={handleExportPDF}
               disabled={exporting || loading}
-              className="h-10 px-5 rounded-xl bg-obsidian text-white text-sm font-bold flex items-center gap-2 hover:bg-obsidian/90 transition-colors shadow-sm disabled:opacity-60"
+              className="h-10 px-5 rounded-xl bg-k-bg-sidebar text-white text-sm font-bold flex items-center gap-2 hover:bg-k-bg-sidebar/90 transition-colors shadow-k-card disabled:opacity-60"
             >
               {exporting
                 ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -614,10 +614,10 @@ export default function BitacoraPage() {
 
         {/* Header del documento */}
         {!isEnabled("newManagementAdmin") && (
-          <div className="bg-obsidian rounded-[32px] px-8 py-7 flex items-center justify-between text-white">
+          <div className="bg-k-bg-sidebar rounded-[32px] px-8 py-7 flex items-center justify-between text-white">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-10 w-10 rounded-2xl bg-white flex items-center justify-center text-obsidian font-black text-xl italic">K</div>
+                <div className="h-10 w-10 rounded-2xl bg-k-bg-card flex items-center justify-center text-k-text-h font-black text-xl italic">K</div>
                 <div>
                   <div className="text-xl font-black tracking-tighter">Kore</div>
                   <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Ops Suite</div>
@@ -642,9 +642,9 @@ export default function BitacoraPage() {
         {/* KPIs */}
         {/* Empleados e KPIs (EmptyState cuando no hay registros) */}
         {loading ? (
-          <div className="bg-white rounded-[32px] border border-neutral-100 p-16 flex flex-col items-center gap-3">
-            <div className="h-10 w-10 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
-            <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Cargando bitácora...</span>
+          <div className="bg-k-bg-card rounded-[32px] border border-k-border p-16 flex flex-col items-center gap-3">
+            <div className="h-10 w-10 border-4 border-k-border border-t-obsidian rounded-full animate-spin" />
+            <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Cargando bitácora...</span>
           </div>
         ) : attendance.length === 0 ? (
           isEnabled("newManagementAdmin") ? (
@@ -654,12 +654,12 @@ export default function BitacoraPage() {
               description="No hay asistencia registrada en la fecha seleccionada."
             />
           ) : (
-            <div className="bg-white rounded-[32px] border border-neutral-100 p-16 flex flex-col items-center gap-4 text-center">
+            <div className="bg-k-bg-card rounded-[32px] border border-k-border p-16 flex flex-col items-center gap-4 text-center">
               <AlertTriangle className="h-12 w-12 text-neutral-200" />
-              <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">
+              <p className="text-sm font-bold text-k-text-b uppercase tracking-widest">
                 Sin registros de asistencia para esta fecha
               </p>
-              <p className="text-xs text-neutral-300">Selecciona otro día o verifica que haya empleados con check-in registrado</p>
+              <p className="text-xs text-k-text-b">Selecciona otro día o verifica que haya empleados con check-in registrado</p>
             </div>
           )
         ) : (
@@ -672,20 +672,20 @@ export default function BitacoraPage() {
                   { label: "Promedio del equipo", value: `${avgRating} ★`, icon: <Star className="h-5 w-5" />, color: "text-amber-500 bg-amber-50" },
                   { label: "Sin incidencias", value: sinIncidencias, icon: <CheckCircle2 className="h-5 w-5" />, color: "text-teal-600 bg-teal-50" },
                 ].map(kpi => (
-                  <div key={kpi.label} className="bg-white rounded-[24px] border border-neutral-100 p-5 shadow-sm">
+                  <div key={kpi.label} className="bg-k-bg-card rounded-[24px] border border-k-border p-5 shadow-k-card">
                     <div className={cx("h-10 w-10 rounded-xl flex items-center justify-center mb-3", kpi.color)}>
                       {kpi.icon}
                     </div>
-                    <div className="text-2xl font-black text-obsidian">{kpi.value}</div>
-                    <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wide mt-1">{kpi.label}</div>
+                    <div className="text-2xl font-black text-k-text-h">{kpi.value}</div>
+                    <div className="text-[11px] font-bold text-k-text-b uppercase tracking-wide mt-1">{kpi.label}</div>
                   </div>
                 ))}
               </div>
             )}
             <div className="space-y-4">
               <div className="flex items-center gap-3 px-1">
-                <FileText className="h-4 w-4 text-neutral-400" />
-                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+                <FileText className="h-4 w-4 text-k-text-b" />
+                <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">
                   Empleados y Tareas Realizadas
                 </span>
               </div>
@@ -706,20 +706,20 @@ export default function BitacoraPage() {
         )}
 
         {/* Notas generales */}
-        <div className="bg-white rounded-[32px] border border-neutral-100 p-6 shadow-sm">
+        <div className="bg-k-bg-card rounded-[32px] border border-k-border p-6 shadow-k-card">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center">
-                <FileText className="h-4 w-4 text-neutral-400" />
+              <div className="h-8 w-8 rounded-xl bg-k-bg-card2 border border-k-border flex items-center justify-center">
+                <FileText className="h-4 w-4 text-k-text-b" />
               </div>
-              <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+              <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">
                 Notas Generales del Día
               </span>
             </div>
             {isEnabled("newManagementAdmin") && !exporting && !showNotas && !notasGenerales && (
               <button
                 onClick={() => setShowNotas(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-k-border text-xs font-bold text-neutral-600 hover:bg-k-bg-card2 transition"
               >
                 <Plus className="h-3 w-3" /> Agregar nota del día
               </button>
@@ -732,20 +732,20 @@ export default function BitacoraPage() {
                 onChange={e => setNotasGenerales(e.target.value)}
                 placeholder="Observaciones generales, incidencias del negocio, pendientes para mañana..."
                 rows={4}
-                className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-neutral-300"
+                className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 resize-none transition-all placeholder:text-k-text-b"
               />
             ) : null
           ) : notasGenerales ? (
-            <div className="w-full rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-700 whitespace-pre-wrap">
+            <div className="w-full rounded-xl bg-k-bg-card2 px-4 py-3 text-sm text-neutral-700 whitespace-pre-wrap">
               {notasGenerales}
             </div>
           ) : (
-            <div className="text-sm text-neutral-400 italic">Sin observaciones generales.</div>
+            <div className="text-sm text-k-text-b italic">Sin observaciones generales.</div>
           )}
         </div>
 
         {/* Footer del doc */}
-        <div className="text-center py-4 text-[11px] text-neutral-300 font-medium">
+        <div className="text-center py-4 text-[11px] text-k-text-b font-medium">
           Documento generado por Kore Ops Suite · {new Date().toLocaleString("es-MX")}
         </div>
       </div>

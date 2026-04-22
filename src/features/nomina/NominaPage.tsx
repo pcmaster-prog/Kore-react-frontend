@@ -164,8 +164,8 @@ function EntryRow({
   return (
     <>
       <tr className={cx(
-        "border-t border-neutral-50 transition-colors group",
-        isExcluded ? "opacity-40 bg-neutral-50" : (dirty ? "bg-amber-50/30" : "hover:bg-neutral-50/50")
+        "border-t border-k-border transition-colors group",
+        isExcluded ? "opacity-40 bg-k-bg-card2" : (dirty ? "bg-amber-50/30" : "hover:bg-k-bg-card2/50")
       )}>
         {/* Empleado */}
         <td className="px-5 py-4">
@@ -174,15 +174,15 @@ function EntryRow({
               {initials(entry.empleado_name)}
             </div>
             <div>
-              <div className="text-sm font-bold text-obsidian">{entry.empleado_name}</div>
-              {entry.empleado_role && <div className="text-[10px] text-neutral-400 uppercase tracking-wider mt-0.5">{entry.empleado_role}</div>}
+              <div className="text-sm font-bold text-k-text-h">{entry.empleado_name}</div>
+              {entry.empleado_role && <div className="text-[10px] text-k-text-b uppercase tracking-wider mt-0.5">{entry.empleado_role}</div>}
             </div>
           </div>
         </td>
 
         {/* Horas/días */}
         <td className="px-5 py-4">
-          <div className="text-sm font-semibold text-obsidian">{fmtUnits(entry.payment_type, entry.units)}</div>
+          <div className="text-sm font-semibold text-k-text-h">{fmtUnits(entry.payment_type, entry.units)}</div>
           {entry.rest_days_paid > 0 && (
             <div className="text-[10px] text-emerald-600 font-medium mt-0.5">+{entry.rest_days_paid} descanso pagado</div>
           )}
@@ -224,30 +224,30 @@ function EntryRow({
 
         {/* Tarifa */}
         <td className="px-5 py-4">
-          <div className="text-sm font-semibold text-obsidian">{fmt(entry.rate)}</div>
-          <div className="text-[10px] text-neutral-400">{entry.payment_type === "hourly" ? "/hora" : "/día"}</div>
+          <div className="text-sm font-semibold text-k-text-h">{fmt(entry.rate)}</div>
+          <div className="text-[10px] text-k-text-b">{entry.payment_type === "hourly" ? "/hora" : "/día"}</div>
         </td>
 
         {/* Subtotal */}
         <td className="px-5 py-4">
-          <div className="text-sm font-bold text-obsidian">{fmt(entry.subtotal)}</div>
+          <div className="text-sm font-bold text-k-text-h">{fmt(entry.subtotal)}</div>
         </td>
 
         {/* Ajuste */}
         <td className="px-5 py-4">
           {approved ? (
-            <div className={cx("text-sm font-semibold", currentAdj < 0 ? "text-rose-500" : "text-neutral-500")}>
-              {currentAdj !== 0 ? fmt(currentAdj) : <span className="text-neutral-300">—</span>}
+            <div className={cx("text-sm font-semibold", currentAdj < 0 ? "text-rose-500" : "text-k-text-b")}>
+              {currentAdj !== 0 ? fmt(currentAdj) : <span className="text-k-text-b">—</span>}
             </div>
           ) : (isEnabled("newManagementAdmin") && !editingAdj) ? (
             <div 
               onClick={() => { setEditingAdj(true); setExpanded(true); }}
               className="cursor-pointer group flex items-center gap-2"
             >
-              <span className={cx("text-sm font-semibold transition-colors", currentAdj < 0 ? "text-rose-500" : "text-neutral-400 group-hover:text-obsidian")}>
+              <span className={cx("text-sm font-semibold transition-colors", currentAdj < 0 ? "text-rose-500" : "text-k-text-b group-hover:text-k-text-h")}>
                 {currentAdj !== 0 ? fmt(currentAdj) : "—"}
               </span>
-              <Pencil className="h-3 w-3 text-neutral-300 group-hover:text-obsidian transition-colors" />
+              <Pencil className="h-3 w-3 text-k-text-b group-hover:text-k-text-h transition-colors" />
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
@@ -261,7 +261,7 @@ function EntryRow({
                 className={cx(
                   "w-24 rounded-xl border px-2.5 py-1.5 text-sm font-medium outline-none transition",
                   "focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300",
-                  parseFloat(adj) < 0 ? "text-rose-600 border-rose-200 bg-rose-50" : "border-neutral-200 bg-white text-obsidian"
+                  parseFloat(adj) < 0 ? "text-rose-600 border-rose-200 bg-rose-50" : "border-k-border bg-k-bg-card text-k-text-h"
                 )}
                 placeholder="0"
               />
@@ -270,7 +270,7 @@ function EntryRow({
                   onClick={() => setExpanded(!expanded)}
                   className={cx(
                     "h-7 w-7 rounded-lg flex items-center justify-center transition",
-                    expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
+                    expanded ? "bg-k-bg-sidebar text-white" : "border border-k-border text-k-text-b hover:bg-k-bg-card2"
                   )}
                   title="Agregar motivo"
                 >
@@ -285,17 +285,17 @@ function EntryRow({
         <td className="px-5 py-4">
           {approved ? (
             <div className="text-sm font-semibold text-emerald-600">
-              {currentBonus > 0 ? fmt(currentBonus) : <span className="text-neutral-300">—</span>}
+              {currentBonus > 0 ? fmt(currentBonus) : <span className="text-k-text-b">—</span>}
             </div>
           ) : (isEnabled("newManagementAdmin") && !editingBonus) ? (
             <div 
               onClick={() => { setEditingBonus(true); setExpanded(true); }}
               className="cursor-pointer group flex items-center gap-2"
             >
-              <span className={cx("text-sm font-semibold transition-colors", currentBonus > 0 ? "text-emerald-600" : "text-neutral-400 group-hover:text-obsidian")}>
+              <span className={cx("text-sm font-semibold transition-colors", currentBonus > 0 ? "text-emerald-600" : "text-k-text-b group-hover:text-k-text-h")}>
                 {currentBonus !== 0 ? fmt(currentBonus) : "—"}
               </span>
-              <Pencil className="h-3 w-3 text-neutral-300 group-hover:text-obsidian transition-colors" />
+              <Pencil className="h-3 w-3 text-k-text-b group-hover:text-k-text-h transition-colors" />
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
@@ -307,7 +307,7 @@ function EntryRow({
                 onChange={(e) => { setBonus(e.target.value); setDirty(true); }}
                 onBlur={() => setEditingBonus(false)}
                 autoFocus={editingBonus}
-                className="w-24 rounded-xl border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium text-obsidian outline-none transition focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300"
+                className="w-24 rounded-xl border border-k-border bg-k-bg-card px-2.5 py-1.5 text-sm font-medium text-k-text-h outline-none transition focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300"
                 placeholder="0"
               />
               {!isEnabled("newManagementAdmin") && (
@@ -315,7 +315,7 @@ function EntryRow({
                   onClick={() => setExpanded(!expanded)}
                   className={cx(
                     "h-7 w-7 rounded-lg flex items-center justify-center transition",
-                    expanded ? "bg-obsidian text-white" : "border border-neutral-200 text-neutral-400 hover:bg-neutral-50"
+                    expanded ? "bg-k-bg-sidebar text-white" : "border border-k-border text-k-text-b hover:bg-k-bg-card2"
                   )}
                   title="Agregar motivo"
                 >
@@ -328,7 +328,7 @@ function EntryRow({
 
         {/* Total */}
         <td className="px-5 py-4">
-          <div className="text-sm font-black text-obsidian">{fmt(computedTotal)}</div>
+          <div className="text-sm font-black text-k-text-h">{fmt(computedTotal)}</div>
         </td>
 
         {/* Guardar/Acciones */}
@@ -340,12 +340,12 @@ function EntryRow({
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="h-8 w-8 rounded-xl flex items-center justify-center hover:bg-neutral-100 transition-colors"
                 >
-                  <MoreVertical className="h-4 w-4 text-neutral-500" />
+                  <MoreVertical className="h-4 w-4 text-k-text-b" />
                 </button>
                 {showDropdown && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)} />
-                    <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-neutral-100 shadow-xl z-20 overflow-hidden py-2">
+                    <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-k-bg-card border border-k-border shadow-xl z-20 overflow-hidden py-2">
                       <button
                         onClick={async () => {
                           setShowDropdown(false);
@@ -373,7 +373,7 @@ function EntryRow({
                             setDirty(false);
                           }
                         }}
-                        className="w-full text-left px-4 py-2 text-sm font-semibold text-obsidian hover:bg-neutral-50 flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-sm font-semibold text-k-text-h hover:bg-k-bg-card2 flex items-center gap-2"
                       >
                         <Check className="h-4 w-4" /> Guardar fila
                       </button>
@@ -407,7 +407,7 @@ function EntryRow({
                       setDirty(false);
                     }}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-obsidian px-3 py-1.5 text-[11px] font-bold text-white hover:bg-gold transition disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-k-bg-sidebar px-3 py-1.5 text-[11px] font-bold text-white hover:opacity-90 transition disabled:opacity-50"
                   >
                     {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Check className="h-3 w-3" />Guardar</>}
                   </button>
@@ -466,23 +466,23 @@ function EntryRow({
           <td colSpan={9} className="px-5 pb-4 pt-0">
             <div className="flex items-center gap-4 ml-14 mt-2">
               <div className="flex-1">
-                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5 block">Motivo del ajuste</label>
+                <label className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5 block">Motivo del ajuste</label>
                 <input
                   type="text"
                   value={adjNote}
                   onChange={(e) => { setAdjNote(e.target.value); setDirty(true); }}
                   placeholder="Ej. Descuento por falta, error en pago anterior..."
-                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
+                  className="w-full rounded-xl border border-k-border bg-k-bg-card px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
                 />
               </div>
               <div className="flex-1">
-                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5 block">Motivo del bono</label>
+                <label className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5 block">Motivo del bono</label>
                 <input
                   type="text"
                   value={bonusNote}
                   onChange={(e) => { setBonusNote(e.target.value); setDirty(true); }}
                   placeholder="Ej. Bono por puntualidad, incentivo especial..."
-                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
+                  className="w-full rounded-xl border border-k-border bg-k-bg-card px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
                 />
               </div>
             </div>
@@ -762,11 +762,11 @@ export default function NominaPage() {
     <div className="space-y-6 pb-24">
 
       {/* ── Header Hero ─────────────────────────────────────────────────────── */}
-      <div className="relative rounded-[40px] bg-obsidian overflow-hidden px-8 py-8 text-white">
+      <div className="relative rounded-[40px] bg-k-bg-sidebar overflow-hidden px-8 py-8 text-white">
         {/* Organic blobs */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/[0.03]" />
-          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-white/[0.04]" />
+          <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-k-bg-card/[0.03]" />
+          <div className="absolute top-8 right-32 h-32 w-32 rounded-full bg-k-bg-card/[0.04]" />
           <div className="absolute bottom-0 left-1/3 h-20 w-40 rounded-full bg-gold/10" />
         </div>
 
@@ -791,10 +791,10 @@ export default function NominaPage() {
             )}
 
             {/* Week navigator inline in header */}
-            <div className="flex items-center gap-2 bg-white/10 rounded-2xl p-1">
+            <div className="flex items-center gap-2 bg-k-bg-card/10 rounded-2xl p-1">
               <button
                 onClick={prevWeek}
-                className="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
+                className="h-9 w-9 rounded-xl bg-k-bg-card/10 hover:bg-k-bg-card/20 flex items-center justify-center transition"
               >
                 <ChevronLeft className="h-4 w-4 text-white" />
               </button>
@@ -803,7 +803,7 @@ export default function NominaPage() {
               </span>
               <button
                 onClick={nextWeek}
-                className="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
+                className="h-9 w-9 rounded-xl bg-k-bg-card/10 hover:bg-k-bg-card/20 flex items-center justify-center transition"
               >
                 <ChevronRight className="h-4 w-4 text-white" />
               </button>
@@ -835,26 +835,26 @@ export default function NominaPage() {
       )}
 
       {loading ? (
-        <div className="rounded-[40px] border bg-white p-20 flex flex-col items-center gap-4 text-neutral-400">
-          <div className="h-12 w-12 border-4 border-neutral-100 border-t-obsidian rounded-full animate-spin" />
+        <div className="rounded-[40px] border bg-k-bg-card p-20 flex flex-col items-center gap-4 text-k-text-b">
+          <div className="h-12 w-12 border-4 border-k-border border-t-obsidian rounded-full animate-spin" />
           <span className="text-xs font-bold uppercase tracking-widest">Cargando nómina...</span>
         </div>
       ) : !period ? (
         /* ── Sin periodo generado ─────────────────────────────────────── */
-        <div className="rounded-[40px] border bg-white p-16 flex flex-col items-center gap-6 text-center">
-          <div className="h-20 w-20 rounded-[28px] bg-neutral-50 border border-neutral-100 flex items-center justify-center">
+        <div className="rounded-[40px] border bg-k-bg-card p-16 flex flex-col items-center gap-6 text-center">
+          <div className="h-20 w-20 rounded-[28px] bg-k-bg-card2 border border-k-border flex items-center justify-center">
             <DollarSign className="h-10 w-10 text-neutral-200" />
           </div>
           <div>
-            <div className="font-black text-2xl text-obsidian">Sin Nómina Generada</div>
-            <div className="text-sm text-neutral-400 mt-2 max-w-xs">
-              No hay un periodo para la semana <span className="font-bold text-obsidian">{weekLabel(weekStart, weekEnd)}</span>. Genera uno para empezar.
+            <div className="font-black text-2xl text-k-text-h">Sin Nómina Generada</div>
+            <div className="text-sm text-k-text-b mt-2 max-w-xs">
+              No hay un periodo para la semana <span className="font-bold text-k-text-h">{weekLabel(weekStart, weekEnd)}</span>. Genera uno para empezar.
             </div>
           </div>
           <button
             onClick={generate}
             disabled={generating}
-            className="inline-flex items-center gap-2 rounded-2xl bg-obsidian px-8 py-3.5 text-sm font-bold text-white hover:bg-gold transition-all shadow-lg shadow-obsidian/20 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-2xl bg-k-bg-sidebar px-8 py-3.5 text-sm font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-obsidian/20 disabled:opacity-50"
           >
             {generating
               ? <><Loader2 className="h-4 w-4 animate-spin" />Generando...</>
@@ -866,11 +866,11 @@ export default function NominaPage() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
 
           {/* ─ Tabla de empleados ─────────────────────────────────── */}
-          <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-            <div className="px-8 py-6 border-b border-neutral-50 flex items-center justify-between">
+          <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+            <div className="px-8 py-6 border-b border-k-border flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-obsidian tracking-tight">Detalle por Empleado</h2>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-1">
+                <h2 className="text-xl font-black text-k-text-h tracking-tight">Detalle por Empleado</h2>
+                <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">
                   Semana {weekLabel(period.week_start, period.week_end)}
                 </p>
               </div>
@@ -882,7 +882,7 @@ export default function NominaPage() {
                   }}
                   disabled={generating}
                   title="Vuelve a calcular la nómina tomando la última información de asistencia"
-                  className="inline-flex items-center gap-1.5 rounded-2xl border border-neutral-100 bg-white px-4 py-2 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-k-border bg-k-bg-card px-4 py-2 text-xs font-bold text-k-text-b hover:bg-k-bg-card2 transition"
                 >
                   <RefreshCw className={cx("h-3.5 w-3.5", generating && "animate-spin")} />
                   {isEnabled("newManagementAdmin") ? "Recalcular nómina del mes" : "Recalcular"}
@@ -892,14 +892,14 @@ export default function NominaPage() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-neutral-50/80 border-b border-neutral-50">
+                <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
                     {["Empleado", "Horas/Días", "Tipo", "Tarifa", "Subtotal", "Ajuste", "Bono", "Total"].map((h, i) => (
-                      <th key={i} className="text-left px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">
+                      <th key={i} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">
                         {h}
                       </th>
                     ))}
-                    {!approved && <th className="px-5 py-4 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.1em]">Guardar</th>}
+                    {!approved && <th className="px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">Guardar</th>}
                     {!approved && <th className="px-5 py-4"></th>}
                   </tr>
                 </thead>
@@ -908,7 +908,7 @@ export default function NominaPage() {
                     <tr>
                       <td colSpan={10} className="px-5 py-16 text-center">
                         <Users className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
-                        <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">Sin empleados en este periodo</p>
+                        <p className="text-sm font-bold text-k-text-b uppercase tracking-widest">Sin empleados en este periodo</p>
                       </td>
                     </tr>
                   ) : (
@@ -930,13 +930,13 @@ export default function NominaPage() {
             </div>
 
             {/* Footer con total */}
-            <div className="px-8 py-5 border-t border-neutral-50 bg-neutral-50/50 flex items-center justify-between">
-              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
+            <div className="px-8 py-5 border-t border-k-border bg-k-bg-card2/50 flex items-center justify-between">
+              <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">
                 {totalEmp} empleado{totalEmp !== 1 ? "s" : ""} (pagables)
               </span>
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Total semana</span>
-                <span className="text-2xl font-black text-obsidian">{fmt(period.total_amount)}</span>
+                <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Total semana</span>
+                <span className="text-2xl font-black text-k-text-h">{fmt(period.total_amount)}</span>
               </div>
             </div>
           </div>
@@ -945,14 +945,14 @@ export default function NominaPage() {
           <div className="space-y-4">
 
             {/* Resumen de nómina */}
-            <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-neutral-50">
-                <h3 className="text-sm font-black text-obsidian tracking-tight">Resumen de Nómina</h3>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Totales del periodo</p>
+            <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+              <div className="px-6 py-5 border-b border-k-border">
+                <h3 className="text-sm font-black text-k-text-h tracking-tight">Resumen de Nómina</h3>
+                <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">Totales del periodo</p>
               </div>
               <div className="p-6 space-y-4">
                 {/* Total destacado */}
-                <div className="rounded-[28px] bg-obsidian p-5 text-white">
+                <div className="rounded-[28px] bg-k-bg-sidebar p-5 text-white">
                   <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/50 mb-2">Total a Pagar</div>
                   <div className="text-3xl font-black tracking-tight">{fmt(period.total_amount)}</div>
                 </div>
@@ -976,31 +976,31 @@ export default function NominaPage() {
                 </div>
 
                 {/* Stats */}
-                <div className="rounded-2xl border border-neutral-50 bg-neutral-50/50 p-4 space-y-3">
+                <div className="rounded-2xl border border-k-border bg-k-bg-card2/50 p-4 space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Empleados</span>
-                    <span className="text-sm font-black text-obsidian">{totalEmp}</span>
+                    <span className="text-xs font-bold text-k-text-b uppercase tracking-wider">Empleados</span>
+                    <span className="text-sm font-black text-k-text-h">{totalEmp}</span>
                   </div>
                   <div className="w-full h-px bg-neutral-100" />
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Prom. por empleado</span>
-                    <span className="text-sm font-black text-obsidian">{fmt(avgTotal)}</span>
+                    <span className="text-xs font-bold text-k-text-b uppercase tracking-wider">Prom. por empleado</span>
+                    <span className="text-sm font-black text-k-text-h">{fmt(avgTotal)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Acciones */}
-            <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-neutral-50">
-                <h3 className="text-sm font-black text-obsidian tracking-tight">Acciones</h3>
+            <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+              <div className="px-6 py-5 border-b border-k-border">
+                <h3 className="text-sm font-black text-k-text-h tracking-tight">Acciones</h3>
               </div>
               <div className="p-6 space-y-3">
                 {!approved && (
                   <button
                     onClick={approve}
                     disabled={approving}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-obsidian px-4 py-3.5 text-xs font-bold text-white uppercase tracking-widest hover:bg-gold transition-all shadow-lg shadow-obsidian/10 disabled:opacity-50"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-k-bg-sidebar px-4 py-3.5 text-xs font-bold text-white uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-obsidian/10 disabled:opacity-50"
                   >
                     {approving
                       ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -1010,13 +1010,13 @@ export default function NominaPage() {
                 )}
                 <button
                   onClick={exportPDF}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-100 bg-white hover:bg-neutral-50 px-4 py-3 text-xs font-bold text-obsidian uppercase tracking-widest transition"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 px-4 py-3 text-xs font-bold text-k-text-h uppercase tracking-widest transition"
                 >
                   <Download className="h-4 w-4" />Exportar PDF
                 </button>
                 <button
                   onClick={exportCSV}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-100 bg-white hover:bg-neutral-50 px-4 py-3 text-xs font-bold text-obsidian uppercase tracking-widest transition"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 px-4 py-3 text-xs font-bold text-k-text-h uppercase tracking-widest transition"
                 >
                   <FileSpreadsheet className="h-4 w-4" />Exportar CSV
                 </button>
@@ -1025,10 +1025,10 @@ export default function NominaPage() {
 
             {/* Gráfico de distribución (NUEVO) */}
             {isEnabled("newManagementAdmin") && chartData.length > 0 && (
-              <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden mb-4">
-                <div className="px-6 py-5 border-b border-neutral-50">
-                  <h3 className="text-sm font-black text-obsidian tracking-tight">Distribución de Costos</h3>
-                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Por departamento / Rol</p>
+              <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden mb-4">
+                <div className="px-6 py-5 border-b border-k-border">
+                  <h3 className="text-sm font-black text-k-text-h tracking-tight">Distribución de Costos</h3>
+                  <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">Por departamento / Rol</p>
                 </div>
                 <div className="p-6">
                   <div className="h-48 w-full">
@@ -1079,14 +1079,14 @@ export default function NominaPage() {
       {/* Floating Save Bar for Global Save */}
       {isEnabled("newManagementAdmin") && Object.keys(globalPatches).length > 0 && !approved && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10">
-          <div className="bg-obsidian text-white rounded-full px-6 py-3 shadow-2xl flex items-center gap-6 border border-white/10">
+          <div className="bg-k-bg-sidebar text-white rounded-full px-6 py-3 shadow-2xl flex items-center gap-6 border border-white/10">
             <div className="text-sm font-bold">
               Hay cambios pendientes de guardar
             </div>
             <button
               onClick={saveAllChanges}
               disabled={savingGlobal}
-              className="flex items-center gap-2 bg-white text-obsidian px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:bg-neutral-100 transition disabled:opacity-50"
+              className="flex items-center gap-2 bg-k-bg-card text-k-text-h px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:bg-neutral-100 transition disabled:opacity-50"
             >
               {savingGlobal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Guardar Cambios

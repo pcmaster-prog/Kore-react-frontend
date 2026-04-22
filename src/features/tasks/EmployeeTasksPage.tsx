@@ -680,7 +680,7 @@ export default function EmployeeTasksPage() {
 
           {/* Lista */}
           <div className="rounded-[32px] sm:rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden mt-6">
-            <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex flex-wrap items-center justify-between gap-4">
+            <div className="p-6 sm:p-8 border-b border-k-border bg-k-bg-card2/50 flex flex-wrap items-center justify-between gap-4">
               <div className="text-xl font-black text-k-text-h tracking-tight">
                 Resultados
               </div>
@@ -945,7 +945,7 @@ export default function EmployeeTasksPage() {
             ) : null}
 
             {data && data.last_page > 1 && (
-              <div className="p-6 border-t border-neutral-50 bg-k-bg-card2/50 flex flex-wrap items-center justify-between gap-4">
+              <div className="p-6 border-t border-k-border bg-k-bg-card2/50 flex flex-wrap items-center justify-between gap-4">
                 <button
                   className="rounded-2xl border border-k-border bg-k-bg-card px-5 py-2.5 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition-colors uppercase tracking-widest disabled:opacity-50 inline-flex items-center"
                   disabled={page <= 1}

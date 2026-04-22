@@ -105,20 +105,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex bg-neutral-50 font-sans">
+    <div className="min-h-screen w-full flex bg-k-bg-card2 font-sans">
 
       {/* ── Left Panel: Brand Experience (Hidden on Mobile) ── */}
-      <div className="hidden lg:flex lg:w-1/2 bg-obsidian relative overflow-hidden flex-col justify-between p-12">
+      <div className="hidden lg:flex lg:w-1/2 bg-k-bg-sidebar relative overflow-hidden flex-col justify-between p-12">
         {/* Abstract shapes / Glows */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-white/[0.03] blur-3xl animate-pulse" />
+          <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-k-bg-card/[0.03] blur-3xl animate-pulse" />
           <div className="absolute top-1/2 -right-32 h-80 w-80 rounded-full bg-gold/10 blur-3xl" />
           <div className="absolute bottom-0 left-1/4 h-72 w-[38rem] rounded-full bg-emerald-500/5 blur-3xl" />
         </div>
 
         {/* Top Logo */}
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-3 rounded-[24px] bg-white/5 border border-white/10 px-5 py-2.5 backdrop-blur-md shadow-2xl">
+          <div className="inline-flex items-center gap-3 rounded-[24px] bg-k-bg-card/5 border border-white/10 px-5 py-2.5 backdrop-blur-md shadow-2xl">
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
             <span className="text-xl font-black tracking-tight text-white">Kore</span>
             <span className="text-white/50 text-[10px] font-bold tracking-[0.2em] uppercase ml-1">Ops Suite</span>
@@ -147,7 +147,7 @@ export default function LoginPage() {
 
           {/* Mobile Logo */}
           <div className="lg:hidden mb-12 text-center flex justify-center">
-            <div className="inline-flex items-center gap-3 rounded-[24px] bg-obsidian px-5 py-2.5 shadow-xl">
+            <div className="inline-flex items-center gap-3 rounded-[24px] bg-k-bg-sidebar px-5 py-2.5 shadow-xl">
               <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
               <span className="text-xl font-black tracking-tight text-white">Kore</span>
               <span className="text-white/50 text-[10px] font-bold tracking-[0.2em] uppercase ml-1">Ops Suite</span>
@@ -155,8 +155,8 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-10 lg:mb-12 text-center lg:text-left">
-            <h2 className="text-3xl font-black text-obsidian tracking-tight">Iniciar Sesión</h2>
-            <p className="mt-3 text-sm font-medium text-neutral-500 leading-relaxed">
+            <h2 className="text-3xl font-black text-k-text-h tracking-tight">Iniciar Sesión</h2>
+            <p className="mt-3 text-sm font-medium text-k-text-b leading-relaxed">
               Ingresa tus credenciales para acceder a tu entorno de trabajo seguro.
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function LoginPage() {
               ref={errorRef}
               tabIndex={-1}
               role="alert"
-              className="mb-8 rounded-[24px] border border-rose-200 bg-rose-50/50 p-5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="mb-8 rounded-[24px] border border-rose-200 bg-rose-50/50 p-5 shadow-k-card focus:outline-none focus:ring-2 focus:ring-rose-300"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-rose-600">
@@ -184,10 +184,10 @@ export default function LoginPage() {
 
           <form onSubmit={onSubmit} className="space-y-5">
             <div className="space-y-1.5">
-              <label htmlFor="login-email" className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-2">Correo Electrónico</label>
+              <label htmlFor="login-email" className="text-[10px] font-bold text-k-text-b uppercase tracking-widest ml-2">Correo Electrónico</label>
               <input
                 id="login-email"
-                className="w-full rounded-2xl border border-neutral-200 bg-white px-5 py-3.5 text-sm font-medium text-obsidian placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-obsidian/5 transition-all shadow-sm"
+                className="w-full rounded-2xl border border-k-border bg-k-bg-card px-5 py-3.5 text-sm font-medium text-k-text-h placeholder:text-k-text-b focus:outline-none focus:ring-2 focus:ring-obsidian/5 transition-all shadow-k-card"
                 placeholder="correo@kore.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -198,7 +198,7 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between ml-2">
-                <label htmlFor="login-password" className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Contraseña</label>
+                <label htmlFor="login-password" className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Contraseña</label>
                 {caps ? (
                   <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Caps Lock
@@ -209,7 +209,7 @@ export default function LoginPage() {
               <div className="relative flex items-center">
                 <input
                   id="login-password"
-                  className="w-full rounded-2xl border border-neutral-200 bg-white px-5 py-3.5 text-sm font-medium text-obsidian placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-obsidian/5 transition-all shadow-sm pr-20"
+                  className="w-full rounded-2xl border border-k-border bg-k-bg-card px-5 py-3.5 text-sm font-medium text-k-text-h placeholder:text-k-text-b focus:outline-none focus:ring-2 focus:ring-obsidian/5 transition-all shadow-k-card pr-20"
                   type={showPass ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
@@ -219,7 +219,7 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
-                  className="absolute right-4 text-[10px] font-bold text-neutral-400 uppercase tracking-widest hover:text-obsidian transition-colors"
+                  className="absolute right-4 text-[10px] font-bold text-k-text-b uppercase tracking-widest hover:text-k-text-h transition-colors"
                   onClick={() => setShowPass((v) => !v)}
                   aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
                 >
@@ -234,14 +234,14 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
-                  className="w-4 h-4 rounded border-neutral-300 text-obsidian focus:ring-obsidian/20 transition-all cursor-pointer accent-obsidian"
+                  className="w-4 h-4 rounded border-neutral-300 text-k-text-h focus:ring-obsidian/20 transition-all cursor-pointer accent-obsidian"
                 />
-                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest group-hover:text-obsidian transition-colors">
+                <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest group-hover:text-k-text-h transition-colors">
                   Recordarme
                 </span>
               </label>
 
-              <button type="button" className="text-[11px] font-bold text-neutral-400 hover:text-obsidian uppercase tracking-widest transition-colors">
+              <button type="button" className="text-[11px] font-bold text-k-text-b hover:text-k-text-h uppercase tracking-widest transition-colors">
                 ¿Olvidaste tu clave?
               </button>
             </div>
@@ -249,7 +249,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !email.trim() || !password.trim() || isCoolingDown}
-              className="mt-6 w-full rounded-2xl bg-obsidian text-white px-6 py-4 text-xs font-bold tracking-widest uppercase hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-obsidian focus:ring-offset-2 flex items-center justify-center gap-2"
+              className="mt-6 w-full rounded-2xl bg-k-accent-btn text-k-accent-btn-text px-6 py-4 text-xs font-bold tracking-widest uppercase hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-obsidian focus:ring-offset-2 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

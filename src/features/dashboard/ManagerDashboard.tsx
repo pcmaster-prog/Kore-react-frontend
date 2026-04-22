@@ -311,7 +311,7 @@ function AdminDashboard() {
           </button>
           
           {activityOpen && (
-            <div className="p-6 pt-0 space-y-3 border-t border-neutral-50 animate-in-fade">
+            <div className="p-6 pt-0 space-y-3 border-t border-k-border animate-in-fade">
               {activityFeed.length > 0 ? (
                 activityFeed.map(item => (
                   <div

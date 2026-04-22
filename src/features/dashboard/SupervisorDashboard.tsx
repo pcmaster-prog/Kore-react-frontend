@@ -1282,7 +1282,7 @@ export default function SupervisorDashboard({ userName }: { userName: string }) 
       {/* 6 · Mis Góndolas (si el supervisor tiene órdenes asignadas) */}
       {gondolaOrdenes.filter(o => ['pendiente','en_proceso','rechazado'].includes(o.status)).length > 0 && (
         <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between gap-4">
+          <div className="p-6 sm:p-8 border-b border-k-border bg-k-bg-card2/50 flex items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
                 <LayoutGrid className="h-5 w-5 text-amber-500" />

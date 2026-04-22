@@ -93,7 +93,7 @@ function AbsenceRequestsTab() {
 
       {/* Pendientes */}
       <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-        <div className="px-8 py-6 border-b border-neutral-50 flex items-center justify-between">
+        <div className="px-8 py-6 border-b border-k-border flex items-center justify-between">
           <div>
             <h3 className="text-lg font-black text-k-text-h tracking-tight">Solicitudes de Ausencia</h3>
             <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">
@@ -179,7 +179,7 @@ function AbsenceRequestsTab() {
       {/* Revisadas recientemente */}
       {reviewed.length > 0 && (
         <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-          <div className="px-8 py-6 border-b border-neutral-50">
+          <div className="px-8 py-6 border-b border-k-border">
             <h3 className="text-sm font-black text-k-text-h tracking-tight">Revisadas Recientemente</h3>
           </div>
           <div className="divide-y divide-neutral-50">
@@ -257,7 +257,7 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
 
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-      <div className="px-8 py-6 border-b border-neutral-50 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="px-8 py-6 border-b border-k-border flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h3 className="text-lg font-black text-k-text-h tracking-tight">Resumen Semanal</h3>
           <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">Horas trabajadas, pausas y horas pagables</p>
@@ -450,7 +450,7 @@ export default function ManagerAttendancePage() {
 
             {/* Table */}
             <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden mt-6">
-              <div className="px-8 py-6 border-b border-neutral-50">
+              <div className="px-8 py-6 border-b border-k-border">
                 <h3 className="text-lg font-black text-k-text-h tracking-tight">Registro de Asistencia</h3>
                 <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">
                   {items.length} registros · {employees.length} empleados
@@ -487,7 +487,7 @@ export default function ManagerAttendancePage() {
               ) : (
                 <div className="overflow-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-k-bg-card2/80 border-b border-neutral-50">
+                    <thead className="bg-k-bg-card2/80 border-b border-k-border">
                       <tr>
                         {["Empleado", "Entrada", "Salida", "Estado", "Horas", ""].map((h) => (
                           <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">{h}</th>
@@ -501,7 +501,7 @@ export default function ManagerAttendancePage() {
                         const tieneDiaDescanso = item?.status === 'day_off' || (item as any)?.is_rest_day;
 
                         return (
-                          <tr key={emp.id} className="group border-t border-neutral-50 hover:bg-k-bg-card2/50 transition">
+                          <tr key={emp.id} className="group border-t border-k-border hover:bg-k-bg-card2/50 transition">
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar name={empName} />

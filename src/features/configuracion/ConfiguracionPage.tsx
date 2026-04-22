@@ -33,7 +33,7 @@ function RolesTab() {
 
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
+      <div className="px-8 py-6 border-b border-k-border bg-k-bg-card2/50 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-black text-k-text-h tracking-tight">Roles del Sistema</h2>
           <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Niveles de permisos y visibilidad</p>
@@ -80,7 +80,7 @@ function RolesTab() {
 function TarifasTab() {
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50">
+      <div className="px-8 py-6 border-b border-k-border bg-k-bg-card2/50">
         <h2 className="text-xl font-black text-k-text-h tracking-tight">Tarifas y Remuneración</h2>
         <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Gestión financiera de recursos humanos</p>
       </div>
@@ -167,7 +167,7 @@ function HorariosTab() {
 
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
+      <div className="px-8 py-6 border-b border-k-border bg-k-bg-card2/50 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-black text-k-text-h tracking-tight">Esquema Operativo</h2>
           <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Horarios laborables y tolerancias</p>
@@ -378,7 +378,7 @@ function ModulosTab() {
 
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50">
+      <div className="px-8 py-6 border-b border-k-border bg-k-bg-card2/50">
         <h2 className="text-xl font-black text-k-text-h tracking-tight">Capacidades del Ecosistema</h2>
         <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Activa las herramientas de la suite kore</p>
       </div>
@@ -467,7 +467,7 @@ function RedTab() {
 
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
+      <div className="px-8 py-6 border-b border-k-border bg-k-bg-card2/50 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-black text-k-text-h tracking-tight">Geocerca Virtual & Redes</h2>
           <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Seguridad de accesos e IPs</p>
@@ -608,7 +608,7 @@ function DocumentosTab() {
       )}
 
       <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-        <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
+        <div className="px-8 py-6 border-b border-k-border bg-k-bg-card2/50 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-black text-k-text-h tracking-tight">Documentos de Bienvenida</h2>
             <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Gestión de archivos adjuntos para nuevos ingresos</p>
@@ -650,7 +650,7 @@ function DocumentosTab() {
 
           {/* Lista de documentos */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b border-neutral-50">
+            <div className="flex items-center gap-3 pb-2 border-b border-k-border">
               <FileText className="h-4 w-4 text-k-text-b" />
               <h3 className="text-[10px] font-bold text-k-text-b uppercase tracking-[0.2em]">Archivos en el Sistema</h3>
             </div>
@@ -661,7 +661,7 @@ function DocumentosTab() {
                 <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Consultando archivos...</span>
               </div>
             ) : documentos.length === 0 ? (
-              <div className="rounded-3xl border border-neutral-50 bg-k-bg-card2/20 p-12 text-center">
+              <div className="rounded-3xl border border-k-border bg-k-bg-card2/20 p-12 text-center">
                 <div className="text-3xl mb-4 opacity-20">📂</div>
                 <p className="text-sm font-medium text-k-text-b">No hay documentos configurados.</p>
               </div>
@@ -741,7 +741,7 @@ function NotificacionesTab() {
 
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden animate-in-up">
-      <div className="px-8 py-6 border-b border-neutral-50 bg-k-bg-card2/50">
+      <div className="px-8 py-6 border-b border-k-border bg-k-bg-card2/50">
         <h2 className="text-xl font-black text-k-text-h tracking-tight">Centro de Notificaciones</h2>
         <p className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">Verificación y estado de alertas push</p>
       </div>

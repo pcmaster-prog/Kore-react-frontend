@@ -229,7 +229,7 @@ export default function EmployeeDashboard() {
 
       {/* ── Tasks list ─────────────────────────────────────────────── */}
       <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-        <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-6 sm:p-8 border-b border-k-border bg-k-bg-card2/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="text-xl font-black text-k-text-h tracking-tight">Tareas de hoy</div>
             {/* 3.8 — Badge conteo solo si > 0 */}
@@ -314,7 +314,7 @@ export default function EmployeeDashboard() {
       {/* ── Gondolas ───────────────────────────────────────────────── */}
       {gondolasActivas.length > 0 && (
         <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-neutral-50 bg-k-bg-card2/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-6 sm:p-8 border-b border-k-border bg-k-bg-card2/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="text-xl font-black text-k-text-h tracking-tight">Góndolas por rellenar</div>
               <div className="text-[11px] font-bold text-k-text-b uppercase tracking-widest mt-1">{gondolasActivas.length} orden(es) activa(s)</div>

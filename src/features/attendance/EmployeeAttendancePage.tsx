@@ -163,7 +163,7 @@ function AbsencePanel() {
       </button>
 
       {open && (
-        <div className="px-6 pb-6 space-y-5 border-t border-neutral-50">
+        <div className="px-6 pb-6 space-y-5 border-t border-k-border">
           {toast && (
             <div className={cx(
               "rounded-2xl border px-4 py-3 text-sm font-bold flex items-center gap-3 mt-4",
@@ -634,7 +634,7 @@ export default function EmployeeAttendancePage() {
 
       {/* History table */}
       <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-        <div className="px-8 py-6 border-b border-neutral-50 flex items-center gap-3">
+        <div className="px-8 py-6 border-b border-k-border flex items-center gap-3">
           <Calendar className="h-5 w-5 text-k-text-b" />
           <div>
             <h3 className="text-sm font-black text-k-text-h tracking-tight">Actividad de la Semana</h3>
@@ -651,7 +651,7 @@ export default function EmployeeAttendancePage() {
           <>
             <div className="overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-k-bg-card2/80 border-b border-neutral-50">
+                <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
                     {["Día", "Fecha", "Entrada", "Salida", "Horas", "Estado"].map((h) => (
                       <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">{h}</th>
@@ -666,7 +666,7 @@ export default function EmployeeAttendancePage() {
                     const isToday = row.date === new Date().toISOString().slice(0, 10);
                     const rowLateMinutes = (row as any).late_minutes;
                     return (
-                      <tr key={row.id} className={cx("border-t border-neutral-50 transition", isToday ? "bg-blue-50/30" : "hover:bg-k-bg-card2/50")}>
+                      <tr key={row.id} className={cx("border-t border-k-border transition", isToday ? "bg-blue-50/30" : "hover:bg-k-bg-card2/50")}>
                         <td className="px-5 py-4 capitalize text-sm font-bold text-k-text-h">{dayName}</td>
                         <td className="px-5 py-4 text-sm text-k-text-b">{dateShort}</td>
                         <td className="px-5 py-4 font-bold text-sm text-k-text-h">
@@ -686,7 +686,7 @@ export default function EmployeeAttendancePage() {
                 </tbody>
               </table>
             </div>
-            <div className="px-8 py-5 border-t border-neutral-50 bg-k-bg-card2/50 flex items-center justify-between">
+            <div className="px-8 py-5 border-t border-k-border bg-k-bg-card2/50 flex items-center justify-between">
               <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Total semanal</span>
               <span className="text-xl font-black text-k-text-h">{minutesToHHMM(workedThisWeek)}</span>
             </div>
