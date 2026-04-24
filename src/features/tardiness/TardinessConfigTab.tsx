@@ -50,7 +50,7 @@ function Tooltip({ text }: { text: string }) {
 }
 
 export default function TardinessConfigTab() {
-  const [config, setConfig] = useState<TardinessConfig | null>(null);
+  const [, setConfig] = useState<TardinessConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);

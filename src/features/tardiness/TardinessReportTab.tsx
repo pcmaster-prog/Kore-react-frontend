@@ -6,10 +6,9 @@ import {
   getEmployeeDetail,
   type TardinessMonthlySummary,
   type EmployeeTardinessDetail,
-  type EmployeeLateRecord,
 } from "./api";
 import {
-  Loader2, AlertTriangle, CheckCircle2, Clock,
+  Loader2, AlertTriangle, CheckCircle2,
   ChevronDown, ChevronUp, X,
 } from "lucide-react";
 

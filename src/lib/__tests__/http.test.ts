@@ -1,7 +1,7 @@
 // src/lib/__tests__/http.test.ts
 // Tests for the HTTP interceptor: 401 logout + 500+ error event dispatch
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import axios from "axios";
+
 
 // We need to mock authStore before importing http
 vi.mock("@/features/auth/authStore", () => ({
@@ -26,8 +26,8 @@ describe("HTTP Interceptor", () => {
   });
 
   afterEach(() => {
-    window.removeEventListener("kore-error", eventHandler);
-    window.removeEventListener("kore:unauthorized", eventHandler);
+    window.removeEventListener("kore-error" as any, eventHandler as EventListener);
+    window.removeEventListener("kore:unauthorized" as any, eventHandler as EventListener);
   });
 
   it("attaches Authorization header when token exists", () => {
@@ -36,7 +36,7 @@ describe("HTTP Interceptor", () => {
   });
 
   it("dispatches kore-error event on 500+ responses", async () => {
-    window.addEventListener("kore-error", eventHandler);
+    window.addEventListener("kore-error" as any, eventHandler as EventListener);
 
     // Simulate a 500 response via axios interceptor
     const errorResponse = {
@@ -63,7 +63,7 @@ describe("HTTP Interceptor", () => {
   });
 
   it("dispatches kore-error with default message when server returns no message", async () => {
-    window.addEventListener("kore-error", eventHandler);
+    window.addEventListener("kore-error" as any, eventHandler as EventListener);
 
     const errorResponse = {
       response: {
@@ -88,7 +88,7 @@ describe("HTTP Interceptor", () => {
   });
 
   it("dispatches kore:unauthorized and calls logout on 401", async () => {
-    window.addEventListener("kore:unauthorized", eventHandler);
+    window.addEventListener("kore:unauthorized" as any, eventHandler as EventListener);
 
     const mockLogout = vi.fn();
     (useAuthStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
@@ -118,7 +118,7 @@ describe("HTTP Interceptor", () => {
   });
 
   it("does NOT dispatch kore-error for 4xx client errors (other than 401)", async () => {
-    window.addEventListener("kore-error", eventHandler);
+    window.addEventListener("kore-error" as any, eventHandler as EventListener);
 
     const errorResponse = {
       response: {

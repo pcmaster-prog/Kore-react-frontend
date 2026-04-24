@@ -2,7 +2,7 @@
 // Widget for the employee dashboard showing tardiness count and progress (§5.4.3)
 import { useEffect, useState } from "react";
 import { getMyLateInfo, type LateInfo } from "@/features/attendance/api";
-import { Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Clock, AlertTriangle } from "lucide-react";
 
 function cx(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
