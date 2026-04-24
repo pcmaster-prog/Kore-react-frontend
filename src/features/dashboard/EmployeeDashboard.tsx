@@ -19,6 +19,7 @@ import EmptyState from "@/components/EmptyState";
 import KpiCard from "@/components/KpiCard";
 import PageSkeleton from "@/components/PageSkeleton";
 import { auth } from "@/features/auth/store";
+import TardinessWidget from "@/features/tardiness/TardinessWidget";
 
 type EmployeeDash = {
   date: string;
@@ -226,6 +227,9 @@ export default function EmployeeDashboard() {
           )}
         </div>
       )}
+
+      {/* ── 3.7 · Widget de retardos ─────────────────────────────── */}
+      <TardinessWidget />
 
       {/* ── Tasks list ─────────────────────────────────────────────── */}
       <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">

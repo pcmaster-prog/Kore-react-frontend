@@ -6,6 +6,8 @@ import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import ActividadTab from "./ActividadTab";
 import SemaforoAdminTab from "@/features/semaforo/SemaforoAdminTab";
+import TardinessConfigTab from "@/features/tardiness/TardinessConfigTab";
+import TardinessReportTab from "@/features/tardiness/TardinessReportTab";
 import PageHeader from "@/components/PageHeader";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -824,6 +826,7 @@ const TAB_GROUPS = [
     icon: <Settings2 className="h-4 w-4" />,
     items: [
       { key: "horarios", label: "Horarios", icon: <Clock className="h-4 w-4" /> },
+      { key: "retardos", label: "Retardos", icon: <AlertTriangle className="h-4 w-4" /> },
       { key: "tarifas", label: "Nómina", icon: <DollarSign className="h-4 w-4" /> },
       { key: "semaforo", label: "Semáforo", icon: <Activity className="h-4 w-4" /> },
       { key: "modulos", label: "Capacidades", icon: <Blocks className="h-4 w-4" /> },
@@ -838,6 +841,7 @@ const TAB_GROUPS = [
       { key: "red", label: "Seguridad", icon: <Wifi className="h-4 w-4" /> },
       { key: "actividad", label: "Auditoría", icon: <Activity className="h-4 w-4" /> },
       { key: "documentos", label: "Documentos", icon: <FileText className="h-4 w-4" /> },
+      { key: "reporte-retardos", label: "Reporte Retardos", icon: <Clock className="h-4 w-4" /> },
     ]
   }
 ];
@@ -921,6 +925,8 @@ export default function ConfiguracionPage() {
           {activeTab === "modulos"   && <ModulosTab />}
           {activeTab === "red"       && <RedTab />}
           {activeTab === "semaforo"  && <SemaforoAdminTab />}
+          {activeTab === "retardos" && <TardinessConfigTab />}
+          {activeTab === "reporte-retardos" && <TardinessReportTab />}
         </div>
       </div>
     </div>

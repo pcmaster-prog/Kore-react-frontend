@@ -41,7 +41,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ─── Response interceptor: manejar 401 ────────────────────────────────────
+// ─── Response interceptor: manejar 401 + toast global para 500+ ───────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -50,6 +50,17 @@ api.interceptors.response.use(
     if (status === 401) {
       useAuthStore.getState().logout();
       window.dispatchEvent(new CustomEvent("kore:unauthorized"));
+    }
+
+    // Toast global para errores del servidor (500+)
+    if (status && status >= 500) {
+      const serverMsg =
+        error?.response?.data?.message ?? "Error del servidor. Intenta más tarde.";
+      window.dispatchEvent(
+        new CustomEvent("kore-error", {
+          detail: { message: serverMsg, status },
+        })
+      );
     }
 
     return Promise.reject(error);

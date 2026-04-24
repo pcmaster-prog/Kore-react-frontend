@@ -187,11 +187,22 @@ export default function TasksPage() {
   ) {
     setErr(null);
     setBusyId(taskId);
+    
+    // Optimistic update
+    const previousData = data;
+    if (data) {
+      setData({
+        ...data,
+        data: data.data.map(t => t.id === taskId ? { ...t, status: next } : t)
+      });
+    }
+
     try {
       await updateTaskStatus(taskId, next);
       const res = await listTasks(params);
       setData({ data: res.data, total: res.total, last_page: res.last_page });
     } catch (e: any) {
+      if (previousData) setData(previousData);
       setErr(e?.response?.data?.message ?? "No se pudo actualizar el status");
     } finally {
       setBusyId(null);
@@ -306,6 +317,17 @@ export default function TasksPage() {
   async function doApprove(assignmentId: string) {
     setActionBusy(assignmentId);
     setApErr(null);
+
+    // Optimistic update
+    const previousApData = apData;
+    if (apData) {
+      setApData({
+        ...apData,
+        data: apData.data.filter((a: any) => a.id !== assignmentId),
+        total: Math.max(0, apData.total - 1)
+      });
+    }
+
     try {
       await approveAssignment(assignmentId);
       const res = await listPendingApprovals({ page: apPage });
@@ -324,6 +346,7 @@ export default function TasksPage() {
         setEvOpen(false);
       }
     } catch (e: any) {
+      if (previousApData) setApData(previousApData);
       setApErr(e?.response?.data?.message ?? "No se pudo aprobar");
     } finally {
       setActionBusy(null);
@@ -339,6 +362,17 @@ export default function TasksPage() {
 
     setActionBusy(assignmentId);
     setApErr(null);
+
+    // Optimistic update
+    const previousApData = apData;
+    if (apData) {
+      setApData({
+        ...apData,
+        data: apData.data.filter((a: any) => a.id !== assignmentId),
+        total: Math.max(0, apData.total - 1)
+      });
+    }
+
     try {
       await rejectAssignment(assignmentId, note);
       setRejectNote(""); // limpia nota tras rechazo
@@ -349,6 +383,7 @@ export default function TasksPage() {
         setEvOpen(false);
       }
     } catch (e: any) {
+      if (previousApData) setApData(previousApData);
       setApErr(e?.response?.data?.message ?? "No se pudo rechazar");
     } finally {
       setActionBusy(null);

@@ -393,10 +393,21 @@ export default function EmployeeTasksPage() {
   ) {
     setErr(null);
     setBusyId(item.assignment.id);
+
+    // Optimistic update
+    const previousData = data;
+    if (data) {
+      setData({
+        ...data,
+        data: data.data.map(i => i.assignment.id === item.assignment.id ? { ...i, assignment: { ...i.assignment, status: next } } : i)
+      });
+    }
+
     try {
       await updateMyAssignment(item.assignment.id, { status: next });
       await refresh();
     } catch (e: any) {
+      if (previousData) setData(previousData);
       setErr(e?.response?.data?.message ?? "No se pudo actualizar la tarea");
     } finally {
       setBusyId(null);

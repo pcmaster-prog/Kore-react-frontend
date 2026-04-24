@@ -338,12 +338,17 @@ export default function EmployeeAttendancePage() {
   async function doAction(fn: () => Promise<any>, msg: string) {
     setBusy(true);
     setWifiBlocked(false);
+    setErr(null);
+
+    // Immediate visual feedback — show a processing toast
+    // (NOT an optimistic data update — attendance is too sensitive for nómina)
+    showToast("ok", "Procesando...");
+
     try {
       await fn();
       showToast("ok", msg);
-      await loadToday();
-      await loadHistory();
-      await loadLateInfo(); // Refresh tardiness after any action
+      // Refresh all data from server (source of truth for nómina)
+      await Promise.all([loadToday(), loadHistory(), loadLateInfo()]);
     } catch (e: any) {
       const code = e?.response?.data?.code ?? "";
       if (code === "NETWORK_RESTRICTED") {

@@ -65,7 +65,34 @@ export async function getMyToday(): Promise<TodayResponse> {
 }
 
 export async function checkIn() {
-  const res = await api.post("/asistencia/entrada", {});
+  // Enviar coordenadas GPS para futura validación de geofencing (§2.3)
+  // Si no hay geolocation o falla, enviamos sin coords — el backend las ignora hoy
+  let lat: number | null = null;
+  let lng: number | null = null;
+
+  try {
+    if (navigator.geolocation) {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 60000,
+        });
+      });
+      lat = position.coords.latitude;
+      lng = position.coords.longitude;
+    }
+  } catch {
+    // Geolocation denied or timed out — proceed without coords
+  }
+
+  const body: Record<string, unknown> = {};
+  if (lat !== null && lng !== null) {
+    body.lat = lat;
+    body.lng = lng;
+  }
+
+  const res = await api.post("/asistencia/entrada", body);
   return res.data;
 }
 

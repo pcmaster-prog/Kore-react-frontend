@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import NotificationToast from "@/components/NotificationToast";
+import GlobalErrorToast from "@/components/GlobalErrorToast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { auth } from "@/features/auth/store";
 import {
@@ -336,6 +337,7 @@ export default function AppShell() {
 
       {/* Notification Toast */}
       <NotificationToast />
+      <GlobalErrorToast />
     </div>
   );
 }
