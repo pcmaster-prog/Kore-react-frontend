@@ -216,11 +216,30 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
-function StatusBadge({ item }: { item: ByDateItem }) {
+function StatusBadge({ item, isAbsent }: { item?: ByDateItem; isAbsent?: boolean }) {
+  // Sin registro alguno → Falta
+  if (!item || isAbsent) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-rose-100 bg-rose-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-600">
+        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />Falta
+      </span>
+    );
+  }
+
   const checkedIn = !!item.first_check_in_at;
   const closed = item.status === "closed" || !!item.last_check_out_at;
+
   if ((item as any).is_rest_day || (item as any).state === "rest")
     return <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-100 bg-sky-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-600">Descanso</span>;
+
+  // Retardo: llegó, pero el backend lo marcó como "late"
+  if (item.status === "late")
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700">
+        ⏰ Retardo
+      </span>
+    );
+
   if (!checkedIn)
     return <span className="inline-flex items-center gap-1.5 rounded-lg border border-k-border bg-k-bg-card2 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-k-text-b"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />Ausente</span>;
   if (closed)
@@ -514,7 +533,7 @@ export default function ManagerAttendancePage() {
                             <td className="px-5 py-4 font-bold text-sm text-k-text-h">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
                             <td className="px-5 py-4 text-sm text-k-text-b">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
                             <td className="px-5 py-4">
-                              {item ? <StatusBadge item={item} /> : <span className="inline-flex items-center gap-1.5 rounded-lg border border-k-border bg-k-bg-card2 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-k-text-b"><AlertTriangle className="h-2 w-2" /> Ausente</span>}
+                              <StatusBadge item={item} isAbsent={!item} />
                             </td>
                             <td className="px-5 py-4 font-black text-sm text-k-text-h">
                               {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
