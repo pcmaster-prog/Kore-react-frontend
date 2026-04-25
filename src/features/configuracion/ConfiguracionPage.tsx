@@ -8,6 +8,7 @@ import ActividadTab from "./ActividadTab";
 import SemaforoAdminTab from "@/features/semaforo/SemaforoAdminTab";
 import TardinessConfigTab from "@/features/tardiness/TardinessConfigTab";
 import TardinessReportTab from "@/features/tardiness/TardinessReportTab";
+import MealScheduleTab from "./MealScheduleTab";
 import PageHeader from "@/components/PageHeader";
 
 function cx(...s: Array<string | false | null | undefined>) {
@@ -827,6 +828,7 @@ const TAB_GROUPS = [
     items: [
       { key: "horarios", label: "Horarios", icon: <Clock className="h-4 w-4" /> },
       { key: "retardos", label: "Retardos", icon: <AlertTriangle className="h-4 w-4" /> },
+      { key: "comidas", label: "Comidas", icon: <Clock className="h-4 w-4" /> },
       { key: "tarifas", label: "Nómina", icon: <DollarSign className="h-4 w-4" /> },
       { key: "semaforo", label: "Semáforo", icon: <Activity className="h-4 w-4" /> },
       { key: "modulos", label: "Capacidades", icon: <Blocks className="h-4 w-4" /> },
@@ -926,6 +928,7 @@ export default function ConfiguracionPage() {
           {activeTab === "red"       && <RedTab />}
           {activeTab === "semaforo"  && <SemaforoAdminTab />}
           {activeTab === "retardos" && <TardinessConfigTab />}
+          {activeTab === "comidas" && <MealScheduleTab />}
           {activeTab === "reporte-retardos" && <TardinessReportTab />}
         </div>
       </div>

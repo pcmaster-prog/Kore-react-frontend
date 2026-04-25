@@ -4,9 +4,9 @@ import api from "@/lib/http";
 import {
   CheckCircle2, ChevronLeft, ChevronRight,
   Download, FileSpreadsheet, Loader2,
-  AlertTriangle, RefreshCw, Clock, CalendarDays,
-  DollarSign, Users, TrendingDown, TrendingUp,
-  Pencil, Check, MoreVertical, Save, Trash2
+  AlertTriangle, RefreshCw,
+  DollarSign, Users, TrendingDown, UtensilsCrossed,
+  Pencil, Check, MoreVertical, Save, Trash2, StickyNote
 } from "lucide-react";
 import { isEnabled } from "@/lib/featureFlags";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
@@ -48,10 +48,25 @@ type Period = {
   total_bonuses: number;
   approved_at?: string | null;
   excluded_employee_ids?: string[];
+  notes?: string | null;
   entries: Entry[];
 };
 
+type MealScheduleItem = {
+  employee_id: string;
+  employee_name?: string;
+  meal_start_time: string;
+  duration_minutes: number;
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatTime12(time24: string): string {
+  if (!time24) return "—";
+  const [h, m] = time24.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
 function fmt(n: number): string {
   return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2 }).format(n);
 }
@@ -63,6 +78,14 @@ function fmtUnits(type: PaymentType, units: number): string {
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
   return `${units} día${units !== 1 ? "s" : ""}`;
+}
+
+function getWeekNumber(dateStr: string): number {
+  const date = new Date(dateStr + "T12:00:00");
+  const startOfYear = new Date(date.getFullYear(), 0, 1);
+  const diff = date.getTime() - startOfYear.getTime();
+  const oneWeek = 604800000;
+  return Math.ceil((diff / oneWeek) + 1);
 }
 
 function weekLabel(start: string, end: string): string {
@@ -113,41 +136,31 @@ function EntryRow({
 }) {
   const currentAdj = pendingPatch?.adjustment_amount ?? entry.adjustment_amount ?? 0;
   const currentAdjNote = pendingPatch?.adjustment_note ?? entry.adjustment_note ?? "";
-  const currentBonus = pendingPatch?.bonus_amount ?? entry.bonus_amount ?? 0;
-  const currentBonusNote = pendingPatch?.bonus_note ?? entry.bonus_note ?? "";
 
   const [adj, setAdj] = useState(String(currentAdj));
   const [adjNote, setAdjNote] = useState(currentAdjNote);
-  const [bonus, setBonus] = useState(String(currentBonus));
-  const [bonusNote, setBonusNote] = useState(currentBonusNote);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   const [editingAdj, setEditingAdj] = useState(false);
-  const [editingBonus, setEditingBonus] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showConfirmExclude, setShowConfirmExclude] = useState(false);
 
-  // Sync internal state if pendingPatch changes from outside (not strictly needed since we update patch on edit, but good practice)
+  // Sync internal state if pendingPatch changes from outside
   useEffect(() => {
     if (!dirty) {
       setAdj(String(currentAdj));
       setAdjNote(currentAdjNote);
-      setBonus(String(currentBonus));
-      setBonusNote(currentBonusNote);
     }
-  }, [currentAdj, currentAdjNote, currentBonus, currentBonusNote, dirty]);
+  }, [currentAdj, currentAdjNote, dirty]);
 
   function handleChange() {
     setDirty(true);
     const parsedAdj = parseFloat(adj) || 0;
-    const parsedBonus = parseFloat(bonus) || 0;
     onPatch(entry.id, {
       adjustment_amount: parsedAdj,
       adjustment_note: adjNote || null,
-      bonus_amount: parsedBonus,
-      bonus_note: bonusNote || null,
     } as any);
   }
 
@@ -156,9 +169,9 @@ function EntryRow({
     if (dirty) {
       handleChange();
     }
-  }, [adj, adjNote, bonus, bonusNote]);
+  }, [adj, adjNote]);
 
-  const computedTotal = entry.subtotal + currentAdj + currentBonus;
+  const computedTotal = entry.subtotal + currentAdj;
   const isExcluded = (period?.excluded_employee_ids ?? []).includes(entry.empleado_id);
 
   return (
@@ -191,19 +204,7 @@ function EntryRow({
           )}
         </td>
 
-        {/* Tipo */}
-        <td className="px-5 py-4">
-          <span className={cx(
-            "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
-            entry.payment_type === "hourly"
-              ? "bg-blue-50 text-blue-600 border-blue-100"
-              : "bg-violet-50 text-violet-600 border-violet-100"
-          )}>
-            {entry.payment_type === "hourly"
-              ? <><Clock className="h-3 w-3" />Por hora</>
-              : <><CalendarDays className="h-3 w-3" />Por día</>}
-          </span>
-        </td>
+
 
         {/* Tarifa */}
         <td className="px-5 py-4">
@@ -264,50 +265,7 @@ function EntryRow({
           )}
         </td>
 
-        {/* Bono */}
-        <td className="px-5 py-4">
-          {approved ? (
-            <div className="text-sm font-semibold text-emerald-600">
-              {currentBonus > 0 ? fmt(currentBonus) : <span className="text-k-text-b">—</span>}
-            </div>
-          ) : (isEnabled("newManagementAdmin") && !editingBonus) ? (
-            <div 
-              onClick={() => { setEditingBonus(true); setExpanded(true); }}
-              className="cursor-pointer group flex items-center gap-2"
-            >
-              <span className={cx("text-sm font-semibold transition-colors", currentBonus > 0 ? "text-emerald-600" : "text-k-text-b group-hover:text-k-text-h")}>
-                {currentBonus !== 0 ? fmt(currentBonus) : "—"}
-              </span>
-              <Pencil className="h-3 w-3 text-k-text-b group-hover:text-k-text-h transition-colors" />
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={bonus}
-                onChange={(e) => { setBonus(e.target.value); setDirty(true); }}
-                onBlur={() => setEditingBonus(false)}
-                autoFocus={editingBonus}
-                className="w-24 rounded-xl border border-k-border bg-k-bg-card px-2.5 py-1.5 text-sm font-medium text-k-text-h outline-none transition focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300"
-                placeholder="0"
-              />
-              {!isEnabled("newManagementAdmin") && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className={cx(
-                    "h-7 w-7 rounded-lg flex items-center justify-center transition",
-                    expanded ? "bg-k-bg-sidebar text-white" : "border border-k-border text-k-text-b hover:bg-k-bg-card2"
-                  )}
-                  title="Agregar motivo"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          )}
-        </td>
+
 
         {/* Total */}
         <td className="px-5 py-4">
@@ -337,20 +295,14 @@ function EntryRow({
                             await onSave(entry.id, {
                               adjustment_amount: parseFloat(adj) || 0,
                               adjustment_note: adjNote || null,
-                              bonus_amount: parseFloat(bonus) || 0,
-                              bonus_note: bonusNote || null,
                             });
                             setSaving(false);
                             setDirty(false);
                           } else {
-                            // "Guardar" individual can just trigger the global save for this row or we can leave it as "dirty will be picked up by global save".
-                            // But maybe they want to force save one row.
                             setSaving(true);
                             await onSave(entry.id, {
                               adjustment_amount: parseFloat(adj) || 0,
                               adjustment_note: adjNote || null,
-                              bonus_amount: parseFloat(bonus) || 0,
-                              bonus_note: bonusNote || null,
                             });
                             setSaving(false);
                             setDirty(false);
@@ -383,8 +335,6 @@ function EntryRow({
                       await onSave(entry.id, {
                         adjustment_amount: parseFloat(adj) || 0,
                         adjustment_note: adjNote || null,
-                        bonus_amount: parseFloat(bonus) || 0,
-                        bonus_note: bonusNote || null,
                       });
                       setSaving(false);
                       setDirty(false);
@@ -418,7 +368,7 @@ function EntryRow({
       {/* Confirm Exclude Modal */}
       {showConfirmExclude && (
         <tr>
-          <td colSpan={9} className="px-5 py-4 bg-rose-50 border-t border-rose-100">
+          <td colSpan={7} className="px-5 py-4 bg-rose-50 border-t border-rose-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5 text-rose-600" />
@@ -446,7 +396,7 @@ function EntryRow({
       {/* Fila de motivos expandida */}
       {expanded && !approved && (
         <tr className="bg-amber-50/20">
-          <td colSpan={9} className="px-5 pb-4 pt-0">
+          <td colSpan={7} className="px-5 pb-4 pt-0">
             <div className="flex items-center gap-4 ml-14 mt-2">
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5 block">Motivo del ajuste</label>
@@ -454,17 +404,7 @@ function EntryRow({
                   type="text"
                   value={adjNote}
                   onChange={(e) => { setAdjNote(e.target.value); setDirty(true); }}
-                  placeholder="Ej. Descuento por falta, error en pago anterior..."
-                  className="w-full rounded-xl border border-k-border bg-k-bg-card px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5 block">Motivo del bono</label>
-                <input
-                  type="text"
-                  value={bonusNote}
-                  onChange={(e) => { setBonusNote(e.target.value); setDirty(true); }}
-                  placeholder="Ej. Bono por puntualidad, incentivo especial..."
+                  placeholder="Ej. Descuento por falta, bono puntualidad, error en pago..."
                   className="w-full rounded-xl border border-k-border bg-k-bg-card px-3 py-2 text-sm outline-none focus:border-neutral-300 focus:ring-2 focus:ring-obsidian/10"
                 />
               </div>
@@ -489,6 +429,9 @@ export default function NominaPage() {
   const [savingGlobal, setSavingGlobal] = useState(false);
 
   const [refDate, setRefDate] = useState<string>(todayLocalDate());
+  const [notes, setNotes] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [mealSchedules, setMealSchedules] = useState<MealScheduleItem[]>([]);
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
@@ -531,8 +474,15 @@ export default function NominaPage() {
 
       if (found) {
         const detail = await api.get(`/nomina/periodos/${found.id}`);
-        setPeriod(detail.data?.period ?? detail.data);
+        const periodData = detail.data?.period ?? detail.data;
+        setPeriod(periodData);
+        setNotes(periodData?.notes ?? "");
       }
+      // Load meal schedules separately (won't block payroll)
+      try {
+        const mealRes = await api.get("/meal-schedules");
+        setMealSchedules(mealRes.data?.data ?? mealRes.data ?? []);
+      } catch { /* meal schedules not yet configured */ }
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error cargando nómina");
     } finally {
@@ -639,25 +589,59 @@ export default function NominaPage() {
     const excludedIds = period.excluded_employee_ids ?? [];
     const visibleEntries = period.entries.filter(e => !excludedIds.includes(e.empleado_id));
 
+    const wkNum = getWeekNumber(period.week_start);
+
     const rows = visibleEntries.map(e => `
       <tr>
         <td>${e.empleado_name}</td>
         <td>${fmtUnits(e.payment_type, e.units)}${e.rest_days_paid > 0 ? ` +${e.rest_days_paid}d` : ""}</td>
-        <td>${e.payment_type === "hourly" ? "Por hora" : "Por día"}</td>
         <td>${fmt(e.rate)}</td>
         <td>${fmt(e.subtotal)}</td>
         <td>${e.adjustment_amount !== 0 ? fmt(e.adjustment_amount) : "—"}${e.adjustment_note ? ` (${e.adjustment_note})` : ""}</td>
-        <td>${e.bonus_amount > 0 ? fmt(e.bonus_amount) : "—"}${e.bonus_note ? ` (${e.bonus_note})` : ""}</td>
         <td><strong>${fmt(e.total)}</strong></td>
       </tr>`).join("");
+
+    const mealRows = mealSchedules.map(ms => {
+      const empName = ms.employee_name ?? visibleEntries.find(e => e.empleado_id === ms.employee_id)?.empleado_name ?? ms.employee_id;
+      const [h, m] = (ms.meal_start_time || "0:0").split(":").map(Number);
+      const totalMin = h * 60 + m + ms.duration_minutes;
+      const endH = Math.floor(totalMin / 60) % 24;
+      const endM = totalMin % 60;
+      const endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+      return `
+        <tr>
+          <td>${empName}</td>
+          <td>${formatTime12(ms.meal_start_time)}</td>
+          <td>${ms.duration_minutes} min</td>
+          <td>${formatTime12(endTime)}</td>
+        </tr>`;
+    }).join("");
+
+    const mealHtml = mealSchedules.length > 0 ? `
+      <div style="margin-top: 40px;">
+        <h2 style="font-size: 16px; margin-bottom: 12px; border-bottom: 2px solid #111; padding-bottom: 6px;">Horarios de Comida</h2>
+        <table>
+          <thead><tr>
+            <th>Empleado</th><th>Inicio</th><th>Duración</th><th>Fin Estimado</th>
+          </tr></thead>
+          <tbody>${mealRows}</tbody>
+        </table>
+      </div>` : "";
+
+    const notesHtml = period.notes ? `
+      <div class="notes">
+        <div class="notes-label">Notas</div>
+        <div class="notes-text">${period.notes}</div>
+      </div>` : "";
 
     w.document.write(`
       <!DOCTYPE html><html><head>
       <meta charset="utf-8"/>
-      <title>Nómina ${weekLabel(period.week_start, period.week_end)}</title>
+      <title>Nómina Semana ${wkNum} – ${weekLabel(period.week_start, period.week_end)}</title>
       <style>
         body { font-family: system-ui; font-size: 13px; padding: 32px; color: #111; }
         h1 { font-size: 20px; margin-bottom: 4px; }
+        .week-badge { display: inline-block; background: #111; color: #fff; border-radius: 6px; padding: 3px 10px; font-size: 13px; font-weight: bold; margin-left: 8px; }
         .meta { color: #666; margin-bottom: 24px; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #f5f5f5; text-align: left; padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
@@ -666,30 +650,34 @@ export default function NominaPage() {
         .total-box { background: #f9f9f9; border-radius: 8px; padding: 16px 24px; }
         .total-box .label { font-size: 11px; color: #888; margin-bottom: 4px; }
         .total-box .val { font-size: 22px; font-weight: bold; }
+        .notes { margin-top: 24px; background: #fefce8; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; }
+        .notes-label { font-size: 11px; font-weight: bold; color: #92400e; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+        .notes-text { font-size: 13px; color: #451a03; white-space: pre-wrap; }
         @media print { body { padding: 16px; } }
       </style>
       </head><body>
-      <h1>Nómina Semanal</h1>
+      <h1>Nómina Semanal <span class="week-badge">Semana ${wkNum}</span></h1>
       <div class="meta">
-        Semana: ${weekLabel(period.week_start, period.week_end)} &nbsp;·&nbsp;
+        ${weekLabel(period.week_start, period.week_end)} &nbsp;·&nbsp;
         Estado: ${period.status === "approved" ? "✓ Aprobada" : "Borrador"} &nbsp;·&nbsp;
         Empleados: ${visibleEntries.length}
       </div>
       <table>
         <thead><tr>
-          <th>Empleado</th><th>Horas/Días</th><th>Tipo</th><th>Tarifa</th>
-          <th>Subtotal</th><th>Ajuste</th><th>Bono</th><th>Total</th>
+          <th>Empleado</th><th>Horas/Días</th><th>Tarifa</th>
+          <th>Subtotal</th><th>Ajuste</th><th>Total</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="totals">
         <div class="total-box"><div class="label">Total Nómina</div><div class="val">${fmt(period.total_amount)}</div></div>
         <div class="total-box"><div class="label">Ajustes</div><div class="val">${fmt(period.total_adjustments)}</div></div>
-        <div class="total-box"><div class="label">Bonos</div><div class="val">${fmt(period.total_bonuses)}</div></div>
         <div class="total-box"><div class="label">Empleados</div><div class="val">${visibleEntries.length}</div></div>
       </div>
+      ${mealHtml}
+      ${notesHtml}
       <script>window.onload = () => window.print();</script>
-      </body></html>`);
+      </body></html>`);;
     w.document.close();
   }
 
@@ -699,18 +687,15 @@ export default function NominaPage() {
     const excludedIds = period.excluded_employee_ids ?? [];
     const visibleEntries = period.entries.filter(e => !excludedIds.includes(e.empleado_id));
 
-    const header = "Empleado,Horas/Días,Tipo,Tarifa,Subtotal,Ajuste,Motivo Ajuste,Bono,Motivo Bono,Total\n";
+    const header = "Empleado,Horas/Días,Tarifa,Subtotal,Ajuste,Motivo Ajuste,Total\n";
     const rows = visibleEntries.map(e =>
       [
         `"${e.empleado_name}"`,
         fmtUnits(e.payment_type, e.units),
-        e.payment_type === "hourly" ? "Por hora" : "Por día",
         e.rate,
         e.subtotal,
         e.adjustment_amount,
         `"${e.adjustment_note ?? ""}"`,
-        e.bonus_amount,
-        `"${e.bonus_note ?? ""}"`,
         e.total,
       ].join(",")
     ).join("\n");
@@ -756,7 +741,10 @@ export default function NominaPage() {
         <div className="relative flex items-center justify-between gap-4 flex-wrap">
           <div>
             <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Recursos Humanos</p>
-            <h1 className="text-3xl font-black tracking-tight">Nómina Semanal</h1>
+            <h1 className="text-3xl font-black tracking-tight">
+              Nómina Semanal
+              {period && <span className="ml-3 inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-1 text-base font-black">Sem. {getWeekNumber(period.week_start)}</span>}
+            </h1>
             <p className="text-white/50 text-sm mt-1">Genera, revisa y aprueba el pago semanal.</p>
           </div>
 
@@ -877,7 +865,7 @@ export default function NominaPage() {
               <table className="w-full text-sm">
                 <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
-                    {["Empleado", "Horas/Días", "Tipo", "Tarifa", "Subtotal", "Ajuste", "Bono", "Total"].map((h, i) => (
+                    {["Empleado", "Horas/Días", "Tarifa", "Subtotal", "Ajuste", "Total"].map((h, i) => (
                       <th key={i} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">
                         {h}
                       </th>
@@ -889,7 +877,7 @@ export default function NominaPage() {
                 <tbody>
                   {period.entries.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="px-5 py-16 text-center">
+                      <td colSpan={8} className="px-5 py-16 text-center">
                         <Users className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
                         <p className="text-sm font-bold text-k-text-b uppercase tracking-widest">Sin empleados en este periodo</p>
                       </td>
@@ -924,7 +912,70 @@ export default function NominaPage() {
             </div>
           </div>
 
-          {/* ─ Panel lateral ──────────────────────────────────────── */}
+          {/* ─ Horarios de Comida ────────────────────────────── */}
+          {mealSchedules.length > 0 && (
+            <div className="col-span-full rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+              <div className="px-8 py-5 border-b border-k-border bg-k-bg-card2/50 flex items-center gap-3">
+                <UtensilsCrossed className="h-5 w-5 text-amber-500" />
+                <div>
+                  <h2 className="text-lg font-black text-k-text-h tracking-tight">Horarios de Comida</h2>
+                  <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">
+                    Semana {getWeekNumber(period.week_start)} · {mealSchedules.length} empleados asignados
+                  </p>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-k-bg-card2/80 border-b border-k-border">
+                    <tr>
+                      {["Empleado", "Hora Inicio", "Duración", "Hora Fin"].map((h, i) => (
+                        <th key={i} className="text-left px-5 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mealSchedules.map(ms => {
+                      const empName = ms.employee_name ?? visibleEntries.find(e => e.empleado_id === ms.employee_id)?.empleado_name ?? ms.employee_id;
+                      const [h, m] = (ms.meal_start_time || "0:0").split(":").map(Number);
+                      const totalMin = h * 60 + m + ms.duration_minutes;
+                      const endH = Math.floor(totalMin / 60) % 24;
+                      const endM = totalMin % 60;
+                      const endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+                      return (
+                        <tr key={ms.employee_id} className="border-t border-k-border hover:bg-k-bg-card2/50 transition-colors">
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className={cx("h-8 w-8 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0", avatarColor(empName))}>
+                                {initials(empName)}
+                              </div>
+                              <span className="text-sm font-bold text-k-text-h">{empName}</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-k-text-h">
+                              {formatTime12(ms.meal_start_time)}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                              {ms.duration_minutes} min
+                            </span>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                              {formatTime12(endTime)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ─ Panel lateral ──────────────────────────────────────────── */}
           <div className="space-y-4">
 
             {/* Resumen de nómina */}
@@ -940,22 +991,13 @@ export default function NominaPage() {
                   <div className="text-3xl font-black tracking-tight">{fmt(period.total_amount)}</div>
                 </div>
 
-                {/* Ajustes y bonos */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-rose-50 border border-rose-100 p-4">
-                    <div className="flex items-center gap-1.5 text-rose-500 mb-2">
-                      <TrendingDown className="h-3.5 w-3.5" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Ajustes</span>
-                    </div>
-                    <div className="text-xl font-black text-rose-600">{fmt(period.total_adjustments)}</div>
+                {/* Ajustes */}
+                <div className="rounded-2xl bg-rose-50 border border-rose-100 p-4">
+                  <div className="flex items-center gap-1.5 text-rose-500 mb-2">
+                    <TrendingDown className="h-3.5 w-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Ajustes</span>
                   </div>
-                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
-                    <div className="flex items-center gap-1.5 text-emerald-600 mb-2">
-                      <TrendingUp className="h-3.5 w-3.5" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider">Bonos</span>
-                    </div>
-                    <div className="text-xl font-black text-emerald-600">{fmt(period.total_bonuses)}</div>
-                  </div>
+                  <div className="text-xl font-black text-rose-600">{fmt(period.total_adjustments)}</div>
                 </div>
 
                 {/* Stats */}
@@ -1006,6 +1048,50 @@ export default function NominaPage() {
               </div>
             </div>
 
+            {/* Notas */}
+            <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+              <div className="px-6 py-5 border-b border-k-border flex items-center gap-2">
+                <StickyNote className="h-4 w-4 text-amber-500" />
+                <h3 className="text-sm font-black text-k-text-h tracking-tight">Notas</h3>
+              </div>
+              <div className="p-6">
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={approved}
+                  rows={4}
+                  placeholder="Escribe notas adicionales para esta nómina..."
+                  className={cx(
+                    "w-full rounded-2xl border border-k-border px-4 py-3 text-sm outline-none resize-none transition",
+                    "focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300",
+                    approved ? "bg-k-bg-card2 text-k-text-b cursor-not-allowed" : "bg-k-bg-card text-k-text-h"
+                  )}
+                />
+                {!approved && (
+                  <button
+                    onClick={async () => {
+                      if (!period) return;
+                      setSavingNotes(true);
+                      try {
+                        await api.patch(`/nomina/periodos/${period.id}`, { notes });
+                        setPeriod(prev => prev ? { ...prev, notes } : prev);
+                        showToast("ok", "Notas guardadas");
+                      } catch {
+                        showToast("err", "No se pudieron guardar las notas");
+                      } finally {
+                        setSavingNotes(false);
+                      }
+                    }}
+                    disabled={savingNotes || notes === (period?.notes ?? "")}
+                    className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 px-4 py-2.5 text-xs font-bold text-k-text-h uppercase tracking-widest transition disabled:opacity-40"
+                  >
+                    {savingNotes ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                    Guardar Notas
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Gráfico de distribución (NUEVO) */}
             {isEnabled("newManagementAdmin") && chartData.length > 0 && (
               <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden mb-4">
@@ -1051,7 +1137,7 @@ export default function NominaPage() {
                 <div>
                   <div className="font-bold mb-1">En Borrador</div>
                   {draftCount > 0 && <div className="mb-1">Hay <strong>{draftCount}</strong> registros con ajustes negativos.</div>}
-                  Puedes editar ajustes y bonos. Una vez aprobada, no podrá modificarse.
+                  Puedes editar ajustes. Una vez aprobada, no podrá modificarse.
                 </div>
               </div>
             )}
