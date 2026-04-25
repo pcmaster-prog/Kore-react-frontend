@@ -308,8 +308,8 @@ export default function ActividadTab() {
     if (category !== "todo" && conf.category !== category) return false;
     if (search) {
       const q = search.toLowerCase();
-      if (!conf.label.toLowerCase().includes(q) &&
-          !conf.sublabel.toLowerCase().includes(q) &&
+      if (!(conf.label ?? "").toLowerCase().includes(q) &&
+          !(conf.sublabel ?? "").toLowerCase().includes(q) &&
           !JSON.stringify(item.meta ?? {}).toLowerCase().includes(q)) return false;
     }
     return true;

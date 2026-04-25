@@ -75,14 +75,23 @@ export default function MealScheduleTab() {
           api.get("/meal-schedules"),
         ]);
         const empList = empRes.data?.data ?? empRes.data ?? [];
-        setEmployees(empList);
+        setEmployees(empList.map((e: any) => ({
+          id: String(e.id),
+          name: e.name ?? e.full_name ?? "—",
+          role: e.role ?? e.position_title ?? null,
+        })));
         const schedList = schedRes.data?.data ?? schedRes.data ?? [];
         setSchedules(schedList);
       } catch {
         // Employees may load, schedules may not exist yet
         try {
           const empRes = await api.get("/empleados");
-          setEmployees(empRes.data?.data ?? empRes.data ?? []);
+          const fallbackList = empRes.data?.data ?? empRes.data ?? [];
+          setEmployees(fallbackList.map((e: any) => ({
+            id: String(e.id),
+            name: e.name ?? e.full_name ?? "—",
+            role: e.role ?? e.position_title ?? null,
+          })));
         } catch {
           showToast("err", "No se pudieron cargar los empleados");
         }
@@ -142,7 +151,7 @@ export default function MealScheduleTab() {
   }
 
   const filtered = employees.filter(e =>
-    e.name.toLowerCase().includes(search.toLowerCase())
+    (e.name ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   const assignedCount = schedules.filter(s => s.meal_start_time).length;

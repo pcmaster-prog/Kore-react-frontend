@@ -465,16 +465,12 @@ export default function NominaPage() {
     setPeriod(null);
     setGlobalPatches({});
     try {
-      const res = await api.get("/nomina/periodos");
-      const list = res.data?.data ?? res.data ?? [];
-      // Buscar periodo que contenga el refDate
-      const found = Array.isArray(list)
-        ? list.find((p: Period) => refDate >= p.week_start && refDate <= p.week_end)
-        : null;
-
-      if (found) {
-        const detail = await api.get(`/nomina/periodos/${found.id}`);
-        const periodData = detail.data?.period ?? detail.data;
+      // Use the dedicated week-lookup endpoint instead of fetching all periods
+      const res = await api.get("/nomina/periodos/semana", {
+        params: { week_date: refDate },
+      });
+      const periodData = res.data?.period ?? res.data;
+      if (periodData) {
         setPeriod(periodData);
         setNotes(periodData?.notes ?? "");
       }
@@ -484,7 +480,12 @@ export default function NominaPage() {
         setMealSchedules(mealRes.data?.data ?? mealRes.data ?? []);
       } catch { /* meal schedules not yet configured */ }
     } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "Error cargando nómina");
+      // 404 = no period for this week (normal, show empty state)
+      if (e?.response?.status === 404) {
+        // no period found — leave period as null to show "generate" UI
+      } else {
+        setErr(e?.response?.data?.message ?? "Error cargando nómina");
+      }
     } finally {
       setLoading(false);
     }
@@ -501,10 +502,20 @@ export default function NominaPage() {
       setPeriod(newPeriod);
       if (newPeriod) {
         setRefDate(newPeriod.week_start);
+        setNotes(newPeriod.notes ?? "");
       }
       showToast("ok", "Nómina generada correctamente");
     } catch (e: any) {
-      showToast("err", e?.response?.data?.message ?? "No se pudo generar la nómina");
+      // 409 = period already approved — backend returns the existing period
+      if (e?.response?.status === 409 && e?.response?.data?.period) {
+        const existingPeriod = e.response.data.period;
+        setPeriod(existingPeriod);
+        setRefDate(existingPeriod.week_start);
+        setNotes(existingPeriod.notes ?? "");
+        showToast("err", e.response.data.message ?? "Esta nómina ya fue aprobada");
+      } else {
+        showToast("err", e?.response?.data?.message ?? "No se pudo generar la nómina");
+      }
     } finally {
       setGenerating(false);
     }
