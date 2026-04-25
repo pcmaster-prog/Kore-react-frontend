@@ -124,11 +124,12 @@ function avatarColor(name: string) {
 
 // ─── Fila editable ────────────────────────────────────────────────────────────
 function EntryRow({
-  entry, period, approved, onSave, onToggleExclude, pendingPatch, onPatch
+  entry, period, approved, mealSchedule, onSave, onToggleExclude, pendingPatch, onPatch
 }: {
   entry: Entry;
   period: Period;
   approved: boolean;
+  mealSchedule?: MealScheduleItem;
   onSave: (id: string, patch: Partial<Entry>) => Promise<void>;
   onToggleExclude: (empleadoId: string, excluir: boolean) => Promise<void>;
   pendingPatch?: Partial<Entry>;
@@ -191,6 +192,23 @@ function EntryRow({
               {entry.empleado_role && <div className="text-[10px] text-k-text-b uppercase tracking-wider mt-0.5">{entry.empleado_role}</div>}
             </div>
           </div>
+        </td>
+
+        {/* Comida */}
+        <td className="px-5 py-4">
+          {mealSchedule ? (
+            <div>
+              <div className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                <UtensilsCrossed className="h-3 w-3" />
+                {formatTime12(mealSchedule.meal_start_time)}
+              </div>
+              <div className="text-[10px] text-k-text-b font-medium mt-1">
+                {mealSchedule.duration_minutes} min
+              </div>
+            </div>
+          ) : (
+            <span className="text-sm font-semibold text-k-text-b">—</span>
+          )}
         </td>
 
         {/* Horas/días */}
@@ -876,7 +894,7 @@ export default function NominaPage() {
               <table className="w-full text-sm">
                 <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
-                    {["Empleado", "Horas/Días", "Tarifa", "Subtotal", "Ajuste", "Total"].map((h, i) => (
+                    {["Empleado", "Comida", "Horas/Días", "Tarifa", "Subtotal", "Ajuste", "Total"].map((h, i) => (
                       <th key={i} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">
                         {h}
                       </th>
@@ -900,6 +918,7 @@ export default function NominaPage() {
                         entry={entry}
                         period={period}
                         approved={approved}
+                        mealSchedule={mealSchedules.find(ms => ms.employee_id === entry.empleado_id)}
                         onSave={saveEntry}
                         onToggleExclude={toggleExclude}
                         pendingPatch={globalPatches[entry.id]}
@@ -922,69 +941,6 @@ export default function NominaPage() {
               </div>
             </div>
           </div>
-
-          {/* ─ Horarios de Comida ────────────────────────────── */}
-          {mealSchedules.length > 0 && (
-            <div className="col-span-full rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-              <div className="px-8 py-5 border-b border-k-border bg-k-bg-card2/50 flex items-center gap-3">
-                <UtensilsCrossed className="h-5 w-5 text-amber-500" />
-                <div>
-                  <h2 className="text-lg font-black text-k-text-h tracking-tight">Horarios de Comida</h2>
-                  <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">
-                    Semana {getWeekNumber(period.week_start)} · {mealSchedules.length} empleados asignados
-                  </p>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-k-bg-card2/80 border-b border-k-border">
-                    <tr>
-                      {["Empleado", "Hora Inicio", "Duración", "Hora Fin"].map((h, i) => (
-                        <th key={i} className="text-left px-5 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mealSchedules.map(ms => {
-                      const empName = ms.employee_name ?? visibleEntries.find(e => e.empleado_id === ms.employee_id)?.empleado_name ?? ms.employee_id;
-                      const [h, m] = (ms.meal_start_time || "0:0").split(":").map(Number);
-                      const totalMin = h * 60 + m + ms.duration_minutes;
-                      const endH = Math.floor(totalMin / 60) % 24;
-                      const endM = totalMin % 60;
-                      const endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
-                      return (
-                        <tr key={ms.employee_id} className="border-t border-k-border hover:bg-k-bg-card2/50 transition-colors">
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className={cx("h-8 w-8 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0", avatarColor(empName))}>
-                                {initials(empName)}
-                              </div>
-                              <span className="text-sm font-bold text-k-text-h">{empName}</span>
-                            </div>
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className="inline-flex items-center gap-1 text-sm font-semibold text-k-text-h">
-                              {formatTime12(ms.meal_start_time)}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
-                              {ms.duration_minutes} min
-                            </span>
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
-                              {formatTime12(endTime)}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
 
           {/* ─ Panel lateral ──────────────────────────────────────────── */}
           <div className="space-y-4">
