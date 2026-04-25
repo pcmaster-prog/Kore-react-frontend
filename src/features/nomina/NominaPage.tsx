@@ -620,42 +620,20 @@ export default function NominaPage() {
 
     const wkNum = getWeekNumber(period.week_start);
 
-    const rows = visibleEntries.map(e => `
+    const rows = visibleEntries.map(e => {
+      const ms = mealSchedules.find(m => m.employee_id === e.empleado_id);
+      const msStr = ms ? `${formatTime12(ms.meal_start_time)} (${ms.duration_minutes}m)` : "—";
+      return `
       <tr>
         <td>${e.empleado_name}</td>
+        <td>${msStr}</td>
         <td>${fmtUnits(e.payment_type, e.units)}${e.rest_days_paid > 0 ? ` +${e.rest_days_paid}d` : ""}</td>
         <td>${fmt(e.rate)}</td>
         <td>${fmt(e.subtotal)}</td>
         <td>${e.adjustment_amount !== 0 ? fmt(e.adjustment_amount) : "—"}${e.adjustment_note ? ` (${e.adjustment_note})` : ""}</td>
         <td><strong>${fmt(e.total)}</strong></td>
-      </tr>`).join("");
-
-    const mealRows = mealSchedules.map(ms => {
-      const empName = ms.employee_name ?? visibleEntries.find(e => e.empleado_id === ms.employee_id)?.empleado_name ?? ms.employee_id;
-      const [h, m] = (ms.meal_start_time || "0:0").split(":").map(Number);
-      const totalMin = h * 60 + m + ms.duration_minutes;
-      const endH = Math.floor(totalMin / 60) % 24;
-      const endM = totalMin % 60;
-      const endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
-      return `
-        <tr>
-          <td>${empName}</td>
-          <td>${formatTime12(ms.meal_start_time)}</td>
-          <td>${ms.duration_minutes} min</td>
-          <td>${formatTime12(endTime)}</td>
-        </tr>`;
+      </tr>`;
     }).join("");
-
-    const mealHtml = mealSchedules.length > 0 ? `
-      <div style="margin-top: 40px;">
-        <h2 style="font-size: 16px; margin-bottom: 12px; border-bottom: 2px solid #111; padding-bottom: 6px;">Horarios de Comida</h2>
-        <table>
-          <thead><tr>
-            <th>Empleado</th><th>Inicio</th><th>Duración</th><th>Fin Estimado</th>
-          </tr></thead>
-          <tbody>${mealRows}</tbody>
-        </table>
-      </div>` : "";
 
     const notesHtml = period.notes ? `
       <div class="notes">
@@ -693,7 +671,7 @@ export default function NominaPage() {
       </div>
       <table>
         <thead><tr>
-          <th>Empleado</th><th>Horas/Días</th><th>Tarifa</th>
+          <th>Empleado</th><th>Comida</th><th>Horas/Días</th><th>Tarifa</th>
           <th>Subtotal</th><th>Ajuste</th><th>Total</th>
         </tr></thead>
         <tbody>${rows}</tbody>
@@ -703,7 +681,6 @@ export default function NominaPage() {
         <div class="total-box"><div class="label">Ajustes</div><div class="val">${fmt(period.total_adjustments)}</div></div>
         <div class="total-box"><div class="label">Empleados</div><div class="val">${visibleEntries.length}</div></div>
       </div>
-      ${mealHtml}
       ${notesHtml}
       <script>window.onload = () => window.print();</script>
       </body></html>`);;
@@ -716,10 +693,13 @@ export default function NominaPage() {
     const excludedIds = period.excluded_employee_ids ?? [];
     const visibleEntries = period.entries.filter(e => !excludedIds.includes(e.empleado_id));
 
-    const header = "Empleado,Horas/Días,Tarifa,Subtotal,Ajuste,Motivo Ajuste,Total\n";
-    const rows = visibleEntries.map(e =>
-      [
+    const header = "Empleado,Comida,Horas/Días,Tarifa,Subtotal,Ajuste,Motivo Ajuste,Total\n";
+    const rows = visibleEntries.map(e => {
+      const ms = mealSchedules.find(m => m.employee_id === e.empleado_id);
+      const msStr = ms ? `${formatTime12(ms.meal_start_time)} (${ms.duration_minutes}m)` : "";
+      return [
         `"${e.empleado_name}"`,
+        `"${msStr}"`,
         fmtUnits(e.payment_type, e.units),
         e.rate,
         e.subtotal,
@@ -727,7 +707,7 @@ export default function NominaPage() {
         `"${e.adjustment_note ?? ""}"`,
         e.total,
       ].join(",")
-    ).join("\n");
+    }).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
