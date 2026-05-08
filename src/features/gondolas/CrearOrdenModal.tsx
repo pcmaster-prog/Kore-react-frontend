@@ -6,10 +6,7 @@ import { createOrden, getGondola } from "./api";
 import type { Gondola, GondolaOrden, GondolaProducto } from "./types";
 import { UNIDADES } from "./utils";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 type Empleado = { id: string; name: string; position_title?: string | null };
 
 type Props = {

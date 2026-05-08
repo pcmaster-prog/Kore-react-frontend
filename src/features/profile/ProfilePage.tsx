@@ -7,10 +7,7 @@ import {
   Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, MonitorSmartphone, Globe, Moon
 } from "lucide-react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
+import { cx } from "@/lib/utils";
 
 type ProfileData = {
   id: string;
@@ -82,12 +79,18 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
 
-  const [avatarLocal, setAvatarLocal] = useState<string | null>(localStorage.getItem("kore_avatar"));
-  
-  const [preferences, setPreferences] = useState({
-    notifications: localStorage.getItem("kore_prefs_notif") !== "false",
-    language: localStorage.getItem("kore_prefs_lang") || "es",
-    theme: localStorage.getItem("kore_prefs_theme") || "system",
+  const [avatarLocal, setAvatarLocal] = useState<string | null>(sessionStorage.getItem("kore_avatar"));
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const [preferences, setPreferences] = useState(() => {
+    const notif = sessionStorage.getItem("kore_prefs_notif");
+    const lang = sessionStorage.getItem("kore_prefs_lang");
+    const theme = sessionStorage.getItem("kore_prefs_theme");
+    return {
+      notifications: notif !== "false",
+      language: lang || "es",
+      theme: theme || "system",
+    };
   });
 
   const [securityExpanded, setSecurityExpanded] = useState(false);
@@ -171,12 +174,33 @@ export default function ProfilePage() {
   function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setAvatarError(null);
+
+    // Validación de tipo MIME
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Solo se permiten imágenes (JPG, PNG, WebP)");
+      return;
+    }
+
+    // Validación de tamaño (máx 2MB)
+    const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_AVATAR_SIZE) {
+      setAvatarError("La imagen no debe exceder 2MB");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result as string;
       setAvatarLocal(base64);
-      localStorage.setItem("kore_avatar", base64);
-      showToast("ok", "Avatar guardado localmente en este dispositivo");
+      // Guardar en sessionStorage (más seguro que localStorage para datos binarios)
+      // Idealmente debería subirse al servidor y guardar solo la URL
+      try {
+        sessionStorage.setItem("kore_avatar", base64);
+        showToast("ok", "Avatar guardado localmente en esta sesión");
+      } catch (err) {
+        setAvatarError("La imagen es demasiado grande para guardar localmente");
+      }
     };
     reader.readAsDataURL(file);
   }
@@ -185,7 +209,7 @@ export default function ProfilePage() {
     try {
       await api.put("/users/preferences", { [key]: value });
     } catch (e) {
-      console.error("Error saving preference", e);
+      // Error silencioso: preferencia guardada localmente
     }
   }
   async function toggleNotifications() {
@@ -198,14 +222,14 @@ export default function ProfilePage() {
     }
 
     setPreferences(p => ({ ...p, notifications: next }));
-    localStorage.setItem("kore_prefs_notif", String(next));
+    sessionStorage.setItem("kore_prefs_notif", String(next));
     showToast("ok", next ? "Notificaciones habilitadas" : "Notificaciones deshabilitadas");
     updatePreferenceBackend("notifications_enabled", next);
   }
 
   function changeLanguage(lang: string) {
     setPreferences(p => ({ ...p, language: lang }));
-    localStorage.setItem("kore_prefs_lang", lang);
+    sessionStorage.setItem("kore_prefs_lang", lang);
     showToast("ok", "Idioma actualizado");
     updatePreferenceBackend("language", lang);
   }
@@ -269,6 +293,9 @@ export default function ProfilePage() {
             <div className="relative flex items-center gap-5">
               <div className="flex-shrink-0">
                 <Avatar name={profile.full_name} url={avatarLocal || profile.avatar_url} onUpload={handleAvatarUpload} />
+                {avatarError && (
+                  <div className="mt-2 text-[10px] font-bold text-rose-500 text-center">{avatarError}</div>
+                )}
               </div>
               <div className="min-w-0">
                 <div className="font-black text-xl tracking-tight truncate text-k-sb-active">{profile.full_name}</div>

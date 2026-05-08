@@ -5,10 +5,7 @@ import { getOrden, aprobarOrden, rechazarOrden } from "./api";
 import type { GondolaOrden } from "./types";
 import { STATUS_CONFIG, UNIDADES } from "./utils";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 type Props = {
   orden: GondolaOrden;
   onClose: () => void;

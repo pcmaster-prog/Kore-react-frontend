@@ -10,10 +10,7 @@ import {
   Clock, CheckCircle2, AlertTriangle, Loader2, HelpCircle, Save,
 } from "lucide-react";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 function Toggle({ checked, onChange, disabled }: {
   checked: boolean;
   onChange: (v: boolean) => void;

@@ -4,10 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { auth } from "./store";
 import { register, type RegisterPayload } from "./api";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 const INDUSTRIES = ["Retail", "Restaurante", "Manufactura", "Servicios", "Otro"];
 const RANGES = ["1-10", "11-50", "51-200", "200+"];
 

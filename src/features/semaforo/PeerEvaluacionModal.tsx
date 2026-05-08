@@ -5,10 +5,7 @@ import { CRITERIOS_PEER, initials } from './utils';
 import { enviarPeerEvaluacion } from './api';
 import StarRating from './StarRating';
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(' ');
-}
-
+import { cx } from "@/lib/utils";
 type PeerEvaluacionModalProps = {
   open: boolean;
   onClose: () => void;

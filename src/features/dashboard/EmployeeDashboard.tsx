@@ -26,10 +26,7 @@ type EmployeeDash = {
   attendance?: { state?: string; day_id?: string | null };
 };
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 function StatusPill({ status }: { status?: string }) {
   const s = (status ?? "-").toLowerCase();
   const conf =

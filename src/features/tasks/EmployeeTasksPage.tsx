@@ -18,10 +18,7 @@ import { isEnabled } from "@/lib/featureFlags";
 import EmptyState from "@/components/EmptyState";
 import PageHeader from "@/components/PageHeader";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 // ✅ Actualizado: incluye approved y rejected
 function StatusPill({ s }: { s: string }) {
   const meta =

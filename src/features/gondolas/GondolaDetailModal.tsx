@@ -13,10 +13,7 @@ import type { Gondola, GondolaProducto, GondolaOrden } from "./types";
 import { STATUS_CONFIG, UNIDADES, tiempoRelativo } from "./utils";
 import OrdenDetailModal from "./OrdenDetailModal";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 type Props = {
   gondola: Gondola;
   onClose: () => void;

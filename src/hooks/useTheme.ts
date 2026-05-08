@@ -51,7 +51,7 @@ export function useTheme() {
         body: JSON.stringify({ theme }),
       });
     } catch (e) {
-      console.warn('No se pudo sincronizar tema con backend:', e);
+      // Silencioso: fallo al sincronizar tema con backend
     }
   }, [theme]);
 

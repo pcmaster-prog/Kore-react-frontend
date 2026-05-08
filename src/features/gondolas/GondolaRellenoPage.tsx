@@ -7,10 +7,7 @@ import type { GondolaOrden, GondolaOrdenItem } from "./types";
 import { STATUS_CONFIG, UNIDADES } from "./utils";
 import EvidenciaUploader from "./EvidenciaUploader";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 /* ─── Modal de selección de productos ─────────────────────────────── */
 function ProductSelectionModal({
   items,

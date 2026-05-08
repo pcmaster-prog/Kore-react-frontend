@@ -14,10 +14,7 @@ import {
 import { getPendientesSupervisor } from "@/features/semaforo/api";
 import { isEnabled } from "@/lib/featureFlags";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 // ─── Link simple con Prefetch ─────────────────────────────────────────────────
 function SidebarLink({
   to, label, icon, indent = false, onClick,

@@ -7,10 +7,7 @@ import EvaluacionFormModal from './EvaluacionFormModal';
 import ResultadoModal from './ResultadoModal';
 import { auth } from '@/features/auth/store';
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(' ');
-}
-
+import { cx, reportError } from "@/lib/utils";
 /* ── Skeleton Card ─────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
@@ -54,7 +51,7 @@ export default function SemaforoAdminTab() {
     try {
       const data = await listEmpleadosEvaluacion();
       setEmpleados(data);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Cargando semáforo admin", e); }
     finally { setLoading(false); }
   }
 

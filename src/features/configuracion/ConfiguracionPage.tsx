@@ -9,12 +9,10 @@ import SemaforoAdminTab from "@/features/semaforo/SemaforoAdminTab";
 import TardinessConfigTab from "@/features/tardiness/TardinessConfigTab";
 import TardinessReportTab from "@/features/tardiness/TardinessReportTab";
 import MealScheduleTab from "./MealScheduleTab";
+import HolidaysConfigSection from "./HolidaysConfigSection";
 import PageHeader from "@/components/PageHeader";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx, reportError } from "@/lib/utils";
 function RolesTab() {
   const roles = [
     {
@@ -131,7 +129,7 @@ function HorariosTab() {
           setWeekStart(c.week_start.toString());
         }
       })
-      .catch((err) => console.error("Error loading settings", err))
+      .catch(() => { /* Error silencioso: ya manejado en UI */ })
       .finally(() => setLoading(false));
   }, []);
 
@@ -155,7 +153,7 @@ function HorariosTab() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
-      console.error("Error saving settings", err);
+      // Error ya manejado en UI
     } finally {
       setSaving(false);
     }
@@ -296,23 +294,7 @@ function HorariosTab() {
 
 
 
-        {/* 5.6 Excepciones visuales (NUEVO) */}
-        <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 space-y-4">
-          <div className="flex items-center gap-3 pb-2 border-b border-k-border">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Excepciones y Festivos</h3>
-          </div>
-          <div className="flex items-center gap-4 overflow-x-auto custom-scrollbar pb-2">
-            <div className="min-w-[200px] rounded-2xl bg-k-bg-card border border-k-border p-4 shadow-k-card">
-              <div className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-1">Próximo Festivo</div>
-              <div className="text-sm font-black text-k-text-h">Día del Trabajo</div>
-              <div className="text-xs font-medium text-k-text-b mt-1">1 de Mayo</div>
-            </div>
-            <div className="min-w-[200px] rounded-2xl bg-k-bg-card border border-k-border p-4 shadow-k-card border-dashed flex items-center justify-center text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2 cursor-pointer transition-colors">
-              <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2"><Clock className="h-4 w-4" /> Agregar Excepción</span>
-            </div>
-          </div>
-        </div>
+        <HolidaysConfigSection />
 
         <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700 flex items-center gap-3">
           <div className="h-8 w-8 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
@@ -368,7 +350,7 @@ function ModulosTab() {
       setModules(next);
       auth.setModules(next.filter(m => m.enabled).map(m => m.key));
       window.dispatchEvent(new Event("kore-modules-updated"));
-    } catch { /* silent */ }
+    } catch (e) { reportError("Guardando configuración", e); }
     finally { setSaving(null); }
   }
 
@@ -454,7 +436,7 @@ function RedTab() {
       await api.post("/empresa/red", { allowed_ip: ip.trim() });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Guardando configuración", e); }
     finally { setSaving(false); }
   }
 
@@ -464,7 +446,7 @@ function RedTab() {
       const res = await fetch("https://api.ipify.org?format=json");
       const data = await res.json();
       setIp(data.ip);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Guardando configuración", e); }
     finally { setLoadingIp(false); }
   }
 

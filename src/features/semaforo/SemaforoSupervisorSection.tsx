@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/utils";
 import { useState, useEffect } from 'react';
 import type { EmpleadoConEvaluacion } from './types';
 import { getPendientesSupervisor } from './api';
@@ -31,7 +32,7 @@ export default function SemaforoSupervisorSection() {
     try {
       const data = await getPendientesSupervisor();
       setPendientes(data);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Cargando semáforo supervisor", e); }
     finally { setLoading(false); }
   }
 

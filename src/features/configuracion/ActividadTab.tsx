@@ -2,10 +2,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import api from "@/lib/http";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 type ActivityItem = {
   id: string;
   action: string;

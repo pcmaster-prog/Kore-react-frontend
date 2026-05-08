@@ -15,10 +15,7 @@ import {
   Search, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign, FileText, Pencil
 } from "lucide-react";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 // ─── Avatar ──────────────────────────────────────────────────────────────────
 function Avatar({ name }: { name: string }) {
   const initials = name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");

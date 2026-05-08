@@ -16,7 +16,7 @@ describe("useAuthStore", () => {
   beforeEach(() => {
     // Reset store state between tests
     useAuthStore.getState().logout();
-    localStorage.clear();
+    sessionStorage.clear();
   });
 
   it("should start with null token and user", () => {
@@ -90,7 +90,7 @@ import { auth } from "../authStore";
 describe("auth (legacy wrapper)", () => {
   beforeEach(() => {
     useAuthStore.getState().logout();
-    localStorage.clear();
+    sessionStorage.clear();
   });
 
   it("auth.get() returns null when not authenticated", () => {

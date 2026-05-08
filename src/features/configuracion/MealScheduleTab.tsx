@@ -6,10 +6,7 @@ import {
   Search, Save, Clock
 } from "lucide-react";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx, initials, avatarColor } from "@/lib/utils";
 type Employee = {
   id: string;
   name: string;
@@ -23,22 +20,6 @@ type MealSchedule = {
 };
 
 const DURATION_OPTIONS = [15, 20, 30, 45, 60];
-
-function initials(name: string): string {
-  return name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
-}
-
-const AVATAR_COLORS = [
-  "bg-blue-100 text-blue-700", "bg-emerald-100 text-emerald-700",
-  "bg-violet-100 text-violet-700", "bg-amber-100 text-amber-700",
-  "bg-rose-100 text-rose-700", "bg-teal-100 text-teal-700",
-];
-
-function avatarColor(name: string) {
-  let h = 0;
-  for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
 
 function formatTime12(time24: string): string {
   if (!time24) return "—";

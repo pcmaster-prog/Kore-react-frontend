@@ -9,7 +9,7 @@ export type AttendanceDay = {
   id: string;
   empleado_id: string;
   date: string;
-  status: "open" | "closed" | "day_off" | "present" | "late";
+  status: "open" | "closed" | "day_off" | "present" | "late" | "holiday";
   first_check_in_at?: string | null;
   last_check_out_at?: string | null;
 };
@@ -22,6 +22,8 @@ export type AttendanceTotals = {
 export type TodayResponse = {
   date: string;
   is_rest_day: boolean;
+  is_holiday?: boolean;
+  holiday_name?: string | null;
   state: AttendanceState;
   actions: {
     check_in: boolean;

@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { getMyLateInfo, type LateInfo } from "@/features/attendance/api";
 import { Clock, AlertTriangle } from "lucide-react";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 // Max lates before penalty — this should ideally come from config
 // but for now we hardcode 3 (matches the default spec)
 const MAX_LATES = 3;

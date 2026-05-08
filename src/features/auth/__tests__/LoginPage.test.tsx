@@ -36,7 +36,7 @@ describe("LoginPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuthStore.getState().logout();
-    localStorage.clear();
+    sessionStorage.clear();
   });
 
   it("renders the login form with email and password fields", () => {

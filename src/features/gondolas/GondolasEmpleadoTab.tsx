@@ -6,10 +6,7 @@ import { misOrdenesGondola, listGondolas, autoRellenarGondola } from "./api";
 import type { Gondola, GondolaOrden } from "./types";
 import { STATUS_CONFIG, tiempoRelativo } from "./utils";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 export default function GondolasEmpleadoTab() {
   const nav = useNavigate();
   const [ordenes, setOrdenes] = useState<GondolaOrden[]>([]);

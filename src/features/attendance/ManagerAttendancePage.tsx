@@ -21,10 +21,7 @@ import DiaDescansoAdminModal from "./DiaDescansoAdminModal";
 import { isEnabled } from "@/lib/featureFlags";
 import EmptyState from "@/components/EmptyState";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 type Employee = { id: string; full_name?: string; name?: string; position_title?: string };
 
 // ─── Badge de solicitud ───────────────────────────────────────────────────────
@@ -228,6 +225,13 @@ function StatusBadge({ item, isAbsent }: { item?: ByDateItem; isAbsent?: boolean
 
   const checkedIn = !!item.first_check_in_at;
   const closed = item.status === "closed" || !!item.last_check_out_at;
+
+  if (item.status === "holiday")
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-100 bg-violet-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-violet-600">
+        <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />Festivo
+      </span>
+    );
 
   if ((item as any).is_rest_day || (item as any).state === "rest")
     return <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-100 bg-sky-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-600">Descanso</span>;

@@ -29,10 +29,7 @@ import EmptyState from "@/components/EmptyState";
 import KpiCard from "@/components/KpiCard";
 import PageSkeleton from "@/components/PageSkeleton";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx, reportError } from "@/lib/utils";
 type AttendanceSnap = {
   date: string;
   employees_total: number;
@@ -126,7 +123,7 @@ function AdminDashboard() {
           });
           setActivityFeed(adapted);
         }
-      } catch { /* silent */ }
+      } catch (e) { reportError("Cargando dashboard manager", e); }
       if (alive) setLoading(false);
     })();
     return () => { alive = false; };

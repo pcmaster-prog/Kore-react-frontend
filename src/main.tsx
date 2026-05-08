@@ -29,6 +29,6 @@ const updateSW = registerSW({
     }
   },
   onOfflineReady() {
-    console.log("Kore listo para uso offline");
+    // App lista para uso offline (silencioso en producción)
   },
 });

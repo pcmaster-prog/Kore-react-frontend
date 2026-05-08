@@ -4,10 +4,7 @@ import { X } from "lucide-react";
 import { createGondola, updateGondola } from "./api";
 import type { Gondola } from "./types";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 type Props = {
   gondola?: Gondola | null;
   onClose: () => void;

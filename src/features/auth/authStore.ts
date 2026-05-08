@@ -30,7 +30,7 @@ interface AuthStoreState {
   isTokenExpired: () => boolean;
 }
 
-const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas
+const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas — debe coincidir con config/sanctum.php expiration
 
 export const useAuthStore = create<AuthStoreState>()(
   persist(
@@ -68,7 +68,19 @@ export const useAuthStore = create<AuthStoreState>()(
       },
     }),
     {
-      name: 'kore-auth', // key in localStorage
+      name: 'kore-auth',
+      storage: {
+        getItem: (name) => {
+          const str = sessionStorage.getItem(name);
+          return str ? JSON.parse(str) : null;
+        },
+        setItem: (name, value) => {
+          sessionStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          sessionStorage.removeItem(name);
+        },
+      },
     }
   )
 );

@@ -5,10 +5,7 @@ import { initials } from './utils';
 import PeerEvaluacionModal from './PeerEvaluacionModal';
 import { auth } from '@/features/auth/store';
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(' ');
-}
-
+import { cx, reportError } from "@/lib/utils";
 function SkeletonCard() {
   return (
     <div className="rounded-[16px] border border-neutral-100 bg-white p-4 animate-pulse">
@@ -36,7 +33,7 @@ export default function SemaforoEmpleadoTab() {
       const data = await getCompanerosParaEvaluar();
       setCompaneros(data.companeros);
       setProgress(data.progress);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Cargando semáforo empleado", e); }
     finally { setLoading(false); }
   }
 

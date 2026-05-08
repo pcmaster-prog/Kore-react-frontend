@@ -24,18 +24,17 @@ import {
   LogIn, LogOut, Coffee, Play, Moon, XCircle,
   Clock, CheckCircle2, AlertTriangle, Calendar,
   Timer, Wifi, Loader2, FileText, Send, ChevronDown, ChevronUp,
+  Sparkles,
 } from "lucide-react";
 import { isEnabled } from "@/lib/featureFlags";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx, reportError } from "@/lib/utils";
 // ─── Badge estado del día ─────────────────────────────────────────────
 function DayBadge({ row }: { row: MyDayRow }) {
   const checkedIn = !!row.first_check_in_at;
   const closed = row.status === "closed";
   const isLate = !!((row as any).late_minutes && (row as any).late_minutes > 0);
+  if (row.status === "holiday") return <span className="inline-flex items-center gap-1.5 rounded-xl border border-violet-100 bg-violet-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-600"><span className="h-1.5 w-1.5 rounded-full bg-violet-500" />Festivo</span>;
   if (!checkedIn) return <span className="inline-flex items-center gap-1.5 rounded-xl border border-rose-100 bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-500"><span className="h-1.5 w-1.5 rounded-full bg-rose-400" />Ausente</span>;
   if (closed && isLate) return <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-600"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />Retardo</span>;
   if (closed) return <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Presente</span>;
@@ -116,7 +115,7 @@ function AbsencePanel() {
     try {
       const data = await getMyAbsenceRequests();
       setRequests(data);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Cargando asistencia", e); }
     finally { setLoadingReqs(false); }
   }, []);
 
@@ -299,7 +298,7 @@ export default function EmployeeAttendancePage() {
     try {
       const info = await getMyLateInfo();
       setLateInfo(info);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Cargando asistencia", e); }
   }, []);
 
   // ─── Rango de semana Dom→Sáb ──────────────────────────────────────────────
@@ -325,7 +324,7 @@ export default function EmployeeAttendancePage() {
     try {
       const res = await getMyDays({ from: weekRange.from, to: weekRange.to, page: 1 });
       setHistory(res.data ?? []);
-    } catch { /* silent */ }
+    } catch (e) { reportError("Cargando asistencia", e); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekRange.from, weekRange.to]);
 
@@ -475,6 +474,14 @@ export default function EmployeeAttendancePage() {
         <div className="rounded-[40px] border bg-k-bg-card p-16 flex flex-col items-center gap-4 text-k-text-b">
           <div className="h-10 w-10 border-4 border-k-border border-t-obsidian rounded-full animate-spin" />
           <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
+        </div>
+      ) : today?.is_holiday ? (
+        <div className="rounded-[40px] border border-violet-100 bg-violet-50 p-10 text-center">
+          <div className="h-16 w-16 rounded-[20px] bg-violet-100 flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="h-8 w-8 text-violet-600" />
+          </div>
+          <div className="font-black text-2xl text-violet-800">{today.holiday_name ?? "Día Festivo"}</div>
+          <div className="text-sm text-violet-600 mt-2">Hoy no se requiere asistencia. ¡Disfruta tu día!</div>
         </div>
       ) : today?.is_rest_day ? (
         <div className="rounded-[40px] border border-emerald-100 bg-emerald-50 p-10 text-center">

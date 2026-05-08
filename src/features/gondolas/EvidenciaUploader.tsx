@@ -2,9 +2,18 @@
 import { useRef, useState } from "react";
 import { Camera, X } from "lucide-react";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
+import { cx } from "@/lib/utils";
+
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+  "application/pdf",
+];
+const MAX_SIZE_MB = 10;
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 type Props = {
   onChange: (file: File | null) => void;
@@ -13,14 +22,31 @@ type Props = {
 
 export default function EvidenciaUploader({ onChange, disabled }: Props) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function handleFile(file: File | null) {
+    setError(null);
     if (!file) {
       setPreview(null);
       onChange(null);
       return;
     }
+
+    // Validación de tipo MIME real (no solo la extensión)
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError(`Tipo de archivo no permitido: ${file.type || "desconocido"}`);
+      onChange(null);
+      return;
+    }
+
+    // Validación de tamaño
+    if (file.size > MAX_SIZE_BYTES) {
+      setError(`El archivo excede el límite de ${MAX_SIZE_MB}MB`);
+      onChange(null);
+      return;
+    }
+
     setPreview(URL.createObjectURL(file));
     onChange(file);
   }
@@ -42,6 +68,12 @@ export default function EvidenciaUploader({ onChange, disabled }: Props) {
         disabled={disabled}
         onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
       />
+
+      {error && (
+        <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600">
+          {error}
+        </div>
+      )}
 
       {preview ? (
         <div className="relative rounded-2xl overflow-hidden border border-neutral-200 shadow-sm">

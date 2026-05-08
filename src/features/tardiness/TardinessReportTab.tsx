@@ -12,10 +12,7 @@ import {
   ChevronDown, ChevronUp, X,
 } from "lucide-react";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 function EmployeeDetailModal({
   detail,
   onClose,

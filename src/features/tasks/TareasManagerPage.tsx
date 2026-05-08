@@ -14,10 +14,7 @@ import { useNavigate } from "react-router-dom";
 import RoutinesPage from "./catalog/RoutinesPage";
 import GondolasManagerTab from "@/features/gondolas/GondolasManagerTab";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 const TABS = [
   {
     key: "tareas",

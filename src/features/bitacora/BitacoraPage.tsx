@@ -23,10 +23,7 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { isEnabled } from "@/lib/featureFlags";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx, reportError } from "@/lib/utils";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -133,7 +130,8 @@ function CriteriosModal({
       await saveEvaluationCriteria(local.map(({ id, ...rest }) => rest));
       onSave(local);
       onClose();
-    } catch {
+    } catch (e) {
+      reportError("Cargando bitácora", e);
       // Si falla, guardamos localmente igual
       onSave(local);
       onClose();

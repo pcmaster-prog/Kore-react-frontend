@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "./store";
 import { login as apiLogin } from "./api";
+import { isValidEmail } from "@/lib/utils";
 
 
 // ─── Rate limiting con cooldown exponencial ──────────────────────────────────
@@ -75,10 +76,26 @@ export default function LoginPage() {
     if (isCoolingDown) return;
 
     setErr(null);
+
+    // Validación de cliente antes de enviar
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setErr("El correo electrónico es obligatorio.");
+      return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
+      setErr("El formato del correo electrónico no es válido.");
+      return;
+    }
+    if (!password.trim()) {
+      setErr("La contraseña es obligatoria.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await apiLogin(email.trim(), password);
+      const res = await apiLogin(trimmedEmail, password);
 
       // Guardar auth y resetear contadores
       auth.set({ token: res.token, user: res.user });

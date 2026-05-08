@@ -24,7 +24,7 @@ export function useNotifications() {
           platform: 'web',
         });
       } catch (err) {
-        console.warn('Error configurando notificaciones:', err);
+        // Error silencioso en producción
       }
     }
 
@@ -42,7 +42,7 @@ export function useNotifications() {
         });
         unsubRef.current = unsub;
       } catch (err) {
-        console.warn('Error configurando listener de notificaciones:', err);
+        // Error silencioso en producción
       }
     }
 

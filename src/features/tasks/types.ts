@@ -21,7 +21,7 @@ export type Task = {
     name?: string | null;
     avatar_url?: string | null;
   } | null;
-  assignees?: any[];
+  assignees?: any[] | null;
 };
 
 export type Paginated<T> = {

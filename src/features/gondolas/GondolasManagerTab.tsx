@@ -15,10 +15,7 @@ import GondolaDetailModal from "./GondolaDetailModal";
 import CrearOrdenModal from "./CrearOrdenModal";
 import OrdenDetailModal from "./OrdenDetailModal";
 
-function cx(...s: Array<string | false | null | undefined>) {
-  return s.filter(Boolean).join(" ");
-}
-
+import { cx } from "@/lib/utils";
 type InnerTab = "gondolas" | "ordenes";
 
 // ── GondolaCard ───────────────────────────────────────────────────────────────

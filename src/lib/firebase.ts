@@ -15,7 +15,7 @@ export const firebaseApp = initializeApp(firebaseConfig);
 // para evitar incluir todo el SDK de messaging en el bundle inicial.
 
 export const VAPID_KEY =
-  'BHaKLf7ppoyI5o98NwBO506hcSkX9Sg1HAvEhP5G18oBdTpm6AXT9iTd9JwsGPc3OvWOj71OfxR4EScAfLoNBEc';
+  import.meta.env.VITE_FIREBASE_VAPID_KEY ?? ''; // NUNCA hardcodear en producción
 
 /**
  * Lazy-load del módulo de Firebase Messaging.
@@ -40,7 +40,7 @@ export async function requestNotificationPermission(): Promise<string | null> {
     const token = await getToken(messaging, { vapidKey: VAPID_KEY });
     return token || null;
   } catch (err) {
-    console.warn('Error obteniendo token FCM:', err);
+    // Error silencioso en producción
     return null;
   }
 }
@@ -55,7 +55,7 @@ export async function onForegroundMessage(callback: (payload: any) => void): Pro
     const messaging = await getMessagingInstance();
     return onMessage(messaging, callback);
   } catch (err) {
-    console.warn('Error configurando listener de mensajes:', err);
+    // Error silencioso en producción
     return () => {}; // noop unsubscribe
   }
 }

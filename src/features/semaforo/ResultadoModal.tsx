@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/utils";
 import { useState, useEffect } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import type { ResultadoCompleto, DesempenoEvaluacion, PeerEvaluacion } from './types';
@@ -169,7 +170,7 @@ export default function ResultadoModal({ open, onClose, empleadoId, onDeactivate
       await desactivarEvaluacion(empleadoId);
       onDeactivated?.();
       onClose();
-    } catch { /* silent */ }
+    } catch (e) { reportError("Cargando resultados", e); }
     finally { setDeactivating(false); }
   }
 
