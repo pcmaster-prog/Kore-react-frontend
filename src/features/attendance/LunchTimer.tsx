@@ -45,6 +45,7 @@ export default function LunchTimer({ lunchState, onUpdate }: Props) {
   const pct = Math.min((elapsed / LIMIT) * 100, 100);
 
   async function handleIniciar() {
+    if (!window.confirm('¿Deseas iniciar tu tiempo de comida?')) return;
     setLoading(true);
     try {
       const res = await iniciarComida();
@@ -57,6 +58,7 @@ export default function LunchTimer({ lunchState, onUpdate }: Props) {
   }
 
   async function handleTerminar() {
+    if (!window.confirm('¿Deseas terminar tu tiempo de comida?')) return;
     setLoading(true);
     try {
       const res = await terminarComida();

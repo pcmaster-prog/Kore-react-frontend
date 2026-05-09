@@ -334,7 +334,8 @@ export default function EmployeeAttendancePage() {
     loadLateInfo();
   }, [loadToday, loadHistory, loadLateInfo]);
 
-  async function doAction(fn: () => Promise<any>, msg: string) {
+  async function doAction(fn: () => Promise<any>, msg: string, confirmMsg?: string) {
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
     setBusy(true);
     setWifiBlocked(false);
     setErr(null);
@@ -601,13 +602,13 @@ export default function EmployeeAttendancePage() {
             <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-4 sm:mb-5">Acciones Rápidas</div>
             <div className="grid grid-cols-2 gap-4">
               <ActionBtn label="Entrada" icon={<LogIn className="h-5 w-5" />} enabled={actions?.check_in ?? false} busy={busy} variant="primary" onClick={() => doAction(checkIn, "Entrada registrada")} />
-              <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={actions?.check_out ?? false} busy={busy} variant="danger" onClick={() => doAction(checkOut, "Salida registrada")} />
+              <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={actions?.check_out ?? false} busy={busy} variant="danger" onClick={() => doAction(checkOut, "Salida registrada", "¿Confirmas que deseas registrar tu salida?")} />
               
               {(!isEnabled("newManagementEmployee") || actions?.break_start) && (
-                <ActionBtn label="Inicio Descanso" icon={<Coffee className="h-5 w-5" />} enabled={actions?.break_start ?? false} busy={busy} variant="warning" onClick={() => doAction(breakStart, "Pausa iniciada")} />
+                <ActionBtn label="Inicio Descanso" icon={<Coffee className="h-5 w-5" />} enabled={actions?.break_start ?? false} busy={busy} variant="warning" onClick={() => doAction(breakStart, "Pausa iniciada", "¿Deseas iniciar tu pausa?")} />
               )}
               {(!isEnabled("newManagementEmployee") || actions?.break_end) && (
-                <ActionBtn label="Fin Descanso" icon={<Play className="h-5 w-5" />} enabled={actions?.break_end ?? false} busy={busy} variant="warning" onClick={() => doAction(breakEnd, "Pausa terminada")} />
+                <ActionBtn label="Fin Descanso" icon={<Play className="h-5 w-5" />} enabled={actions?.break_end ?? false} busy={busy} variant="warning" onClick={() => doAction(breakEnd, "Pausa terminada", "¿Deseas terminar tu pausa?")} />
               )}
             </div>
 
@@ -672,9 +673,14 @@ export default function EmployeeAttendancePage() {
                 </thead>
                 <tbody>
                   {history.slice(0, 7).map((row) => {
-                    const d = new Date(row.date + "T12:00:00");
-                    const dayName = d.toLocaleDateString("es-MX", { weekday: "long" });
-                    const dateShort = d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+                    const safeDate = (() => {
+                      if (!row.date) return null;
+                      const iso = row.date.includes("T") ? row.date : `${row.date}T12:00:00`;
+                      const parsed = new Date(iso);
+                      return isNaN(parsed.getTime()) ? null : parsed;
+                    })();
+                    const dayName = safeDate ? safeDate.toLocaleDateString("es-MX", { weekday: "long" }) : "—";
+                    const dateShort = safeDate ? safeDate.toLocaleDateString("es-MX", { day: "numeric", month: "short" }) : "—";
                     const isToday = row.date === new Date().toISOString().slice(0, 10);
                     const rowLateMinutes = (row as any).late_minutes;
                     return (
