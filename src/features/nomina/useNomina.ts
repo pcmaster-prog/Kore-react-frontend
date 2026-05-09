@@ -245,7 +245,7 @@ export function useNomina() {
     if (!w) return;
 
     const excludedIds = period.excluded_employee_ids ?? [];
-    const visibleEntries = period.entries.filter(
+    const visibleEntries = (period.entries ?? []).filter(
       (e) => !excludedIds.includes(e.empleado_id)
     );
 
@@ -334,7 +334,7 @@ export function useNomina() {
     if (!period) return;
 
     const excludedIds = period.excluded_employee_ids ?? [];
-    const visibleEntries = period.entries.filter(
+    const visibleEntries = (period.entries ?? []).filter(
       (e) => !excludedIds.includes(e.empleado_id)
     );
 

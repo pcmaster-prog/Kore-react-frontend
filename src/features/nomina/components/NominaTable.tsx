@@ -31,7 +31,8 @@ export default function NominaTable({
   onRecalculate,
 }: NominaTableProps) {
   const excludedIds = period.excluded_employee_ids ?? [];
-  const visibleEntries = period.entries.filter((e) => !excludedIds.includes(e.empleado_id));
+  const entries = period.entries ?? [];
+  const visibleEntries = entries.filter((e) => !excludedIds.includes(e.empleado_id));
 
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
@@ -85,7 +86,7 @@ export default function NominaTable({
             </tr>
           </thead>
           <tbody>
-            {period.entries.length === 0 ? (
+            {entries.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-5 py-16 text-center">
                   <Users className="h-10 w-10 text-neutral-100 mx-auto mb-3" />

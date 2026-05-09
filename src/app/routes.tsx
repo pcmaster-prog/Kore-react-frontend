@@ -4,6 +4,7 @@ import { RequireAuth } from "./guards/RequireAuth";
 import { RequireRole } from "./guards/RequireRole";
 import AppShell from "./layout/AppShell";
 import PageSkeleton from "@/components/PageSkeleton";
+import { useAuthStore } from "@/features/auth/store";
 
 // Vistas inmediatas (no lazy)
 import LoginPage from "@/features/auth/LoginPage";
@@ -51,6 +52,14 @@ function Suspended({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>;
 }
 
+function RoleAwareRedirect() {
+  const user = useAuthStore((s) => s.user);
+  if (user?.role === "empleado") {
+    return <Navigate to="/app/employee/dashboard" replace />;
+  }
+  return <Navigate to="/app/manager/dashboard" replace />;
+}
+
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
@@ -65,7 +74,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/app/manager/dashboard" replace />,
+        element: <RoleAwareRedirect />,
       },
 
       {
