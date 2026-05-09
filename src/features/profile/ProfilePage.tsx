@@ -26,6 +26,7 @@ type ProfileData = {
   hourly_rate?: number | null;
   daily_rate?: number | null;
   attendance_status?: string | null;
+  curp?: string | null;
 };
 
 function Avatar({ name, url, onUpload }: { name?: string | null; url?: string | null; onUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
@@ -74,6 +75,7 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [curp, setCurp] = useState("");
 
   const [changingPassword, setChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -116,6 +118,7 @@ export default function ProfilePage() {
       setName(normalized.full_name);
       setPhone(data.phone ?? "");
       setAddress(data.address ?? "");
+      setCurp(data.curp ?? "");
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "No se pudo cargar el perfil");
     } finally {
@@ -130,6 +133,7 @@ export default function ProfilePage() {
     setName(profile.full_name);
     setPhone(profile.phone ?? "");
     setAddress(profile.address ?? "");
+    setCurp(profile.curp ?? "");
     setEditing(true);
   }
 
@@ -138,7 +142,7 @@ export default function ProfilePage() {
   async function saveEdit() {
     setSaving(true);
     try {
-      const res = await api.patch("/mi-perfil", { full_name: name, phone, address });
+      const res = await api.patch("/mi-perfil", { full_name: name, phone, address, curp });
       const data = res.data?.data ?? res.data;
       setProfile(data);
       setEditing(false);
@@ -392,6 +396,16 @@ export default function ProfilePage() {
                     <InfoField label="Correo electrónico" value={profile.email} icon={<Mail className="h-4 w-4" />} />
                   </div>
                   <div className="col-span-2">
+                    <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">CURP</div>
+                    <input
+                      className="w-full rounded-2xl border border-neutral-100 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 uppercase"
+                      value={curp}
+                      onChange={(e) => setCurp(e.target.value.toUpperCase())}
+                      placeholder="PEGJ800101HDFRRL09"
+                      maxLength={18}
+                    />
+                  </div>
+                  <div className="col-span-2">
                     <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Dirección</div>
                     <input
                       className="w-full rounded-2xl border border-neutral-100 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
@@ -407,6 +421,7 @@ export default function ProfilePage() {
                   <InfoField label="Número de empleado" value={profile.employee_number} icon={<Hash className="h-4 w-4" />} />
                   <InfoField label="Correo electrónico" value={profile.email} icon={<Mail className="h-4 w-4" />} />
                   <InfoField label="Teléfono" value={profile.phone} icon={<Phone className="h-4 w-4" />} placeholder="Sin teléfono" />
+                  <InfoField label="CURP" value={profile.curp} icon={<Hash className="h-4 w-4" />} placeholder="Sin CURP registrada" />
                   <div className="col-span-2">
                     <InfoField label="Dirección" value={profile.address} icon={<MapPin className="h-4 w-4" />} placeholder="Sin dirección registrada" />
                   </div>

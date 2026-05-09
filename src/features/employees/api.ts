@@ -15,6 +15,7 @@ export type UserItem = {
   hired_at?: string | null;
   rfc?: string | null;
   nss?: string | null;
+  curp?: string | null;
   expediente_url?: string | null;
   // Campos de nómina
   payment_type?: "hourly" | "daily" | null;
@@ -32,6 +33,7 @@ export type CreateUserPayload = {
   hired_at?: string;
   rfc?: string;
   nss?: string;
+  curp?: string;
   expediente?: File | null;
   payment_type?: "hourly" | "daily";
   hourly_rate?: number;

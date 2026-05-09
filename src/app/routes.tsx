@@ -36,6 +36,10 @@ const ConfiguracionPage = lazy(() => import("@/features/configuracion/Configurac
 // Nómina
 const NominaPage = lazy(() => import("@/features/nomina/NominaPage"));
 
+// Recibos
+const MisRecibosPage = lazy(() => import("@/features/recibos/MisRecibosPage"));
+const TiposGratificacionPage = lazy(() => import("@/features/recibos/admin/TiposGratificacionPage"));
+
 // Góndolas
 const GondolaRellenoPage = lazy(() => import("@/features/gondolas/GondolaRellenoPage"));
 
@@ -129,6 +133,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "manager/tipos-gratificacion",
+        element: (
+          <RequireRole allow={["admin"]}>
+            <Suspended><TiposGratificacionPage /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
         path: "manager/semaforo",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
@@ -168,6 +180,14 @@ export const router = createBrowserRouter([
           <RequireAuth>
             <Suspended><GondolaRellenoPage /></Suspended>
           </RequireAuth>
+        ),
+      },
+      {
+        path: "employee/mis-recibos",
+        element: (
+          <RequireRole allow={["empleado"]}>
+            <Suspended><MisRecibosPage /></Suspended>
+          </RequireRole>
         ),
       },
 

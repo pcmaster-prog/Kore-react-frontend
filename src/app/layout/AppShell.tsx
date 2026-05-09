@@ -9,7 +9,8 @@ import { auth } from "@/features/auth/store";
 import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
   CalendarCheck, User, Users,
-  Settings, ChevronRight, Bell, Activity, BookOpen
+  Settings, ChevronRight, Bell, Activity, BookOpen,
+  Receipt, Gift
 } from "lucide-react";
 import { getPendientesSupervisor } from "@/features/semaforo/api";
 import { isEnabled } from "@/lib/featureFlags";
@@ -164,6 +165,7 @@ function SidebarContent({
               <SidebarLink to="/app/employee/dashboard" label="Dashboard" icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
               <SidebarLink to="/app/employee/mis-tareas/asignaciones" label="Mi Agenda" icon={<ClipboardList className="h-4.5 w-4.5" />} onClick={onNav} />
               <SidebarLink to="/app/employee/asistencia" label="Asistencia" icon={<CalendarCheck className="h-4.5 w-4.5" />} onClick={onNav} />
+              <SidebarLink to="/app/employee/mis-recibos" label="Mis Recibos" icon={<Receipt className="h-4.5 w-4.5" />} onClick={onNav} />
             </NavGroup>
             <NavGroup label="Usuario">
               <SidebarLink to="/app/perfil" label="Mi Perfil" icon={<User className="h-4.5 w-4.5" />} onClick={onNav} />
@@ -186,6 +188,7 @@ function SidebarContent({
               <NavGroup label="Gestión">
                 {hasModule("asistencia") && <SidebarLink to="/app/manager/asistencia" label="Asistencia general" icon={<CalendarCheck className="h-4.5 w-4.5" />} onClick={onNav} />}
                 {isAdmin && hasModule("nomina") && <SidebarLink to="/app/manager/nomina" label="Nómina" icon={<Users className="h-4.5 w-4.5" />} onClick={onNav} />}
+                {isAdmin && <SidebarLink to="/app/manager/tipos-gratificacion" label="Gratificaciones" icon={<Gift className="h-4.5 w-4.5" />} onClick={onNav} />}
                 {isAdmin && <SidebarLink to="/app/manager/usuarios" label="Equipo" icon={<Users className="h-4.5 w-4.5" />} onClick={onNav} />}
               </NavGroup>
             )}
