@@ -33,7 +33,7 @@ export default function TiposGratificacionPage() {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [frequency, setFrequency] = useState<GratificationType["frequency"]>"annual";
+  const [frequency, setFrequency] = useState<GratificationType["frequency"]>("annual");
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
@@ -80,7 +80,7 @@ export default function TiposGratificacionPage() {
     }
     setSaving(true);
     try {
-      const payload = { code: code.trim().toUpperCase(), name: name.trim(), description: description.trim() || undefined, frequency };
+      const payload = { code: code.trim().toUpperCase(), name: name.trim(), description: description.trim() || null, frequency };
       if (editingId) {
         await actualizarTipoGratificacion(editingId, payload);
         showToast("ok", "Tipo actualizado");

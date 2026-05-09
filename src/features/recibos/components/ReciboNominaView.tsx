@@ -2,7 +2,7 @@ import { cx } from "@/lib/utils";
 import type { ReciboNomina } from "../recibos.types";
 import {
   Building2, CalendarDays, Hash, Wallet, CreditCard,
-  CheckCircle2, AlertCircle, PenLine, User, BadgeCheck
+  CheckCircle2, AlertCircle, PenLine, BadgeCheck
 } from "lucide-react";
 
 function formatDate(iso?: string | null) {

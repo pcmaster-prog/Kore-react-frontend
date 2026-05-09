@@ -102,7 +102,7 @@ export default function SignatureCanvas({
   const clear = useCallback(() => {
     const res = getCanvas();
     if (!res) return;
-    const { ctx, canvas } = res;
+    const { ctx } = res;
     ctx.clearRect(0, 0, width, height);
     // Redraw grid
     ctx.save();

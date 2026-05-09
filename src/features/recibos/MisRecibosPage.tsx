@@ -4,7 +4,7 @@ import ReciboGratificacionView from "./components/ReciboGratificacionView";
 import SignatureModal from "./components/SignatureModal";
 import { cx } from "@/lib/utils";
 import {
-  FileText, Gift, ArrowLeft, Loader2, AlertTriangle,
+  FileText, Gift, ArrowLeft, AlertTriangle,
   CheckCircle2, Clock, FileCheck, PenLine, Wallet
 } from "lucide-react";
 
@@ -27,7 +27,7 @@ export default function MisRecibosPage() {
     tab, setTab,
     nominaList, nominaLoading, nominaError, nominaSummary,
     selectedNominaId, selectedNomina, nominaDetailLoading,
-    gratList, gratLoading, gratError,
+    gratList, gratLoading,
     selectedGratId, selectedGrat, gratDetailLoading,
     openNomina, openGratificacion, backToList,
     signModalOpen, signingType, openSignModal, closeSignModal, handleSign, signSuccess,
