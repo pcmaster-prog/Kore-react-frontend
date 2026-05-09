@@ -11,6 +11,17 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
+function isChunkLoadError(error?: Error): boolean {
+  if (!error) return false;
+  const msg = error.message || "";
+  return (
+    msg.includes("Failed to fetch dynamically imported module") ||
+    msg.includes("Loading chunk") ||
+    msg.includes("dynamically imported module") ||
+    msg.includes("Unexpected token '<'")
+  );
+}
+
 export default class ErrorBoundary extends React.Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
@@ -31,10 +42,48 @@ export default class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
+      if (isChunkLoadError(this.state.error)) {
+        return <ChunkLoadFallback />;
+      }
       return this.props.fallback || <ErrorFallback error={this.state.error} />;
     }
     return this.props.children;
   }
+}
+
+// ─── Fallback para chunk load errors (nuevo deploy) ───────────────────────────
+function ChunkLoadFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-6">
+      <div className="max-w-md w-full text-center space-y-6">
+        <div className="mx-auto h-20 w-20 rounded-3xl bg-amber-50 border border-amber-100 flex items-center justify-center shadow-sm">
+          <svg className="h-10 w-10 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 14.652" />
+          </svg>
+        </div>
+        <div>
+          <h1 className="text-2xl font-black text-neutral-900 tracking-tight">
+            Nueva versión disponible
+          </h1>
+          <p className="mt-3 text-sm text-neutral-500 leading-relaxed">
+            La aplicación se actualizó. Recarga la página para obtener la última versión.
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 text-white px-6 py-3 text-sm font-bold tracking-wide hover:bg-neutral-800 transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 14.652" />
+          </svg>
+          Recargar Página
+        </button>
+        <div className="text-[10px] font-bold text-neutral-300 uppercase tracking-[0.2em]">
+          Kore · Ops Suite
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─── Fallback visual premium ───────────────────────────────────────────────────

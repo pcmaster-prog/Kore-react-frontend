@@ -45,6 +45,8 @@ export default defineConfig({
       workbox: {
         // Cachear assets estáticos
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Limpiar caches viejas al activar nuevo SW (evita chunks faltantes tras deploy)
+        cleanupOutdatedCaches: true,
         // No cachear las llamadas a la API
         navigateFallback: "/index.html",
         runtimeCaching: [
