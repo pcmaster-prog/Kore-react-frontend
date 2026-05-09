@@ -96,7 +96,7 @@ export default function EntryRow({
               {initials(entry.empleado_name)}
             </div>
             <div>
-              <div className="text-sm font-bold text-k-text-h">{entry.empleado_name}</div>
+              <div className="text-sm font-bold text-k-text-h">{entry.empleado_name ?? "Empleado sin nombre"}</div>
               {entry.empleado_role && (
                 <div className="text-[10px] text-k-text-b uppercase tracking-wider mt-0.5">
                   {entry.empleado_role}
