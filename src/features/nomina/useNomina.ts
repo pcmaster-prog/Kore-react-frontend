@@ -17,6 +17,7 @@ export function useNomina() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [reopening, setReopening] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
@@ -138,6 +139,22 @@ export function useNomina() {
       showToast("err", axiosError?.response?.data?.message ?? "No se pudo aprobar");
     } finally {
       setApproving(false);
+    }
+  }
+
+  async function reopen() {
+    if (!period) return;
+    if (!confirm("¿Reabrir esta nómina? Se podrán editar ajustes y volver a calcular.")) return;
+    setReopening(true);
+    try {
+      await api.patch(`/nomina/periodos/${period.id}/reabrir`);
+      showToast("ok", "Nómina reabierta");
+      await loadPeriod();
+    } catch (e: unknown) {
+      const axiosError = e as { response?: { data?: { message?: string } } };
+      showToast("err", axiosError?.response?.data?.message ?? "No se pudo reabrir");
+    } finally {
+      setReopening(false);
     }
   }
 
@@ -413,6 +430,7 @@ export function useNomina() {
     loadPeriod,
     generate,
     approve,
+    reopen,
     saveEntry,
     saveAllChanges,
     toggleExclude,
@@ -421,5 +439,6 @@ export function useNomina() {
     setNotes,
     saveNotes,
     patchEntry,
+    reopening,
   };
 }

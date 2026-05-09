@@ -18,6 +18,7 @@ export default function NominaPage() {
     loading,
     generating,
     approving,
+    reopening,
     err,
     toast,
     globalPatches,
@@ -36,6 +37,7 @@ export default function NominaPage() {
     nextWeek,
     generate,
     approve,
+    reopen,
     saveEntry,
     saveAllChanges,
     toggleExclude,
@@ -149,7 +151,9 @@ export default function NominaPage() {
             <ActionsPanel
               approved={approved}
               approving={approving}
+              reopening={reopening}
               onApprove={approve}
+              onReopen={reopen}
               onExportPDF={exportPDF}
               onExportCSV={exportCSV}
             />
