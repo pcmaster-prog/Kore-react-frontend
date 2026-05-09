@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { cx } from "@/lib/utils";
+import { auth } from "@/features/auth/store";
 
 type ProfileData = {
   id: string;
@@ -106,8 +107,13 @@ export default function ProfilePage() {
     try {
       const res = await api.get("/mi-perfil");
       const data = res.data?.data ?? res.data;
-      setProfile(data);
-      setName(data.full_name ?? "");
+      const authUser = auth.get().user;
+      const normalized: ProfileData = {
+        ...data,
+        full_name: data.full_name ?? data.name ?? authUser?.name ?? "",
+      };
+      setProfile(normalized);
+      setName(normalized.full_name);
       setPhone(data.phone ?? "");
       setAddress(data.address ?? "");
     } catch (e: any) {
