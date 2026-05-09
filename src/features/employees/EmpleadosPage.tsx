@@ -17,8 +17,9 @@ import {
 
 import { cx } from "@/lib/utils";
 // ─── Avatar ──────────────────────────────────────────────────────────────────
-function Avatar({ name }: { name: string }) {
-  const initials = name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+function Avatar({ name }: { name?: string | null }) {
+  const safeName = name ?? "";
+  const initials = safeName.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
   const colors = [
     "bg-blue-100 text-blue-700",
     "bg-violet-100 text-violet-700",
@@ -27,7 +28,7 @@ function Avatar({ name }: { name: string }) {
     "bg-rose-100 text-rose-700",
     "bg-sky-100 text-sky-700",
   ];
-  const color = colors[name.charCodeAt(0) % colors.length];
+  const color = colors[(safeName.charCodeAt(0) || 0) % colors.length];
   return (
     <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center text-xs font-bold shrink-0", color)}>
       {initials}
@@ -66,7 +67,7 @@ function UserModal({
   initial?: UserItem | null;
   suggestedCode?: string;
   onClose: () => void;
-  onSaved: (item: UserItem) => void;
+  onSaved: (item?: UserItem | null) => void;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -627,7 +628,7 @@ export default function EmpleadosPage() {
         search: search || undefined,
         role: roleFilter || undefined,
       });
-      setUsers(res.data ?? []);
+      setUsers((res.data ?? []).filter((u): u is UserItem => !!u && typeof u.id === "string"));
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "No se pudo cargar usuarios");
     } finally {
@@ -649,7 +650,11 @@ export default function EmpleadosPage() {
     setModalOpen(true);
   }
 
-  function onSaved(item: UserItem) {
+  function onSaved(item?: UserItem | null) {
+    if (!item?.id) {
+      showToast("err", "Error: la respuesta del servidor no contiene el usuario guardado");
+      return;
+    }
     setUsers((prev) => {
       const idx = prev.findIndex((u) => u.id === item.id);
       if (idx >= 0) {
@@ -667,6 +672,10 @@ export default function EmpleadosPage() {
     setToggling(true);
     try {
       const updated = await toggleUserStatus(toggleTarget.id);
+      if (!updated?.id) {
+        showToast("err", "Error: respuesta inválida del servidor");
+        return;
+      }
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       showToast("ok", updated.is_active ? "Usuario activado" : "Usuario desactivado");
       setToggleTarget(null);
