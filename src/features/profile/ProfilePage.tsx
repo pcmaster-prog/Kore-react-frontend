@@ -27,12 +27,13 @@ type ProfileData = {
   attendance_status?: string | null;
 };
 
-function Avatar({ name, url, onUpload }: { name: string; url?: string | null; onUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
-  const initials = name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+function Avatar({ name, url, onUpload }: { name?: string | null; url?: string | null; onUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+  const safeName = name ?? "";
+  const initials = safeName.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
   return (
     <div className="relative group">
       {url ? (
-        <img src={url} alt={name} className="h-20 w-20 rounded-[24px] object-cover border-2 border-white shadow-lg" />
+        <img src={url} alt={safeName} className="h-20 w-20 rounded-[24px] object-cover border-2 border-white shadow-lg" />
       ) : (
         <div className="h-20 w-20 rounded-[24px] bg-obsidian text-white font-black text-2xl flex items-center justify-center border-2 border-white shadow-lg">
           {initials}

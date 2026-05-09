@@ -544,7 +544,7 @@ return [
 - [ ] Re-ejecutar `cargar-mexico` no duplica registros (idempotente).
 - [ ] `DELETE /api/empresa/festivos/{id}` elimina correctamente.
 - [ ] `GET /api/asistencia/mis-hoy` en día festivo devuelve `is_holiday: true` + `holiday_name`.
-- [ ] `POST /api/asistencia/entrada` en día festivo devuelve 422 con código `HOLIDAY`.
+- [ ] `POST /api/asistencia/entrada` en día festivo devuelve 422 con código `HOLIDAY`.  
 - [ ] Empleado `hourly` con festivo en la semana recibe `holidays_paid > 0` en nómina.
 - [ ] Empleado `daily` con festivo en la semana recibe `holidays_paid > 0` en nómina.
 - [ ] El `subtotal` de nómina incluye el pago del festivo.
