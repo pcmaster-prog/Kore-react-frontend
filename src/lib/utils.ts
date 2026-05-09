@@ -13,7 +13,8 @@ export function cx(...s: Array<string | false | null | undefined>) {
  * Genera iniciales a partir de un nombre completo.
  * Ej: "Juan Pérez" -> "JP"
  */
-export function initials(name: string): string {
+export function initials(name?: string | null): string {
+  if (!name) return "?";
   return name
     .split(" ")
     .slice(0, 2)
@@ -45,10 +46,11 @@ export const AVATAR_COLORS = [
 /**
  * Devuelve un color determinista para un nombre dado.
  */
-export function avatarColor(name: string): string {
+export function avatarColor(name?: string | null): string {
+  const safeName = name ?? "";
   let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < safeName.length; i++) {
+    hash = safeName.charCodeAt(i) + ((hash << 5) - hash);
   }
   const idx = Math.abs(hash) % AVATAR_COLORS.length;
   return AVATAR_COLORS[idx];
