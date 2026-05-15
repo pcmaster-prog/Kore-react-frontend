@@ -220,7 +220,30 @@ export type AbsenceRequest = {
   // Solo en vista admin
   empleado_id?: string;
   empleado_name?: string;
+  // Algunos endpoints devuelven el empleado anidado
+  empleado?: {
+    id?: string;
+    name?: string;
+    full_name?: string;
+    nombre?: string;
+  };
+  user?: {
+    id?: string;
+    name?: string;
+    full_name?: string;
+    nombre?: string;
+  };
 };
+
+export function getAbsenceRequesterName(req: AbsenceRequest): string {
+  if (req.empleado_name) return req.empleado_name;
+  const emp = req.empleado ?? req.user;
+  if (emp) {
+    const name = emp.full_name ?? emp.name ?? emp.nombre;
+    if (name) return name;
+  }
+  return "—";
+}
 
 export async function createAbsenceRequest(data: {
   date: string;

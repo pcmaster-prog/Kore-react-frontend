@@ -10,6 +10,7 @@ import {
   type ByDateItem,
   type WeeklySummary,
   type AbsenceRequest,
+  getAbsenceRequesterName,
 } from "./api";
 import {
   Users, UserX, Clock, RefreshCw, Calendar,
@@ -126,7 +127,7 @@ function AbsenceRequestsTab() {
                       <Calendar className="h-5 w-5 text-amber-500" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-black text-k-text-h">{req.empleado_name ?? "—"}</div>
+                      <div className="text-sm font-black text-k-text-h">{getAbsenceRequesterName(req)}</div>
                       <div className="text-xs font-bold text-k-text-b mt-0.5">
                         {new Date((req.date ?? "") + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                       </div>
@@ -184,7 +185,7 @@ function AbsenceRequestsTab() {
               <div key={req.id} className="px-8 py-4 flex items-start gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-k-text-h">{req.empleado_name ?? "—"}</span>
+                    <span className="text-sm font-bold text-k-text-h">{getAbsenceRequesterName(req)}</span>
                     <span className="text-k-text-b">·</span>
                     <span className="text-xs text-k-text-b">
                       {new Date((req.date ?? "") + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
