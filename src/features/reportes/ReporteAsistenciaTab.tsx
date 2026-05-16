@@ -127,7 +127,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
       clone.style.padding = "16px";
       document.body.appendChild(clone);
 
-      // Quitar TODOS los bordes con !important para sobreescribir los de Tailwind
+      // Quitar TODOS los bordes, scrollbars y overflow para capturar TODO el contenido
       const allEls = clone.querySelectorAll("*");
       allEls.forEach((e) => {
         const he = e as HTMLElement;
@@ -140,12 +140,31 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
         he.style.setProperty("outline", "none", "important");
         he.style.setProperty("transition", "none", "important");
         he.style.setProperty("animation", "none", "important");
+        // Expandir todo: quitar overflow para que nada se corte
+        he.style.setProperty("overflow", "visible", "important");
+        he.style.setProperty("overflow-x", "visible", "important");
+        he.style.setProperty("overflow-y", "visible", "important");
+        // Ocultar scrollbars
+        he.style.setProperty("scrollbar-width", "none", "important");
         // Quitar position sticky / fixed que causa artefactos
         const pos = getComputedStyle(he).position;
         if (pos === "sticky" || pos === "fixed") {
           he.style.setProperty("position", "static", "important");
         }
       });
+
+      // Inyectar CSS para ocultar scrollbars de WebKit (Chrome) en el clon
+      const hideScrollStyle = document.createElement("style");
+      hideScrollStyle.textContent = "::-webkit-scrollbar { display: none !important; }";
+      clone.appendChild(hideScrollStyle);
+
+      // Forzar que el clon y la tabla usen ancho/altura auto para mostrar todo
+      clone.style.setProperty("height", "auto", "important");
+      clone.style.setProperty("max-height", "none", "important");
+      const table = clone.querySelector("table");
+      if (table) {
+        (table as HTMLElement).style.setProperty("width", "max-content", "important");
+      }
 
       // Separación visual: fondos alternados en filas
       clone.querySelectorAll("tbody tr").forEach((tr, i) => {

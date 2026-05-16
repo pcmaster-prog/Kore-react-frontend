@@ -39,6 +39,7 @@ export default function FiltrosReporte({
   const [selectedIds, setSelectedIds] = useState<string[]>(empleadoId ? [empleadoId] : []);
   const [incluirRetardos, setIncluirRetardos] = useState(false);
   const [incluirComida, setIncluirComida] = useState(true);
+  const [incluirAdmins, setIncluirAdmins] = useState(false);
   const [empDropdownOpen, setEmpDropdownOpen] = useState(false);
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function FiltrosReporte({
       empleado_ids: modoEmpleado ? undefined : selectedIds.length > 0 ? selectedIds : undefined,
       incluir_retardos: incluirRetardos,
       incluir_tiempos_comida: incluirComida,
+      incluir_admins: incluirAdmins,
     });
   }
 
@@ -180,6 +182,15 @@ export default function FiltrosReporte({
             className="h-4 w-4 rounded border-k-border text-k-bg-sidebar focus:ring-k-bg-sidebar"
           />
           <span className="text-xs font-bold">Incluir tiempos de comida</span>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-k-text-h cursor-pointer">
+          <input
+            type="checkbox"
+            checked={incluirAdmins}
+            onChange={(e) => setIncluirAdmins(e.target.checked)}
+            className="h-4 w-4 rounded border-k-border text-k-bg-sidebar focus:ring-k-bg-sidebar"
+          />
+          <span className="text-xs font-bold">Incluir administradores</span>
         </label>
       </div>
 

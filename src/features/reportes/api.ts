@@ -59,6 +59,7 @@ export type FiltrosAsistencia = {
   empleado_ids?: string[];
   incluir_retardos?: boolean;
   incluir_tiempos_comida?: boolean;
+  incluir_admins?: boolean;
 };
 
 export type ReporteEmpleadoResumen = {
@@ -104,6 +105,7 @@ export async function getReporteAsistenciaSemanal(
     params.empleado_ids = filtros.empleado_ids.join(",");
   if (filtros.incluir_retardos) params.incluir_retardos = true;
   if (filtros.incluir_tiempos_comida) params.incluir_tiempos_comida = true;
+  if (filtros.incluir_admins) params.incluir_admins = true;
 
   const res = await api.get("/reportes/asistencia-semanal", { params });
   return res.data as ReporteAsistenciaResponse;
