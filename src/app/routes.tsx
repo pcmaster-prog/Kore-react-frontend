@@ -47,6 +47,9 @@ const GondolaRellenoPage = lazy(() => import("@/features/gondolas/GondolaRelleno
 // Semáforo
 const SemaforoSupervisorPage = lazy(() => import("@/features/semaforo/SemaforoSupervisorPage"));
 
+// Reportes
+const ReportesPage = lazy(() => import("@/features/reportes/ReportesPage"));
+
 // Wrapper para Suspense
 function Suspended({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>;
@@ -154,6 +157,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
             <Suspended><SemaforoSupervisorPage /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/reportes",
+        element: (
+          <RequireRole allow={["admin", "supervisor"]}>
+            <Suspended><ReportesPage /></Suspended>
           </RequireRole>
         ),
       },

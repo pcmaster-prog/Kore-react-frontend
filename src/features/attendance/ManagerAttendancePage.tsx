@@ -15,10 +15,11 @@ import {
 import {
   Users, UserX, Clock, RefreshCw, Calendar,
   CheckCircle2, AlertTriangle, Timer, Loader2, Pencil,
-  FileText, ThumbsUp, ThumbsDown, MessageSquare,
+  FileText, ThumbsUp, ThumbsDown, MessageSquare, Lock,
 } from "lucide-react";
 import AjustarAsistenciaModal from "./AjustarAsistenciaModal";
 import DiaDescansoAdminModal from "./DiaDescansoAdminModal";
+import CerrarJornadaModal from "./CerrarJornadaModal";
 import { isEnabled } from "@/lib/featureFlags";
 import EmptyState from "@/components/EmptyState";
 
@@ -347,6 +348,7 @@ export default function ManagerAttendancePage() {
   const [err, setErr] = useState<string | null>(null);
   const [ajustando, setAjustando] = useState<{empleadoId:string;empleadoNombre:string;checkIn?:string;checkOut?:string}|null>(null);
   const [descansoAdmin, setDescansoAdmin] = useState<{empleadoId:string;empleadoNombre:string;tieneDiaDescanso:boolean}|null>(null);
+  const [cerrarMasivo, setCerrarMasivo] = useState(false);
 
   const loadDay = useCallback(async () => {
     setLoading(true);
@@ -391,6 +393,16 @@ export default function ManagerAttendancePage() {
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
+          {onShift > 0 && (
+            <button
+              onClick={() => setCerrarMasivo(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
+              title="Cerrar jornada de todos los empleados en turno"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              Cerrar jornada masiva
+            </button>
+          )}
           <button
             onClick={loadDay}
             className="h-9 w-9 rounded-xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 flex items-center justify-center transition"
@@ -615,6 +627,26 @@ export default function ManagerAttendancePage() {
           onClose={() => setDescansoAdmin(null)}
           onSaved={() => {
             setDescansoAdmin(null);
+            loadDay();
+          }}
+        />
+      )}
+
+      {cerrarMasivo && (
+        <CerrarJornadaModal
+          date={date}
+          employees={employees
+            .filter((emp) => {
+              const item = items.find((i) => i.empleado_id === emp.id);
+              return !!item?.first_check_in_at && !item?.last_check_out_at;
+            })
+            .map((emp) => ({
+              id: emp.id,
+              name: emp.full_name ?? emp.name ?? "Empleado",
+            }))}
+          onClose={() => setCerrarMasivo(false)}
+          onSaved={() => {
+            setCerrarMasivo(false);
             loadDay();
           }}
         />

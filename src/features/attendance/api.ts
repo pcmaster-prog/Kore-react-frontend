@@ -275,6 +275,17 @@ export async function reviewAbsence(
   return res.data.request as AbsenceRequest;
 }
 
+// ─── Cierre masivo ────────────────────────────────────────────────────────────
+
+export async function cerrarJornadaMasiva(date: string, motivo?: string): Promise<{
+  message: string;
+  closed_count: number;
+  employees: string[];
+}> {
+  const res = await api.post("/asistencia/cerrar-masivo", { date, motivo });
+  return res.data;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
