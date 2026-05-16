@@ -46,7 +46,7 @@ function moveArray<T>(arr: T[], from: number, to: number): T[] {
 }
 
 export default function CriteriosConfigTab() {
-  const { cfg, setCfg, persist, saved } = useConfigState();
+  const { cfg, setCfg, persist, saved, setSaved } = useConfigState();
   const [activeTab, setActiveTab] = useState<"admin" | "peer" | "pesos">("admin");
 
   // ─── Admin handlers ─────────────────────────────────────────────────────────
@@ -421,5 +421,6 @@ export default function CriteriosConfigTab() {
     </div>
   );
 }
+
 
 
