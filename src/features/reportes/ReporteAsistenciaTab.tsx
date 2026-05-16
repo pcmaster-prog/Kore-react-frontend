@@ -166,10 +166,11 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
         (table as HTMLElement).style.setProperty("width", "max-content", "important");
       }
 
-      // Separación visual: fondos alternados en filas
+      // Separación visual: fondos alternados en filas (sin border-bottom para evitar líneas negras)
       clone.querySelectorAll("tbody tr").forEach((tr, i) => {
         const he = tr as HTMLElement;
         he.style.backgroundColor = i % 2 === 0 ? "#ffffff" : "#f8f9fa";
+        he.style.setProperty("border-bottom", "none", "important");
       });
 
       // Header con fondo gris claro
@@ -187,7 +188,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
         }
       });
 
-      const scale = 2;
+      const scale = 1.5;
       const dataUrl = await domtoimage.toPng(clone, {
         width: clone.scrollWidth * scale,
         height: clone.scrollHeight * scale,
@@ -205,15 +206,19 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
       const img = new Image();
       img.src = dataUrl;
       await new Promise((resolve) => { img.onload = resolve; });
+
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
+      const margin = 10; // mm
+      const pdfW = pdf.internal.pageSize.getWidth() - margin * 2;
+      const pdfH = pdf.internal.pageSize.getHeight() - margin * 2;
       const imgH = (img.height * pdfW) / img.width;
       let yPos = 0;
+      let pageNum = 0;
       while (yPos < imgH) {
-        if (yPos > 0) pdf.addPage();
-        pdf.addImage(dataUrl, "PNG", 0, -yPos, pdfW, imgH);
+        if (pageNum > 0) pdf.addPage();
+        pdf.addImage(dataUrl, "PNG", margin, margin - yPos, pdfW, imgH);
         yPos += pdfH;
+        pageNum++;
       }
       pdf.save(`control-asistencia-semana-${data.semana}.pdf`);
     } catch (e) {
