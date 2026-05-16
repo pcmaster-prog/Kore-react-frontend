@@ -6,6 +6,7 @@ import PeerEvaluacionModal from './PeerEvaluacionModal';
 import { auth } from '@/features/auth/store';
 
 import { cx, reportError } from "@/lib/utils";
+import { RefreshCw, AlertTriangle } from "lucide-react";
 function SkeletonCard() {
   return (
     <div className="rounded-[16px] border border-neutral-100 bg-white p-4 animate-pulse">
@@ -27,14 +28,19 @@ export default function SemaforoEmpleadoTab() {
   const [loading, setLoading] = useState(true);
   const [peerModal, setPeerModal] = useState<CompaneroParaEvaluar | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
+    setLoading(true);
+    setError(null);
     try {
       const data = await getCompanerosParaEvaluar();
-      setCompaneros(data.companeros);
-      setProgress(data.progress);
-    } catch (e) { reportError("Cargando semáforo empleado", e); }
-    finally { setLoading(false); }
+      setCompaneros(data.companeros ?? []);
+      setProgress(data.progress ?? { evaluated: 0, total: 0 });
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'No se pudieron cargar los compañeros para evaluar');
+      reportError("Cargando semáforo empleado", e);
+    } finally { setLoading(false); }
   }
 
   useEffect(() => { refresh(); }, []);
@@ -97,6 +103,13 @@ export default function SemaforoEmpleadoTab() {
           Compañeros en evaluación
         </div>
 
+        {error && (
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-medium text-rose-700 flex items-center gap-3">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            {error}
+          </div>
+        )}
+
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
@@ -105,6 +118,12 @@ export default function SemaforoEmpleadoTab() {
           <div className="rounded-[20px] border border-dashed border-neutral-200 bg-neutral-50/50 p-10 text-center">
             <div className="text-3xl mb-2">👥</div>
             <div className="text-sm font-bold text-neutral-400">No hay compañeros en evaluación activa en este momento.</div>
+            <button
+              onClick={refresh}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-k-border bg-white px-4 py-2 text-xs font-bold text-k-text-h hover:bg-k-bg-card2 transition"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Intentar de nuevo
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -171,3 +190,4 @@ export default function SemaforoEmpleadoTab() {
     </>
   );
 }
+

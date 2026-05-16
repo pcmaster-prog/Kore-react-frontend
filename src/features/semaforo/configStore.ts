@@ -51,7 +51,19 @@ function load(): SemaforoConfigState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<SemaforoConfigState>;
-      return { ...DEFAULTS, ...parsed };
+      // Validar que los arrays no estén vacíos (puede pasar por corrupción)
+      const criteriosAdmin = parsed.criteriosAdmin && parsed.criteriosAdmin.length > 0
+        ? parsed.criteriosAdmin
+        : DEFAULTS.criteriosAdmin;
+      const criteriosPeer = parsed.criteriosPeer && parsed.criteriosPeer.length > 0
+        ? parsed.criteriosPeer
+        : DEFAULTS.criteriosPeer;
+      return {
+        ...DEFAULTS,
+        ...parsed,
+        criteriosAdmin,
+        criteriosPeer,
+      };
     }
   } catch {
     // ignore
@@ -138,4 +150,5 @@ export function getRangosTexto() {
     rojo: `0 – ${amarillo - 1}%`,
   };
 }
+
 

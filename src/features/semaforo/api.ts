@@ -37,8 +37,6 @@ export const getCompanerosParaEvaluar = () =>
 export const enviarPeerEvaluacion = (data: {
   employee_evaluation_id: string;
   evaluado_empleado_id: string;
-  colaboracion: number;
-  puntualidad: number;
-  actitud: number;
-  comunicacion: number;
+  [key: string]: unknown;
 }) => api.post('/semaforo/peer-evaluaciones', data).then(r => r.data);
+

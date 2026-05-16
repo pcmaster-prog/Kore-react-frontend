@@ -290,11 +290,11 @@ export default function EmployeeTasksPage() {
   const [mainTab, setMainTab] = useState<MainTab>("asignaciones");
 
   // Semáforo: check once on mount if there are peers to evaluate
-  const [hasEvalPending, setHasEvalPending] = useState(false);
+  const [hasEvalPending, setHasEvalPending] = useState(true);
   useEffect(() => {
     getCompanerosParaEvaluar()
-      .then(data => { if (data?.companeros?.length > 0) setHasEvalPending(true); })
-      .catch(() => { /* silent — don't show tab if fetch fails */ });
+      .then(data => { setHasEvalPending(!!data?.companeros); })
+      .catch(() => { setHasEvalPending(false); });
   }, []);
 
   const [page, setPage] = useState(1);
@@ -470,11 +470,11 @@ export default function EmployeeTasksPage() {
                 label: "Góndolas",
                 icon: <LayoutGrid className="h-4 w-4" />,
               },
-              ...(hasEvalPending ? [{
+              {
                 key: "evaluar" as MainTab,
                 label: "Evaluar",
                 icon: <Star className="h-4 w-4" />,
-              }] : []),
+              },
             ] as { key: MainTab; label: string; icon: React.ReactNode }[]
           ).map((t) => (
             <button
@@ -981,3 +981,4 @@ export default function EmployeeTasksPage() {
     </div>
   );
 }
+
