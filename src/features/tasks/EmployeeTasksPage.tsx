@@ -289,12 +289,9 @@ export default function EmployeeTasksPage() {
   const today = new Date().toISOString().slice(0, 10);
   const [mainTab, setMainTab] = useState<MainTab>("asignaciones");
 
-  // Semáforo: check once on mount if there are peers to evaluate
-  const [hasEvalPending, setHasEvalPending] = useState(true);
+  // Semáforo: precarga datos de companeros para evaluar en background
   useEffect(() => {
-    getCompanerosParaEvaluar()
-      .then(data => { setHasEvalPending(!!data?.companeros); })
-      .catch(() => { setHasEvalPending(false); });
+    getCompanerosParaEvaluar().catch(() => { /* silent preload */ });
   }, []);
 
   const [page, setPage] = useState(1);
@@ -981,4 +978,5 @@ export default function EmployeeTasksPage() {
     </div>
   );
 }
+
 
