@@ -8,8 +8,6 @@ import {
   setUmbrales,
   resetConfig,
   calcSemaforoDinamico,
-  type CriterioAdminConfig,
-  type CriterioPeerConfig,
 } from "./configStore";
 import { SEMAFORO_CONFIG } from "./utils";
 import { cx } from "@/lib/utils";
@@ -21,7 +19,6 @@ import {
   RotateCcw,
   Save,
   CheckCircle2,
-  AlertTriangle,
 } from "lucide-react";
 
 function useConfigState() {
@@ -38,7 +35,7 @@ function useConfigState() {
     setTimeout(() => setSaved(false), 2000);
   }, []);
 
-  return { cfg, setCfg, persist, saved };
+  return { cfg, setCfg, persist, saved, setSaved };
 }
 
 function moveArray<T>(arr: T[], from: number, to: number): T[] {
@@ -424,4 +421,5 @@ export default function CriteriosConfigTab() {
     </div>
   );
 }
+
 
