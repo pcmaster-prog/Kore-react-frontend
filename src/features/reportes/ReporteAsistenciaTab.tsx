@@ -11,7 +11,7 @@ import FiltrosReporte from "./FiltrosReporte";
 import { Loader2, AlertTriangle, Download, Trash2, RotateCcw } from "lucide-react";
 import { cx } from "@/lib/utils";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import domtoimage from "dom-to-image-more";
 
 type EmployeeOption = { id: string; full_name?: string; name?: string };
 
@@ -117,99 +117,88 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
     if (!el || !data) return;
     setExporting(true);
     try {
-      // Clonar el nodo para limpiar estilos sin afectar la UI visible
+      // Clonar el nodo para limpiar bordes sin afectar la UI visible
       const clone = el.cloneNode(true) as HTMLElement;
       clone.style.position = "fixed";
       clone.style.top = "-99999px";
       clone.style.left = "-99999px";
       clone.style.width = `${el.scrollWidth}px`;
       clone.style.backgroundColor = "#ffffff";
+      clone.style.padding = "16px";
       document.body.appendChild(clone);
 
-      // Limpiar AGRESIVAMENTE todos los bordes, sombras y efectos que causan líneas negras en PDF
+      // Quitar TODOS los bordes con !important para sobreescribir los de Tailwind
       const allEls = clone.querySelectorAll("*");
       allEls.forEach((e) => {
         const he = e as HTMLElement;
-        // Quitar absolutamente todos los bordes y sombras
-        he.style.border = "none";
-        he.style.borderTop = "none";
-        he.style.borderBottom = "none";
-        he.style.borderLeft = "none";
-        he.style.borderRight = "none";
-        he.style.boxShadow = "none";
-        he.style.outline = "none";
-        he.style.transition = "none";
-        he.style.animation = "none";
-        // Quitar position sticky que causa artefactos de renderizado
-        if (getComputedStyle(he).position === "sticky") {
-          he.style.position = "static";
+        he.style.setProperty("border", "none", "important");
+        he.style.setProperty("border-top", "none", "important");
+        he.style.setProperty("border-bottom", "none", "important");
+        he.style.setProperty("border-left", "none", "important");
+        he.style.setProperty("border-right", "none", "important");
+        he.style.setProperty("box-shadow", "none", "important");
+        he.style.setProperty("outline", "none", "important");
+        he.style.setProperty("transition", "none", "important");
+        he.style.setProperty("animation", "none", "important");
+        // Quitar position sticky / fixed que causa artefactos
+        const pos = getComputedStyle(he).position;
+        if (pos === "sticky" || pos === "fixed") {
+          he.style.setProperty("position", "static", "important");
         }
       });
 
-      // Ahora agregar bordes SUTILES solo donde se necesitan para legibilidad
-      const rows = clone.querySelectorAll("tbody tr");
-      rows.forEach((tr, i) => {
+      // Separación visual: fondos alternados en filas
+      clone.querySelectorAll("tbody tr").forEach((tr, i) => {
         const he = tr as HTMLElement;
-        // Fondo alternado para separar filas
-        he.style.backgroundColor = i % 2 === 0 ? "#ffffff" : "#fafafa";
-        // Borde inferior sutil
-        he.style.borderBottom = "1px solid #e5e7eb";
+        he.style.backgroundColor = i % 2 === 0 ? "#ffffff" : "#f8f9fa";
       });
 
-      // Header de tabla con fondo gris muy claro
+      // Header con fondo gris claro
       clone.querySelectorAll("thead th").forEach((th) => {
         const he = th as HTMLElement;
         he.style.backgroundColor = "#f3f4f6";
-        he.style.borderBottom = "2px solid #d1d5db";
         he.style.fontWeight = "700";
       });
 
-      // Quitar las columnas de acción (botón eliminar) del PDF
+      // Quitar columna de acciones (botón eliminar) del PDF
       clone.querySelectorAll("th:last-child, td:last-child").forEach((cell) => {
         const he = cell as HTMLElement;
         if (he.querySelector("button") || he.innerHTML.trim() === "") {
-          he.style.display = "none";
+          (he as HTMLElement).style.setProperty("display", "none", "important");
         }
       });
 
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        width: clone.scrollWidth,
-        height: clone.scrollHeight,
+      const scale = 2;
+      const dataUrl = await domtoimage.toPng(clone, {
+        width: clone.scrollWidth * scale,
+        height: clone.scrollHeight * scale,
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: `${clone.scrollWidth}px`,
+          height: `${clone.scrollHeight}px`,
+          backgroundColor: "#ffffff",
+        },
       });
 
       document.body.removeChild(clone);
 
-      const dataUrl = canvas.toDataURL("image/png");
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pdfW = pdf.internal.pageSize.getWidth();
       const pdfH = pdf.internal.pageSize.getHeight();
-      const imgW = canvas.width;
-      const imgH = canvas.height;
-      const ratio = Math.min(pdfW / imgW, pdfH / imgH);
-      const scaledW = imgW * ratio;
-      const scaledH = imgH * ratio;
-
-      // Si cabe en una página, centrarlo; si no, paginar
-      if (scaledH <= pdfH) {
-        const x = (pdfW - scaledW) / 2;
-        pdf.addImage(dataUrl, "PNG", x, 5, scaledW, scaledH);
-      } else {
-        const totalH = (imgH * pdfW) / imgW;
-        let yPos = 0;
-        while (yPos < totalH) {
-          if (yPos > 0) pdf.addPage();
-          pdf.addImage(dataUrl, "PNG", 0, -yPos, pdfW, totalH);
-          yPos += pdfH;
-        }
+      const imgH = (img.height * pdfW) / img.width;
+      let yPos = 0;
+      while (yPos < imgH) {
+        if (yPos > 0) pdf.addPage();
+        pdf.addImage(dataUrl, "PNG", 0, -yPos, pdfW, imgH);
+        yPos += pdfH;
       }
-
       pdf.save(`control-asistencia-semana-${data.semana}.pdf`);
     } catch (e) {
-      // silently ignore
+      console.error("Error generando PDF:", e);
     } finally {
       setExporting(false);
     }
