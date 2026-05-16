@@ -1,5 +1,5 @@
 // src/features/reportes/ReporteAsistenciaTab.tsx
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import {
   getReporteAsistenciaSemanal,
   DIAS_ORDEN,
@@ -11,7 +11,7 @@ import FiltrosReporte from "./FiltrosReporte";
 import { Loader2, AlertTriangle, Download, Trash2, RotateCcw } from "lucide-react";
 import { cx } from "@/lib/utils";
 import jsPDF from "jspdf";
-import domtoimage from "dom-to-image-more";
+import autoTable from "jspdf-autotable";
 
 type EmployeeOption = { id: string; full_name?: string; name?: string };
 
@@ -31,6 +31,13 @@ const COMIDA_COLOR = "#F2C94C";
 const ENTRADA_COLOR = "#27AE60";
 const SALIDA_COLOR = "#EB5757";
 const TOTAL_COLOR = "#2B6CB0";
+
+function hexToRgb(hex: string): [number, number, number] {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    : [0, 0, 0];
+}
 
 function formatHora(iso?: string | null): string {
   if (!iso) return "—";
@@ -81,7 +88,6 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const [err, setErr] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [hiddenRows, setHiddenRows] = useState<Set<string>>(new Set());
-  const reportRef = useRef<HTMLDivElement>(null);
 
   const handleFilter = useCallback(async (filtros: FiltrosAsistencia) => {
     setLoading(true);
@@ -112,114 +118,147 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const visibleFilas = data?.filas.filter((f) => !hiddenRows.has(f.empleado.id)) ?? [];
   const totalFilas = data?.filas.length ?? 0;
 
-  async function descargarPDF() {
-    const el = reportRef.current;
-    if (!el || !data) return;
+  function descargarPDF() {
+    if (!data) return;
     setExporting(true);
     try {
-      // Clonar el nodo para limpiar bordes sin afectar la UI visible
-      const clone = el.cloneNode(true) as HTMLElement;
-      clone.style.position = "fixed";
-      clone.style.top = "-99999px";
-      clone.style.left = "-99999px";
-      clone.style.width = `${el.scrollWidth}px`;
-      clone.style.backgroundColor = "#ffffff";
-      clone.style.padding = "16px";
-      document.body.appendChild(clone);
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const margin = 10;
 
-      // Quitar TODOS los bordes, scrollbars y overflow para capturar TODO el contenido
-      const allEls = clone.querySelectorAll("*");
-      allEls.forEach((e) => {
-        const he = e as HTMLElement;
-        he.style.setProperty("border", "none", "important");
-        he.style.setProperty("border-top", "none", "important");
-        he.style.setProperty("border-bottom", "none", "important");
-        he.style.setProperty("border-left", "none", "important");
-        he.style.setProperty("border-right", "none", "important");
-        he.style.setProperty("box-shadow", "none", "important");
-        he.style.setProperty("outline", "none", "important");
-        he.style.setProperty("transition", "none", "important");
-        he.style.setProperty("animation", "none", "important");
-        // Expandir todo: quitar overflow para que nada se corte
-        he.style.setProperty("overflow", "visible", "important");
-        he.style.setProperty("overflow-x", "visible", "important");
-        he.style.setProperty("overflow-y", "visible", "important");
-        // Ocultar scrollbars
-        he.style.setProperty("scrollbar-width", "none", "important");
-        // Quitar position sticky / fixed que causa artefactos
-        const pos = getComputedStyle(he).position;
-        if (pos === "sticky" || pos === "fixed") {
-          he.style.setProperty("position", "static", "important");
-        }
+      // ── Header ──
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("CONTROL DE ASISTENCIA", pageW / 2, margin + 6, { align: "center" });
+
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      const desde = new Date(data.rango.desde + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long" });
+      const hasta = new Date(data.rango.hasta + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+      pdf.text(`del ${desde} al ${hasta}`, pageW / 2, margin + 11, { align: "center" });
+
+      pdf.setFontSize(7);
+      pdf.text("SEMANA", pageW - margin - 2, margin + 4, { align: "right" });
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(String(data.semana), pageW - margin - 2, margin + 13, { align: "right" });
+
+      // ── Leyenda ──
+      pdf.setFontSize(6);
+      pdf.setFont("helvetica", "normal");
+      const legendY = margin + 16;
+      const legendItems = [
+        { label: "COMIDA 30 min", color: COMIDA_COLOR },
+        { label: "ENTRADA", color: ENTRADA_COLOR },
+        { label: "SALIDA", color: SALIDA_COLOR },
+        { label: "FALTA", color: ESTADO_COLORES.falta.bg },
+        { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
+        { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
+        { label: "VACACIONES", color: ESTADO_COLORES.vacaciones.bg },
+        { label: "HORAS TOTAL", color: TOTAL_COLOR },
+      ];
+      let legendX = margin;
+      legendItems.forEach((item) => {
+        pdf.setFillColor(item.color);
+        pdf.rect(legendX, legendY, 2.5, 2.5, "F");
+        pdf.text(item.label, legendX + 3.5, legendY + 2);
+        legendX += pdf.getTextWidth(item.label) + 7;
       });
 
-      // Inyectar CSS para ocultar scrollbars de WebKit (Chrome) en el clon
-      const hideScrollStyle = document.createElement("style");
-      hideScrollStyle.textContent = "::-webkit-scrollbar { display: none !important; }";
-      clone.appendChild(hideScrollStyle);
+      // ── Tabla ──
+      const head = [["NOMBRE", "COMIDA\n30 min", "DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "TOTAL", "FIRMA"]];
 
-      // Forzar que el clon y la tabla usen ancho/altura auto para mostrar todo
-      clone.style.setProperty("height", "auto", "important");
-      clone.style.setProperty("max-height", "none", "important");
-      const table = clone.querySelector("table");
-      if (table) {
-        (table as HTMLElement).style.setProperty("width", "max-content", "important");
-      }
+      const body = visibleFilas.map((fila) => {
+        const nombre = fila.empleado.nombre + (fila.empleado.position_title ? `\n${fila.empleado.position_title}` : "");
+        const comida = fila.empleado.comida_hora ?? "—";
 
-      // Separación visual: fondos alternados en filas (sin border-bottom para evitar líneas negras)
-      clone.querySelectorAll("tbody tr").forEach((tr, i) => {
-        const he = tr as HTMLElement;
-        he.style.backgroundColor = i % 2 === 0 ? "#ffffff" : "#f8f9fa";
-        he.style.setProperty("border-bottom", "none", "important");
+        const diasCells = DIAS_ORDEN.map((d) => {
+          const dia = fila.dias[d];
+          if (!dia) return { content: "—", styles: { halign: "center" as const, fontSize: 6 } };
+
+          const style = ESTADO_COLORES[dia.estado] ?? ESTADO_COLORES.ausente;
+          const tieneHoras = !!dia.entrada || !!dia.salida;
+
+          if (!tieneHoras && dia.estado !== "presente" && dia.estado !== "en_turno") {
+            return {
+              content: style.label,
+              styles: {
+                fillColor: hexToRgb(style.bg),
+                textColor: hexToRgb(style.text),
+                halign: "center" as const,
+                fontSize: 6,
+                fontStyle: "bold" as const,
+              },
+            };
+          }
+
+          const lines: string[] = [];
+          if (dia.entrada) lines.push(formatHora(dia.entrada));
+          if (dia.salida) lines.push(formatHora(dia.salida));
+          if (lines.length === 0) lines.push("—");
+
+          return {
+            content: lines.join("\n"),
+            styles: {
+              halign: "center" as const,
+              fontSize: 6,
+            },
+          };
+        });
+
+        return [
+          { content: nombre, styles: { fontSize: 7, valign: "middle" as const } },
+          { content: comida, styles: { halign: "center" as const, fontSize: 6, valign: "middle" as const } },
+          ...diasCells,
+          {
+            content: minutesToHHMM(fila.total_horas),
+            styles: { halign: "center" as const, fontSize: 7, fontStyle: "bold" as const, textColor: hexToRgb(TOTAL_COLOR), valign: "middle" as const },
+          },
+          { content: "", styles: { minCellHeight: 8 } },
+        ];
       });
 
-      // Header con fondo gris claro
-      clone.querySelectorAll("thead th").forEach((th) => {
-        const he = th as HTMLElement;
-        he.style.backgroundColor = "#f3f4f6";
-        he.style.fontWeight = "700";
-      });
-
-      // Quitar columna de acciones (botón eliminar) del PDF
-      clone.querySelectorAll("th:last-child, td:last-child").forEach((cell) => {
-        const he = cell as HTMLElement;
-        if (he.querySelector("button") || he.innerHTML.trim() === "") {
-          (he as HTMLElement).style.setProperty("display", "none", "important");
-        }
-      });
-
-      const scale = 1.5;
-      const dataUrl = await domtoimage.toPng(clone, {
-        width: clone.scrollWidth * scale,
-        height: clone.scrollHeight * scale,
-        style: {
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-          width: `${clone.scrollWidth}px`,
-          height: `${clone.scrollHeight}px`,
-          backgroundColor: "#ffffff",
+      autoTable(pdf, {
+        head,
+        body,
+        startY: legendY + 6,
+        margin: { left: margin, right: margin },
+        styles: {
+          fontSize: 6,
+          cellPadding: 1,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.15,
+          font: "helvetica",
+        },
+        headStyles: {
+          fillColor: [243, 244, 246],
+          textColor: [60, 60, 60],
+          fontStyle: "bold",
+          fontSize: 6,
+          halign: "center",
+          valign: "middle",
+        },
+        alternateRowStyles: {
+          fillColor: [248, 249, 250],
+        },
+        columnStyles: {
+          0: { cellWidth: 38 },
+          1: { cellWidth: 16 },
+          10: { cellWidth: 22 },
+        },
+        didDrawCell: (hookData) => {
+          // Dibujar línea de firma en la columna FIRMA
+          if (hookData.column.index === 10 && hookData.cell.section === "body") {
+            const { cell, doc } = hookData;
+            const y = cell.y + cell.height - 2.5;
+            doc.setDrawColor(180, 180, 180);
+            doc.setLineDashPattern([1, 1], 0);
+            doc.line(cell.x + 1, y, cell.x + cell.width - 1, y);
+            doc.setLineDashPattern([], 0);
+          }
         },
       });
 
-      document.body.removeChild(clone);
-
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise((resolve) => { img.onload = resolve; });
-
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const margin = 10; // mm
-      const pdfW = pdf.internal.pageSize.getWidth() - margin * 2;
-      const pdfH = pdf.internal.pageSize.getHeight() - margin * 2;
-      const imgH = (img.height * pdfW) / img.width;
-      let yPos = 0;
-      let pageNum = 0;
-      while (yPos < imgH) {
-        if (pageNum > 0) pdf.addPage();
-        pdf.addImage(dataUrl, "PNG", margin, margin - yPos, pdfW, imgH);
-        yPos += pdfH;
-        pageNum++;
-      }
       pdf.save(`control-asistencia-semana-${data.semana}.pdf`);
     } catch (e) {
       console.error("Error generando PDF:", e);
@@ -274,7 +313,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
           </div>
 
           {/* Contenedor del reporte (se captura para PDF) */}
-          <div ref={reportRef} className="space-y-4 bg-white p-4 rounded-[28px]">
+          <div className="space-y-4 bg-white p-4 rounded-[28px]">
             {/* Header del reporte */}
             <div className="rounded-[28px] border border-k-border bg-k-bg-card p-6 shadow-k-card">
               <div className="flex items-start justify-between">
