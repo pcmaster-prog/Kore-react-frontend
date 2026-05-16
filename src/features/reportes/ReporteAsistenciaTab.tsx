@@ -8,7 +8,7 @@ import {
 } from "./api";
 import { minutesToHHMM } from "@/features/attendance/api";
 import FiltrosReporte from "./FiltrosReporte";
-import { Loader2, AlertTriangle, Download } from "lucide-react";
+import { Loader2, AlertTriangle, Download, Trash2, RotateCcw } from "lucide-react";
 import { cx } from "@/lib/utils";
 import jsPDF from "jspdf";
 import domtoimage from "dom-to-image-more";
@@ -45,8 +45,6 @@ function CeldaDia({ dia }: { dia?: { fecha: string; entrada?: string | null; sal
   const style = ESTADO_COLORES[dia.estado] ?? ESTADO_COLORES.ausente;
   const tieneHoras = !!dia.entrada || !!dia.salida;
 
-  // Si tiene entrada/salida, mostrar horas (fondo blanco o del estado)
-  // Si es estado puro sin horas (falta, descanso, etc.), mostrar label del estado con fondo coloreado
   if (!tieneHoras && dia.estado !== "presente" && dia.estado !== "en_turno") {
     return (
       <div
@@ -82,11 +80,13 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [hiddenRows, setHiddenRows] = useState<Set<string>>(new Set());
   const reportRef = useRef<HTMLDivElement>(null);
 
   const handleFilter = useCallback(async (filtros: FiltrosAsistencia) => {
     setLoading(true);
     setErr(null);
+    setHiddenRows(new Set());
     try {
       const res = await getReporteAsistenciaSemanal(filtros);
       setData(res);
@@ -97,22 +97,69 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
     }
   }, []);
 
+  function hideRow(id: string) {
+    setHiddenRows((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }
+
+  function resetRows() {
+    setHiddenRows(new Set());
+  }
+
+  const visibleFilas = data?.filas.filter((f) => !hiddenRows.has(f.empleado.id)) ?? [];
+  const totalFilas = data?.filas.length ?? 0;
+
   async function descargarPDF() {
     const el = reportRef.current;
     if (!el || !data) return;
     setExporting(true);
     try {
+      // Clonar el nodo para limpiar bordes sin afectar la UI visible
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.style.position = "fixed";
+      clone.style.top = "-99999px";
+      clone.style.left = "-99999px";
+      clone.style.width = `${el.scrollWidth}px`;
+      document.body.appendChild(clone);
+
+      // Fix bordes: quitar border-collapse (causa líneas negras en dom-to-image)
+      const tables = clone.querySelectorAll("table");
+      tables.forEach((t) => {
+        (t as HTMLElement).style.borderCollapse = "separate";
+        (t as HTMLElement).style.borderSpacing = "0";
+      });
+
+      // Quitar bordes dashed de firma que se ven mal en PDF
+      const dashed = clone.querySelectorAll("[style*='border-style: dashed'], .border-dashed");
+      dashed.forEach((d) => {
+        (d as HTMLElement).style.borderBottom = "1px solid #d1d5db";
+      });
+
+      // Quitar hover effects y transiciones del clon
+      const allEls = clone.querySelectorAll("*");
+      allEls.forEach((e) => {
+        const he = e as HTMLElement;
+        he.style.transition = "none";
+        he.style.animation = "none";
+      });
+
       const scale = 2;
-      const dataUrl = await domtoimage.toPng(el, {
-        width: el.scrollWidth * scale,
-        height: el.scrollHeight * scale,
+      const dataUrl = await domtoimage.toPng(clone, {
+        width: clone.scrollWidth * scale,
+        height: clone.scrollHeight * scale,
         style: {
           transform: `scale(${scale})`,
           transformOrigin: "top left",
-          width: `${el.scrollWidth}px`,
-          height: `${el.scrollHeight}px`,
+          width: `${clone.scrollWidth}px`,
+          height: `${clone.scrollHeight}px`,
         },
       });
+
+      document.body.removeChild(clone);
+
       const img = new Image();
       img.src = dataUrl;
       await new Promise((resolve) => { img.onload = resolve; });
@@ -154,8 +201,21 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
 
       {data && (
         <div className="space-y-4">
-          {/* Botón descargar (fuera del PDF) */}
-          <div className="flex justify-end">
+          {/* Barra de acciones */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm text-k-text-b">
+              Mostrando <span className="font-bold text-k-text-h">{visibleFilas.length}</span> de{" "}
+              <span className="font-bold text-k-text-h">{totalFilas}</span> empleados
+              {hiddenRows.size > 0 && (
+                <button
+                  onClick={resetRows}
+                  className="ml-3 inline-flex items-center gap-1 text-xs font-bold text-k-text-h hover:text-obsidian transition"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Restablecer
+                </button>
+              )}
+            </div>
             <button
               onClick={descargarPDF}
               disabled={exporting}
@@ -264,11 +324,12 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                         <br />
                         Conformidad
                       </th>
+                      <th className="w-10 border-b border-k-border" />
                     </tr>
                   </thead>
                   <tbody>
-                    {data.filas.map((fila) => (
-                      <tr key={fila.empleado.id} className="border-t border-k-border hover:bg-k-bg-card2/30 transition">
+                    {visibleFilas.map((fila) => (
+                      <tr key={fila.empleado.id} className="border-t border-k-border hover:bg-k-bg-card2/30 transition group">
                         {/* Nombre */}
                         <td className="px-3 py-2 sticky left-0 bg-k-bg-card border-r border-k-border z-10">
                           <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{fila.empleado.nombre}</div>
@@ -322,15 +383,26 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                         </td>
 
                         {/* Firma */}
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 border-r border-k-border">
                           <div className="h-8 w-full border-b border-dashed border-neutral-300" />
+                        </td>
+
+                        {/* Eliminar */}
+                        <td className="px-2 py-2 text-center">
+                          <button
+                            onClick={() => hideRow(fila.empleado.id)}
+                            className="h-7 w-7 rounded-lg border border-k-border bg-k-bg-card2 flex items-center justify-center hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 transition opacity-0 group-hover:opacity-100"
+                            title="Quitar del reporte"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))}
 
-                    {data.filas.length === 0 && (
+                    {visibleFilas.length === 0 && (
                       <tr>
-                        <td colSpan={12} className="px-8 py-12 text-center text-k-text-b text-sm">
+                        <td colSpan={13} className="px-8 py-12 text-center text-k-text-b text-sm">
                           No hay registros para el período seleccionado.
                         </td>
                       </tr>
@@ -345,3 +417,4 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
     </div>
   );
 }
+
