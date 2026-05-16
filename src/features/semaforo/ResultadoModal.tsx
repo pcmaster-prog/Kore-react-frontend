@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import type { ResultadoCompleto, DesempenoEvaluacion, PeerEvaluacion } from './types';
 import { getResultado, desactivarEvaluacion } from './api';
-import { CRITERIOS_ADMIN, ACCIONES_CONFIG, initials } from './utils';
+import { getCriteriosAdmin, getCriteriosPeer, getPesos, ACCIONES_CONFIG, initials } from './utils';
 import StarRating from './StarRating';
 import SemaforoBadge from './SemaforoBadge';
 
@@ -16,6 +16,7 @@ type ResultadoModalProps = {
 
 function EvalAdminCard({ ev }: { ev: DesempenoEvaluacion }) {
   const [open, setOpen] = useState(false);
+  const criteriosAdmin = getCriteriosAdmin();
   return (
     <div className="rounded-[16px] border border-[#E8E6E0] bg-white overflow-hidden">
       <div 
@@ -51,13 +52,13 @@ function EvalAdminCard({ ev }: { ev: DesempenoEvaluacion }) {
       {open && (
         <div className="px-4 pb-4 pt-2 border-t border-neutral-100 animate-in fade-in slide-in-from-top-2">
           <div className="space-y-0 divide-y divide-[#F0EFE8] mt-2">
-            {CRITERIOS_ADMIN.map(c => (
+            {criteriosAdmin.map(c => (
               <div key={c.key} className="flex items-center justify-between py-2 gap-2">
                 <span className="text-xs font-medium text-neutral-500">{c.label}</span>
                 <div className="flex items-center gap-2">
-                  <StarRating value={ev[c.key as keyof typeof ev] as number} readOnly size="sm" />
+                  <StarRating value={(ev as any)[c.key] as number} readOnly size="sm" />
                   <span className="text-xs font-bold text-[#1E2D4A] w-6 text-right tabular-nums">
-                    {ev[c.key as keyof typeof ev] as number}/5
+                    {(ev as any)[c.key] as number}/5
                   </span>
                 </div>
               </div>
@@ -88,6 +89,7 @@ function EvalAdminCard({ ev }: { ev: DesempenoEvaluacion }) {
 
 function EvalPeerCard({ pe }: { pe: PeerEvaluacion }) {
   const [open, setOpen] = useState(false);
+  const criteriosPeer = getCriteriosPeer();
   return (
     <div className="rounded-[16px] border border-[#E8E6E0] bg-white overflow-hidden">
        <div 
@@ -124,18 +126,13 @@ function EvalPeerCard({ pe }: { pe: PeerEvaluacion }) {
       {open && (
         <div className="px-4 pb-4 pt-2 border-t border-neutral-100 animate-in fade-in slide-in-from-top-2">
           <div className="space-y-0 divide-y divide-[#F0EFE8] mt-2">
-            {[
-              { key: 'colaboracion', label: 'Colaboración' },
-              { key: 'puntualidad', label: 'Puntualidad' },
-              { key: 'actitud', label: 'Actitud' },
-              { key: 'comunicacion', label: 'Comunicación' }
-            ].map(c => (
+            {criteriosPeer.map(c => (
               <div key={c.key} className="flex items-center justify-between py-2 gap-2">
                 <span className="text-xs font-medium text-neutral-500">{c.label}</span>
                 <div className="flex items-center gap-2">
-                  <StarRating value={pe[c.key as keyof typeof pe] as number} readOnly size="sm" />
+                  <StarRating value={(pe as any)[c.key] as number} readOnly size="sm" />
                   <span className="text-xs font-bold text-[#1E2D4A] w-6 text-right tabular-nums">
-                    {pe[c.key as keyof typeof pe] as number}/5
+                    {(pe as any)[c.key] as number}/5
                   </span>
                 </div>
               </div>
@@ -152,6 +149,8 @@ export default function ResultadoModal({ open, onClose, empleadoId, onDeactivate
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deactivating, setDeactivating] = useState(false);
+  const pesos = getPesos();
+  const criteriosPeer = getCriteriosPeer();
 
   useEffect(() => {
     if (!open || !empleadoId) return;
@@ -233,19 +232,19 @@ export default function ResultadoModal({ open, onClose, empleadoId, onDeactivate
                   <div className="text-3xl font-bold text-[#1E2D4A] mt-1 tabular-nums">
                     {data.eval_score !== null ? `${data.eval_score.toFixed(1)}%` : '—'}
                   </div>
-                  <div className="text-[11px] font-medium text-neutral-500 mt-1">Peso: 70%</div>
+                  <div className="text-[11px] font-medium text-neutral-500 mt-1">Peso: {pesos.admin}%</div>
                 </div>
                 <div className="rounded-[16px] bg-[#F9F8F5] border border-[#E8E6E0] p-5">
                   <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-[0.08em]">Evaluaciones Compañeros</div>
                   <div className="text-3xl font-bold text-[#1E2D4A] mt-1 tabular-nums">
                     {data.peer_score !== null ? `${data.peer_score.toFixed(1)}%` : '—'}
                   </div>
-                  <div className="text-[11px] font-medium text-neutral-500 mt-1">Peso: 30% · {data.peer_count} compañeros</div>
+                  <div className="text-[11px] font-medium text-neutral-500 mt-1">Peso: {pesos.peer}% · {data.peer_count} compañeros</div>
                 </div>
               </div>
 
               <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm font-medium text-blue-700 text-center">
-                Fórmula: (70% × eval) + (30% × peers) = <strong>{data.final_score?.toFixed(1) ?? '—'}%</strong>
+                Fórmula: ({pesos.admin}% × eval) + ({pesos.peer}% × peers) = <strong>{data.final_score?.toFixed(1) ?? '—'}%</strong>
               </div>
 
               {/* Evaluaciones recibidas */}
@@ -269,11 +268,11 @@ export default function ResultadoModal({ open, onClose, empleadoId, onDeactivate
                     Opinión de Compañeros · {data.peer_count} evaluaron
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                    {(['colaboracion', 'puntualidad', 'actitud', 'comunicacion'] as const).map(key => {
-                      const avg = data.peer_evaluaciones.reduce((s, p) => s + p[key], 0) / data.peer_evaluaciones.length;
+                    {criteriosPeer.map(c => {
+                      const avg = data.peer_evaluaciones.reduce((s, p) => s + ((p as any)[c.key] ?? 0), 0) / data.peer_evaluaciones.length;
                       return (
-                        <div key={key} className="rounded-[12px] bg-[#F9F8F5] border border-[#E8E6E0] p-3 text-center">
-                          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">{key}</div>
+                        <div key={c.key} className="rounded-[12px] bg-[#F9F8F5] border border-[#E8E6E0] p-3 text-center">
+                          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">{c.label}</div>
                           <div className="text-xl font-bold text-[#1E2D4A] mt-0.5 tabular-nums">{avg.toFixed(1)}</div>
                         </div>
                       );
@@ -306,3 +305,4 @@ export default function ResultadoModal({ open, onClose, empleadoId, onDeactivate
     </div>
   );
 }
+

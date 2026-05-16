@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
-import type { EvaluacionCriterios, Accion } from './types';
-import { CRITERIOS_ADMIN, ACCIONES_CONFIG, calcSemaforo, SEMAFORO_CONFIG, initials } from './utils';
+import type { Accion } from './types';
+import { ACCIONES_CONFIG, calcSemaforo, SEMAFORO_CONFIG, initials, getCriteriosAdmin, getMaxScoreAdmin } from './utils';
 import { evaluarEmpleado } from './api';
 import StarRating from './StarRating';
 import SemaforoBadge from './SemaforoBadge';
@@ -13,22 +13,25 @@ type EvaluacionFormModalProps = {
   onSuccess?: () => void;
 };
 
-const EMPTY_CRITERIOS: EvaluacionCriterios = {
-  puntualidad: 0, responsabilidad: 0, actitud_trabajo: 0, orden_limpieza: 0,
-  atencion_cliente: 0, trabajo_equipo: 0, iniciativa: 0, aprendizaje_adaptacion: 0,
-};
+function buildEmptyCriterios() {
+  const obj: Record<string, number> = {};
+  getCriteriosAdmin().forEach((c) => { obj[c.key] = 0; });
+  return obj;
+}
 
 export default function EvaluacionFormModal({
   open, onClose, empleado, onSuccess,
 }: EvaluacionFormModalProps) {
-  const [criterios, setCriterios] = useState<EvaluacionCriterios>({ ...EMPTY_CRITERIOS });
+  const criteriosAdmin = getCriteriosAdmin();
+  const maxScore = getMaxScoreAdmin();
+  const [criterios, setCriterios] = useState<Record<string, number>>(buildEmptyCriterios());
   const [acciones, setAcciones] = useState<Accion[]>([]);
   const [observaciones, setObservaciones] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const total = useMemo(() => Object.values(criterios).reduce((a, b) => a + b, 0), [criterios]);
-  const porcentaje = useMemo(() => (total / 40) * 100, [total]);
+  const porcentaje = useMemo(() => maxScore > 0 ? (total / maxScore) * 100 : 0, [total, maxScore]);
   const semaforo = useMemo(() => calcSemaforo(porcentaje), [porcentaje]);
   const semaforoCfg = semaforo ? SEMAFORO_CONFIG[semaforo] : null;
 
@@ -49,10 +52,10 @@ export default function EvaluacionFormModal({
         ...criterios,
         acciones: acciones.length ? acciones : undefined,
         observaciones: observaciones.trim() || undefined,
-      });
+      } as any);
       onSuccess?.();
       onClose();
-      setCriterios({ ...EMPTY_CRITERIOS });
+      setCriterios(buildEmptyCriterios());
       setAcciones([]);
       setObservaciones('');
     } catch (e: any) {
@@ -98,17 +101,17 @@ export default function EvaluacionFormModal({
               Criterios de Evaluación
             </div>
             <div className="space-y-0 divide-y divide-[#F0EFE8]">
-              {CRITERIOS_ADMIN.map((c) => (
+              {criteriosAdmin.map((c) => (
                 <div key={c.key} className="flex items-center justify-between py-3.5 gap-3">
                   <span className="text-sm font-medium text-[#374151] min-w-0">{c.label}</span>
                   <div className="flex items-center gap-3 shrink-0">
                     <StarRating
-                      value={criterios[c.key as keyof EvaluacionCriterios]}
+                      value={criterios[c.key] ?? 0}
                       onChange={(v) => setCriterio(c.key, v)}
                       size="md"
                     />
                     <span className="text-sm font-bold text-[#1E2D4A] w-8 text-right tabular-nums">
-                      {criterios[c.key as keyof EvaluacionCriterios]}/5
+                      {criterios[c.key] ?? 0}/5
                     </span>
                   </div>
                 </div>
@@ -122,7 +125,7 @@ export default function EvaluacionFormModal({
               <div>
                 <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-[0.08em]">Puntaje Total</div>
                 <div className="text-[28px] font-bold text-[#1E2D4A] tracking-tight leading-none mt-1 tabular-nums">
-                  {total} <span className="text-lg text-neutral-400 font-medium">/ 40</span>
+                  {total} <span className="text-lg text-neutral-400 font-medium">/ {maxScore}</span>
                 </div>
               </div>
               <SemaforoBadge status={total > 0 ? semaforo : null} showDot size="md" />
@@ -215,3 +218,4 @@ export default function EvaluacionFormModal({
     </div>
   );
 }
+

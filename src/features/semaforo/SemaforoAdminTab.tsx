@@ -5,6 +5,7 @@ import { initials } from './utils';
 import SemaforoBadge from './SemaforoBadge';
 import EvaluacionFormModal from './EvaluacionFormModal';
 import ResultadoModal from './ResultadoModal';
+import CriteriosConfigTab from './CriteriosConfigTab';
 import { auth } from '@/features/auth/store';
 
 import { cx, reportError } from "@/lib/utils";
@@ -44,6 +45,7 @@ export default function SemaforoAdminTab() {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Modals
+  const [tab, setTab] = useState<'evaluaciones' | 'config'>('evaluaciones');
   const [evalModal, setEvalModal] = useState<{ id: string; full_name: string; position_title?: string | null } | null>(null);
   const [resultModal, setResultModal] = useState<string | null>(null);
 
@@ -95,6 +97,27 @@ export default function SemaforoAdminTab() {
     <>
       {toast && <Toast msg={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
+      <div className="flex items-center gap-1 bg-neutral-100/80 rounded-2xl p-1 mb-6">
+        {([
+          { key: 'evaluaciones', label: 'Evaluaciones' },
+          { key: 'config', label: 'Configuración' },
+        ] as const).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={cx(
+              'flex-1 px-4 py-1.5 rounded-xl text-xs font-bold transition',
+              tab === t.key ? 'bg-white shadow-sm text-[#1E2D4A]' : 'text-neutral-500 hover:text-neutral-700'
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'config' ? (
+        <CriteriosConfigTab />
+      ) : (
       <div className="rounded-[40px] border border-neutral-100 bg-white shadow-sm overflow-hidden animate-in-up">
         <div className="px-8 py-6 border-b border-neutral-50 bg-neutral-50/50">
           <h2 className="text-2xl font-bold text-[#1E2D4A] tracking-tight">Semáforo de Desempeño</h2>
@@ -218,6 +241,8 @@ export default function SemaforoAdminTab() {
         </div>
       </div>
 
+      )}
+
       {/* Modals */}
       <EvaluacionFormModal
         open={!!evalModal}
@@ -234,3 +259,4 @@ export default function SemaforoAdminTab() {
     </>
   );
 }
+

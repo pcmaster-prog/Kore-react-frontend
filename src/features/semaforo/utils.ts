@@ -1,5 +1,18 @@
 import type { SemaforoColor, Accion } from './types';
+import {
+  getCriteriosAdmin,
+  getCriteriosPeer,
+  getUmbrales,
+  getRangosTexto,
+  getPesos,
+  getMaxScoreAdmin,
+  calcSemaforoDinamico,
+} from './configStore';
 
+// Re-export dinámicos para compatibilidad con componentes existentes
+export { getCriteriosAdmin, getCriteriosPeer, getUmbrales, getRangosTexto, getPesos, getMaxScoreAdmin, calcSemaforoDinamico };
+
+// Config visual del semáforo (colores y descripciones se mantienen estáticos, rangos son dinámicos)
 export const SEMAFORO_CONFIG = {
   verde: {
     label: 'Verde',
@@ -7,7 +20,7 @@ export const SEMAFORO_CONFIG = {
     badgeText: '#166534',
     progressColor: '#22c55e',
     dot: '🟢',
-    rango: '80 – 100%',
+    get rango() { return getRangosTexto().verde; },
     descripcion: 'Empleado confiable. Buen desempeño.',
   },
   amarillo: {
@@ -16,7 +29,7 @@ export const SEMAFORO_CONFIG = {
     badgeText: '#92400e',
     progressColor: '#f59e0b',
     dot: '🟡',
-    rango: '60 – 79%',
+    get rango() { return getRangosTexto().amarillo; },
     descripcion: 'Empleado funcional pero con áreas de mejora.',
   },
   rojo: {
@@ -25,28 +38,14 @@ export const SEMAFORO_CONFIG = {
     badgeText: '#991b1b',
     progressColor: '#ef4444',
     dot: '🔴',
-    rango: '0 – 59%',
+    get rango() { return getRangosTexto().rojo; },
     descripcion: 'Requiere seguimiento o corrección.',
   },
 };
 
-export const CRITERIOS_ADMIN = [
-  { key: 'puntualidad',           label: 'Puntualidad' },
-  { key: 'responsabilidad',       label: 'Responsabilidad' },
-  { key: 'actitud_trabajo',       label: 'Actitud de Trabajo' },
-  { key: 'orden_limpieza',        label: 'Orden y Limpieza' },
-  { key: 'atencion_cliente',      label: 'Atención al Cliente' },
-  { key: 'trabajo_equipo',        label: 'Trabajo en Equipo' },
-  { key: 'iniciativa',            label: 'Iniciativa' },
-  { key: 'aprendizaje_adaptacion', label: 'Aprendizaje / Adaptación' },
-] as const;
-
-export const CRITERIOS_PEER = [
-  { key: 'colaboracion', label: 'Colaboración',  icon: '🤝' },
-  { key: 'puntualidad',  label: 'Puntualidad',   icon: '⏰' },
-  { key: 'actitud',      label: 'Actitud',        icon: '😊' },
-  { key: 'comunicacion', label: 'Comunicación',   icon: '💬' },
-] as const;
+// Constantes legacy para compatibilidad con código que aún no migra
+export const CRITERIOS_ADMIN = getCriteriosAdmin();
+export const CRITERIOS_PEER = getCriteriosPeer();
 
 export const ACCIONES_CONFIG: Record<Accion, { label: string; color: string }> = {
   mantener_desempeno:    { label: 'Mantener desempeño',    color: '#1E2D4A' },
@@ -55,13 +54,12 @@ export const ACCIONES_CONFIG: Record<Accion, { label: string; color: string }> =
   seguimiento_30_dias:   { label: 'Seguimiento en 30 días', color: '#8b5cf6' },
 };
 
+// calcSemaforo legacy — ahora delega al dinámico
 export function calcSemaforo(score: number | null): SemaforoColor {
-  if (score === null) return null;
-  if (score >= 80) return 'verde';
-  if (score >= 60) return 'amarillo';
-  return 'rojo';
+  return calcSemaforoDinamico(score) as SemaforoColor;
 }
 
 export function initials(name: string): string {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }
+

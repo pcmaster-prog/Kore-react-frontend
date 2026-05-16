@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import type { CompaneroParaEvaluar } from './types';
-import { CRITERIOS_PEER, initials } from './utils';
+import { getCriteriosPeer, initials } from './utils';
 import { enviarPeerEvaluacion } from './api';
 import StarRating from './StarRating';
 
@@ -17,13 +17,16 @@ type PeerEvaluacionModalProps = {
 export default function PeerEvaluacionModal({
   open, onClose, companero, onSuccess, totalPending,
 }: PeerEvaluacionModalProps) {
-  const [scores, setScores] = useState<Record<string, number>>({
-    colaboracion: 0, puntualidad: 0, actitud: 0, comunicacion: 0,
+  const criteriosPeer = getCriteriosPeer();
+  const [scores, setScores] = useState<Record<string, number>>(() => {
+    const obj: Record<string, number> = {};
+    criteriosPeer.forEach((c) => { obj[c.key] = 0; });
+    return obj;
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const allFilled = Object.values(scores).every(v => v > 0);
+  const allFilled = criteriosPeer.length > 0 && criteriosPeer.every((c) => (scores[c.key] ?? 0) > 0);
 
   async function handleSubmit() {
     if (!allFilled) return;
@@ -33,15 +36,14 @@ export default function PeerEvaluacionModal({
       await enviarPeerEvaluacion({
         employee_evaluation_id: companero.evaluation_id,
         evaluado_empleado_id: companero.empleado.id,
-        colaboracion: scores.colaboracion,
-        puntualidad: scores.puntualidad,
-        actitud: scores.actitud,
-        comunicacion: scores.comunicacion,
-      });
+        ...scores,
+      } as any);
       const allDone = totalPending <= 1;
       onSuccess?.(allDone);
       onClose();
-      setScores({ colaboracion: 0, puntualidad: 0, actitud: 0, comunicacion: 0 });
+      const empty: Record<string, number> = {};
+      criteriosPeer.forEach((c) => { empty[c.key] = 0; });
+      setScores(empty);
     } catch (e: any) {
       setError(e?.response?.data?.message ?? 'No se pudo enviar la evaluación');
     } finally {
@@ -82,7 +84,7 @@ export default function PeerEvaluacionModal({
 
           {/* Criterios */}
           <div className="space-y-3">
-            {CRITERIOS_PEER.map(c => {
+            {criteriosPeer.map(c => {
               const val = scores[c.key] ?? 0;
               return (
                 <div
@@ -130,3 +132,4 @@ export default function PeerEvaluacionModal({
     </div>
   );
 }
+
