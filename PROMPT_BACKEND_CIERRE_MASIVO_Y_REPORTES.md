@@ -270,3 +270,4 @@ $table->text('admin_closed_reason')->nullable();
 - Reporte semanal sin empleado_ids → incluye todos los activos.
 - Reporte semanal con rango inválido (from > to) → 422.
 - Reporte por empleado de otro usuario → 403.
+

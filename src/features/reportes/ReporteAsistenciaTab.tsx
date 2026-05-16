@@ -1,5 +1,5 @@
 // src/features/reportes/ReporteAsistenciaTab.tsx
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   getReporteAsistenciaSemanal,
   DIAS_ORDEN,
@@ -8,8 +8,10 @@ import {
 } from "./api";
 import { minutesToHHMM } from "@/features/attendance/api";
 import FiltrosReporte from "./FiltrosReporte";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Download } from "lucide-react";
 import { cx } from "@/lib/utils";
+import jsPDF from "jspdf";
+import domtoimage from "dom-to-image-more";
 
 type EmployeeOption = { id: string; full_name?: string; name?: string };
 
@@ -79,6 +81,8 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const [data, setData] = useState<ReporteAsistenciaResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const handleFilter = useCallback(async (filtros: FiltrosAsistencia) => {
     setLoading(true);
@@ -92,6 +96,43 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
       setLoading(false);
     }
   }, []);
+
+  async function descargarPDF() {
+    const el = reportRef.current;
+    if (!el || !data) return;
+    setExporting(true);
+    try {
+      const scale = 2;
+      const dataUrl = await domtoimage.toPng(el, {
+        width: el.scrollWidth * scale,
+        height: el.scrollHeight * scale,
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: `${el.scrollWidth}px`,
+          height: `${el.scrollHeight}px`,
+        },
+      });
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgH = (img.height * pdfW) / img.width;
+      let yPos = 0;
+      while (yPos < imgH) {
+        if (yPos > 0) pdf.addPage();
+        pdf.addImage(dataUrl, "PNG", 0, -yPos, pdfW, imgH);
+        yPos += pdfH;
+      }
+      pdf.save(`control-asistencia-semana-${data.semana}.pdf`);
+    } catch (e) {
+      // silently ignore
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -113,175 +154,190 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
 
       {data && (
         <div className="space-y-4">
-          {/* Header del reporte */}
-          <div className="rounded-[28px] border border-k-border bg-k-bg-card p-6 shadow-k-card">
-            <div className="flex items-start justify-between">
-              <div className="text-center flex-1">
-                <h2 className="text-xl font-black text-k-text-h tracking-tight uppercase">
-                  Control de Asistencia
-                </h2>
-                <p className="text-sm text-k-text-b mt-1">
-                  del{" "}
-                  <span className="font-bold">
-                    {new Date(data.rango.desde + "T12:00:00").toLocaleDateString("es-MX", {
-                      day: "numeric",
-                      month: "long",
-                    })}
-                  </span>{" "}
-                  al{" "}
-                  <span className="font-bold">
-                    {new Date(data.rango.hasta + "T12:00:00").toLocaleDateString("es-MX", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </span>
-                </p>
-              </div>
-              <div className="text-center shrink-0 ml-4">
-                <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Semana</div>
-                <div className="text-4xl font-black text-k-text-h">{data.semana}</div>
-              </div>
-            </div>
+          {/* Botón descargar (fuera del PDF) */}
+          <div className="flex justify-end">
+            <button
+              onClick={descargarPDF}
+              disabled={exporting}
+              className="inline-flex items-center gap-2 rounded-xl bg-k-bg-sidebar text-white px-4 py-2.5 text-sm font-bold hover:bg-obsidian transition disabled:opacity-50"
+            >
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {exporting ? "Generando PDF..." : "Descargar PDF"}
+            </button>
           </div>
 
-          {/* Leyenda */}
-          <div className="rounded-[20px] border border-k-border bg-k-bg-card p-4 shadow-k-card">
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-              {[
-                { label: "COMIDA 30 min", color: COMIDA_COLOR },
-                { label: "ENTRADA", color: ENTRADA_COLOR },
-                { label: "SALIDA", color: SALIDA_COLOR },
-                { label: "FALTA", color: ESTADO_COLORES.falta.bg },
-                { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
-                { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
-                { label: "VACACIONES", color: ESTADO_COLORES.vacaciones.bg },
-                { label: "HORAS TOTAL", color: TOTAL_COLOR },
-                { label: "FIRMA DE CONFORMIDAD", color: "transparent" },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-1.5">
-                  <div
-                    className="h-3 w-3 rounded-sm border border-neutral-200 shrink-0"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-k-text-b">{item.label}</span>
+          {/* Contenedor del reporte (se captura para PDF) */}
+          <div ref={reportRef} className="space-y-4 bg-white p-4 rounded-[28px]">
+            {/* Header del reporte */}
+            <div className="rounded-[28px] border border-k-border bg-k-bg-card p-6 shadow-k-card">
+              <div className="flex items-start justify-between">
+                <div className="text-center flex-1">
+                  <h2 className="text-xl font-black text-k-text-h tracking-tight uppercase">
+                    Control de Asistencia
+                  </h2>
+                  <p className="text-sm text-k-text-b mt-1">
+                    del{" "}
+                    <span className="font-bold">
+                      {new Date(data.rango.desde + "T12:00:00").toLocaleDateString("es-MX", {
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </span>{" "}
+                    al{" "}
+                    <span className="font-bold">
+                      {new Date(data.rango.hasta + "T12:00:00").toLocaleDateString("es-MX", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </p>
                 </div>
-              ))}
+                <div className="text-center shrink-0 ml-4">
+                  <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Semana</div>
+                  <div className="text-5xl font-black text-k-text-h">{data.semana}</div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Tabla matriz */}
-          <div className="rounded-[28px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-k-bg-card2/80">
-                    <th className="text-left px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border sticky left-0 bg-k-bg-card2/95 z-10 min-w-[140px]">
-                      Nombre
-                    </th>
-                    <th
-                      className="text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
-                      style={{ backgroundColor: `${COMIDA_COLOR}22` }}
-                    >
-                      Comida
-                      <br />
-                      <span className="text-[9px] opacity-70">30 min</span>
-                    </th>
-                    {DIAS_ORDEN.map((d) => (
-                      <th
-                        key={d}
-                        className={cx(
-                          "text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[80px]",
-                          (d === "sábado" || d === "domingo") && "bg-neutral-50/50"
-                        )}
-                      >
-                        {d}
+            {/* Leyenda */}
+            <div className="rounded-[20px] border border-k-border bg-k-bg-card p-4 shadow-k-card">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                {[
+                  { label: "COMIDA 30 min", color: COMIDA_COLOR },
+                  { label: "ENTRADA", color: ENTRADA_COLOR },
+                  { label: "SALIDA", color: SALIDA_COLOR },
+                  { label: "FALTA", color: ESTADO_COLORES.falta.bg },
+                  { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
+                  { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
+                  { label: "VACACIONES", color: ESTADO_COLORES.vacaciones.bg },
+                  { label: "HORAS TOTAL", color: TOTAL_COLOR },
+                  { label: "FIRMA DE CONFORMIDAD", color: "transparent" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5">
+                    <div
+                      className="h-3 w-3 rounded-sm border border-neutral-200 shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-k-text-b">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Tabla matriz */}
+            <div className="rounded-[28px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-k-bg-card2/80">
+                      <th className="text-left px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border sticky left-0 bg-k-bg-card2/95 z-10 min-w-[140px]">
+                        Nombre
                       </th>
-                    ))}
-                    <th
-                      className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
-                      style={{ backgroundColor: `${TOTAL_COLOR}15` }}
-                    >
-                      Total
-                    </th>
-                    <th className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[100px]">
-                      Firma de
-                      <br />
-                      Conformidad
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.filas.map((fila) => (
-                    <tr key={fila.empleado.id} className="border-t border-k-border hover:bg-k-bg-card2/30 transition">
-                      {/* Nombre */}
-                      <td className="px-3 py-2 sticky left-0 bg-k-bg-card border-r border-k-border z-10">
-                        <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{fila.empleado.nombre}</div>
-                        {fila.empleado.position_title && (
-                          <div className="text-[9px] text-k-text-b">{fila.empleado.position_title}</div>
-                        )}
-                      </td>
-
-                      {/* Comida */}
-                      <td
-                        className="px-2 py-2 text-center border-r border-k-border"
-                        style={{ backgroundColor: `${COMIDA_COLOR}33` }}
+                      <th
+                        className="text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
+                        style={{ backgroundColor: `${COMIDA_COLOR}22` }}
                       >
-                        <span className="text-xs font-bold" style={{ color: "#B7791F" }}>
-                          {fila.empleado.comida_hora ?? "—"}
-                        </span>
-                      </td>
-
-                      {/* Días */}
+                        Comida
+                        <br />
+                        <span className="text-[9px] opacity-70">30 min</span>
+                      </th>
                       {DIAS_ORDEN.map((d) => (
-                        <td
+                        <th
                           key={d}
                           className={cx(
-                            "px-0 py-0 border-r border-k-border h-[52px] w-[80px]",
-                            (d === "sábado" || d === "domingo") && "bg-neutral-50/30"
+                            "text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[80px]",
+                            (d === "sábado" || d === "domingo") && "bg-neutral-50/50"
                           )}
                         >
-                          <CeldaDia
-                            dia={
-                              fila.dias[d]
-                                ? {
-                                    fecha: fila.dias[d]!.fecha,
-                                    entrada: fila.dias[d]!.entrada,
-                                    salida: fila.dias[d]!.salida,
-                                    estado: fila.dias[d]!.estado,
-                                  }
-                                : undefined
-                            }
-                          />
-                        </td>
+                          {d}
+                        </th>
                       ))}
-
-                      {/* Total */}
-                      <td
-                        className="px-3 py-2 text-center border-r border-k-border"
-                        style={{ backgroundColor: `${TOTAL_COLOR}10` }}
+                      <th
+                        className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
+                        style={{ backgroundColor: `${TOTAL_COLOR}15` }}
                       >
-                        <span className="text-sm font-black" style={{ color: TOTAL_COLOR }}>
-                          {minutesToHHMM(fila.total_horas)}
-                        </span>
-                      </td>
-
-                      {/* Firma */}
-                      <td className="px-3 py-2">
-                        <div className="h-8 w-full border-b border-dashed border-neutral-300" />
-                      </td>
+                        Total
+                      </th>
+                      <th className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[100px]">
+                        Firma de
+                        <br />
+                        Conformidad
+                      </th>
                     </tr>
-                  ))}
+                  </thead>
+                  <tbody>
+                    {data.filas.map((fila) => (
+                      <tr key={fila.empleado.id} className="border-t border-k-border hover:bg-k-bg-card2/30 transition">
+                        {/* Nombre */}
+                        <td className="px-3 py-2 sticky left-0 bg-k-bg-card border-r border-k-border z-10">
+                          <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{fila.empleado.nombre}</div>
+                          {fila.empleado.position_title && (
+                            <div className="text-[9px] text-k-text-b">{fila.empleado.position_title}</div>
+                          )}
+                        </td>
 
-                  {data.filas.length === 0 && (
-                    <tr>
-                      <td colSpan={12} className="px-8 py-12 text-center text-k-text-b text-sm">
-                        No hay registros para el período seleccionado.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                        {/* Comida */}
+                        <td
+                          className="px-2 py-2 text-center border-r border-k-border"
+                          style={{ backgroundColor: `${COMIDA_COLOR}33` }}
+                        >
+                          <span className="text-xs font-bold" style={{ color: "#B7791F" }}>
+                            {fila.empleado.comida_hora ?? "—"}
+                          </span>
+                        </td>
+
+                        {/* Días */}
+                        {DIAS_ORDEN.map((d) => (
+                          <td
+                            key={d}
+                            className={cx(
+                              "px-0 py-0 border-r border-k-border h-[52px] w-[80px]",
+                              (d === "sábado" || d === "domingo") && "bg-neutral-50/30"
+                            )}
+                          >
+                            <CeldaDia
+                              dia={
+                                fila.dias[d]
+                                  ? {
+                                      fecha: fila.dias[d]!.fecha,
+                                      entrada: fila.dias[d]!.entrada,
+                                      salida: fila.dias[d]!.salida,
+                                      estado: fila.dias[d]!.estado,
+                                    }
+                                  : undefined
+                              }
+                            />
+                          </td>
+                        ))}
+
+                        {/* Total */}
+                        <td
+                          className="px-3 py-2 text-center border-r border-k-border"
+                          style={{ backgroundColor: `${TOTAL_COLOR}10` }}
+                        >
+                          <span className="text-sm font-black" style={{ color: TOTAL_COLOR }}>
+                            {minutesToHHMM(fila.total_horas)}
+                          </span>
+                        </td>
+
+                        {/* Firma */}
+                        <td className="px-3 py-2">
+                          <div className="h-8 w-full border-b border-dashed border-neutral-300" />
+                        </td>
+                      </tr>
+                    ))}
+
+                    {data.filas.length === 0 && (
+                      <tr>
+                        <td colSpan={12} className="px-8 py-12 text-center text-k-text-b text-sm">
+                          No hay registros para el período seleccionado.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

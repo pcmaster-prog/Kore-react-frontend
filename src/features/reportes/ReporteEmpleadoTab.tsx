@@ -238,3 +238,4 @@ export default function ReporteEmpleadoTab({ employees }: { employees: EmployeeO
     </div>
   );
 }
+

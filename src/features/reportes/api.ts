@@ -122,3 +122,4 @@ export async function getReporteEmpleado(
   const res = await api.get(`/reportes/empleado/${empleadoId}`, { params });
   return res.data as ReporteEmpleadoResponse;
 }
+

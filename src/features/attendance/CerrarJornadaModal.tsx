@@ -125,3 +125,4 @@ export default function CerrarJornadaModal({ date, employees, onClose, onSaved }
     </div>
   );
 }
+
