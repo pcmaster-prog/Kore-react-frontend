@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { assignTask } from "@/features/tasks/api";
 import type { EmployeeWorkload } from "../types";
-import { reportError } from "@/lib/utils";
-import EmployeePicker from "./ui/EmployeePicker";
+import EmployeeWorkloadPicker from "@/features/tasks/components/EmployeeWorkloadPicker";
 
 export interface AssignTaskModalProps {
   tasks: { id: string; title: string }[];
@@ -35,9 +34,22 @@ export default function AssignTaskModal({
       await Promise.all(
         tasks.map((t) => assignTask(t.id, { empleado_ids: selectedEmployees }))
       );
+      window.dispatchEvent(
+        new CustomEvent("kore-notification", {
+          detail: {
+            title: "Asignación exitosa",
+            body: `Se asignó a ${selectedEmployees.length} empleado(s).`,
+          },
+        })
+      );
       onAssigned();
-    } catch (e) {
-      reportError("Operación de supervisor", e);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? "No se pudo asignar la tarea.";
+      window.dispatchEvent(
+        new CustomEvent("kore-notification", {
+          detail: { title: "Error", body: msg },
+        })
+      );
     } finally {
       setAssigning(false);
     }
@@ -78,11 +90,15 @@ export default function AssignTaskModal({
           )}
         </div>
 
-        <EmployeePicker
-          workload={workload}
-          selectedIds={selectedEmployees}
-          onToggle={toggleEmployee}
-        />
+        <div className="flex-1 overflow-hidden px-7 pb-4">
+          <EmployeeWorkloadPicker
+            employees={workload}
+            selectedIds={selectedEmployees}
+            onToggle={toggleEmployee}
+            onSelectAll={() => setSelectedEmployees(workload.map((e) => e.empleado_id))}
+            onClear={() => setSelectedEmployees([])}
+          />
+        </div>
 
         <div className="px-7 pb-7 pt-4 border-t border-k-border flex gap-3">
           <button

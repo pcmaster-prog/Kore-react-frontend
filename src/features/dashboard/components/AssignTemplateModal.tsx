@@ -3,7 +3,7 @@ import { bulkCreateFromCatalog } from "@/features/tasks/catalog/api";
 import type { Template } from "@/features/tasks/catalog/api";
 import type { EmployeeWorkload } from "../types";
 import { getApiErrorMessage } from "../utils";
-import EmployeePicker from "./ui/EmployeePicker";
+import EmployeeWorkloadPicker from "@/features/tasks/components/EmployeeWorkloadPicker";
 import PriorityBadge from "./ui/PriorityBadge";
 
 export interface AssignTemplateModalProps {
@@ -42,9 +42,23 @@ export default function AssignTemplateModal({
         empleado_ids: selectedEmployees,
         allow_duplicate: true,
       });
+      window.dispatchEvent(
+        new CustomEvent("kore-notification", {
+          detail: {
+            title: "Asignación exitosa",
+            body: `${templates.length} plantilla(s) asignada(s) a ${selectedEmployees.length} empleado(s).`,
+          },
+        })
+      );
       onAssigned();
     } catch (e: unknown) {
-      setError(getApiErrorMessage(e, "Error al asignar"));
+      const msg = getApiErrorMessage(e, "Error al asignar");
+      setError(msg);
+      window.dispatchEvent(
+        new CustomEvent("kore-notification", {
+          detail: { title: "Error", body: msg },
+        })
+      );
     } finally {
       setAssigning(false);
     }
@@ -88,11 +102,15 @@ export default function AssignTemplateModal({
           )}
         </div>
 
-        <EmployeePicker
-          workload={workload}
-          selectedIds={selectedEmployees}
-          onToggle={toggleEmployee}
-        />
+        <div className="flex-1 overflow-hidden px-7 pb-4">
+          <EmployeeWorkloadPicker
+            employees={workload}
+            selectedIds={selectedEmployees}
+            onToggle={toggleEmployee}
+            onSelectAll={() => setSelectedEmployees(workload.map((e) => e.empleado_id))}
+            onClear={() => setSelectedEmployees([])}
+          />
+        </div>
 
         {error && (
           <p className="px-7 pb-2 text-xs text-rose-500 font-bold">{error}</p>

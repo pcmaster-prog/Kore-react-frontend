@@ -29,8 +29,22 @@ export default function TaskTableRow({
     task.has_evidences ||
     (task.assignees ?? []).some((a) => a.has_evidence);
 
+  const priorityBorder =
+    task.priority === "urgent"
+      ? "border-l-rose-500"
+      : task.priority === "high"
+        ? "border-l-orange-400"
+        : task.priority === "low"
+          ? "border-l-neutral-300"
+          : "border-l-transparent";
+
   return (
-    <tr className="border-t border-neutral-50 hover:bg-neutral-50/80 transition-colors group">
+    <tr
+      className={cx(
+        "border-t border-neutral-50 hover:bg-neutral-50/80 transition-colors group border-l-[3px]",
+        priorityBorder,
+      )}
+    >
       <td className="px-6 py-5">
         <AssigneeCell task={task} />
       </td>

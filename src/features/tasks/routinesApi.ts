@@ -4,6 +4,7 @@ import api from "@/lib/http";
 export type Routine = {
   id: string;
   name: string;
+  description?: string | null;
   recurrence: "daily" | "weekly";
   weekdays?: number[] | null;
   is_active: boolean;

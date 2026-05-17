@@ -2,6 +2,7 @@ import { cx } from "@/lib/utils";
 
 interface StatusPillProps {
   status: string;
+  size?: "sm" | "md";
 }
 
 const MAP: Record<string, { label: string; cls: string; dot: string }> = {
@@ -42,7 +43,7 @@ const MAP: Record<string, { label: string; cls: string; dot: string }> = {
   },
 };
 
-export default function StatusPill({ status }: StatusPillProps) {
+export default function StatusPill({ status, size = "sm" }: StatusPillProps) {
   const x = MAP[status] ?? {
     label: status,
     cls: "bg-neutral-50 text-neutral-600 border-neutral-100",
@@ -52,7 +53,8 @@ export default function StatusPill({ status }: StatusPillProps) {
   return (
     <span
       className={cx(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
+        "inline-flex items-center gap-1.5 rounded-full border font-bold uppercase tracking-wider",
+        size === "md" ? "px-2.5 py-1 text-xs" : "px-2.5 py-1 text-[10px]",
         x.cls,
       )}
     >

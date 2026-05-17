@@ -1,4 +1,4 @@
-import { ChevronRight, Search, Check, CheckCircle2 } from "lucide-react";
+import { ChevronRight, Search, Check, CheckCircle2, Calendar, Flag } from "lucide-react";
 import { cx } from "@/lib/utils";
 import type { EmployeeOption } from "./tasks.types";
 
@@ -12,6 +12,10 @@ interface TaskFiltersBarProps {
   onSearchChange: (v: string) => void;
   overdue: boolean;
   onOverdueChange: (v: boolean) => void;
+  date: string;
+  onDateChange: (v: string) => void;
+  priority: string;
+  onPriorityChange: (v: string) => void;
   totalTasks: number;
   pendingApprovalsCount: number;
   onGotoAprobaciones: () => void;
@@ -27,6 +31,10 @@ export default function TaskFiltersBar({
   onSearchChange,
   overdue,
   onOverdueChange,
+  date,
+  onDateChange,
+  priority,
+  onPriorityChange,
   totalTasks,
   pendingApprovalsCount,
   onGotoAprobaciones,
@@ -62,6 +70,31 @@ export default function TaskFiltersBar({
             ))}
           </select>
           <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 rotate-90 pointer-events-none" />
+        </div>
+
+        <div className="relative">
+          <input
+            type="date"
+            className="h-11 pl-4 pr-3 rounded-2xl bg-neutral-50/50 border border-neutral-100 text-[11px] font-bold uppercase tracking-widest text-obsidian outline-none appearance-none focus:ring-2 focus:ring-obsidian/10 cursor-pointer"
+            value={date}
+            onChange={(e) => onDateChange(e.target.value)}
+          />
+          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 pointer-events-none" />
+        </div>
+
+        <div className="relative">
+          <select
+            className="h-11 pl-5 pr-10 rounded-2xl bg-neutral-50/50 border border-neutral-100 text-[11px] font-bold uppercase tracking-widest text-obsidian outline-none appearance-none focus:ring-2 focus:ring-obsidian/10"
+            value={priority}
+            onChange={(e) => onPriorityChange(e.target.value)}
+          >
+            <option value="">Todas las Prioridades</option>
+            <option value="urgent">Urgente</option>
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+          </select>
+          <Flag className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 rotate-90 pointer-events-none" />
         </div>
 
         <div className="relative flex items-center bg-neutral-50/50 h-11 rounded-2xl border border-neutral-100 px-4 min-w-[280px] gap-2 focus-within:ring-2 focus-within:ring-obsidian/10">

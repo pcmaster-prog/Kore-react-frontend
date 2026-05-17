@@ -1,6 +1,8 @@
 import { ClipboardList, AlertTriangle } from "lucide-react";
 import { cx } from "@/lib/utils";
+import EmptyState from "@/components/EmptyState";
 import TaskTableRow from "./TaskTableRow";
+import TaskTableSkeleton from "./TaskTableSkeleton";
 import type { TasksListData, ExtendedTask } from "./tasks.types";
 
 interface TaskTableProps {
@@ -48,12 +50,7 @@ export default function TaskTable({
       </div>
 
       {loading ? (
-        <div className="p-16 flex flex-col items-center gap-4 text-neutral-400 bg-neutral-50/50">
-          <div className="h-10 w-10 border-4 border-neutral-200 border-t-obsidian rounded-full animate-spin" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">
-            Sincronizando tareas...
-          </span>
-        </div>
+        <TaskTableSkeleton rows={5} />
       ) : error ? (
         <div className="p-8 m-6 rounded-3xl bg-rose-50 border border-rose-100 flex items-center gap-4">
           <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
@@ -69,24 +66,17 @@ export default function TaskTable({
           </div>
         </div>
       ) : data?.data?.length === 0 ? (
-        <div className="p-20 text-center bg-neutral-50/30">
-          <div className="h-20 w-20 rounded-[24px] bg-white border border-neutral-100 shadow-sm flex items-center justify-center mx-auto mb-6">
-            <ClipboardList className="h-8 w-8 text-neutral-300" />
-          </div>
-          <p className="text-xs font-black text-obsidian uppercase tracking-widest mb-2">
-            No hay tareas activas
-          </p>
-          <p className="text-[11px] font-bold text-neutral-400 capitalize tracking-wide max-w-xs mx-auto text-center leading-relaxed mb-4">
-            Prueba cambiando los filtros o crea una nueva tarea.
-          </p>
-          <button
-            className="h-10 px-5 rounded-xl bg-obsidian text-sm font-bold text-white shadow-sm hover:bg-neutral-800 transition-all inline-flex items-center gap-2"
-            onClick={() =>
-              window.dispatchEvent(new CustomEvent("kore-new-task"))
-            }
-          >
-            + Nueva Tarea
-          </button>
+        <div className="p-8 bg-neutral-50/30">
+          <EmptyState
+            variant="neutral"
+            title="No hay tareas activas"
+            description="Prueba cambiando los filtros o crea una nueva tarea para empezar."
+            action={{
+              label: "+ Nueva Tarea",
+              onClick: () =>
+                window.dispatchEvent(new CustomEvent("kore-new-task")),
+            }}
+          />
         </div>
       ) : (
         <div className="overflow-x-auto">

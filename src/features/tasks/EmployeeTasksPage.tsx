@@ -17,52 +17,11 @@ import {
 import { isEnabled } from "@/lib/featureFlags";
 import EmptyState from "@/components/EmptyState";
 import PageHeader from "@/components/PageHeader";
+import TaskProgressTracker from "./components/TaskProgressTracker";
+import ChecklistProgressBar from "./components/ChecklistProgressBar";
 
 import { cx } from "@/lib/utils";
-// ✅ Actualizado: incluye approved y rejected
-function StatusPill({ s }: { s: string }) {
-  const meta =
-    s === "assigned"
-      ? {
-          label: "Asignada",
-          cls: "bg-k-bg-card2 text-neutral-700 border-k-border",
-        }
-      : s === "in_progress"
-        ? {
-            label: "En progreso",
-            cls: "bg-blue-50 text-blue-800 border-blue-200",
-          }
-        : s === "done_pending"
-          ? {
-              label: "En revisión",
-              cls: "bg-amber-50 text-amber-900 border-amber-200",
-            }
-          : s === "approved"
-            ? {
-                label: "Aprobada",
-                cls: "bg-emerald-50 text-emerald-800 border-emerald-200",
-              }
-            : s === "rejected"
-              ? {
-                  label: "Rechazada",
-                  cls: "bg-rose-50 text-rose-800 border-rose-200",
-                }
-              : {
-                  label: s,
-                  cls: "bg-k-bg-card2 text-neutral-700 border-k-border",
-                };
-
-  return (
-    <span
-      className={cx(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs",
-        meta.cls,
-      )}
-    >
-      {meta.label}
-    </span>
-  );
-}
+import StatusPill from "./StatusPill";
 
 function PriorityPill({ p }: { p?: string | null }) {
   const key = (p ?? "medium").toLowerCase();
@@ -96,7 +55,7 @@ function PriorityPill({ p }: { p?: string | null }) {
   );
 }
 
-// ✅ Componente inline para subir evidencia (ahora llama a refresh tras subir)
+// ✅ Componente inline para subir evidencia con drag & drop
 function EvidenceInlineUploader({
   assignmentId,
   taskId,
@@ -108,21 +67,13 @@ function EvidenceInlineUploader({
 }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
-  async function pick() {
-    setErr(null);
-    setMsg(null);
-    fileRef.current?.click();
-  }
-
-  async function onFileChange(f: File | null) {
+  async function processFile(f: File | null) {
     if (!f) return;
-
     setBusy(true);
     setErr(null);
-    setMsg(null);
 
     try {
       const up = await uploadEvidence(f, {
@@ -130,10 +81,15 @@ function EvidenceInlineUploader({
         task_id: taskId,
         assignment_id: assignmentId,
       });
-
       await attachEvidenceToMyAssignment(assignmentId, up.item.id);
-
-      setMsg("Evidencia subida ✅");
+      window.dispatchEvent(
+        new CustomEvent("kore-notification", {
+          detail: {
+            title: "Evidencia subida",
+            body: "Tu evidencia se vinculó correctamente a la tarea.",
+          },
+        })
+      );
       onUploadSuccess?.();
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "No se pudo subir la evidencia");
@@ -143,31 +99,58 @@ function EvidenceInlineUploader({
     }
   }
 
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(true);
+  }
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+  }
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files?.[0] ?? null;
+    if (f) processFile(f);
+  }
+
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-2 w-full max-w-[280px]">
       <input
         ref={fileRef}
         type="file"
         className="hidden"
         accept="image/*,application/pdf"
-        onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+        onChange={(e) => processFile(e.target.files?.[0] ?? null)}
       />
 
       <button
         type="button"
-        onClick={pick}
+        onClick={() => fileRef.current?.click()}
         disabled={busy}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         className={cx(
-          "rounded-2xl px-3 py-2 text-sm font-medium border transition",
-          busy ? "opacity-60 cursor-not-allowed" : "hover:bg-k-bg-card2",
-          "bg-k-bg-card",
+          "w-full rounded-2xl border-2 border-dashed px-4 py-3 text-sm font-medium transition flex flex-col items-center gap-1.5 text-center",
+          dragOver
+            ? "border-k-bg-sidebar bg-k-bg-sidebar/5 text-k-text-h"
+            : "border-k-border bg-k-bg-card text-k-text-b hover:border-k-text-b hover:bg-k-bg-card2",
+          busy && "opacity-60 cursor-not-allowed"
         )}
       >
-        {busy ? "Subiendo..." : "📎 Evidencia"}
+        <span className="text-lg">{busy ? "⏳" : "📎"}</span>
+        <span>{busy ? "Subiendo..." : "Arrastra o toca para subir"}</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-k-text-b opacity-60">
+          Imagen o PDF
+        </span>
       </button>
 
-      {err ? <div className="text-xs text-rose-600">{err}</div> : null}
-      {msg ? <div className="text-xs text-emerald-700">{msg}</div> : null}
+      {err ? (
+        <div className="text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2 w-full text-center">
+          {err}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -399,6 +382,16 @@ export default function EmployeeTasksPage() {
 
     try {
       await updateMyAssignment(item.assignment.id, { status: next });
+      if (next === "done_pending") {
+        window.dispatchEvent(
+          new CustomEvent("kore-notification", {
+            detail: {
+              title: "Tarea entregada",
+              body: `"${item.task.title}" fue enviada a revisión exitosamente.`,
+            },
+          })
+        );
+      }
       await refresh();
     } catch (e: any) {
       if (previousData) setData(previousData);
@@ -798,9 +791,15 @@ export default function EmployeeTasksPage() {
                             <div className="text-lg font-black text-k-text-h tracking-tight truncate mr-2">
                               {t.title}
                             </div>
-                            <StatusPill s={a.status} />
+                            <StatusPill status={a.status} size="md" />
                             <PriorityPill p={t.priority} />
                           </div>
+
+                          <TaskProgressTracker
+                            status={a.status}
+                            hasEvidence={hasEvidence}
+                            checklistOk={checklistOk}
+                          />
 
                           {t.description ? (
                             <div className="text-sm font-medium text-k-text-b mt-2 line-clamp-2 leading-relaxed">
@@ -853,19 +852,25 @@ export default function EmployeeTasksPage() {
                           onToggle={() => toggleOpen(a.id)}
                           titleRight={checklistChip}
                         >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <ChecklistInline
-                              assignmentId={a.id}
-                              items={checklistDef ?? []}
-                              state={checklistState}
-                              disabled={
-                                a.status === "approved" ||
-                                a.status === "done_pending"
-                              }
-                              onChange={(itemId, done) =>
-                                toggleChecklist(a.id, itemId, done)
-                              }
+                          <div className="space-y-4">
+                            <ChecklistProgressBar
+                              done={checklistProgress?.required_done ?? 0}
+                              total={checklistProgress?.required_total ?? (checklistDef?.length ?? 0)}
                             />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <ChecklistInline
+                                assignmentId={a.id}
+                                items={checklistDef ?? []}
+                                state={checklistState}
+                                disabled={
+                                  a.status === "approved" ||
+                                  a.status === "done_pending"
+                                }
+                                onChange={(itemId, done) =>
+                                  toggleChecklist(a.id, itemId, done)
+                                }
+                              />
+                            </div>
                           </div>
                         </ChecklistAccordion>
                       ) : null}

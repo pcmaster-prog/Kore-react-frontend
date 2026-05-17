@@ -35,10 +35,11 @@ export default function TasksPage() {
   // filtros
   const [status, setStatus] = useState<string>("");
   const today = new Date().toISOString().slice(0, 10);
-  const [date] = useState<string>(today);
+  const [date, setDate] = useState<string>(today);
   const [search, setSearch] = useState<string>("");
   const [overdue, setOverdue] = useState(false);
   const [empleadoId, setEmpleadoId] = useState<string>("");
+  const [priority, setPriority] = useState<string>("");
 
   const [empleados, setEmpleados] = useState<EmployeeOption[]>([]);
   const [showCatalog, setShowCatalog] = useState(false);
@@ -73,8 +74,9 @@ export default function TasksPage() {
     if (empleadoId) p.empleado_id = empleadoId;
     if (search.trim()) p.search = search.trim();
     if (overdue) p.overdue = true;
+    if (priority) p.priority = priority;
     return p;
-  }, [page, status, date, search, overdue, empleadoId, reloadKey]);
+  }, [page, status, date, search, overdue, empleadoId, priority, reloadKey]);
 
   useEffect(() => {
     let alive = true;
@@ -108,7 +110,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [status, date, overdue, search]);
+  }, [status, date, overdue, search, priority]);
 
   async function quickSetStatus(
     taskId: string,
@@ -320,6 +322,10 @@ export default function TasksPage() {
             onSearchChange={setSearch}
             overdue={overdue}
             onOverdueChange={setOverdue}
+            date={date}
+            onDateChange={setDate}
+            priority={priority}
+            onPriorityChange={setPriority}
             totalTasks={data?.total ?? 0}
             pendingApprovalsCount={apData?.total ?? 0}
             onGotoAprobaciones={() => setTab("aprobaciones")}
