@@ -209,14 +209,27 @@ export default function TemplatesPage() {
                 )}
               </div>
 
-              <div className="mt-auto flex items-center justify-between pt-4 border-t border-neutral-50">
-                <div className="flex items-center gap-3">
-                  <PriorityBadge p={t.priority} />
-                  <span className="flex items-center gap-1 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                    <Clock className="h-3 w-3" />
-                    {t.estimated_minutes ? `${t.estimated_minutes}M` : "N/A"}
-                  </span>
+              <div className="mt-auto flex flex-col gap-2 pt-4 border-t border-neutral-50">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {t.department && (
+                    <span className="inline-flex items-center rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+                      {t.department}
+                    </span>
+                  )}
+                  {t.section && (
+                    <span className="inline-flex items-center rounded-lg border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-blue-600">
+                      {t.section}
+                    </span>
+                  )}
                 </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <PriorityBadge p={t.priority} />
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                      <Clock className="h-3 w-3" />
+                      {t.estimated_minutes ? `${t.estimated_minutes}M` : "N/A"}
+                    </span>
+                  </div>
 
                 <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
@@ -236,6 +249,7 @@ export default function TemplatesPage() {
                 </div>
               </div>
             </div>
+          </div>
           ))}
         </div>
       )}

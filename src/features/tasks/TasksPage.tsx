@@ -40,6 +40,7 @@ export default function TasksPage() {
   const [overdue, setOverdue] = useState(false);
   const [empleadoId, setEmpleadoId] = useState<string>("");
   const [priority, setPriority] = useState<string>("");
+  const [section, setSection] = useState<string>("");
 
   const [empleados, setEmpleados] = useState<EmployeeOption[]>([]);
   const [showCatalog, setShowCatalog] = useState(false);
@@ -75,8 +76,9 @@ export default function TasksPage() {
     if (search.trim()) p.search = search.trim();
     if (overdue) p.overdue = true;
     if (priority) p.priority = priority;
+    if (section) p.section = section;
     return p;
-  }, [page, status, date, search, overdue, empleadoId, priority, reloadKey]);
+  }, [page, status, date, search, overdue, empleadoId, priority, section, reloadKey]);
 
   useEffect(() => {
     let alive = true;
@@ -110,7 +112,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [status, date, overdue, search, priority]);
+  }, [status, date, overdue, search, priority, section]);
 
   async function quickSetStatus(
     taskId: string,
@@ -326,6 +328,8 @@ export default function TasksPage() {
             onDateChange={setDate}
             priority={priority}
             onPriorityChange={setPriority}
+            section={section}
+            onSectionChange={setSection}
             totalTasks={data?.total ?? 0}
             pendingApprovalsCount={apData?.total ?? 0}
             onGotoAprobaciones={() => setTab("aprobaciones")}

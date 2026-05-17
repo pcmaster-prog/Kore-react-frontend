@@ -23,6 +23,10 @@ export type Template = {
   show_in_dashboard?: boolean;
   created_at?: string;
   updated_at?: string;
+  /** Sección a la que pertenece la tarea (ej. Carnicería, Panadería) */
+  section?: string | null;
+  /** Departamento al que pertenece la tarea */
+  department?: string | null;
 };
 
 export type Routine = {

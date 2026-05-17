@@ -11,6 +11,8 @@ export type AuthUser = {
   role: Role;
   empresa_id: string;
   modules?: string[];
+  /** Sección asignada al supervisor (ej. Carnicería). Solo aplica para role='supervisor' */
+  section?: string | null;
 };
 
 export type AuthState = {

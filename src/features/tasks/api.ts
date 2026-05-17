@@ -222,6 +222,8 @@ export type MyAssignmentRow = {
     status?: string;
     due_at?: string | null;
     meta?: any;
+    section?: string | null;
+    department?: string | null;
   };
   // ✅ CHECKLIST CAMPOS
   checklist_def?: ChecklistItem[] | null;

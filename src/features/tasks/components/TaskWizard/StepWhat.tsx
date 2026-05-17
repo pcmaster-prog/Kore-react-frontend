@@ -6,7 +6,7 @@ import type { Routine } from "../../routinesApi";
 
 type CatalogApiItem = CatalogResponse["catalog"][number];
 
-export type AssignMode = "adhoc" | "catalog" | "routine";
+export type AssignMode = "adhoc" | "catalog" | "routine" | "section";
 
 interface StepWhatProps {
   mode: AssignMode;
@@ -36,6 +36,11 @@ interface StepWhatProps {
   routines: Routine[];
   routineId: string;
   onRoutineChange: (id: string) => void;
+
+  // Section (supervisor only)
+  sectionTemplates: CatalogApiItem[];
+  isSupervisor: boolean;
+  userSection: string | null;
 }
 
 function PriorityBadge({ p }: { p?: string }) {
@@ -75,11 +80,15 @@ export default function StepWhat({
   routines,
   routineId,
   onRoutineChange,
+  sectionTemplates,
+  isSupervisor,
+  userSection,
 }: StepWhatProps) {
   const modes: { key: AssignMode; label: string; icon: React.ReactNode }[] = [
     { key: "adhoc", label: "Tarea Rápida", icon: <Clock className="h-4 w-4" /> },
     { key: "catalog", label: "Del Catálogo", icon: <Layers className="h-4 w-4" /> },
     { key: "routine", label: "Rutina Completa", icon: <RefreshCw className="h-4 w-4" /> },
+    ...(isSupervisor && userSection ? [{ key: "section" as AssignMode, label: "Mi Sección", icon: <Layers className="h-4 w-4" /> }] : []),
   ];
 
   return (
@@ -339,6 +348,102 @@ export default function StepWhat({
                 })()}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Section bulk (supervisor only) */}
+      {mode === "section" && (
+        <div className="space-y-4 animate-in-fade">
+          <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+              <Layers className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                Sección asignada
+              </p>
+              <p className="text-xs font-bold text-blue-800 mt-0.5">
+                {userSection}
+              </p>
+              <p className="text-[10px] text-blue-600 mt-0.5">
+                Solo puedes asignar tareas de esta sección.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-5 bg-k-bg-card border border-k-border rounded-3xl shadow-k-card flex flex-col h-[320px]">
+            <div className="flex items-center justify-between mb-4">
+              <span className="block text-[11px] font-bold uppercase tracking-widest text-k-text-b">
+                Tareas de {userSection}
+              </span>
+              <div className="flex items-center gap-2">
+                {selectedTemplateIds.length > 0 && (
+                  <span className="text-[10px] font-bold text-k-text-h bg-k-bg-sidebar/5 px-2 py-1 rounded-md">
+                    {selectedTemplateIds.length} seleccionadas
+                  </span>
+                )}
+                {sectionTemplates.length > 0 && (
+                  <button
+                    className="text-[9px] font-bold uppercase tracking-widest text-k-text-h bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded-md transition"
+                    onClick={onSelectAllTemplates}
+                  >
+                    Seleccionar Todo
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+              {sectionTemplates.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-xs text-k-text-b font-medium pb-4 gap-2">
+                  <Layers className="h-6 w-6 text-neutral-300" />
+                  No hay tareas configuradas para esta sección.
+                </div>
+              ) : (
+                sectionTemplates.map((it) => {
+                  const t = it.template;
+                  const selected = selectedTemplateIds.includes(t.id);
+                  const est =
+                    (t as any).estimated_minutes ??
+                    t.meta?.estimated_minutes ??
+                    null;
+                  return (
+                    <label
+                      key={t.id}
+                      className={cx(
+                        "flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-colors",
+                        selected
+                          ? "bg-k-bg-sidebar/5 border-obsidian/20"
+                          : "bg-k-bg-card border-k-border hover:border-k-border"
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1 accent-obsidian"
+                        checked={selected}
+                        onChange={() => onToggleTemplate(t.id)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-sm font-bold text-k-text-h line-clamp-2 leading-tight">
+                            {t.title}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <PriorityBadge p={t.priority} />
+                          {est !== null && (
+                            <span className="text-[10px] font-bold text-k-text-b flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> {est}m
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
       )}

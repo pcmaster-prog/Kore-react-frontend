@@ -10,6 +10,10 @@ export type Task = {
   due_at?: string | null;
   created_at: string;
   meta?: Record<string, any> | null;
+  /** Sección a la que pertenece la tarea */
+  section?: string | null;
+  /** Departamento al que pertenece la tarea */
+  department?: string | null;
 
   // Campos enriquecidos desde el backend (eager-load)
   has_evidence?: boolean | null;

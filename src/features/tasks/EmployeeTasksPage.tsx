@@ -812,6 +812,16 @@ export default function EmployeeTasksPage() {
                           )}
 
                           <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-k-text-b uppercase tracking-widest">
+                            {t.department && (
+                              <span className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-neutral-500 shadow-k-card">
+                                {t.department}
+                              </span>
+                            )}
+                            {t.section && (
+                              <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-blue-600 shadow-k-card">
+                                {t.section}
+                              </span>
+                            )}
                             <span className="rounded-full border border-k-border px-3 py-1 shadow-k-card">
                               Catálogo: {t.meta?.catalog_date ?? "-"}
                             </span>

@@ -1,4 +1,4 @@
-import { ChevronRight, Search, Check, CheckCircle2, Calendar, Flag } from "lucide-react";
+import { ChevronRight, Search, Check, CheckCircle2, Calendar, Flag, Layers } from "lucide-react";
 import { cx } from "@/lib/utils";
 import type { EmployeeOption } from "./tasks.types";
 
@@ -16,6 +16,8 @@ interface TaskFiltersBarProps {
   onDateChange: (v: string) => void;
   priority: string;
   onPriorityChange: (v: string) => void;
+  section: string;
+  onSectionChange: (v: string) => void;
   totalTasks: number;
   pendingApprovalsCount: number;
   onGotoAprobaciones: () => void;
@@ -35,6 +37,8 @@ export default function TaskFiltersBar({
   onDateChange,
   priority,
   onPriorityChange,
+  section,
+  onSectionChange,
   totalTasks,
   pendingApprovalsCount,
   onGotoAprobaciones,
@@ -95,6 +99,17 @@ export default function TaskFiltersBar({
             <option value="low">Baja</option>
           </select>
           <Flag className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 rotate-90 pointer-events-none" />
+        </div>
+
+        <div className="relative flex items-center bg-neutral-50/50 h-11 rounded-2xl border border-neutral-100 px-4 min-w-[200px] gap-2 focus-within:ring-2 focus-within:ring-obsidian/10">
+          <Layers className="h-4 w-4 text-neutral-400 shrink-0" />
+          <input
+            type="text"
+            placeholder="Sección..."
+            className="bg-transparent border-none text-xs font-bold text-obsidian outline-none w-full placeholder:text-neutral-400 placeholder:uppercase placeholder:tracking-widest"
+            value={section}
+            onChange={(e) => onSectionChange(e.target.value)}
+          />
         </div>
 
         <div className="relative flex items-center bg-neutral-50/50 h-11 rounded-2xl border border-neutral-100 px-4 min-w-[280px] gap-2 focus-within:ring-2 focus-within:ring-obsidian/10">

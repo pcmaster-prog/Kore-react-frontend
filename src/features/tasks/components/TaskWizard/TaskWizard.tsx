@@ -12,8 +12,10 @@ import {
   listActiveRoutines,
   type Routine,
 } from "../../routinesApi";
+import { listTemplates } from "../../catalog/api";
 import { getSupervisorDashboard } from "@/features/dashboard/api";
 import type { EmployeeWorkload } from "@/features/dashboard/types";
+import { useAuthStore } from "@/features/auth/authStore";
 import { ArrowRight, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import Stepper from "./Stepper";
 import StepWhat, { type AssignMode } from "./StepWhat";
@@ -33,6 +35,9 @@ const STEPS = [
 
 export default function TaskWizard({ onAssigned, onClose }: TaskWizardProps) {
   const today = new Date().toISOString().slice(0, 10);
+  const user = useAuthStore((s) => s.user);
+  const isSupervisor = user?.role === "supervisor";
+  const userSection = user?.section ?? null;
 
   // Step & mode
   const [step, setStep] = useState(1);
@@ -40,6 +45,7 @@ export default function TaskWizard({ onAssigned, onClose }: TaskWizardProps) {
 
   // Data loading
   const [catalog, setCatalog] = useState<CatalogResponse["catalog"]>([]);
+  const [sectionTemplates, setSectionTemplates] = useState<CatalogResponse["catalog"]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [employees, setEmployees] = useState<EmployeeWorkload[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -67,15 +73,41 @@ export default function TaskWizard({ onAssigned, onClose }: TaskWizardProps) {
       setLoadingData(true);
       setDataErr(null);
       try {
-        const [catRes, empRes, rutRes, dashRes] = await Promise.all([
+        const promises: any[] = [
           getCatalog(date),
           listEmployees(),
           listActiveRoutines(),
           getSupervisorDashboard().catch(() => null),
-        ]);
+        ];
+        // If supervisor with section, also fetch all templates for that section
+        if (isSupervisor && userSection) {
+          promises.push(
+            listTemplates({ active: true }).catch(() => ({ data: [] }))
+          );
+        }
+        const [catRes, empRes, rutRes, dashRes, tplRes] = await Promise.all(promises);
         if (!alive) return;
 
         const catRaw = (catRes as CatalogResponse).catalog || [];
+        // Filter catalog by supervisor section
+        const filteredCatalog = isSupervisor && userSection
+          ? catRaw.filter((it) => (it.template as any).section === userSection)
+          : catRaw;
+
+        // Build section templates list
+        let secTemplates: CatalogResponse["catalog"] = [];
+        if (isSupervisor && userSection && tplRes) {
+          const allTemplates = Array.isArray(tplRes) ? tplRes : (tplRes.data ?? []);
+          secTemplates = allTemplates
+            .filter((tmpl: any) => (tmpl.section ?? tmpl.meta?.section) === userSection)
+            .map((tmpl: any) => ({
+              routine_item_id: `sec_${tmpl.id}`,
+              routine_id: "section",
+              template: tmpl,
+              sort_order: 0,
+            }));
+        }
+
         const e = Array.isArray(empRes)
           ? empRes
           : (empRes as { data?: any[] }).data || [];
@@ -108,7 +140,8 @@ export default function TaskWizard({ onAssigned, onClose }: TaskWizardProps) {
           };
         });
 
-        setCatalog(catRaw);
+        setCatalog(filteredCatalog);
+        setSectionTemplates(secTemplates);
         setRoutines(rutRes);
         setRoutineId((prev) => prev || (rutRes?.[0]?.id ?? ""));
         setEmployees(mergedEmps);
@@ -129,7 +162,7 @@ export default function TaskWizard({ onAssigned, onClose }: TaskWizardProps) {
   const canGoNext = useMemo(() => {
     if (step === 1) {
       if (mode === "adhoc") return newTitle.trim().length >= 3;
-      if (mode === "catalog") return selectedTemplateIds.length > 0;
+      if (mode === "catalog" || mode === "section") return selectedTemplateIds.length > 0;
       if (mode === "routine") return !!routineId;
       return false;
     }
@@ -194,7 +227,7 @@ export default function TaskWizard({ onAssigned, onClose }: TaskWizardProps) {
         await assignTask(created.item.id, {
           empleado_ids: selectedEmpleadoIds,
         });
-      } else if (mode === "catalog") {
+      } else if (mode === "catalog" || mode === "section") {
         await bulkAssignFromCatalog({
           date,
           template_ids: selectedTemplateIds,
@@ -284,12 +317,16 @@ export default function TaskWizard({ onAssigned, onClose }: TaskWizardProps) {
           catalog={catalog}
           selectedTemplateIds={selectedTemplateIds}
           onToggleTemplate={toggleTemplate}
-          onSelectAllTemplates={() =>
-            setSelectedTemplateIds(catalog.map((x) => x.template.id))
-          }
+          onSelectAllTemplates={() => {
+            const source = mode === "section" ? sectionTemplates : catalog;
+            setSelectedTemplateIds(source.map((x) => x.template.id));
+          }}
           routines={routines}
           routineId={routineId}
           onRoutineChange={setRoutineId}
+          sectionTemplates={sectionTemplates}
+          isSupervisor={isSupervisor}
+          userSection={userSection}
         />
       );
     }

@@ -199,6 +199,8 @@ export default function TemplateModal({
   const [tags, setTags] = useState<string>("");
   const [isActive, setIsActive] = useState(true);
   const [showInDashboard, setShowInDashboard] = useState(false);
+  const [section, setSection] = useState<string>("");
+  const [department, setDepartment] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -223,6 +225,8 @@ export default function TemplateModal({
     setTags(initial?.tags ? JSON.stringify(initial.tags) : "");
     setIsActive(initial?.is_active ?? true);
     setShowInDashboard(initial?.show_in_dashboard ?? false);
+    setSection(initial?.section ?? "");
+    setDepartment(initial?.department ?? "");
 
     // Detectar tipo de instructions
     const ins = initial?.instructions;
@@ -310,6 +314,8 @@ export default function TemplateModal({
         instructions: instructionsPreview ?? null,
         is_active: isActive,
         show_in_dashboard: showInDashboard,
+        section: section.trim() ? section.trim() : null,
+        department: department.trim() ? department.trim() : null,
       };
 
       await onSave(payload);
@@ -376,6 +382,28 @@ export default function TemplateModal({
               value={estimated}
               onChange={(e) => setEstimated(e.target.value)}
               placeholder="Ej. 15"
+            />
+          </div>
+
+          <div>
+            <div className="mb-1 text-xs font-medium text-black/60">
+              Departamento
+            </div>
+            <Input
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              placeholder="Ej. Operaciones"
+            />
+          </div>
+
+          <div>
+            <div className="mb-1 text-xs font-medium text-black/60">
+              Sección
+            </div>
+            <Input
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              placeholder="Ej. Carnicería"
             />
           </div>
 
