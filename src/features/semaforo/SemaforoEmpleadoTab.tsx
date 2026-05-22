@@ -56,7 +56,7 @@ export default function SemaforoEmpleadoTab() {
     if (peerModal) {
       setCompaneros(prev =>
         prev.map(c =>
-          c.empleado.id === peerModal.empleado.id
+          c.empleado?.id === peerModal.empleado?.id
             ? { ...c, already_evaluated: true }
             : c
         )
@@ -67,7 +67,8 @@ export default function SemaforoEmpleadoTab() {
   }
 
   const currentUser = auth.get().user;
-  const companerosFiltrados = companeros.filter(c => 
+  const companerosFiltrados = companeros.filter(c =>
+    c.empleado &&
     String(c.empleado.id) !== String(currentUser?.id) &&
     String(c.empleado.user_id) !== String(currentUser?.id)
   );
@@ -129,7 +130,7 @@ export default function SemaforoEmpleadoTab() {
           <div className="space-y-3">
             {companerosFiltrados.map(c => (
               <div
-                key={c.empleado.id}
+                key={c.empleado?.id ?? c.evaluation_id}
                 className={cx(
                   'rounded-[16px] border bg-white px-4 py-3 flex items-center gap-3 transition-all',
                   c.already_evaluated ? 'border-emerald-100 bg-emerald-50/30' : 'border-[#F0EFE8] hover:shadow-md'
