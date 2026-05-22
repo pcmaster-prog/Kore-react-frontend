@@ -1,10 +1,11 @@
 // src/features/gondolas/CrearOrdenModal.tsx
 import { useEffect, useState } from "react";
-import { X, User } from "lucide-react";
+import { X, User, CheckSquare, Square } from "lucide-react";
 import api from "@/lib/http";
-import { createOrden, getGondola } from "./api";
+import { createOrden, generarTareaDeRelleno, getGondola } from "./api";
 import type { Gondola, GondolaOrden, GondolaProducto } from "./types";
 import { UNIDADES } from "./utils";
+import { getProductDisplayName, getProductUnit } from "./helpers";
 
 import { cx } from "@/lib/utils";
 type Empleado = { id: string; name: string; position_title?: string | null };
@@ -27,6 +28,7 @@ export default function CrearOrdenModal({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loadingEmps, setLoadingEmps] = useState(true);
+  const [generarComoTarea, setGenerarComoTarea] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -63,14 +65,22 @@ export default function CrearOrdenModal({
     setBusy(true);
     setErr(null);
     try {
-      const orden = await createOrden({
-        gondola_id: gondola.id,
-        empleado_id: selectedEmp,
-        notas: notas.trim() || undefined,
-      });
-      onCreated(orden);
+      if (generarComoTarea) {
+        const result = await generarTareaDeRelleno(gondola.id, {
+          empleado_ids: [selectedEmp],
+          notas: notas.trim() || undefined,
+        });
+        onCreated(result as unknown as GondolaOrden);
+      } else {
+        const orden = await createOrden({
+          gondola_id: gondola.id,
+          empleado_id: selectedEmp,
+          notas: notas.trim() || undefined,
+        });
+        onCreated(orden);
+      }
     } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "Error al crear la orden");
+      setErr(e?.response?.data?.message ?? "Error al procesar");
     } finally {
       setBusy(false);
     }
@@ -162,6 +172,26 @@ export default function CrearOrdenModal({
             )}
           </div>
 
+          {/* Generar como tarea */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setGenerarComoTarea((v) => !v)}
+              className="flex items-center gap-3 w-full text-left"
+            >
+              <div className="shrink-0">
+                {generarComoTarea ? (
+                  <CheckSquare className="h-5 w-5 text-obsidian" />
+                ) : (
+                  <Square className="h-5 w-5 text-neutral-300" />
+                )}
+              </div>
+              <span className="text-sm font-bold text-obsidian">
+                Generar como tarea para el empleado
+              </span>
+            </button>
+          </div>
+
           {/* Nota */}
           <div>
             <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-1.5">
@@ -188,9 +218,9 @@ export default function CrearOrdenModal({
                   key={p.id}
                   className="inline-flex items-center rounded-xl bg-white border border-neutral-200 px-2.5 py-1 text-xs font-medium text-neutral-600"
                 >
-                  {p.nombre}
+                  {getProductDisplayName(p)}
                   <span className="ml-1 text-[10px] text-neutral-400">
-                    {UNIDADES[p.unidad]}
+                    {UNIDADES[getProductUnit(p)]}
                   </span>
                 </span>
               ))}
@@ -231,7 +261,11 @@ export default function CrearOrdenModal({
                   : "bg-obsidian hover:bg-gold",
               )}
             >
-              {busy ? "Creando..." : "Crear y asignar"}
+              {busy
+                ? "Procesando..."
+                : generarComoTarea
+                  ? "Generar tarea"
+                  : "Crear y asignar"}
             </button>
           </div>
         </form>

@@ -3,15 +3,25 @@ import { useEffect, useRef, useState } from "react";
 import { X, Plus, Package, Edit2, Check, Camera, Trash2 } from "lucide-react";
 import {
   getGondola,
-  addProducto,
-  updateProducto,
+  addProductoToGondola,
+  updateProductoEnGondola,
   uploadFotoProducto,
   listOrdenes,
   deleteGondola,
 } from "./api";
-import type { Gondola, GondolaProducto, GondolaOrden } from "./types";
+import type { Gondola, GondolaProducto, GondolaOrden, Product } from "./types";
 import { STATUS_CONFIG, UNIDADES, tiempoRelativo } from "./utils";
 import OrdenDetailModal from "./OrdenDetailModal";
+import ProductPickerModal from "./ProductPickerModal";
+import ProductFormModal from "./ProductFormModal";
+import {
+  getProductDisplayName,
+  getProductPhoto,
+  getProductSku,
+  getProductUnit,
+  isLegacyProduct,
+  getProductMasterId,
+} from "./helpers";
 
 import { cx } from "@/lib/utils";
 type Props = {
@@ -33,14 +43,10 @@ export default function GondolaDetailModal({
   const [loading, setLoading] = useState(true);
   const [selectedOrden, setSelectedOrden] = useState<GondolaOrden | null>(null);
 
-  // Formulario agregar producto
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [addBusy, setAddBusy] = useState(false);
-  const [addErr, setAddErr] = useState<string | null>(null);
-  const [newNombre, setNewNombre] = useState("");
-  const [newClave, setNewClave] = useState("");
-  const [newUnidad, setNewUnidad] = useState<string>("pz");
-  const [newDesc, setNewDesc] = useState("");
+  // Modales de catálogo
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerBusy, setPickerBusy] = useState(false);
+  const [showProductForm, setShowProductForm] = useState(false);
 
   // Edición inline
   const [editId, setEditId] = useState<string | null>(null);
@@ -86,38 +92,23 @@ export default function GondolaDetailModal({
     load();
   }, [gondola.id]);
 
-  async function handleAddProducto(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newNombre.trim()) {
-      setAddErr("Nombre requerido");
-      return;
-    }
-    setAddBusy(true);
-    setAddErr(null);
+  async function handlePickProduct(product: Product) {
+    setPickerBusy(true);
     try {
-      const p = await addProducto(gondola.id, {
-        nombre: newNombre.trim(),
-        clave: newClave.trim() || undefined,
-        unidad: newUnidad,
-        descripcion: newDesc.trim() || undefined,
-      });
-      setProductos((prev) => [...prev, p]);
-      setNewNombre("");
-      setNewClave("");
-      setNewDesc("");
-      setNewUnidad("pz");
-      setShowAddForm(false);
+      await addProductoToGondola(gondola.id, product.id);
+      await load();
       onRefreshList();
+      setShowPicker(false);
     } catch (e: any) {
-      setAddErr(e?.response?.data?.message ?? "Error al agregar");
+      alert(e?.response?.data?.message ?? "Error al vincular producto");
     } finally {
-      setAddBusy(false);
+      setPickerBusy(false);
     }
   }
 
   async function handleToggleActivo(p: GondolaProducto) {
     try {
-      const updated = await updateProducto(gondola.id, p.id, {
+      const updated = await updateProductoEnGondola(gondola.id, p.id, {
         activo: !p.activo,
       });
       setProductos((prev) => prev.map((x) => (x.id === p.id ? updated : x)));
@@ -130,9 +121,9 @@ export default function GondolaDetailModal({
     if (!editNombre.trim()) return;
     setEditBusy(true);
     try {
-      const updated = await updateProducto(gondola.id, p.id, {
+      const updated = await updateProductoEnGondola(gondola.id, p.id, {
         nombre: editNombre.trim(),
-      });
+      } as Parameters<typeof updateProductoEnGondola>[2]);
       setProductos((prev) => prev.map((x) => (x.id === p.id ? updated : x)));
       setEditId(null);
     } finally {
@@ -149,7 +140,15 @@ export default function GondolaDetailModal({
         file,
       );
       setProductos((prev) =>
-        prev.map((x) => (x.id === fotoTargetId ? { ...x, foto_url } : x)),
+        prev.map((x) => {
+          if (getProductMasterId(x) === fotoTargetId) {
+            if (x.product) {
+              return { ...x, product: { ...x.product, photo_url: foto_url } };
+            }
+            return { ...x, foto_url };
+          }
+          return x;
+        }),
       );
     } catch {
       /* silent */
@@ -241,15 +240,17 @@ export default function GondolaDetailModal({
                     {/* Foto */}
                     <button
                       onClick={() => {
-                        setFotoTargetId(p.id);
+                        const masterId = getProductMasterId(p);
+                        if (!masterId) return;
+                        setFotoTargetId(masterId);
                         fotoInputRef.current?.click();
                       }}
                       className="relative h-12 w-12 shrink-0 rounded-xl overflow-hidden border border-neutral-100 hover:opacity-80 transition-opacity group"
                     >
-                      {p.foto_url ? (
+                      {getProductPhoto(p) ? (
                         <img
-                          src={p.foto_url}
-                          alt={p.nombre}
+                          src={getProductPhoto(p)!}
+                          alt={getProductDisplayName(p)}
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -285,20 +286,25 @@ export default function GondolaDetailModal({
                           </button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-bold text-obsidian truncate">
-                            {p.nombre}
+                            {getProductDisplayName(p)}
                           </span>
-                          {p.clave && (
+                          {getProductSku(p) && (
                             <span className="text-[10px] font-bold text-neutral-400 uppercase">
-                              {p.clave}
+                              {getProductSku(p)}
+                            </span>
+                          )}
+                          {isLegacyProduct(p) && (
+                            <span className="inline-flex rounded-full border border-neutral-200 px-2 py-0.5 text-[10px] font-bold text-neutral-500 bg-neutral-50">
+                              Legacy
                             </span>
                           )}
                         </div>
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="inline-flex rounded-full border border-neutral-200 px-2 py-0.5 text-[10px] font-bold text-neutral-500 bg-neutral-50">
-                          {UNIDADES[p.unidad] ?? p.unidad}
+                          {UNIDADES[getProductUnit(p)] ?? getProductUnit(p)}
                         </span>
                       </div>
                     </div>
@@ -308,7 +314,7 @@ export default function GondolaDetailModal({
                       <button
                         onClick={() => {
                           setEditId(p.id);
-                          setEditNombre(p.nombre);
+                          setEditNombre(getProductDisplayName(p));
                         }}
                         className="h-8 w-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-colors"
                       >
@@ -334,76 +340,23 @@ export default function GondolaDetailModal({
                   </div>
                 ))}
 
-                {/* Add form */}
-                {showAddForm ? (
-                  <form
-                    onSubmit={handleAddProducto}
-                    className="rounded-2xl border-2 border-dashed border-obsidian/20 p-4 space-y-3 bg-obsidian/[0.02]"
-                  >
-                    <div className="text-xs font-black text-obsidian uppercase tracking-widest">
-                      Nuevo Producto
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        value={newNombre}
-                        onChange={(e) => setNewNombre(e.target.value)}
-                        placeholder="Nombre *"
-                        className="col-span-2 rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium outline-none focus:border-obsidian"
-                      />
-                      <input
-                        value={newClave}
-                        onChange={(e) => setNewClave(e.target.value)}
-                        placeholder="Clave"
-                        className="rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium outline-none focus:border-obsidian"
-                      />
-                      <select
-                        value={newUnidad}
-                        onChange={(e) => setNewUnidad(e.target.value)}
-                        className="rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium outline-none focus:border-obsidian bg-white"
-                      >
-                        {Object.entries(UNIDADES).map(([k, v]) => (
-                          <option key={k} value={k}>
-                            {v}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        value={newDesc}
-                        onChange={(e) => setNewDesc(e.target.value)}
-                        placeholder="Descripción"
-                        className="col-span-2 rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium outline-none focus:border-obsidian"
-                      />
-                    </div>
-                    {addErr && (
-                      <div className="text-xs text-rose-600 font-medium">
-                        {addErr}
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowAddForm(false)}
-                        className="flex-1 h-10 rounded-xl border border-neutral-200 text-sm font-bold text-neutral-500 hover:bg-neutral-50 transition-colors"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={addBusy}
-                        className="flex-1 h-10 rounded-xl bg-obsidian text-white text-sm font-bold hover:bg-gold transition-colors disabled:opacity-60"
-                      >
-                        {addBusy ? "..." : "Agregar"}
-                      </button>
-                    </div>
-                  </form>
-                ) : (
+                {/* Add buttons */}
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setShowAddForm(true)}
-                    className="w-full rounded-2xl border-2 border-dashed border-neutral-200 py-4 text-sm font-bold text-neutral-400 hover:border-obsidian hover:text-obsidian transition-all flex items-center justify-center gap-2"
+                    onClick={() => setShowPicker(true)}
+                    disabled={pickerBusy}
+                    className="flex-1 rounded-2xl border-2 border-dashed border-neutral-200 py-4 text-sm font-bold text-neutral-400 hover:border-obsidian hover:text-obsidian transition-all flex items-center justify-center gap-2"
                   >
-                    <Plus className="h-4 w-4" /> Agregar producto
+                    <Plus className="h-4 w-4" />
+                    {pickerBusy ? "Vinculando..." : "Vincular producto del catálogo"}
                   </button>
-                )}
+                  <button
+                    onClick={() => setShowProductForm(true)}
+                    className="flex-1 rounded-2xl border-2 border-dashed border-neutral-200 py-4 text-sm font-bold text-neutral-400 hover:border-obsidian hover:text-obsidian transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Crear producto
+                  </button>
+                </div>
               </div>
             ) : (
               /* Historial */
@@ -474,6 +427,23 @@ export default function GondolaDetailModal({
               prev.map((o) => (o.id === updated.id ? updated : o)),
             );
           }}
+        />
+      )}
+
+      {showPicker && (
+        <ProductPickerModal
+          onClose={() => setShowPicker(false)}
+          onSelect={handlePickProduct}
+          excludeIds={productos
+            .map((p) => getProductMasterId(p))
+            .filter((id): id is string => !!id)}
+        />
+      )}
+
+      {showProductForm && (
+        <ProductFormModal
+          onClose={() => setShowProductForm(false)}
+          onSaved={() => setShowProductForm(false)}
         />
       )}
     </>

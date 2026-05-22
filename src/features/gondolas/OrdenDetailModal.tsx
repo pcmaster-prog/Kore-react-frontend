@@ -4,6 +4,12 @@ import { X, CheckCircle, XCircle, Package } from "lucide-react";
 import { getOrden, aprobarOrden, rechazarOrden } from "./api";
 import type { GondolaOrden } from "./types";
 import { STATUS_CONFIG, UNIDADES } from "./utils";
+import {
+  getProductDisplayName,
+  getProductSku,
+  getProductUnit,
+  getProductPhoto,
+} from "./helpers";
 
 import { cx } from "@/lib/utils";
 type Props = {
@@ -174,7 +180,7 @@ export default function OrdenDetailModal({ orden, onClose, onUpdated }: Props) {
                                 Foto
                               </th>
                               <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                                Clave
+                                SKU / Clave
                               </th>
                               <th className="text-left px-4 py-2.5 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
                                 Producto
@@ -197,10 +203,10 @@ export default function OrdenDetailModal({ orden, onClose, onUpdated }: Props) {
                                 )}
                               >
                                 <td className="px-4 py-3">
-                                  {item.foto_url ? (
+                                  {getProductPhoto(item) ? (
                                     <img
-                                      src={item.foto_url}
-                                      alt={item.nombre}
+                                      src={getProductPhoto(item)!}
+                                      alt={getProductDisplayName(item)}
                                       className="h-10 w-10 rounded-xl object-cover border border-neutral-100"
                                     />
                                   ) : (
@@ -210,17 +216,17 @@ export default function OrdenDetailModal({ orden, onClose, onUpdated }: Props) {
                                   )}
                                 </td>
                                 <td className="px-4 py-3 text-xs font-bold text-neutral-400">
-                                  {item.clave ?? "—"}
+                                  {getProductSku(item) ?? "—"}
                                 </td>
                                 <td className="px-4 py-3 text-sm font-medium text-obsidian">
-                                  {item.nombre}
+                                  {getProductDisplayName(item)}
                                 </td>
                                 <td className="px-4 py-3 text-right text-sm font-black text-emerald-700">
                                   {item.cantidad}
                                 </td>
                                 <td className="px-4 py-3">
                                   <span className="inline-flex rounded-full border border-neutral-200 px-2 py-0.5 text-xs font-bold text-neutral-500 bg-neutral-50">
-                                    {UNIDADES[item.unidad] ?? item.unidad}
+                                    {UNIDADES[getProductUnit(item)] ?? getProductUnit(item)}
                                   </span>
                                 </td>
                               </tr>

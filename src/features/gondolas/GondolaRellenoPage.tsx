@@ -5,9 +5,16 @@ import { ArrowLeft, Package, Check, X, Search } from "lucide-react";
 import { getOrden, iniciarOrden, completarOrden } from "./api";
 import type { GondolaOrden, GondolaOrdenItem } from "./types";
 import { STATUS_CONFIG, UNIDADES } from "./utils";
+import {
+  getProductDisplayName,
+  getProductPhoto,
+  getProductSku,
+  getProductUnit,
+} from "./helpers";
 import EvidenciaUploader from "./EvidenciaUploader";
 
 import { cx } from "@/lib/utils";
+
 /* ─── Modal de selección de productos ─────────────────────────────── */
 function ProductSelectionModal({
   items,
@@ -37,8 +44,8 @@ function ProductSelectionModal({
   const filteredItems = items.filter(
     (it) =>
       !search.trim() ||
-      it.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      (it.clave ?? "").toLowerCase().includes(search.toLowerCase()),
+      getProductDisplayName(it).toLowerCase().includes(search.toLowerCase()) ||
+      (getProductSku(it) ?? "").toLowerCase().includes(search.toLowerCase()),
   );
 
   const totalSelected = Object.values(selected).filter(Boolean).length;
@@ -108,6 +115,10 @@ function ProductSelectionModal({
           )}
           {filteredItems.map((item) => {
             const isChecked = selected[item.id] ?? false;
+            const displayName = getProductDisplayName(item);
+            const sku = getProductSku(item);
+            const photo = getProductPhoto(item);
+            const unit = getProductUnit(item);
             return (
               <button
                 key={item.id}
@@ -134,10 +145,10 @@ function ProductSelectionModal({
 
                 {/* Foto */}
                 <div className="h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-k-border">
-                  {item.foto_url ? (
+                  {photo ? (
                     <img
-                      src={item.foto_url}
-                      alt={item.nombre}
+                      src={photo}
+                      alt={displayName}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -149,16 +160,16 @@ function ProductSelectionModal({
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  {item.clave && (
+                  {sku && (
                     <div className="text-[10px] font-bold text-k-text-b uppercase">
-                      {item.clave}
+                      {sku}
                     </div>
                   )}
                   <div className="text-sm font-bold text-k-text-h truncate leading-tight">
-                    {item.nombre}
+                    {displayName}
                   </div>
                   <div className="text-[10px] font-medium text-k-text-b uppercase mt-0.5">
-                    {UNIDADES[item.unidad] ?? item.unidad}
+                    {UNIDADES[unit] ?? unit}
                   </div>
                 </div>
               </button>
@@ -209,6 +220,7 @@ export default function GondolaRellenoPage() {
 
   // Cantidades locales
   const [cantidades, setCantidades] = useState<Record<string, number>>({});
+  const [itemUnits, setItemUnits] = useState<Record<string, string>>({});
   const [notas, setNotas] = useState("");
   const [evidencia, setEvidencia] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -253,10 +265,13 @@ export default function GondolaRellenoPage() {
       const ids = itemsConCantidad.map((it) => it.id);
       setSelectedIds(ids);
       const init: Record<string, number> = {};
+      const unitInit: Record<string, string> = {};
       itemsConCantidad.forEach((it) => {
         init[it.id] = it.cantidad ?? 0;
+        if (it.unit) unitInit[it.id] = it.unit;
       });
       setCantidades(init);
+      setItemUnits(unitInit);
     } else {
       // Mostrar modal de selección
       setShowSelection(true);
@@ -266,12 +281,16 @@ export default function GondolaRellenoPage() {
   function handleSelectionConfirm(ids: string[]) {
     setSelectedIds(ids);
     setShowSelection(false);
-    // Inicializar cantidades a 0 para cada seleccionado
+    // Inicializar cantidades y unidades a 0 / default para cada seleccionado
     const init: Record<string, number> = {};
+    const unitInit: Record<string, string> = {};
     ids.forEach((id) => {
       init[id] = 0;
+      const item = orden?.items.find((it) => it.id === id);
+      if (item) unitInit[id] = getProductUnit(item);
     });
     setCantidades(init);
+    setItemUnits(unitInit);
   }
 
   useEffect(() => {
@@ -283,6 +302,10 @@ export default function GondolaRellenoPage() {
       ...prev,
       [itemId]: Math.max(0, (prev[itemId] ?? 0) + delta),
     }));
+  }
+
+  function updateItemUnit(itemId: string, unit: string) {
+    setItemUnits((prev) => ({ ...prev, [itemId]: unit }));
   }
 
   // Solo los items seleccionados
@@ -326,6 +349,7 @@ export default function GondolaRellenoPage() {
     return activeItems.map((it) => ({
       id: it.id,
       cantidad: cantidades[it.id] ?? 0,
+      unit: itemUnits[it.id] || getProductUnit(it),
     }));
   }
 
@@ -446,6 +470,10 @@ export default function GondolaRellenoPage() {
         {activeItems.map((item) => {
           const cant = cantidades[item.id] ?? 0;
           const filled = cant > 0;
+          const displayName = getProductDisplayName(item);
+          const sku = getProductSku(item);
+          const photo = getProductPhoto(item);
+          const unitValue = itemUnits[item.id] ?? getProductUnit(item);
           return (
             <div
               key={item.id}
@@ -458,10 +486,10 @@ export default function GondolaRellenoPage() {
             >
               {/* Foto */}
               <div className="h-14 w-14 shrink-0 rounded-2xl overflow-hidden border border-k-border">
-                {item.foto_url ? (
+                {photo ? (
                   <img
-                    src={item.foto_url}
-                    alt={item.nombre}
+                    src={photo}
+                    alt={displayName}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -474,13 +502,13 @@ export default function GondolaRellenoPage() {
               {/* Info + controles */}
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-k-text-b uppercase">
-                  {item.clave}
+                  {sku}
                 </div>
                 <div className="text-sm font-bold text-k-text-h truncate leading-tight">
-                  {item.nombre}
+                  {displayName}
                 </div>
 
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
                   {/* - */}
                   <button
                     type="button"
@@ -522,10 +550,23 @@ export default function GondolaRellenoPage() {
                     +
                   </button>
 
-                  {/* Unidad */}
-                  <span className="ml-1 text-xs font-bold text-k-text-b uppercase">
-                    {UNIDADES[item.unidad] ?? item.unidad}
-                  </span>
+                  {/* Unidad dinámica */}
+                  {!isReadonly ? (
+                    <select
+                      value={unitValue}
+                      onChange={(e) => updateItemUnit(item.id, e.target.value)}
+                      className="h-9 px-2 rounded-xl border border-k-border bg-k-bg-card2 text-xs font-bold text-k-text-h outline-none focus:border-obsidian transition-all"
+                    >
+                      <option value="pz">pieza</option>
+                      <option value="caja">caja</option>
+                      <option value="media_caja">media caja</option>
+                      <option value="kg">kg</option>
+                    </select>
+                  ) : (
+                    <span className="ml-1 text-xs font-bold text-k-text-b uppercase">
+                      {UNIDADES[unitValue] ?? unitValue}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

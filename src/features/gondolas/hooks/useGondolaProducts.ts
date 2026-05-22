@@ -10,7 +10,7 @@ import {
   removeProductoDeGondola,
   generarTareaDeRelleno,
 } from "@/features/gondolas/api";
-import type { Product } from "@/features/gondolas/types";
+// Product type used implicitly through API return types
 
 const PRODUCTS_KEY = ["products"] as const;
 const GONDOLA_KEY = ["gondolas"] as const;
