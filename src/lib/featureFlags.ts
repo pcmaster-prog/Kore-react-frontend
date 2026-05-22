@@ -37,7 +37,7 @@ export const featureFlags = {
   newManagementEmployee: true,
 
   /** Módulo nuevo: Tareas por Área/Sección (v2) */
-  newTaskModule: false,
+  newTaskModule: true,
 } as const;
 
 export type FeatureFlag = keyof typeof featureFlags;
