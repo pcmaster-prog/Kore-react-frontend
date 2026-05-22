@@ -7,15 +7,17 @@ import {
   RefreshCw,
   Plus,
   LayoutGrid,
+  TreePine,
 } from "lucide-react";
 import TasksPage from "./TasksPage";
 import TemplatesPage from "./catalog/TemplatesPage";
 import { useNavigate } from "react-router-dom";
 import RoutinesPage from "./catalog/RoutinesPage";
 import GondolasManagerTab from "@/features/gondolas/GondolasManagerTab";
+import TaskAreasPage from "./TaskAreasPage";
 
 import { cx } from "@/lib/utils";
-const TABS = [
+const BASE_TABS = [
   {
     key: "tareas",
     label: "Tareas",
@@ -34,10 +36,11 @@ const TABS = [
   },
 ] as const;
 
-type TabKey = (typeof TABS)[number]["key"];
-
 import { isEnabled } from "@/lib/featureFlags";
 import PageHeader from "@/components/PageHeader";
+
+type BaseTabKey = (typeof BASE_TABS)[number]["key"];
+type TabKey = BaseTabKey | "areas";
 
 function RoutinesWrapper() {
   const nav = useNavigate();
@@ -49,6 +52,11 @@ function RoutinesWrapper() {
 }
 
 export default function TareasManagerPage() {
+  const showAreasTab = isEnabled("newTaskModule");
+  const TABS = showAreasTab
+    ? ([...BASE_TABS, { key: "areas" as const, label: "Áreas", icon: <TreePine className="h-4 w-4" /> }] as const)
+    : BASE_TABS;
+
   const [tab, setTab] = useState<TabKey>("tareas");
   const useNewLayout = isEnabled("newAdminTasks");
 
@@ -129,6 +137,7 @@ export default function TareasManagerPage() {
         {tab === "plantillas" && <TemplatesPage />}
         {tab === "rutinas" && <RoutinesWrapper />}
         {tab === "gondolas" && <GondolasManagerTab />}
+        {tab === "areas" && <TaskAreasPage />}
       </div>
     </div>
   );

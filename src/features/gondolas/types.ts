@@ -9,6 +9,39 @@ export type GondolaStatus =
   | "aprobado"
   | "rechazado";
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ① CATÁLOGO MAESTRO DE PRODUCTOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface Product {
+  id: string;
+  sku: string | null;
+  name: string;
+  description: string | null;
+  default_unit: string;
+  photo_url: string | null;
+  is_active: boolean;
+  locations_count?: number;
+}
+
+export interface ProductLocation {
+  id: string;
+  gondola_id: string;
+  product_id: string;
+  product?: Product;
+  orden: number;
+  activo: boolean;
+  // Campos legacy (para productos aún no migrados):
+  clave?: string | null;
+  nombre?: string | null;
+  unidad?: string | null;
+  foto_url?: string | null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ② GÓNDOLAS
+// ═══════════════════════════════════════════════════════════════════════════
+
 export type Gondola = {
   id: string;
   nombre: string;
@@ -24,25 +57,47 @@ export type Gondola = {
   ordenes_pendientes: number;
 };
 
-export type GondolaProducto = {
+// Legacy — solo para productos sin product_id
+export interface GondolaProductoLegacy {
   id: string;
   gondola_id: string;
-  clave?: string | null;
+  clave: string | null;
   nombre: string;
-  descripcion?: string | null;
-  unidad: Unidad;
+  descripcion: string | null;
+  unidad: string;
+  foto_url: string | null;
+  orden: number;
+  activo: boolean;
+}
+
+// Nuevo — unificador que el backend devuelve
+export interface GondolaProducto {
+  id: string; // Este ES el location_id (gondola_productos.id)
+  product_id?: string | null;
+  product?: Product;
+  // Fallback legacy:
+  clave?: string | null;
+  nombre?: string | null;
+  unidad?: string | null;
   foto_url?: string | null;
   orden: number;
   activo: boolean;
-};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ③ ÓRDENES
+// ═══════════════════════════════════════════════════════════════════════════
 
 export type GondolaOrdenItem = {
   id: string;
-  gondola_producto_id: string;
-  clave?: string | null;
+  product_id?: string | null;
+  product?: Product | null;
+  // Snapshot legacy (siempre presente para historial):
+  clave: string | null;
   nombre: string;
-  unidad: Unidad;
+  unidad: string;
   cantidad: number | null;
+  unit?: string | null; // unidad dinámica registrada por empleado
   foto_url?: string | null;
 };
 

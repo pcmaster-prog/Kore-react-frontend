@@ -18,6 +18,8 @@ const EmployeeDashboard = lazy(() => import("@/features/dashboard/EmployeeDashbo
 // Tareas
 const TasksPageEmployee = lazy(() => import("@/features/tasks/EmployeeTasksPage"));
 const TareasManagerPage = lazy(() => import("@/features/tasks/TareasManagerPage"));
+const TaskAreasPage = lazy(() => import("@/features/tasks/TaskAreasPage"));
+const EmployeeTaskAreasPage = lazy(() => import("@/features/tasks/EmployeeTaskAreasPage"));
 const RoutineDetailPage = lazy(() => import("@/features/tasks/catalog/RoutineDetailPage"));
 
 // Bitácora
@@ -141,6 +143,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "manager/tareas/areas",
+        element: (
+          <RequireRole allow={["admin", "supervisor"]}>
+            <Suspended><TaskAreasPage /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
         path: "manager/bitacora",
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
@@ -227,6 +237,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole allow={["empleado"]}>
             <Suspended><TasksPageEmployee /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
+        path: "employee/mis-tareas/areas",
+        element: (
+          <RequireRole allow={["empleado"]}>
+            <Suspended><EmployeeTaskAreasPage /></Suspended>
           </RequireRole>
         ),
       },

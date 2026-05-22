@@ -1,4 +1,9 @@
 //features/tasks/types.ts
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ① TIPOS LEGACY (no modificar — usados por vistas existentes)
+// ═══════════════════════════════════════════════════════════════════════════
+
 export type TaskStatus = "open" | "in_progress" | "completed";
 
 export type Task = {
@@ -35,3 +40,149 @@ export type Paginated<T> = {
   per_page: number;
   total: number;
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ② NUEVOS TIPOS — Módulo Tareas por Área/Sección (v2)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface Area {
+  id: string;
+  name: string;
+  icon: string;
+  sortOrder: number;
+  isActive: boolean;
+  sections?: Section[];
+}
+
+export interface Section {
+  id: string;
+  areaId: string;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export interface Position {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  baseTasks?: TaskTemplate[];
+}
+
+export interface TaskTemplate {
+  id: string;
+  title: string;
+  description?: string | null;
+  priority?: string | null;
+  estimated_minutes?: number | null;
+  isActive: boolean;
+}
+
+export type AssigneeType = 'empleado' | 'position' | 'section_supervisor';
+
+export interface TaskAssignmentRule {
+  id: string;
+  taskTemplateId: string;
+  assigneeType: AssigneeType;
+  assigneeId?: string;
+  sectionId?: string;
+  dayOfWeek: number[];
+  triggerTime?: string;
+  triggerEvent: 'time' | 'attendance_checkin' | 'both';
+  isActive: boolean;
+}
+
+export type IncidentType = 'missing_material' | 'broken_equipment' | 'other';
+export type IncidentStatus = 'open' | 'resolved' | 'dismissed';
+
+export interface Incident {
+  id: string;
+  taskId: string;
+  taskAssigneeId?: string;
+  reportedBy: string;
+  type: IncidentType;
+  description: string;
+  status: IncidentStatus;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  createdAt: string;
+}
+
+export type EvidenceType = 'photo' | 'voice_note' | 'text_note' | 'file';
+
+export interface Evidence {
+  id: string;
+  taskId?: string;
+  taskAssigneeId?: string;
+  evidenceType: EvidenceType;
+  disk: string;
+  path: string;
+  originalName: string;
+  mime: string;
+  size: number;
+  createdAt: string;
+}
+
+export type TaskV2Status = 'open' | 'in_progress' | 'done_pending' | 'approved' | 'rejected' | 'completed';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface TaskV2 {
+  id: string;
+  name: string;
+  description: string;
+  areaId?: string;
+  sectionId?: string;
+  priority: TaskPriority;
+  assignedTo?: string[];
+  dueDate?: string;
+  estimatedTime?: number;
+  actualTime?: number;
+  status: TaskV2Status;
+  completed: boolean;
+  attachments: Evidence[];
+  checklist: ChecklistItem[];
+  notes: string;
+  incidents: Incident[];
+  startedAt?: string;
+  area?: Area;
+  section?: Section;
+  isBlocked?: boolean;
+}
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
+export interface RoutineSchedule {
+  id: string;
+  routineId: string;
+  triggerTime: string;
+  triggerDays: number[];
+  autoAssign: boolean;
+  notifyPush: boolean;
+  isActive: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ③ TIPOS DE REQUEST/RESPONSE AUXILIARES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type CreateAreaPayload = Omit<Area, 'id' | 'sections'>;
+export type UpdateAreaPayload = Partial<Omit<Area, 'id' | 'sections'>>;
+
+export type CreateSectionPayload = Omit<Section, 'id'>;
+export type UpdateSectionPayload = Partial<Omit<Section, 'id'>>;
+
+export type CreatePositionPayload = Omit<Position, 'id' | 'baseTasks'>;
+export type UpdatePositionPayload = Partial<Omit<Position, 'id' | 'baseTasks'>>;
+
+export type CreateTaskAssignmentRulePayload = Omit<TaskAssignmentRule, 'id'>;
+export type UpdateTaskAssignmentRulePayload = Partial<Omit<TaskAssignmentRule, 'id'>>;
+
+export type CreateIncidentPayload = Omit<Incident, 'id' | 'status' | 'resolvedBy' | 'resolvedAt' | 'createdAt'>;
+
+export type CreateRoutineSchedulePayload = Omit<RoutineSchedule, 'id'>;
+export type UpdateRoutineSchedulePayload = Partial<Omit<RoutineSchedule, 'id'>>;
