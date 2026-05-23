@@ -1,30 +1,32 @@
 // src/features/tasks/catalog/TemplateModal.tsx
+// Modal profesional para crear/editar plantillas de tareas
+
 import { useEffect, useMemo, useState } from "react";
-import { Button, Input, Modal, Select, Textarea } from "./ui";
+import { X, Loader2, GripVertical, Plus, Trash2, Pin } from "lucide-react";
+import { cx } from "@/lib/utils";
 import type { Template } from "./api";
 
 const PRIORITY_OPTIONS = [
-  { value: "low", label: "Baja" },
-  { value: "medium", label: "Media" },
-  { value: "high", label: "Alta" },
-  { value: "urgent", label: "Urgente" },
+  { value: "low", label: "Baja", color: "bg-slate-100 text-slate-600 border-slate-200" },
+  { value: "medium", label: "Media", color: "bg-blue-50 text-blue-600 border-blue-200" },
+  { value: "high", label: "Alta", color: "bg-amber-50 text-amber-600 border-amber-200" },
+  { value: "urgent", label: "Urgente", color: "bg-rose-50 text-rose-600 border-rose-200" },
 ];
 
 // ─── Tipos internos del checklist ────────────────────────────────────────────
 type ChecklistItemDraft = {
-  id: string; // item_1, item_2, etc. (se genera automático)
-  label: string; // lo que escribe el admin
+  id: string;
+  label: string;
   required: boolean;
 };
 
 type InstructionMode = "none" | "checklist" | "text";
 
-// ─── Pequeño helper para generar IDs únicos ───────────────────────────────
 function makeItemId(index: number) {
   return `item_${index + 1}`;
 }
 
-// ─── Componente visual del constructor de checklist ───────────────────────
+// ─── Constructor de checklist con estilo k- ─────────────────────────────────
 function ChecklistBuilder({
   items,
   onChange,
@@ -41,7 +43,6 @@ function ChecklistBuilder({
 
   function removeItem(index: number) {
     const next = items.filter((_, i) => i !== index);
-    // Recalcula los IDs para mantener secuencia limpia
     onChange(next.map((it, i) => ({ ...it, id: makeItemId(i) })));
   }
 
@@ -57,68 +58,54 @@ function ChecklistBuilder({
     );
   }
 
-  function moveUp(index: number) {
-    if (index === 0) return;
+  function moveItem(index: number, direction: -1 | 1) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= items.length) return;
     const next = [...items];
-    [next[index - 1], next[index]] = [next[index], next[index - 1]];
-    onChange(next.map((it, i) => ({ ...it, id: makeItemId(i) })));
-  }
-
-  function moveDown(index: number) {
-    if (index === items.length - 1) return;
-    const next = [...items];
-    [next[index], next[index + 1]] = [next[index + 1], next[index]];
+    [next[index], next[newIndex]] = [next[newIndex], next[index]];
     onChange(next.map((it, i) => ({ ...it, id: makeItemId(i) })));
   }
 
   return (
     <div className="space-y-2">
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center text-sm font-medium text-neutral-500">
-          Sin instrucciones detalladas todavía. Agrega el primer punto 👇
+        <div className="rounded-2xl border border-dashed border-k-border bg-k-bg-card2 p-6 text-center text-sm font-medium text-k-text-b">
+          Sin instrucciones detalladas todavía. Agrega el primer paso 👇
         </div>
       ) : (
         items.map((it, i) => (
           <div
             key={it.id}
-            className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-2.5 shadow-sm hover:shadow-md transition-shadow"
+            className="flex items-center gap-2 rounded-2xl border border-k-border bg-k-bg-card p-2.5 shadow-k-card hover:shadow-md transition-shadow"
           >
-            {/* Orden */}
-            <div className="flex flex-col gap-0.5 shrink-0 px-1">
+            {/* Handle de reordenamiento */}
+            <div className="flex flex-col gap-0.5 shrink-0">
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  moveUp(i);
-                }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveItem(i, -1); }}
                 disabled={i === 0}
-                className="rounded px-1 text-xs text-neutral-300 hover:text-obsidian disabled:opacity-30"
+                className="h-5 w-5 rounded flex items-center justify-center text-k-text-b/40 hover:text-k-text-h disabled:opacity-20 transition-colors"
               >
                 ▲
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  moveDown(i);
-                }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); moveItem(i, 1); }}
                 disabled={i === items.length - 1}
-                className="rounded px-1 text-xs text-neutral-300 hover:text-obsidian disabled:opacity-30"
+                className="h-5 w-5 rounded flex items-center justify-center text-k-text-b/40 hover:text-k-text-h disabled:opacity-20 transition-colors"
               >
                 ▼
               </button>
             </div>
 
             {/* Número */}
-            <span className="shrink-0 w-6 text-center text-[11px] font-black uppercase text-neutral-400">
+            <span className="shrink-0 w-6 text-center text-[11px] font-black uppercase text-k-text-b/50">
               {i + 1}
             </span>
 
             {/* Label */}
             <input
-              className="flex-1 rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black/5 bg-neutral-50 focus:bg-white transition-colors min-w-0 font-medium"
+              className="flex-1 rounded-xl border border-k-border bg-k-bg-card2 px-3 py-2 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 focus:bg-k-bg-card transition-all min-w-0"
               placeholder={`Ej. Limpiar área de trabajo`}
               value={it.label}
               onChange={(e) => updateLabel(i, e.target.value)}
@@ -127,16 +114,13 @@ function ChecklistBuilder({
             {/* Toggle requerido */}
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                toggleRequired(i);
-              }}
-              className={[
+              onClick={(e) => { e.preventDefault(); toggleRequired(i); }}
+              className={cx(
                 "shrink-0 rounded-[10px] border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all",
                 it.required
                   ? "bg-rose-50 text-rose-700 border-rose-200 shadow-sm"
-                  : "bg-white text-neutral-400 border-neutral-200 hover:bg-neutral-50",
-              ].join(" ")}
+                  : "bg-k-bg-card text-k-text-b border-k-border hover:bg-k-bg-card2"
+              )}
             >
               {it.required ? "Requerido" : "Opcional"}
             </button>
@@ -144,13 +128,10 @@ function ChecklistBuilder({
             {/* Eliminar */}
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                removeItem(i);
-              }}
-              className="shrink-0 h-8 w-8 rounded-xl border border-neutral-200 flex items-center justify-center text-rose-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors"
+              onClick={(e) => { e.preventDefault(); removeItem(i); }}
+              className="shrink-0 h-8 w-8 rounded-xl border border-k-border flex items-center justify-center text-rose-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors"
             >
-              ✕
+              <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
         ))
@@ -158,17 +139,15 @@ function ChecklistBuilder({
 
       <button
         type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          addItem();
-        }}
-        className="w-full mt-3 rounded-2xl border-2 border-dashed border-neutral-200 bg-white px-4 py-4 text-sm font-bold text-neutral-500 hover:bg-neutral-50 hover:border-neutral-300 hover:text-obsidian transition-all"
+        onClick={(e) => { e.preventDefault(); addItem(); }}
+        className="w-full mt-3 rounded-2xl border-2 border-dashed border-k-border bg-k-bg-card px-4 py-4 text-sm font-bold text-k-text-b hover:bg-k-bg-card2 hover:border-neutral-300 hover:text-k-text-h transition-all flex items-center justify-center gap-2"
       >
-        + Añadir Evento
+        <Plus className="h-4 w-4" />
+        Añadir paso
       </button>
 
       {items.length > 0 && (
-        <div className="text-[10px] uppercase font-black tracking-widest text-neutral-400 pt-3 text-center">
+        <div className="text-[10px] uppercase font-black tracking-widest text-k-text-b/50 pt-3 text-center">
           {items.filter((it) => it.required).length} obligatorios ·{" "}
           {items.filter((it) => !it.required).length} opcionales ·{" "}
           {items.length} total
@@ -204,31 +183,23 @@ export default function TemplateModal({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // ── Instrucciones ──
-  const [instructionMode, setInstructionMode] =
-    useState<InstructionMode>("none");
-  const [checklistItems, setChecklistItems] = useState<ChecklistItemDraft[]>(
-    [],
-  );
+  const [instructionMode, setInstructionMode] = useState<InstructionMode>("none");
+  const [checklistItems, setChecklistItems] = useState<ChecklistItemDraft[]>([]);
   const [textInstructions, setTextInstructions] = useState("");
 
-  // ── Parseo inicial al abrir ──
   useEffect(() => {
     if (!open) return;
     setErr(null);
     setTitle(initial?.title ?? "");
     setDescription(initial?.description ?? "");
     setPriority((initial?.priority as any) ?? "medium");
-    setEstimated(
-      initial?.estimated_minutes ? String(initial.estimated_minutes) : "",
-    );
+    setEstimated(initial?.estimated_minutes ? String(initial.estimated_minutes) : "");
     setTags(initial?.tags ? JSON.stringify(initial.tags) : "");
     setIsActive(initial?.is_active ?? true);
     setShowInDashboard(initial?.show_in_dashboard ?? false);
     setSection(initial?.section ?? "");
     setDepartment(initial?.department ?? "");
 
-    // Detectar tipo de instructions
     const ins = initial?.instructions;
     if (!ins) {
       setInstructionMode("none");
@@ -252,22 +223,18 @@ export default function TemplateModal({
     } else {
       setInstructionMode("text");
       setChecklistItems([]);
-      setTextInstructions(
-        typeof ins === "string" ? ins : JSON.stringify(ins, null, 2),
-      );
+      setTextInstructions(typeof ins === "string" ? ins : JSON.stringify(ins, null, 2));
     }
   }, [open, initial]);
 
   const canSave = useMemo(() => {
     if (!title.trim()) return false;
     if (instructionMode === "checklist") {
-      // Al menos 1 item con label no vacío
       return checklistItems.every((it) => it.label.trim().length > 0);
     }
     return true;
   }, [title, instructionMode, checklistItems]);
 
-  // ── Preview del JSON que se enviará ──
   const instructionsPreview = useMemo(() => {
     if (instructionMode === "none") return null;
     if (instructionMode === "checklist") {
@@ -321,216 +288,323 @@ export default function TemplateModal({
       await onSave(payload);
       onClose();
     } catch (e: any) {
-      setErr(e?.response?.data?.message ?? e?.message ?? "No pude guardar");
+      setErr(e?.response?.data?.message ?? e?.message ?? "No se pudo guardar");
     } finally {
       setSaving(false);
     }
   }
 
+  if (!open) return null;
+
   return (
-    <Modal
-      open={open}
-      title={mode === "create" ? "Nuevo Template" : "Editar Template"}
-      onClose={onClose}
-      footer={
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="secondary" onClick={onClose} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={!canSave || saving}>
-            {saving ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        {err ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {err}
-          </div>
-        ) : null}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-k-bg-sidebar/40 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
 
-        {/* ── Campos base ── */}
-        <div className="grid gap-3 md:grid-cols-2">
+      {/* Modal */}
+      <div className="relative w-full max-w-2xl rounded-[32px] bg-k-bg-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in-fade animate-in-slide-up border border-k-border">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-k-border bg-k-bg-card2/50 px-8 py-6 shrink-0">
           <div>
-            <div className="mb-1 text-xs font-medium text-black/60">
-              Título *
-            </div>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ej. Verificar candados"
-            />
+            <h3 className="text-xl font-black text-k-text-h tracking-tight">
+              {mode === "create" ? "Nueva plantilla" : "Editar plantilla"}
+            </h3>
+            <p className="text-xs font-medium text-k-text-b mt-1">
+              {mode === "create"
+                ? "Crea una nueva plantilla de tarea para tu equipo"
+                : "Modifica los detalles de la plantilla"}
+            </p>
           </div>
-
-          <div>
-            <div className="mb-1 text-xs font-medium text-black/60">
-              Prioridad
-            </div>
-            <Select
-              value={priority}
-              onChange={(v) => setPriority(v as any)}
-              options={PRIORITY_OPTIONS}
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-xs font-medium text-black/60">
-              Tiempo estimado (min)
-            </div>
-            <Input
-              value={estimated}
-              onChange={(e) => setEstimated(e.target.value)}
-              placeholder="Ej. 15"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-xs font-medium text-black/60">
-              Departamento
-            </div>
-            <Input
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              placeholder="Ej. Operaciones"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-xs font-medium text-black/60">
-              Sección
-            </div>
-            <Input
-              value={section}
-              onChange={(e) => setSection(e.target.value)}
-              placeholder="Ej. Carnicería"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-xs font-medium text-black/60">Activo</div>
-            <select
-              value={isActive ? "1" : "0"}
-              onChange={(e) => setIsActive(e.target.value === "1")}
-              className="w-full rounded-xl border px-3 py-2 text-sm"
-            >
-              <option value="1">Sí</option>
-              <option value="0">No</option>
-            </select>
-          </div>
+          <button
+            type="button"
+            className="h-10 w-10 rounded-full bg-k-bg-card border border-k-border flex items-center justify-center text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2 hover:border-neutral-300 transition-colors shadow-k-card"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-          <input
-            type="checkbox"
-            id="showInDashboard"
-            checked={showInDashboard}
-            onChange={(e) => setShowInDashboard(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-          />
-          <label htmlFor="showInDashboard" className="text-sm font-bold text-obsidian cursor-pointer select-none">
-            📌 Mostrar rápido en Dashboard
-            <span className="block text-xs font-medium text-neutral-500 mt-0.5">
-              Si lo marcas, esta plantilla aparecerá automáticamente en las Tareas Disponibles del gerente.
-            </span>
-          </label>
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs font-medium text-black/60">
-            Descripción
-          </div>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            placeholder="Instrucciones generales de la tarea..."
-          />
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs font-medium text-black/60">
-            Tags (opcional)
-          </div>
-          <Input
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder='Ej. ["cierre","limpieza"]'
-          />
-        </div>
-
-        {/* ── Instrucciones / Checklist ── */}
-        <div className="mt-6 border-t border-neutral-100 pt-5">
-          <div className="mb-3 text-xs font-black text-obsidian uppercase tracking-widest">
-            Detalle Operativo
-          </div>
-
-          {/* Selector de modo */}
-          <div className="inline-flex rounded-2xl border border-neutral-200 bg-neutral-100/50 p-1.5 gap-1 mb-4 w-full">
-            {(
-              [
-                { value: "none", label: "Ninguna" },
-                { value: "checklist", label: "☑️ Checklist" },
-                { value: "text", label: "📝 Texto libre" },
-              ] as { value: InstructionMode; label: string }[]
-            ).map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setInstructionMode(opt.value);
-                }}
-                className={[
-                  "flex-1 rounded-xl px-3 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all",
-                  instructionMode === opt.value
-                    ? "bg-white shadow-sm text-obsidian border border-neutral-200"
-                    : "text-neutral-500 hover:text-obsidian hover:bg-neutral-50",
-                ].join(" ")}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Modo: ninguna */}
-          {instructionMode === "none" && (
-            <div className="rounded-2xl bg-neutral-50 border border-neutral-100 p-6 text-center text-xs font-bold text-neutral-500">
-              📌 Tarea simplificada: El empleado solo verá el título y la
-              descripción general.
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar space-y-6">
+          {err && (
+            <div className="rounded-2xl bg-rose-50 border border-rose-100 px-4 py-3 text-sm text-rose-700 font-medium">
+              {err}
             </div>
           )}
 
-          {/* Modo: checklist visual */}
-          {instructionMode === "checklist" && (
-            <div className="space-y-3">
-              <ChecklistBuilder
-                items={checklistItems}
-                onChange={setChecklistItems}
+          {/* ── Campos base ── */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Título */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Título *
+              </label>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ej. Verificar candados"
+                className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
               />
-
-              {/* Validación */}
-              {checklistItems.some((it) => !it.label.trim()) && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[11px] font-bold text-rose-700 mt-2 flex items-center gap-2">
-                  <span className="text-sm">⚠️</span> Todos los eventos deben
-                  tener un nombre antes de guardar.
-                </div>
-              )}
             </div>
-          )}
 
-          {/* Modo: texto libre / JSON manual */}
-          {instructionMode === "text" && (
-            <Textarea
-              value={textInstructions}
-              onChange={(e) => setTextInstructions(e.target.value)}
-              rows={6}
-              className="bg-neutral-50 font-mono text-xs"
-              placeholder="Escribe las instrucciones detalladas en texto plano, o inserta un JSON estructurado..."
+            {/* Prioridad */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Prioridad
+              </label>
+              <div className="flex gap-2">
+                {PRIORITY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setPriority(opt.value as any)}
+                    className={cx(
+                      "flex-1 h-12 rounded-2xl text-[11px] font-bold border transition-all",
+                      priority === opt.value
+                        ? opt.color + " shadow-sm"
+                        : "bg-k-bg-card2 border-k-border text-k-text-b hover:border-neutral-300"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tiempo estimado */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Tiempo estimado (min)
+              </label>
+              <input
+                type="number"
+                value={estimated}
+                onChange={(e) => setEstimated(e.target.value)}
+                placeholder="Ej. 15"
+                className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+              />
+            </div>
+
+            {/* Departamento */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Departamento
+              </label>
+              <input
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="Ej. Operaciones"
+                className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+              />
+            </div>
+
+            {/* Sección */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Sección
+              </label>
+              <input
+                value={section}
+                onChange={(e) => setSection(e.target.value)}
+                placeholder="Ej. Carnicería"
+                className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+              />
+            </div>
+
+            {/* Activo */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Estado
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsActive(true)}
+                  className={cx(
+                    "flex-1 h-12 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-2",
+                    isActive
+                      ? "bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm"
+                      : "bg-k-bg-card2 border-k-border text-k-text-b hover:border-neutral-300"
+                  )}
+                >
+                  <span className={cx("h-2 w-2 rounded-full", isActive ? "bg-emerald-500" : "bg-neutral-300")} />
+                  Activa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsActive(false)}
+                  className={cx(
+                    "flex-1 h-12 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-2",
+                    !isActive
+                      ? "bg-neutral-100 text-neutral-500 border-neutral-200 shadow-sm"
+                      : "bg-k-bg-card2 border-k-border text-k-text-b hover:border-neutral-300"
+                  )}
+                >
+                  <span className={cx("h-2 w-2 rounded-full", !isActive ? "bg-neutral-500" : "bg-neutral-300")} />
+                  Inactiva
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mostrar en dashboard */}
+          <div className="flex items-start gap-3 rounded-2xl bg-k-bg-card2/50 border border-k-border p-4">
+            <div className="shrink-0 mt-0.5">
+              <button
+                type="button"
+                onClick={() => setShowInDashboard(!showInDashboard)}
+                className={cx(
+                  "h-5 w-5 rounded-md border flex items-center justify-center transition-all",
+                  showInDashboard
+                    ? "bg-k-accent-btn border-k-accent-btn text-white"
+                    : "border-k-border bg-k-bg-card"
+                )}
+              >
+                {showInDashboard && <Pin className="h-3 w-3" />}
+              </button>
+            </div>
+            <div>
+              <label
+                onClick={() => setShowInDashboard(!showInDashboard)}
+                className="text-sm font-bold text-k-text-h cursor-pointer select-none"
+              >
+                Mostrar rápido en Dashboard
+              </label>
+              <p className="text-xs font-medium text-k-text-b mt-0.5">
+                Si lo marcas, esta plantilla aparecerá automáticamente en las Tareas Disponibles del gerente.
+              </p>
+            </div>
+          </div>
+
+          {/* Descripción */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+              Descripción
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              placeholder="Instrucciones generales de la tarea..."
+              className="w-full rounded-2xl bg-k-bg-card2 border border-k-border px-4 py-3 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all resize-none"
             />
-          )}
+          </div>
+
+          {/* Tags */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+              Etiquetas (opcional)
+            </label>
+            <input
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder='Ej. ["cierre","limpieza"]'
+              className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+            />
+          </div>
+
+          {/* ── Instrucciones / Checklist ── */}
+          <div className="border-t border-k-border pt-6">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b mb-3 block">
+              Detalle operativo
+            </label>
+
+            {/* Selector de modo */}
+            <div className="flex p-1.5 bg-k-bg-card border border-k-border rounded-[28px] shadow-k-card gap-1 mb-5">
+              {[
+                { value: "none" as const, label: "Ninguna" },
+                { value: "checklist" as const, label: "Checklist" },
+                { value: "text" as const, label: "Texto libre" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setInstructionMode(opt.value);
+                  }}
+                  className={cx(
+                    "flex-1 rounded-[22px] px-3 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all",
+                    instructionMode === opt.value
+                      ? "bg-k-bg-sidebar text-white shadow-lg shadow-obsidian/20"
+                      : "text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Modo: ninguna */}
+            {instructionMode === "none" && (
+              <div className="rounded-2xl bg-k-bg-card2 border border-k-border p-6 text-center text-sm font-medium text-k-text-b">
+                <Pin className="h-5 w-5 mx-auto mb-2 text-k-text-b/40" />
+                Tarea simplificada: el empleado solo verá el título y la descripción general.
+              </div>
+            )}
+
+            {/* Modo: checklist */}
+            {instructionMode === "checklist" && (
+              <div className="space-y-3">
+                <ChecklistBuilder items={checklistItems} onChange={setChecklistItems} />
+
+                {checklistItems.some((it) => !it.label.trim()) && (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[11px] font-bold text-rose-700 flex items-center gap-2">
+                    <span className="text-sm">⚠️</span> Todos los pasos deben tener un nombre antes de guardar.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Modo: texto libre */}
+            {instructionMode === "text" && (
+              <textarea
+                value={textInstructions}
+                onChange={(e) => setTextInstructions(e.target.value)}
+                rows={6}
+                placeholder="Escribe las instrucciones detalladas en texto plano, o inserta un JSON estructurado..."
+                className="w-full rounded-2xl bg-k-bg-card2 border border-k-border px-4 py-3 text-sm font-medium text-k-text-h placeholder:text-k-text-b/50 outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all resize-none font-mono"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-k-border bg-k-bg-card2/50 px-8 py-5 shrink-0">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="flex-1 h-12 rounded-2xl bg-k-bg-card border border-k-border text-[11px] font-black uppercase tracking-widest text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2 hover:border-neutral-300 transition-all shadow-k-card"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!canSave || saving}
+              className="flex-[2] h-12 rounded-2xl bg-k-accent-btn text-[11px] font-black uppercase tracking-widest text-k-accent-btn-text hover:opacity-90 transition-all shadow-k-card disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>Guardar plantilla</>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }
