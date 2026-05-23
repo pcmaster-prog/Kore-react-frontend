@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from "react";
 import { X, ClipboardList, Clock, Calendar, Flag, Save, Loader2, Plus, Trash2, ListChecks } from "lucide-react";
 import { cx } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { createTask, updateTask, deleteTask } from "@/features/tasks/api";
+import { createTask, updateTask } from "@/features/tasks/api";
 import type { Area, Section, TaskPriority, TaskV2, ChecklistItem } from "@/features/tasks/types";
 
 const PRIORITIES: { value: TaskPriority; label: string; color: string }[] = [

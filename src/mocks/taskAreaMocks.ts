@@ -9,6 +9,7 @@ import type {
   Position,
   TaskTemplate,
   TaskAssignmentRule,
+  TaskAssignmentRuleItem,
   RoutineSchedule,
   Incident,
   TaskV2,
@@ -62,6 +63,12 @@ export const MOCK_POSITIONS: Position[] = [
   { id: "pos-001", name: "Supervisor de Turno", description: "Coordina operaciones del turno", isActive: true },
   { id: "pos-002", name: "Cajero", description: "Atiende pagos y corte de caja", isActive: true },
   { id: "pos-003", name: "Almacenista", description: "Maneja inventario y recepción", isActive: true },
+];
+
+export const MOCK_TEMPLATES: TaskTemplate[] = [
+  { id: "tpl-001", title: "Limpieza de caja", isActive: true },
+  { id: "tpl-002", title: "Revisar jabón", isActive: true },
+  { id: "tpl-003", title: "Revisar patio", isActive: true },
 ];
 
 export const MOCK_EVIDENCES: Evidence[] = [
@@ -197,24 +204,28 @@ export const MOCK_TASKS: TaskV2[] = [
 export const MOCK_ASSIGNMENT_RULES: TaskAssignmentRule[] = [
   {
     id: "rule-001",
-    taskTemplateId: "tpl-001",
-    templateTitle: "Limpieza de caja",
     assigneeType: "position",
     assigneeId: "pos-002",
+    sectionId: "sec-007",
     dayOfWeek: [1, 2, 3, 4, 5],
     triggerTime: "08:00",
     triggerEvent: "time",
     isActive: true,
+    items: [
+      { id: "ri-001", ruleId: "rule-001", templateId: "tpl-001", template: { id: "tpl-001", title: "Limpieza de caja", isActive: true }, sortOrder: 1, isActive: true },
+      { id: "ri-002", ruleId: "rule-001", templateId: "tpl-002", template: { id: "tpl-002", title: "Revisar jabón", isActive: true }, sortOrder: 2, isActive: true },
+    ],
   },
   {
     id: "rule-002",
-    taskTemplateId: "tpl-002",
-    templateTitle: "Revisión de patio",
     assigneeType: "section_supervisor",
     sectionId: "sec-001",
     dayOfWeek: [1, 3, 5],
     triggerEvent: "attendance_checkin",
     isActive: true,
+    items: [
+      { id: "ri-003", ruleId: "rule-002", templateId: "tpl-003", template: { id: "tpl-003", title: "Revisar patio", isActive: true }, sortOrder: 1, isActive: true },
+    ],
   },
 ];
 
@@ -430,7 +441,7 @@ export async function mockListTaskAssignmentRules(): Promise<TaskAssignmentRule[
 
 export async function mockListRulesByTemplate(templateId: string): Promise<TaskAssignmentRule[]> {
   await delay(250);
-  return MOCK_ASSIGNMENT_RULES.filter((r) => r.taskTemplateId === templateId).map((r) => ({ ...r }));
+  return MOCK_ASSIGNMENT_RULES.filter((r) => r.items?.some((i) => i.templateId === templateId)).map((r) => ({ ...r }));
 }
 
 export async function mockListRulesByEmpleado(_empleadoId: string): Promise<TaskAssignmentRule[]> {
@@ -438,16 +449,49 @@ export async function mockListRulesByEmpleado(_empleadoId: string): Promise<Task
   return MOCK_ASSIGNMENT_RULES.map((r) => ({ ...r }));
 }
 
+function buildItemsFromTemplateIds(templateIds: string[]): TaskAssignmentRuleItem[] {
+  return templateIds.map((tid, idx) => {
+    const template = MOCK_TEMPLATES.find((t) => t.id === tid) ?? { id: tid, title: "Tarea", isActive: true };
+    return { id: nextId(), ruleId: "", templateId: tid, template, sortOrder: idx + 1, isActive: true };
+  });
+}
+
 export async function mockCreateTaskAssignmentRule(payload: CreateTaskAssignmentRulePayload): Promise<TaskAssignmentRule> {
   await delay(400);
-  const created: TaskAssignmentRule = { id: nextId(), ...payload };
+  const ruleId = nextId();
+  const items = buildItemsFromTemplateIds(payload.template_ids ?? []).map((i) => ({ ...i, ruleId }));
+  const created: TaskAssignmentRule = {
+    id: ruleId,
+    items,
+    assigneeType: payload.assignee_type,
+    assigneeId: payload.assignee_id ?? undefined,
+    sectionId: payload.section_id ?? undefined,
+    dayOfWeek: payload.day_of_week,
+    triggerTime: payload.trigger_time,
+    triggerEvent: payload.trigger_event ?? "time",
+    isActive: payload.is_active ?? true,
+  };
   MOCK_ASSIGNMENT_RULES.push(created);
   return { ...created };
 }
 
 export async function mockBulkCreateRules(payloads: CreateTaskAssignmentRulePayload[]): Promise<TaskAssignmentRule[]> {
   await delay(500);
-  const created = payloads.map((p) => ({ id: nextId(), ...p }));
+  const created: TaskAssignmentRule[] = payloads.map((p) => {
+    const ruleId = nextId();
+    const items = buildItemsFromTemplateIds(p.template_ids ?? []).map((i) => ({ ...i, ruleId }));
+    return {
+      id: ruleId,
+      items,
+      assigneeType: p.assignee_type,
+      assigneeId: p.assignee_id ?? undefined,
+      sectionId: p.section_id ?? undefined,
+      dayOfWeek: p.day_of_week,
+      triggerTime: p.trigger_time,
+      triggerEvent: p.trigger_event ?? "time",
+      isActive: p.is_active ?? true,
+    };
+  });
   MOCK_ASSIGNMENT_RULES.push(...created);
   return created.map((c) => ({ ...c }));
 }
@@ -456,7 +500,19 @@ export async function mockUpdateTaskAssignmentRule(id: string, payload: UpdateTa
   await delay(300);
   const idx = MOCK_ASSIGNMENT_RULES.findIndex((r) => r.id === id);
   if (idx === -1) throw new Error("Regla no encontrada");
-  MOCK_ASSIGNMENT_RULES[idx] = { ...MOCK_ASSIGNMENT_RULES[idx], ...payload };
+  const current = MOCK_ASSIGNMENT_RULES[idx];
+  const items = payload.template_ids ? buildItemsFromTemplateIds(payload.template_ids).map((i) => ({ ...i, ruleId: id })) : current.items;
+  MOCK_ASSIGNMENT_RULES[idx] = {
+    ...current,
+    items,
+    assigneeType: payload.assignee_type ?? current.assigneeType,
+    assigneeId: payload.assignee_id !== undefined ? (payload.assignee_id ?? undefined) : current.assigneeId,
+    sectionId: payload.section_id !== undefined ? (payload.section_id ?? undefined) : current.sectionId,
+    dayOfWeek: payload.day_of_week ?? current.dayOfWeek,
+    triggerTime: payload.trigger_time !== undefined ? payload.trigger_time : current.triggerTime,
+    triggerEvent: payload.trigger_event ?? current.triggerEvent,
+    isActive: payload.is_active !== undefined ? payload.is_active : current.isActive,
+  };
   return { ...MOCK_ASSIGNMENT_RULES[idx] };
 }
 

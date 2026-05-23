@@ -64,7 +64,7 @@ function SectionsCell({ empleadoId }: { empleadoId: string }) {
   if (sections.length === 0) {
     return <span className="text-neutral-300 text-xs">—</span>;
   }
-  const names = sections.map((s) => s.section_name ?? "Sección").join(", ");
+  const names = sections.map((s) => s.section?.name ?? s.section_name ?? "Sección").join(", ");
   const hasPrimary = sections.some((s) => s.is_primary);
   return (
     <div className="flex items-center gap-1.5" title={names}>
@@ -133,9 +133,9 @@ function SeccionesTab({ empleadoId, canEdit }: { empleadoId: string; canEdit: bo
               className="inline-flex items-center gap-2 rounded-full bg-k-bg-card2 border border-k-border px-3 py-1.5 text-xs font-medium"
             >
               <span className="text-k-text-h">
-                {s.section_name}
-                {s.area_name ? (
-                  <span className="text-k-text-b ml-1">({s.area_name})</span>
+                {s.section?.name ?? s.section_name}
+                {(s.area?.name ?? s.area_name) ? (
+                  <span className="text-k-text-b ml-1">({s.area?.name ?? s.area_name})</span>
                 ) : null}
               </span>
               {s.is_primary && (

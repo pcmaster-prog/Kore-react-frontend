@@ -81,10 +81,22 @@ export interface TaskTemplate {
 
 export type AssigneeType = 'empleado' | 'position' | 'section_supervisor';
 
+export interface TaskAssignmentRuleItem {
+  id: string;
+  ruleId: string;
+  templateId: string;
+  template: TaskTemplate;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 export interface TaskAssignmentRule {
   id: string;
-  taskTemplateId: string;
+  // Legacy: soporte para reglas con un solo template (se migran a items)
+  taskTemplateId?: string;
   templateTitle?: string;
+  // Nuevo: reglas multitemplate
+  items: TaskAssignmentRuleItem[];
   assigneeType: AssigneeType;
   assigneeId?: string;
   sectionId?: string;
@@ -187,8 +199,18 @@ export type UpdateSectionPayload = Partial<Omit<Section, 'id'>>;
 export type CreatePositionPayload = Omit<Position, 'id' | 'baseTasks'>;
 export type UpdatePositionPayload = Partial<Omit<Position, 'id' | 'baseTasks'>>;
 
-export type CreateTaskAssignmentRulePayload = Omit<TaskAssignmentRule, 'id'>;
-export type UpdateTaskAssignmentRulePayload = Partial<Omit<TaskAssignmentRule, 'id'>>;
+export type CreateTaskAssignmentRulePayload = {
+  template_ids: string[];
+  assignee_type: 'empleado' | 'position' | 'section_supervisor';
+  assignee_id?: string | null;
+  section_id?: string | null;
+  day_of_week: number[];
+  trigger_time?: string;
+  trigger_event?: 'time' | 'attendance_checkin' | 'both';
+  is_active?: boolean;
+};
+
+export type UpdateTaskAssignmentRulePayload = Partial<CreateTaskAssignmentRulePayload>;
 
 export type CreateIncidentPayload = Omit<Incident, 'id' | 'status' | 'resolvedBy' | 'resolvedAt' | 'createdAt'>;
 
@@ -206,6 +228,9 @@ export interface EmpleadoSection {
   section_name?: string;
   area_name?: string;
   is_primary: boolean;
+  // Objetos anidados cuando el backend eager-load
+  section?: Section;
+  area?: Area;
 }
 
 export interface UnassignedTask {
