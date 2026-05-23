@@ -245,24 +245,28 @@ function RuleCard({
         )}
       </div>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit();
-        }}
-        className="absolute top-1.5 right-7 opacity-0 group-hover:opacity-100 h-5 w-5 rounded-md bg-blue-50 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-all"
-      >
-        <Pencil className="h-3 w-3" />
-      </button>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 h-5 w-5 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-all"
-      >
-        <Trash2 className="h-3 w-3" />
-      </button>
+      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="h-6 w-6 rounded-md bg-blue-50 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-all"
+          title="Editar"
+        >
+          <Pencil className="h-3 w-3" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="h-6 w-6 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-all"
+          title="Eliminar"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
     </div>
   );
 }
