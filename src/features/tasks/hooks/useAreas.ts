@@ -12,19 +12,21 @@ import type { CreateAreaPayload, UpdateAreaPayload } from "@/features/tasks/type
 const AREAS_KEY = ["areas"] as const;
 const AREAS_WITH_SECTIONS_KEY = ["areas", "with-sections"] as const;
 
-export function useAreas() {
+export function useAreas(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: AREAS_KEY,
     queryFn: listAreas,
     staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled !== false,
   });
 }
 
-export function useAreasWithSections() {
+export function useAreasWithSections(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: AREAS_WITH_SECTIONS_KEY,
     queryFn: listAreasWithSections,
     staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled !== false,
   });
 }
 

@@ -6,6 +6,7 @@ import {
   createSection,
   updateSection,
   deleteSection,
+  getMySections,
 } from "@/features/tasks/areaApi";
 import type { CreateSectionPayload, UpdateSectionPayload } from "@/features/tasks/types";
 
@@ -59,5 +60,14 @@ export function useDeleteSection() {
       qc.invalidateQueries({ queryKey: SECTIONS_KEY });
       qc.invalidateQueries({ queryKey: ["areas", "with-sections"] });
     },
+  });
+}
+
+export function useMySections(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["my-sections"],
+    queryFn: getMySections,
+    staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled !== false,
   });
 }

@@ -4,13 +4,13 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { cx } from "@/lib/utils";
-import { useTaskAssignmentRules, useCreateTaskAssignmentRule, useDeleteTaskAssignmentRule } from "./hooks/useTaskAssignmentRules";
+import { useTaskAssignmentRules, useCreateTaskAssignmentRule, useUpdateTaskAssignmentRule, useDeleteTaskAssignmentRule } from "./hooks/useTaskAssignmentRules";
 import { usePositions } from "./hooks/usePositions";
 import { useSections } from "./hooks/useSections";
 import { listTemplates } from "./catalog/api";
 import { listEmployees } from "./employeeApi";
 import type { TaskAssignmentRule, CreateTaskAssignmentRulePayload } from "./types";
-import { Plus, Trash2, Clock, User, Users, Shield, X, Save, LogIn } from "lucide-react";
+import { Plus, Trash2, Pencil, Clock, User, Users, Shield, X, Save, LogIn } from "lucide-react";
 
 const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const;
 const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0] as const;
@@ -32,6 +32,7 @@ export default function TaskAssignmentRulesManager() {
 
   const templates = templatesRes?.data ?? [];
   const createRule = useCreateTaskAssignmentRule();
+  const updateRule = useUpdateTaskAssignmentRule();
   const deleteRule = useDeleteTaskAssignmentRule();
 
   // Lookup maps
@@ -60,6 +61,7 @@ export default function TaskAssignmentRulesManager() {
   }, [sections]);
 
   const [showForm, setShowForm] = useState(false);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateTaskAssignmentRulePayload>({
     taskTemplateId: "",
     assigneeType: "position",
@@ -102,21 +104,41 @@ export default function TaskAssignmentRulesManager() {
       assigneeId: isSectionSupervisor ? "" : form.assigneeId,
     };
 
-    createRule.mutate(payload, {
-      onSuccess: () => {
-        setShowForm(false);
-        setForm({
-          taskTemplateId: "",
-          assigneeType: "position",
-          assigneeId: "",
-          sectionId: "",
-          dayOfWeek: [1, 2, 3, 4, 5],
-          triggerTime: "08:00",
-          triggerEvent: "time",
-          isActive: true,
-        });
-      },
-    });
+    if (editingRuleId) {
+      updateRule.mutate({ id: editingRuleId, payload }, {
+        onSuccess: () => {
+          setShowForm(false);
+          setEditingRuleId(null);
+          setForm({
+            taskTemplateId: "",
+            assigneeType: "position",
+            assigneeId: "",
+            sectionId: "",
+            dayOfWeek: [1, 2, 3, 4, 5],
+            triggerTime: "08:00",
+            triggerEvent: "time",
+            isActive: true,
+          });
+        },
+      });
+    } else {
+      createRule.mutate(payload, {
+        onSuccess: () => {
+          setShowForm(false);
+          setEditingRuleId(null);
+          setForm({
+            taskTemplateId: "",
+            assigneeType: "position",
+            assigneeId: "",
+            sectionId: "",
+            dayOfWeek: [1, 2, 3, 4, 5],
+            triggerTime: "08:00",
+            triggerEvent: "time",
+            isActive: true,
+          });
+        },
+      });
+    }
   };
 
   const isFormValid = useMemo(() => {
@@ -144,6 +166,21 @@ export default function TaskAssignmentRulesManager() {
     return null;
   }, [form, employeeMap, positionMap, sectionMap]);
 
+  const handleEditRule = (rule: TaskAssignmentRule) => {
+    setForm({
+      taskTemplateId: rule.taskTemplateId,
+      assigneeType: rule.assigneeType,
+      assigneeId: rule.assigneeId ?? "",
+      sectionId: rule.sectionId ?? "",
+      dayOfWeek: rule.dayOfWeek,
+      triggerTime: rule.triggerTime ?? "08:00",
+      triggerEvent: rule.triggerEvent,
+      isActive: rule.isActive,
+    });
+    setEditingRuleId(rule.id);
+    setShowForm(true);
+  };
+
   const rulesByDay = (day: number) => rules?.filter((r) => r.dayOfWeek.includes(day) && r.isActive) ?? [];
 
   if (isLoading) {
@@ -159,7 +196,20 @@ export default function TaskAssignmentRulesManager() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-black text-k-text-h tracking-tight">Reglas de Asignación</h3>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            setEditingRuleId(null);
+            setForm({
+              taskTemplateId: "",
+              assigneeType: "position",
+              assigneeId: "",
+              sectionId: "",
+              dayOfWeek: [1, 2, 3, 4, 5],
+              triggerTime: "08:00",
+              triggerEvent: "time",
+              isActive: true,
+            });
+            setShowForm(true);
+          }}
           className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-k-accent-btn text-white text-sm font-bold hover:opacity-90 transition-all"
         >
           <Plus className="h-4 w-4" />
@@ -170,6 +220,9 @@ export default function TaskAssignmentRulesManager() {
       {/* Form */}
       {showForm && (
         <div className="rounded-2xl bg-k-bg-card border border-k-border p-5 space-y-4">
+          <h4 className="text-sm font-bold text-k-text-h">
+            {editingRuleId ? "Editar regla" : "Nueva regla"}
+          </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Template */}
             <div>
@@ -333,14 +386,17 @@ export default function TaskAssignmentRulesManager() {
           <div className="flex gap-2 pt-2">
             <button
               onClick={handleSave}
-              disabled={!isFormValid || createRule.isPending}
+              disabled={!isFormValid || createRule.isPending || updateRule.isPending}
               className="h-10 px-5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50 inline-flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              Guardar
+              {editingRuleId ? "Actualizar" : "Guardar"}
             </button>
             <button
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false);
+                setEditingRuleId(null);
+              }}
               className="h-10 px-4 rounded-xl bg-k-bg-card2 text-k-text-h text-sm font-bold hover:bg-k-border transition-all inline-flex items-center gap-2"
             >
               <X className="h-4 w-4" />
@@ -362,6 +418,7 @@ export default function TaskAssignmentRulesManager() {
                 <RuleCard
                   key={rule.id}
                   rule={rule}
+                  onEdit={() => handleEditRule(rule)}
                   onDelete={() => deleteRule.mutate(rule.id)}
                   templateMap={templateMap}
                   employeeMap={employeeMap}
@@ -384,6 +441,7 @@ export default function TaskAssignmentRulesManager() {
 
 function RuleCard({
   rule,
+  onEdit,
   onDelete,
   templateMap,
   employeeMap,
@@ -391,6 +449,7 @@ function RuleCard({
   sectionMap,
 }: {
   rule: TaskAssignmentRule;
+  onEdit: () => void;
   onDelete: () => void;
   templateMap: Map<string, string>;
   employeeMap: Map<string, string>;
@@ -450,6 +509,12 @@ function RuleCard({
           </div>
         )}
       </div>
+      <button
+        onClick={onEdit}
+        className="absolute top-1.5 right-7 opacity-0 group-hover:opacity-100 h-5 w-5 rounded-md bg-blue-50 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-all"
+      >
+        <Pencil className="h-3 w-3" />
+      </button>
       <button
         onClick={onDelete}
         className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 h-5 w-5 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-all"

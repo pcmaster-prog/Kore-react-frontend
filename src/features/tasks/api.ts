@@ -2,6 +2,12 @@
 
 import api from "@/lib/http";
 import type { Paginated, Task } from "./types";
+import {
+  USE_MOCKS,
+  mockCreateTask,
+  mockUpdateTask,
+  mockDeleteTask,
+} from "@/mocks/taskAreaMocks";
 
 // ===== TIPOS COMPARTIDOS =====
 export type AssignmentStatus = "assigned" | "in_progress" | "done_pending" | "approved" | "rejected";
@@ -99,7 +105,9 @@ export async function createTask(payload: {
   due_at?: string | null;
   catalog_date?: string;
   estimated_minutes?: number;
+  meta?: any;
 }) {
+  if (USE_MOCKS) return mockCreateTask(payload);
   const res = await api.post("/tareas", payload);
   return res.data as { item: Task };
 }
@@ -116,8 +124,26 @@ export async function updateTaskStatus(id: string, status: "open" | "in_progress
   return res.data;
 }
 
+// ===== ACTUALIZAR TAREA =====
+export async function updateTask(
+  id: string,
+  payload: {
+    title?: string;
+    description?: string;
+    priority?: string;
+    due_at?: string | null;
+    estimated_minutes?: number;
+    meta?: any;
+  }
+) {
+  if (USE_MOCKS) return mockUpdateTask(id, payload);
+  const res = await api.patch(`/tareas/${id}`, payload);
+  return res.data as { item: Task };
+}
+
 // ===== ELIMINAR TAREA =====
 export async function deleteTask(id: string) {
+  if (USE_MOCKS) return mockDeleteTask(id);
   const res = await api.delete(`/tareas/${id}`);
   return res.data;
 }

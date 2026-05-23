@@ -602,6 +602,68 @@ export async function mockFinishTask(id: string): Promise<TaskV2> {
   return { ...MOCK_TASKS[idx] };
 }
 
+export async function mockCreateTask(payload: {
+  title: string;
+  description?: string;
+  priority?: string;
+  due_at?: string | null;
+  catalog_date?: string;
+  estimated_minutes?: number;
+  meta?: any;
+}): Promise<{ item: TaskV2 }> {
+  await delay(400);
+  const newTask: TaskV2 = {
+    id: nextId(),
+    name: payload.title,
+    description: payload.description || "",
+    priority: (payload.priority as any) || "medium",
+    status: "open",
+    completed: false,
+    attachments: [],
+    checklist: payload.meta?.checklist || [],
+    notes: "",
+    incidents: [],
+    dueDate: payload.due_at || undefined,
+    estimatedTime: payload.estimated_minutes || 0,
+    actualTime: 0,
+  };
+  MOCK_TASKS.push(newTask);
+  return { item: newTask };
+}
+
+export async function mockUpdateTask(
+  id: string,
+  payload: {
+    title?: string;
+    description?: string;
+    priority?: string;
+    due_at?: string | null;
+    estimated_minutes?: number;
+    meta?: any;
+  }
+): Promise<{ item: TaskV2 }> {
+  await delay(300);
+  const idx = MOCK_TASKS.findIndex((t) => t.id === id);
+  if (idx === -1) throw new Error("Tarea no encontrada");
+  const current = MOCK_TASKS[idx];
+  MOCK_TASKS[idx] = {
+    ...current,
+    name: payload.title ?? current.name,
+    description: payload.description ?? current.description,
+    priority: (payload.priority as any) ?? current.priority,
+    dueDate: payload.due_at === null ? undefined : (payload.due_at ?? current.dueDate),
+    estimatedTime: payload.estimated_minutes ?? current.estimatedTime,
+    checklist: payload.meta?.checklist ?? current.checklist,
+  };
+  return { item: MOCK_TASKS[idx] };
+}
+
+export async function mockDeleteTask(id: string): Promise<void> {
+  await delay(300);
+  const idx = MOCK_TASKS.findIndex((t) => t.id === id);
+  if (idx !== -1) MOCK_TASKS.splice(idx, 1);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCK API FUNCTIONS — EMPLEADO-SECCIONES
 // ═══════════════════════════════════════════════════════════════════════════

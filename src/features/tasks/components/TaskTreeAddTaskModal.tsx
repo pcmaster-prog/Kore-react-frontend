@@ -1,12 +1,12 @@
 // src/features/tasks/components/TaskTreeAddTaskModal.tsx
-// Modal simple para crear una tarea directamente en una sección del árbol
+// Modal para crear/editar una tarea directamente en una sección del árbol
 
-import { useState, useMemo } from "react";
-import { X, ClipboardList, Clock, Calendar, Flag, Save, Loader2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { X, ClipboardList, Clock, Calendar, Flag, Save, Loader2, Plus, Trash2, ListChecks } from "lucide-react";
 import { cx } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { createTask } from "@/features/tasks/api";
-import type { Area, Section, TaskPriority } from "@/features/tasks/types";
+import { createTask, updateTask, deleteTask } from "@/features/tasks/api";
+import type { Area, Section, TaskPriority, TaskV2, ChecklistItem } from "@/features/tasks/types";
 
 const PRIORITIES: { value: TaskPriority; label: string; color: string }[] = [
   { value: "low", label: "Baja", color: "bg-slate-100 text-slate-600 border-slate-200" },
@@ -27,6 +27,7 @@ interface TaskTreeAddTaskModalProps {
   onClose: () => void;
   defaultArea?: Area | null;
   defaultSection?: Section | null;
+  taskToEdit?: TaskV2 | null;
 }
 
 export default function TaskTreeAddTaskModal({
@@ -34,15 +35,40 @@ export default function TaskTreeAddTaskModal({
   onClose,
   defaultArea,
   defaultSection,
+  taskToEdit,
 }: TaskTreeAddTaskModalProps) {
   const queryClient = useQueryClient();
+  const isEditMode = !!taskToEdit;
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [estimatedMinutes, setEstimatedMinutes] = useState<number>(30);
   const [dueDate, setDueDate] = useState("");
+  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [newChecklistItem, setNewChecklistItem] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Load task data when editing
+  useEffect(() => {
+    if (taskToEdit) {
+      setTitle(taskToEdit.name);
+      setDescription(taskToEdit.description);
+      setPriority(taskToEdit.priority);
+      setEstimatedMinutes(taskToEdit.estimatedTime ?? 30);
+      setDueDate(taskToEdit.dueDate ?? "");
+      setChecklistItems(taskToEdit.checklist.map((c) => c.label));
+    } else {
+      setTitle("");
+      setDescription("");
+      setPriority("medium");
+      setEstimatedMinutes(30);
+      setDueDate("");
+      setChecklistItems([]);
+    }
+    setErr(null);
+  }, [taskToEdit, open]);
 
   const canSave = useMemo(() => title.trim().length >= 3, [title]);
 
@@ -51,26 +77,43 @@ export default function TaskTreeAddTaskModal({
     setErr(null);
     setSubmitting(true);
     try {
-      await createTask({
+      const checklist: ChecklistItem[] = checklistItems
+        .filter((l) => l.trim())
+        .map((label, i) => ({
+          id: taskToEdit?.checklist[i]?.id ?? `chk-${Date.now()}-${i}`,
+          label: label.trim(),
+          done: taskToEdit?.checklist[i]?.done ?? false,
+        }));
+
+      const payload = {
         title: title.trim(),
         description: description.trim() || undefined,
         priority,
         due_at: dueDate || null,
         estimated_minutes: estimatedMinutes,
-      });
+        meta: { checklist },
+      };
+
+      if (isEditMode && taskToEdit) {
+        await updateTask(taskToEdit.id, payload);
+        window.dispatchEvent(
+          new CustomEvent("kore-notification", {
+            detail: { title: "Tarea actualizada", body: `La tarea "${title.trim()}" se actualizó correctamente.` },
+          })
+        );
+      } else {
+        await createTask(payload);
+        window.dispatchEvent(
+          new CustomEvent("kore-notification", {
+            detail: { title: "Tarea creada", body: `La tarea "${title.trim()}" se creó correctamente.` },
+          })
+        );
+      }
       queryClient.invalidateQueries({ queryKey: ["tareas", "tree"] });
       queryClient.invalidateQueries({ queryKey: ["tareas", "by-section"] });
-      window.dispatchEvent(
-        new CustomEvent("kore-notification", {
-          detail: {
-            title: "Tarea creada",
-            body: `La tarea "${title.trim()}" se creó correctamente.`,
-          },
-        })
-      );
       handleClose();
     } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "Error al crear la tarea.");
+      setErr(e?.response?.data?.message ?? `Error al ${isEditMode ? "actualizar" : "crear"} la tarea.`);
     } finally {
       setSubmitting(false);
     }
@@ -82,8 +125,21 @@ export default function TaskTreeAddTaskModal({
     setPriority("medium");
     setEstimatedMinutes(30);
     setDueDate("");
+    setChecklistItems([]);
+    setNewChecklistItem("");
     setErr(null);
     onClose();
+  };
+
+  const addChecklistItem = () => {
+    const trimmed = newChecklistItem.trim();
+    if (!trimmed) return;
+    setChecklistItems((prev) => [...prev, trimmed]);
+    setNewChecklistItem("");
+  };
+
+  const removeChecklistItem = (idx: number) => {
+    setChecklistItems((prev) => prev.filter((_, i) => i !== idx));
   };
 
   if (!open) return null;
@@ -101,11 +157,12 @@ export default function TaskTreeAddTaskModal({
         <div className="px-8 py-6 border-b border-k-border flex items-center justify-between shrink-0 bg-k-bg-card2/50">
           <div>
             <h2 className="text-xl font-black text-k-text-h tracking-tight">
-              Nueva Tarea en el Árbol
+              {isEditMode ? "Editar Tarea" : "Nueva Tarea en el Árbol"}
             </h2>
             <p className="text-xs font-medium text-k-text-b mt-1">
-              Crea una tarea directamente en {defaultSection?.name ?? "la sección"}
-              {defaultArea ? ` · ${defaultArea.name}` : ""}
+              {isEditMode
+                ? "Modifica los datos de la tarea"
+                : `Crea una tarea directamente en ${defaultSection?.name ?? "la sección"}${defaultArea ? ` · ${defaultArea.name}` : ""}`}
             </p>
           </div>
           <button
@@ -216,6 +273,48 @@ export default function TaskTreeAddTaskModal({
               className="w-full h-12 px-4 rounded-2xl bg-k-bg-card2 border border-k-border text-sm font-medium text-k-text-h focus:outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
             />
           </div>
+
+          {/* Checklist */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b flex items-center gap-1.5">
+              <ListChecks className="h-3.5 w-3.5" /> Checklist
+            </label>
+            <div className="space-y-2">
+              {checklistItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="flex-1 rounded-xl bg-k-bg-card2 border border-k-border px-3 py-2 text-sm font-medium text-k-text-h">
+                    {item}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeChecklistItem(idx)}
+                    className="h-8 w-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-colors shrink-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newChecklistItem}
+                  onChange={(e) => setNewChecklistItem(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addChecklistItem()}
+                  placeholder="Nuevo item del checklist..."
+                  className="flex-1 h-10 px-4 rounded-2xl bg-k-bg-card2 border border-k-border text-sm font-medium text-k-text-h placeholder:text-k-text-b/40 focus:outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={addChecklistItem}
+                  disabled={!newChecklistItem.trim()}
+                  className="h-10 px-4 rounded-2xl bg-k-accent-btn text-white text-xs font-bold hover:opacity-90 transition-all disabled:opacity-40 shrink-0 flex items-center gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
@@ -242,7 +341,7 @@ export default function TaskTreeAddTaskModal({
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Crear Tarea
+                  {isEditMode ? "Guardar Cambios" : "Crear Tarea"}
                 </>
               )}
             </button>

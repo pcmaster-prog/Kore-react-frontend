@@ -5,7 +5,10 @@ import { useState, useMemo } from "react";
 import { cx } from "@/lib/utils";
 import { useTaskStore } from "./taskStore";
 import { useAreasWithSections } from "./hooks/useAreas";
+import { useMySections } from "./hooks/useSections";
 import { useTaskTree } from "./hooks/useTaskTree";
+import { useAuthStore } from "@/features/auth/authStore";
+import { deleteTask } from "./api";
 import PriorityBadge from "./components/PriorityBadge";
 import TaskBreadcrumbs from "./components/Breadcrumbs";
 import {
@@ -18,17 +21,40 @@ import {
   ClipboardList,
   CircleDot,
   Plus,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import TaskTreeAddTaskModal from "./components/TaskTreeAddTaskModal";
 
 export default function TaskTreePanel() {
-  const { selectedAreaId, selectedSectionId, selectedTaskId, selectArea, selectSection, selectTask } = useTaskStore();
-  const { data: areas, isLoading: areasLoading } = useAreasWithSections();
+  const { selectedAreaId, selectedSectionId, selectedTaskId, selectArea, selectSection, selectTask, clearSelection } = useTaskStore();
+  const user = useAuthStore((s) => s.user);
+  const isSupervisor = user?.role === "supervisor";
+
+  // Supervisor ve solo sus secciones asignadas
+  const { data: allAreas, isLoading: allAreasLoading } = useAreasWithSections({ enabled: !isSupervisor });
+  const { data: mySections, isLoading: mySectionsLoading } = useMySections({ enabled: isSupervisor });
+
+  // Construir áreas filtradas para supervisor
+  const areas = useMemo(() => {
+    if (!isSupervisor) return allAreas;
+    if (!mySections || !allAreas) return [];
+    // Mapear secciones del supervisor a áreas
+    const areaIds = new Set(mySections.map((s) => s.areaId));
+    return allAreas
+      .filter((a) => areaIds.has(a.id))
+      .map((a) => ({
+        ...a,
+        sections: a.sections?.filter((s) => mySections.some((ms) => ms.id === s.id)),
+      }));
+  }, [isSupervisor, allAreas, mySections]);
+
   const { data: tasks, isLoading: tasksLoading } = useTaskTree();
   const [search, setSearch] = useState("");
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showAddTask, setShowAddTask] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<import("./types").TaskV2 | null>(null);
 
   const toggleArea = (id: string) => {
     setExpandedAreas((prev) => {
@@ -69,7 +95,7 @@ export default function TaskTreePanel() {
     [selectedArea, selectedSectionId]
   );
 
-  const isLoading = areasLoading || tasksLoading;
+  const isLoading = (isSupervisor ? mySectionsLoading || allAreasLoading : allAreasLoading) || tasksLoading;
 
   if (isLoading) {
     return (
@@ -169,23 +195,62 @@ export default function TaskTreePanel() {
                               {sectionTasks.map((task) => {
                                 const isTaskSelected = selectedTaskId === task.id;
                                 return (
-                                  <button
+                                  <div
                                     key={task.id}
-                                    type="button"
-                                    onClick={() => selectTask(task.id)}
                                     className={cx(
-                                      "w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left transition-all",
+                                      "group relative flex items-center gap-2 rounded-xl px-3 py-2 text-left transition-all",
                                       isTaskSelected
                                         ? "bg-k-accent-btn text-white shadow-sm"
                                         : "text-k-text-b hover:bg-k-bg-card2"
                                     )}
                                   >
-                                    <ClipboardList className="h-3.5 w-3.5 shrink-0" />
-                                    <span className="text-xs font-medium truncate">{task.name}</span>
-                                    {task.status === "completed" && (
-                                      <CircleDot className="h-3 w-3 shrink-0 ml-auto text-emerald-400" />
-                                    )}
-                                  </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => selectTask(task.id)}
+                                      className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                                    >
+                                      <ClipboardList className="h-3.5 w-3.5 shrink-0" />
+                                      <span className="text-xs font-medium truncate">{task.name}</span>
+                                      {task.status === "completed" && (
+                                        <CircleDot className="h-3 w-3 shrink-0 ml-auto text-emerald-400" />
+                                      )}
+                                    </button>
+                                    {/* Acciones hover */}
+                                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setTaskToEdit(task);
+                                          setShowAddTask(true);
+                                        }}
+                                        className="h-5 w-5 rounded-md bg-blue-50 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-colors"
+                                        title="Editar"
+                                      >
+                                        <Pencil className="h-2.5 w-2.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          if (!confirm(`¿Eliminar la tarea "${task.name}"?`)) return;
+                                          try {
+                                            await deleteTask(task.id);
+                                            if (selectedTaskId === task.id) clearSelection();
+                                            window.dispatchEvent(
+                                              new CustomEvent("kore-notification", {
+                                                detail: { title: "Tarea eliminada", body: `"${task.name}" fue eliminada.` },
+                                              })
+                                            );
+                                          } catch {}
+                                        }}
+                                        className="h-5 w-5 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-colors"
+                                        title="Eliminar"
+                                      >
+                                        <Trash2 className="h-2.5 w-2.5" />
+                                      </button>
+                                    </div>
+                                  </div>
                                 );
                               })}
                               {sectionTasks.length === 0 && (
@@ -235,12 +300,16 @@ export default function TaskTreePanel() {
         )}
       </div>
 
-      {/* ── Modal: Crear tarea en el árbol ── */}
+      {/* ── Modal: Crear/Editar tarea en el árbol ── */}
       <TaskTreeAddTaskModal
         open={showAddTask}
-        onClose={() => setShowAddTask(false)}
+        onClose={() => {
+          setShowAddTask(false);
+          setTaskToEdit(null);
+        }}
         defaultArea={selectedArea}
         defaultSection={selectedSection}
+        taskToEdit={taskToEdit}
       />
     </div>
   );
@@ -265,6 +334,8 @@ function TaskPreview({
     rejected: "Rechazada",
     completed: "Completada",
   };
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<import("./types").TaskV2 | null>(null);
 
   return (
     <div className="space-y-6">
@@ -276,8 +347,51 @@ function TaskPreview({
             <h2 className="text-xl font-black text-k-text-h tracking-tight">{task.name}</h2>
             <p className="text-sm text-k-text-b mt-1">{task.description}</p>
           </div>
-          <PriorityBadge priority={task.priority} />
+          <div className="flex items-center gap-2">
+            <PriorityBadge priority={task.priority} />
+            <button
+              type="button"
+              onClick={() => {
+                setTaskToEdit(task);
+                setShowAddTask(true);
+              }}
+              className="h-8 w-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-colors"
+              title="Editar tarea"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!confirm(`¿Eliminar la tarea "${task.name}"?`)) return;
+                try {
+                  await deleteTask(task.id);
+                  useTaskStore.getState().clearSelection();
+                  window.dispatchEvent(
+                    new CustomEvent("kore-notification", {
+                      detail: { title: "Tarea eliminada", body: `"${task.name}" fue eliminada.` },
+                    })
+                  );
+                } catch {}
+              }}
+              className="h-8 w-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-colors"
+              title="Eliminar tarea"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
+
+        <TaskTreeAddTaskModal
+          open={showAddTask}
+          onClose={() => {
+            setShowAddTask(false);
+            setTaskToEdit(null);
+          }}
+          defaultArea={area}
+          defaultSection={section}
+          taskToEdit={taskToEdit}
+        />
 
         <div className="flex flex-wrap gap-3">
           <div className="rounded-xl bg-k-bg-card2 px-4 py-2.5">
