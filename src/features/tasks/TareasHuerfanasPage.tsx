@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { cx } from "@/lib/utils";
 import PageHeader from "@/components/PageHeader";
-import { useUnassignedTasks, useReasignarTarea } from "./hooks/useUnassignedTasks";
+import { useUnassignedTasks, useReasignarTarea, useDeleteTask } from "./hooks/useUnassignedTasks";
 import { useAreasWithSections } from "./hooks/useAreas";
 import { useEmployees } from "./hooks/useEmployees";
 import type { UnassignedTask } from "./types";
@@ -18,6 +18,7 @@ import {
   Check,
   Clock,
   Inbox,
+  Trash2,
 } from "lucide-react";
 
 function formatRelativeTime(dateStr: string): string {
@@ -55,6 +56,7 @@ export default function TareasHuerfanasPage() {
   const { data: areas, isLoading: loadingAreas } = useAreasWithSections();
   const { data: employees, isLoading: loadingEmployees } = useEmployees();
   const reasignar = useReasignarTarea();
+  const deleteTaskMutation = useDeleteTask();
 
   const [areaFilter, setAreaFilter] = useState<string>("");
   const [sectionFilter, setSectionFilter] = useState<string>("");
@@ -78,6 +80,28 @@ export default function TareasHuerfanasPage() {
       return true;
     });
   }, [tasks, areaFilter, sectionFilter]);
+
+  const handleDelete = (taskId: string, title: string) => {
+    if (confirm(`¿Eliminar la tarea "${title}"? Esta acción no se puede deshacer.`)) {
+      deleteTaskMutation.mutate(taskId, {
+        onSuccess: () => {
+          window.dispatchEvent(
+            new CustomEvent("kore-notification", {
+              detail: { title: "Tarea eliminada", body: `"${title}" fue eliminada correctamente.` },
+            })
+          );
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message ?? "No se pudo eliminar la tarea.";
+          window.dispatchEvent(
+            new CustomEvent("kore-notification", {
+              detail: { title: "Error", body: msg },
+            })
+          );
+        },
+      });
+    }
+  };
 
   const openReassignModal = (task: UnassignedTask) => {
     setSelectedTask(task);
@@ -207,6 +231,8 @@ export default function TareasHuerfanasPage() {
               key={task.id}
               task={task}
               onReassign={() => openReassignModal(task)}
+              onDelete={() => handleDelete(task.id, task.title)}
+              isDeleting={deleteTaskMutation.isPending && deleteTaskMutation.variables === task.id}
             />
           ))}
         </div>
@@ -240,9 +266,13 @@ export default function TareasHuerfanasPage() {
 function TaskCard({
   task,
   onReassign,
+  onDelete,
+  isDeleting,
 }: {
   task: UnassignedTask;
   onReassign: () => void;
+  onDelete: () => void;
+  isDeleting?: boolean;
 }) {
   return (
     <div className="rounded-2xl bg-k-bg-card border border-k-border shadow-k-card p-5 space-y-4 transition-all hover:shadow-lg">
@@ -282,13 +312,23 @@ function TaskCard({
           <Clock className="h-3.5 w-3.5" />
           <span>{formatRelativeTime(task.created_at)}</span>
         </div>
-        <button
-          onClick={onReassign}
-          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-k-accent-btn text-white text-xs font-bold hover:opacity-90 transition-all"
-        >
-          <UserCheck className="h-3.5 w-3.5" />
-          Reasignar
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold hover:bg-rose-100 transition-all disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Eliminar
+          </button>
+          <button
+            onClick={onReassign}
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-k-accent-btn text-white text-xs font-bold hover:opacity-90 transition-all"
+          >
+            <UserCheck className="h-3.5 w-3.5" />
+            Reasignar
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -267,28 +267,7 @@ export const MOCK_EMPLEADO_SECTIONS: EmpleadoSection[] = [
   { id: "es-004", empleado_id: "emp-003", section_id: "sec-008", section_name: "Corte", area_name: "Caja", is_primary: false },
 ];
 
-export const MOCK_UNASSIGNED_TASKS: UnassignedTask[] = [
-  {
-    id: "ut-001",
-    title: "Limpieza de baños",
-    description: "Desinfectar y revisar suministros",
-    priority: "high",
-    area: { id: "area-001", name: "Patio" },
-    section: { id: "sec-001", name: "Limpieza exterior" },
-    unassigned_reason: "Empleado inactivo",
-    created_at: "2026-05-20T08:00:00Z",
-  },
-  {
-    id: "ut-002",
-    title: "Inventario de mostrador",
-    description: "Contar productos en exhibición",
-    priority: "medium",
-    area: { id: "area-002", name: "Mostrador" },
-    section: { id: "sec-004", name: "Exhibición" },
-    unassigned_reason: "Sin empleados en sección",
-    created_at: "2026-05-20T09:00:00Z",
-  },
-];
+export const MOCK_UNASSIGNED_TASKS: UnassignedTask[] = []; // Datos demo eliminados — se llenan desde el backend
 
 export const MOCK_INCIDENTS: Incident[] = [
   {

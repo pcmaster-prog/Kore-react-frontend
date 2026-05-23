@@ -22,7 +22,7 @@ const BASE_TABS = [
   },
   {
     key: "plantillas",
-    label: "Plantillas",
+    label: "Catálogo de tareas",
     icon: <Layers className="h-4 w-4" />,
   },
   {
