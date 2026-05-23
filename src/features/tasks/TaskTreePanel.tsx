@@ -17,16 +17,21 @@ import {
   Folder,
   ClipboardList,
   CircleDot,
+  Plus,
 } from "lucide-react";
+import TaskCatalogPanel from "./TaskCatalogPanel";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function TaskTreePanel() {
   const { selectedAreaId, selectedSectionId, selectedTaskId, selectArea, selectSection, selectTask } = useTaskStore();
   const { data: areas, isLoading: areasLoading } = useAreasWithSections();
   const { data: tasks, isLoading: tasksLoading } = useTaskTree();
+  const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [showWizard, setShowWizard] = useState(false);
 
   const toggleArea = (id: string) => {
     setExpandedAreas((prev) => {
@@ -191,6 +196,15 @@ export default function TaskTreePanel() {
                                   Sin tareas en esta sección
                                 </div>
                               )}
+                              {/* ── Agregar tarea en esta sección ── */}
+                              <button
+                                type="button"
+                                onClick={() => setShowWizard(true)}
+                                className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left transition-all text-k-text-b hover:bg-k-bg-card2 hover:text-k-accent-btn mt-0.5"
+                              >
+                                <Plus className="h-3.5 w-3.5 shrink-0" />
+                                <span className="text-[11px] font-semibold">Agregar tarea</span>
+                              </button>
                             </div>
                           )}
                         </div>
@@ -223,6 +237,18 @@ export default function TaskTreePanel() {
           </div>
         )}
       </div>
+
+      {/* ── Wizard: Crear / Asignar tarea ── */}
+      {showWizard && (
+        <TaskCatalogPanel
+          onAssigned={() => {
+            queryClient.invalidateQueries({ queryKey: ["tareas", "tree"] });
+            queryClient.invalidateQueries({ queryKey: ["tareas", "by-section"] });
+            setShowWizard(false);
+          }}
+          onClose={() => setShowWizard(false)}
+        />
+      )}
     </div>
   );
 }
