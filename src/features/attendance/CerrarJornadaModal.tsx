@@ -11,6 +11,10 @@ type Props = {
 
 export default function CerrarJornadaModal({ date, employees, onClose, onSaved }: Props) {
   const [motivo, setMotivo] = useState("");
+  const [hora, setHora] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:mm
+  });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -29,7 +33,7 @@ export default function CerrarJornadaModal({ date, employees, onClose, onSaved }
     setLoading(true);
     setErr(null);
     try {
-      await cerrarJornadaMasiva(date, motivo.trim());
+      await cerrarJornadaMasiva(date, motivo.trim(), hora);
       onSaved();
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error al cerrar las jornadas");
@@ -76,6 +80,21 @@ export default function CerrarJornadaModal({ date, employees, onClose, onSaved }
               {employees.length !== 1 ? "s" : ""} que aún no han marcado salida. Esta acción no se
               puede deshacer.
             </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide mb-1.5 block">
+              Hora de cierre *
+            </label>
+            <input
+              type="time"
+              value={hora}
+              onChange={(e) => setHora(e.target.value)}
+              className="w-full h-11 rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:ring-2 focus:ring-obsidian/10"
+            />
+            <p className="text-[11px] text-neutral-400 mt-1">
+              Se registrará esta hora como salida para todos los empleados afectados.
+            </p>
           </div>
 
           <div>
