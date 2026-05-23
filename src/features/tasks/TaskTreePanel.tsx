@@ -20,14 +20,11 @@ import {
   Plus,
 } from "lucide-react";
 import TaskTreeAddTaskModal from "./components/TaskTreeAddTaskModal";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function TaskTreePanel() {
   const { selectedAreaId, selectedSectionId, selectedTaskId, selectArea, selectSection, selectTask } = useTaskStore();
   const { data: areas, isLoading: areasLoading } = useAreasWithSections();
   const { data: tasks, isLoading: tasksLoading } = useTaskTree();
-  const queryClient = useQueryClient();
-
   const [search, setSearch] = useState("");
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
