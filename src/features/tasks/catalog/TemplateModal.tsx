@@ -2,7 +2,7 @@
 // Modal profesional para crear/editar plantillas de tareas
 
 import { useEffect, useMemo, useState } from "react";
-import { X, Loader2, GripVertical, Plus, Trash2, Pin } from "lucide-react";
+import { X, Loader2, Plus, Trash2, Pin } from "lucide-react";
 import { cx } from "@/lib/utils";
 import type { Template } from "./api";
 
