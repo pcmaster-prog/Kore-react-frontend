@@ -19,7 +19,7 @@ import {
   CircleDot,
   Plus,
 } from "lucide-react";
-import TaskCatalogPanel from "./TaskCatalogPanel";
+import TaskTreeAddTaskModal from "./components/TaskTreeAddTaskModal";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function TaskTreePanel() {
@@ -31,7 +31,7 @@ export default function TaskTreePanel() {
   const [search, setSearch] = useState("");
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
-  const [showWizard, setShowWizard] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
 
   const toggleArea = (id: string) => {
     setExpandedAreas((prev) => {
@@ -199,7 +199,7 @@ export default function TaskTreePanel() {
                               {/* ── Agregar tarea en esta sección ── */}
                               <button
                                 type="button"
-                                onClick={() => setShowWizard(true)}
+                                onClick={() => setShowAddTask(true)}
                                 className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left transition-all text-k-text-b hover:bg-k-bg-card2 hover:text-k-accent-btn mt-0.5"
                               >
                                 <Plus className="h-3.5 w-3.5 shrink-0" />
@@ -238,17 +238,13 @@ export default function TaskTreePanel() {
         )}
       </div>
 
-      {/* ── Wizard: Crear / Asignar tarea ── */}
-      {showWizard && (
-        <TaskCatalogPanel
-          onAssigned={() => {
-            queryClient.invalidateQueries({ queryKey: ["tareas", "tree"] });
-            queryClient.invalidateQueries({ queryKey: ["tareas", "by-section"] });
-            setShowWizard(false);
-          }}
-          onClose={() => setShowWizard(false)}
-        />
-      )}
+      {/* ── Modal: Crear tarea en el árbol ── */}
+      <TaskTreeAddTaskModal
+        open={showAddTask}
+        onClose={() => setShowAddTask(false)}
+        defaultArea={selectedArea}
+        defaultSection={selectedSection}
+      />
     </div>
   );
 }

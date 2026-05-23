@@ -1,6 +1,7 @@
 // src/features/tasks/catalog/RoutineModal.tsx
 import { useEffect, useMemo, useState } from "react";
-import { Button, Input, Modal, Select, Textarea } from "./ui";
+import { X, Calendar, Repeat, Clock, Check, LayoutDashboard } from "lucide-react";
+import { cx } from "@/lib/utils";
 import type { Routine } from "./api";
 
 const REC_OPTIONS = [
@@ -9,13 +10,13 @@ const REC_OPTIONS = [
 ];
 
 const WEEK = [
-  { n: 1, label: "L" },
-  { n: 2, label: "M" },
-  { n: 3, label: "X" },
-  { n: 4, label: "J" },
-  { n: 5, label: "V" },
-  { n: 6, label: "S" },
-  { n: 0, label: "D" },
+  { n: 1, label: "Lun" },
+  { n: 2, label: "Mar" },
+  { n: 3, label: "Mié" },
+  { n: 4, label: "Jue" },
+  { n: 5, label: "Vie" },
+  { n: 6, label: "Sáb" },
+  { n: 0, label: "Dom" },
 ];
 
 export default function RoutineModal({
@@ -94,152 +95,246 @@ export default function RoutineModal({
     }
   }
 
+  if (!open) return null;
+
   return (
-    <Modal
-      open={open}
-      title={mode === "create" ? "Nueva Rutina" : "Editar Rutina"}
-      onClose={onClose}
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={!canSave || saving}>
-            {saving ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        {err ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {err}
-          </div>
-        ) : null}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-k-bg-sidebar/40 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
 
-        <div className="grid gap-4 md:grid-cols-2">
+      {/* Modal */}
+      <div className="relative w-full max-w-lg rounded-[32px] bg-k-bg-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in-fade animate-in-slide-up border border-k-border">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-k-border bg-k-bg-card2/50 px-8 py-6 shrink-0">
           <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-              Nombre *
-            </div>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. Apertura"
-              className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
-            />
+            <h3 className="text-xl font-black text-k-text-h tracking-tight">
+              {mode === "create" ? "Nueva Rutina" : "Editar Rutina"}
+            </h3>
+            <p className="text-xs font-medium text-k-text-b mt-1">
+              {mode === "create"
+                ? "Crea un bloque de tareas que se puede asignar en conjunto"
+                : "Modifica los datos de la rutina"}
+            </p>
           </div>
-
-          <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-              Recurrencia
-            </div>
-            <Select
-              value={recurrence}
-              onChange={(v) => setRecurrence(v as any)}
-              options={REC_OPTIONS}
-            />
-          </div>
-
-          <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-              Inicio (Opcional)
-            </div>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-              Fin (Opcional)
-            </div>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-              Activa
-            </div>
-            <select
-              value={isActive ? "1" : "0"}
-              onChange={(e) => setIsActive(e.target.value === "1")}
-              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/5"
-            >
-              <option value="1">Sí</option>
-              <option value="0">No</option>
-            </select>
-          </div>
+          <button
+            type="button"
+            className="h-10 w-10 rounded-full bg-k-bg-card border border-k-border flex items-center justify-center text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2 hover:border-neutral-300 transition-colors shadow-k-card"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-          <input
-            type="checkbox"
-            id="showInDashboardRoutine"
-            checked={showInDashboard}
-            onChange={(e) => setShowInDashboard(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-          />
-          <label htmlFor="showInDashboardRoutine" className="text-sm font-bold text-obsidian cursor-pointer select-none">
-            📌 Mostrar rápido en Dashboard
-            <span className="block text-xs font-medium text-neutral-500 mt-0.5">
-              Si lo marcas, esta rutina aparecerá automáticamente en las Tareas Disponibles del gerente.
-            </span>
-          </label>
-        </div>
-
-        {recurrence === "weekly" ? (
-          <div className="pt-2">
-            <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-              Días *
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar space-y-6">
+          {err ? (
+            <div className="rounded-2xl bg-rose-50 border border-rose-100 px-4 py-3 text-sm text-rose-700 font-medium">
+              {err}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {WEEK.map((d) => {
-                const on = weekdays.includes(d.n);
-                return (
+          ) : null}
+
+          {/* Nombre + Recurrencia */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Nombre *
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ej. Apertura"
+                className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h placeholder:text-k-text-b/40 focus:outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b flex items-center gap-1.5">
+                <Repeat className="h-3.5 w-3.5" /> Recurrencia
+              </label>
+              <div className="flex gap-2">
+                {REC_OPTIONS.map((opt) => (
                   <button
-                    key={d.n}
+                    key={opt.value}
                     type="button"
-                    onClick={() => toggleDay(d.n)}
-                    className={[
-                      "h-10 w-10 flex items-center justify-center rounded-xl text-[11px] font-black transition-all shadow-sm",
-                      on
-                        ? "bg-obsidian text-white border-transparent"
-                        : "bg-white border border-neutral-200 text-neutral-400 hover:text-obsidian hover:bg-neutral-50 hover:border-neutral-300",
-                    ].join(" ")}
+                    onClick={() => setRecurrence(opt.value as Routine["recurrence"])}
+                    className={cx(
+                      "flex-1 h-12 rounded-2xl text-xs font-bold border transition-all",
+                      recurrence === opt.value
+                        ? "bg-k-accent-btn text-white border-k-accent-btn shadow-sm"
+                        : "bg-k-bg-card2 border-k-border text-k-text-b hover:border-neutral-300"
+                    )}
                   >
-                    {d.label}
+                    {opt.label}
                   </button>
-                );
-              })}
-            </div>
-            <div className="mt-2 text-[10px] text-neutral-400 font-medium">
-              Tip: El Domingo es D.
+                ))}
+              </div>
             </div>
           </div>
-        ) : null}
 
-        <div className="pt-2">
-          <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-            Descripción
+          {/* Fechas */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" /> Inicio (opcional)
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h focus:outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" /> Fin (opcional)
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full h-12 rounded-2xl bg-k-bg-card2 border border-k-border px-4 text-sm font-medium text-k-text-h focus:outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all"
+              />
+            </div>
           </div>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="bg-neutral-50 border-neutral-200 text-obsidian font-medium"
-            placeholder="Escribe un breve objetivo para esta rutina..."
-          />
+
+          {/* Activa + Dashboard */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Estado
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsActive(true)}
+                  className={cx(
+                    "flex-1 h-12 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-2",
+                    isActive
+                      ? "bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm"
+                      : "bg-k-bg-card2 border-k-border text-k-text-b hover:border-neutral-300"
+                  )}
+                >
+                  <Check className={cx("h-3.5 w-3.5", isActive ? "opacity-100" : "opacity-0")} />
+                  Activa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsActive(false)}
+                  className={cx(
+                    "flex-1 h-12 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-2",
+                    !isActive
+                      ? "bg-neutral-100 text-neutral-500 border-neutral-200 shadow-sm"
+                      : "bg-k-bg-card2 border-k-border text-k-text-b hover:border-neutral-300"
+                  )}
+                >
+                  <Check className={cx("h-3.5 w-3.5", !isActive ? "opacity-100" : "opacity-0")} />
+                  Inactiva
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+                Visibilidad
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowInDashboard(!showInDashboard)}
+                className={cx(
+                  "w-full h-12 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-2",
+                  showInDashboard
+                    ? "bg-k-accent-btn/10 text-k-accent-btn border-k-accent-btn/20 shadow-sm"
+                    : "bg-k-bg-card2 border-k-border text-k-text-b hover:border-neutral-300"
+                )}
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                {showInDashboard ? "Visible en Dashboard" : "No mostrar en Dashboard"}
+              </button>
+            </div>
+          </div>
+
+          {/* Días de la semana */}
+          {recurrence === "weekly" ? (
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" /> Días activos *
+              </label>
+              <div className="flex gap-2">
+                {WEEK.map((d) => {
+                  const on = weekdays.includes(d.n);
+                  return (
+                    <button
+                      key={d.n}
+                      type="button"
+                      onClick={() => toggleDay(d.n)}
+                      className={cx(
+                        "h-12 w-12 flex items-center justify-center rounded-2xl text-[11px] font-bold transition-all",
+                        on
+                          ? "bg-k-accent-btn text-white shadow-sm"
+                          : "bg-k-bg-card2 border border-k-border text-k-text-b hover:text-k-text-h hover:border-neutral-300"
+                      )}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Descripción */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-k-text-b">
+              Descripción
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Escribe un breve objetivo para esta rutina..."
+              rows={3}
+              className="w-full rounded-2xl bg-k-bg-card2 border border-k-border px-4 py-3 text-sm font-medium text-k-text-h placeholder:text-k-text-b/40 focus:outline-none focus:ring-2 focus:ring-k-bg-sidebar/20 transition-all resize-none"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-k-border bg-k-bg-card2/50 px-8 py-5 shrink-0">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="flex-1 h-12 rounded-2xl bg-k-bg-card border border-k-border text-[11px] font-black uppercase tracking-widest text-k-text-b hover:text-k-text-h hover:bg-k-bg-card2 hover:border-neutral-300 transition-all shadow-k-card"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!canSave || saving}
+              className="flex-[2] h-12 rounded-2xl bg-k-accent-btn text-[11px] font-black uppercase tracking-widest text-k-accent-btn-text hover:opacity-90 transition-all shadow-k-card disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                "Guardar Rutina"
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }
