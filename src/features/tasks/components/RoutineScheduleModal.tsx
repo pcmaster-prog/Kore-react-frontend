@@ -14,12 +14,10 @@ import { listEmployees } from "@/features/tasks/employeeApi";
 import { listPositions, listSections, listAreas } from "@/features/tasks/areaApi";
 import { listRoutines } from "@/features/tasks/catalog/api";
 import {
-  Plus,
   Clock,
   Calendar,
   Bell,
   Bot,
-  X,
   Save,
   AlertTriangle,
   User,

@@ -30,7 +30,6 @@ import {
   Bot,
   Edit3,
   CalendarClock,
-  AlertTriangle,
   User,
   Briefcase,
   MapPin,
