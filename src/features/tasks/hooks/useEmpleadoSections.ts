@@ -6,8 +6,6 @@ import {
   removeSectionFromEmpleado,
   fetchSectionEmpleados,
 } from "@/features/tasks/areaApi";
-import type { EmpleadoSection } from "@/features/tasks/types";
-
 const ES_KEY = ["empleado-sections"] as const;
 const SE_KEY = ["section-empleados"] as const;
 

@@ -18,7 +18,6 @@ import {
   Calendar,
   Bell,
   Bot,
-  Save,
   AlertTriangle,
   User,
   Briefcase,
