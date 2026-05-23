@@ -10,10 +10,11 @@ import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
   CalendarCheck, User, Users,
   Settings, ChevronRight, Bell, Activity, BookOpen,
-  Receipt, Gift, FileBarChart
+  Receipt, Gift, FileBarChart, AlertTriangle
 } from "lucide-react";
 import { getPendientesSupervisor } from "@/features/semaforo/api";
 import { isEnabled } from "@/lib/featureFlags";
+import { useUnassignedTasks } from "@/features/tasks/hooks/useUnassignedTasks";
 
 import { cx } from "@/lib/utils";
 // ─── Link simple con Prefetch ─────────────────────────────────────────────────
@@ -118,6 +119,8 @@ function SidebarContent({
   const isEmployee = role === "empleado";
   const isAdmin = role === "admin";
   const [activeModules, setActiveModules] = useState(() => auth.getModules());
+  const { data: unassignedTasks } = useUnassignedTasks();
+  const orphanCount = unassignedTasks?.length ?? 0;
 
   useEffect(() => {
     const handleUpdate = () => setActiveModules(auth.getModules());
@@ -181,6 +184,7 @@ function SidebarContent({
               <NavGroup label="Operaciones">
                 <SidebarLink to="/app/manager/tareas" label="Tareas" icon={<ClipboardList className="h-4.5 w-4.5" />} onClick={onNav} />
                 <SidebarLink to="/app/manager/bitacora" label="Bitácora" icon={<BookOpen className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/manager/tareas/huerfanas" label={`Sin asignar ${orphanCount > 0 ? `(${orphanCount})` : ''}`} icon={<AlertTriangle className="h-4.5 w-4.5" />} onClick={onNav} />
               </NavGroup>
             )}
 

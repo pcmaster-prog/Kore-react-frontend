@@ -12,6 +12,8 @@ import type {
   RoutineSchedule,
   Incident,
   TaskV2,
+  EmpleadoSection,
+  UnassignedTask,
   CreateAreaPayload,
   UpdateAreaPayload,
   CreateSectionPayload,
@@ -196,6 +198,7 @@ export const MOCK_ASSIGNMENT_RULES: TaskAssignmentRule[] = [
   {
     id: "rule-001",
     taskTemplateId: "tpl-001",
+    templateTitle: "Limpieza de caja",
     assigneeType: "position",
     assigneeId: "pos-002",
     dayOfWeek: [1, 2, 3, 4, 5],
@@ -206,6 +209,7 @@ export const MOCK_ASSIGNMENT_RULES: TaskAssignmentRule[] = [
   {
     id: "rule-002",
     taskTemplateId: "tpl-002",
+    templateTitle: "Revisión de patio",
     assigneeType: "section_supervisor",
     sectionId: "sec-001",
     dayOfWeek: [1, 3, 5],
@@ -218,11 +222,60 @@ export const MOCK_ROUTINE_SCHEDULES: RoutineSchedule[] = [
   {
     id: "rs-001",
     routineId: "rt-001",
+    routineName: "Apertura",
     triggerTime: "07:00",
     triggerDays: [1, 2, 3, 4, 5],
     autoAssign: true,
     notifyPush: true,
     isActive: true,
+    assigneeType: "position",
+    assigneeId: "pos-002",
+    areaId: null,
+    sectionId: null,
+  },
+  {
+    id: "rs-002",
+    routineId: "rt-002",
+    routineName: "Cierre",
+    triggerTime: "21:00",
+    triggerDays: [1, 2, 3, 4, 5, 6],
+    autoAssign: true,
+    notifyPush: true,
+    isActive: true,
+    assigneeType: "section",
+    assigneeId: "sec-007",
+    areaId: null,
+    sectionId: "sec-007",
+  },
+];
+
+export const MOCK_EMPLEADO_SECTIONS: EmpleadoSection[] = [
+  { id: "es-001", empleado_id: "emp-001", section_id: "sec-001", section_name: "Limpieza exterior", area_name: "Patio", is_primary: true },
+  { id: "es-002", empleado_id: "emp-002", section_id: "sec-004", section_name: "Exhibición", area_name: "Mostrador", is_primary: true },
+  { id: "es-003", empleado_id: "emp-003", section_id: "sec-007", section_name: "Cobro", area_name: "Caja", is_primary: true },
+  { id: "es-004", empleado_id: "emp-003", section_id: "sec-008", section_name: "Corte", area_name: "Caja", is_primary: false },
+];
+
+export const MOCK_UNASSIGNED_TASKS: UnassignedTask[] = [
+  {
+    id: "ut-001",
+    title: "Limpieza de baños",
+    description: "Desinfectar y revisar suministros",
+    priority: "high",
+    area: { id: "area-001", name: "Patio" },
+    section: { id: "sec-001", name: "Limpieza exterior" },
+    unassigned_reason: "Empleado inactivo",
+    created_at: "2026-05-20T08:00:00Z",
+  },
+  {
+    id: "ut-002",
+    title: "Inventario de mostrador",
+    description: "Contar productos en exhibición",
+    priority: "medium",
+    area: { id: "area-002", name: "Mostrador" },
+    section: { id: "sec-004", name: "Exhibición" },
+    unassigned_reason: "Sin empleados en sección",
+    created_at: "2026-05-20T09:00:00Z",
   },
 ];
 
@@ -547,4 +600,58 @@ export async function mockFinishTask(id: string): Promise<TaskV2> {
     completed: true,
   };
   return { ...MOCK_TASKS[idx] };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MOCK API FUNCTIONS — EMPLEADO-SECCIONES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function mockFetchEmpleadoSections(empleadoId: string): Promise<EmpleadoSection[]> {
+  await delay(300);
+  return MOCK_EMPLEADO_SECTIONS.filter((es) => es.empleado_id === empleadoId).map((es) => ({ ...es }));
+}
+
+export async function mockAssignSectionToEmpleado(empleadoId: string, sectionId: string, isPrimary = false): Promise<EmpleadoSection> {
+  await delay(400);
+  const section = MOCK_SECTIONS.find((s) => s.id === sectionId);
+  const created: EmpleadoSection = {
+    id: nextId(),
+    empleado_id: empleadoId,
+    section_id: sectionId,
+    section_name: section?.name,
+    area_name: MOCK_AREAS.find((a) => a.id === section?.areaId)?.name,
+    is_primary: isPrimary,
+  };
+  MOCK_EMPLEADO_SECTIONS.push(created);
+  return { ...created };
+}
+
+export async function mockRemoveSectionFromEmpleado(empleadoId: string, sectionId: string): Promise<void> {
+  await delay(300);
+  const idx = MOCK_EMPLEADO_SECTIONS.findIndex((es) => es.empleado_id === empleadoId && es.section_id === sectionId);
+  if (idx !== -1) MOCK_EMPLEADO_SECTIONS.splice(idx, 1);
+}
+
+export async function mockFetchSectionEmpleados(_sectionId: string): Promise<{ id: string; full_name: string }[]> {
+  await delay(250);
+  return [
+    { id: "emp-001", full_name: "Juan Pérez" },
+    { id: "emp-002", full_name: "María García" },
+    { id: "emp-003", full_name: "Carlos López" },
+  ];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MOCK API FUNCTIONS — TAREAS HUÉRFANAS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function mockFetchUnassignedTasks(): Promise<UnassignedTask[]> {
+  await delay(400);
+  return MOCK_UNASSIGNED_TASKS.map((t) => ({ ...t }));
+}
+
+export async function mockReasignarTarea(taskId: string, _empleadoIds: string[]): Promise<void> {
+  await delay(400);
+  const idx = MOCK_UNASSIGNED_TASKS.findIndex((t) => t.id === taskId);
+  if (idx !== -1) MOCK_UNASSIGNED_TASKS.splice(idx, 1);
 }

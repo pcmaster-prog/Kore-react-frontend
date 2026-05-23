@@ -8,23 +8,20 @@ import TaskTreePanel from "./TaskTreePanel";
 import TaskDetailPanel from "./TaskDetailPanel";
 import AreaSectionManager from "./AreaSectionManager";
 import TaskAssignmentRulesManager from "./TaskAssignmentRulesManager";
-import RoutineScheduleConfig from "./RoutineScheduleConfig";
 import { useTaskTree } from "./hooks/useTaskTree";
 import { useTaskStore } from "./taskStore";
 import {
   TreePine,
   Settings,
-  CalendarClock,
   ListChecks,
 } from "lucide-react";
 
-type TabKey = "tree" | "manager" | "rules" | "schedules";
+type TabKey = "tree" | "manager" | "rules";
 
 const TABS = [
   { key: "tree" as TabKey, label: "Árbol de tareas", icon: <TreePine className="h-4 w-4" /> },
   { key: "manager" as TabKey, label: "Áreas y secciones", icon: <Settings className="h-4 w-4" /> },
   { key: "rules" as TabKey, label: "Reglas de asignación", icon: <ListChecks className="h-4 w-4" /> },
-  { key: "schedules" as TabKey, label: "Programación", icon: <CalendarClock className="h-4 w-4" /> },
 ] as const;
 
 export default function TaskAreasPage() {
@@ -81,7 +78,6 @@ export default function TaskAreasPage() {
         )}
         {tab === "manager" && <AreaSectionManager />}
         {tab === "rules" && <TaskAssignmentRulesManager />}
-        {tab === "schedules" && <RoutineScheduleConfig />}
       </div>
     </div>
   );

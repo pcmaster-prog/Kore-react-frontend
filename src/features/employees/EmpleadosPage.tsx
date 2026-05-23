@@ -12,10 +12,15 @@ import {
 } from "./api";
 import {
   Users, UserPlus, CheckCircle2, AlertTriangle,
-  Search, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign, FileText, Pencil
+  Search, UserX, UserCheck, Trash2, Shield, Briefcase, DollarSign, FileText, Pencil,
+  Star, X, MapPin
 } from "lucide-react";
 
 import { cx } from "@/lib/utils";
+import { useAuthStore } from "@/features/auth/authStore";
+import { useEmpleadoSections, useAssignSectionToEmpleado, useRemoveSectionFromEmpleado } from "@/features/tasks/hooks/useEmpleadoSections";
+import { useAreasWithSections } from "@/features/tasks/hooks/useAreas";
+
 // ─── Avatar ──────────────────────────────────────────────────────────────────
 function Avatar({ name }: { name?: string | null }) {
   const safeName = name ?? "";
@@ -53,6 +58,168 @@ function RoleBadge({ role }: { role: string }) {
   );
 }
 
+// ─── Celda de secciones en tabla ─────────────────────────────────────────────
+function SectionsCell({ empleadoId }: { empleadoId: string }) {
+  const { data: sections = [] } = useEmpleadoSections(empleadoId);
+  if (sections.length === 0) {
+    return <span className="text-neutral-300 text-xs">—</span>;
+  }
+  const names = sections.map((s) => s.section_name ?? "Sección").join(", ");
+  const hasPrimary = sections.some((s) => s.is_primary);
+  return (
+    <div className="flex items-center gap-1.5" title={names}>
+      <span className="text-xs text-k-text-b truncate max-w-[140px]">
+        {names}
+      </span>
+      {hasPrimary && <Star className="h-3 w-3 text-amber-500 fill-amber-500 shrink-0" />}
+    </div>
+  );
+}
+
+// ─── Tab Secciones dentro del modal ──────────────────────────────────────────
+function SeccionesTab({ empleadoId, canEdit }: { empleadoId: string; canEdit: boolean }) {
+  const { data: assigned = [], isLoading: loadingAssigned } = useEmpleadoSections(empleadoId);
+  const { data: areas = [] } = useAreasWithSections();
+  const assign = useAssignSectionToEmpleado();
+  const remove = useRemoveSectionFromEmpleado();
+
+  const [areaId, setAreaId] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [isPrimary, setIsPrimary] = useState(false);
+
+  const availableSections = useMemo(() => {
+    if (!areaId) return [];
+    const area = areas.find((a) => a.id === areaId);
+    const sectionIds = new Set(assigned.map((s) => s.section_id));
+    return (area?.sections ?? []).filter((s) => !sectionIds.has(s.id));
+  }, [areaId, areas, assigned]);
+
+  useEffect(() => {
+    setSectionId("");
+  }, [areaId]);
+
+  function handleAdd() {
+    if (!sectionId) return;
+    assign.mutate(
+      { empleadoId, sectionId, isPrimary },
+      {
+        onSuccess: () => {
+          setSectionId("");
+          setIsPrimary(false);
+        },
+      }
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+        <MapPin className="h-5 w-5 text-k-text-b" />
+        <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Secciones Asignadas</h3>
+      </div>
+
+      {loadingAssigned ? (
+        <div className="flex items-center gap-2 text-xs text-k-text-b">
+          <div className="h-4 w-4 border-2 border-k-border border-t-obsidian rounded-full animate-spin" />
+          Cargando secciones...
+        </div>
+      ) : assigned.length === 0 ? (
+        <p className="text-sm text-k-text-b">Sin secciones asignadas.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {assigned.map((s) => (
+            <div
+              key={s.id}
+              className="inline-flex items-center gap-2 rounded-full bg-k-bg-card2 border border-k-border px-3 py-1.5 text-xs font-medium"
+            >
+              <span className="text-k-text-h">
+                {s.section_name}
+                {s.area_name ? (
+                  <span className="text-k-text-b ml-1">({s.area_name})</span>
+                ) : null}
+              </span>
+              {s.is_primary && (
+                <span className="inline-flex items-center gap-0.5 rounded-md bg-amber-100 text-amber-700 text-[10px] font-bold uppercase px-1.5 py-0.5">
+                  <Star className="h-2.5 w-2.5 fill-amber-700" />
+                  Principal
+                </span>
+              )}
+              {canEdit && (
+                <button
+                  onClick={() => remove.mutate({ empleadoId, sectionId: s.section_id })}
+                  disabled={remove.isPending}
+                  className="ml-0.5 h-5 w-5 rounded-full hover:bg-rose-100 hover:text-rose-600 text-k-text-b flex items-center justify-center transition-colors disabled:opacity-50"
+                  title="Eliminar"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {canEdit && (
+        <div className="border-t border-k-border pt-5 space-y-4">
+          <h4 className="text-sm font-bold text-k-text-h">Agregar sección</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+            <div>
+              <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Área</label>
+              <select
+                className="w-full rounded-xl bg-k-bg-card2 border border-k-border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-obsidian/10"
+                value={areaId}
+                onChange={(e) => setAreaId(e.target.value)}
+              >
+                <option value="">Seleccionar área</option>
+                {areas.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Sección</label>
+              <select
+                className="w-full rounded-xl bg-k-bg-card2 border border-k-border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-obsidian/10 disabled:opacity-50"
+                value={sectionId}
+                onChange={(e) => setSectionId(e.target.value)}
+                disabled={!areaId || availableSections.length === 0}
+              >
+                <option value="">
+                  {!areaId ? "Selecciona un área" : availableSections.length === 0 ? "Sin secciones disponibles" : "Seleccionar sección"}
+                </option>
+                {availableSections.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={handleAdd}
+              disabled={!sectionId || assign.isPending}
+              className="h-9 px-4 rounded-xl bg-k-accent-btn text-white text-sm font-bold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {assign.isPending ? (
+                <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              Agregar
+            </button>
+          </div>
+          <label className="inline-flex items-center gap-2 text-sm text-k-text-h cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isPrimary}
+              onChange={(e) => setIsPrimary(e.target.checked)}
+              className="rounded border-k-border text-k-accent-btn focus:ring-k-accent-btn"
+            />
+            <span className="text-sm font-medium">Sección principal</span>
+          </label>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Modal crear/editar ───────────────────────────────────────────────────────
 function UserModal({
   open,
@@ -69,6 +236,9 @@ function UserModal({
   onClose: () => void;
   onSaved: (item?: UserItem | null) => void;
 }) {
+  const currentUser = useAuthStore((s) => s.user);
+  const canEditSections = currentUser?.role === "admin";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,12 +255,14 @@ function UserModal({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<"general" | "secciones">("general");
 
   useEffect(() => {
     if (!open) return;
     setErr(null);
     setPassword("");
     setShowPassword(false);
+    setActiveTab("general");
     if (initial) {
       setName(initial.name);
       setEmail(initial.email);
@@ -176,6 +348,8 @@ function UserModal({
 
   if (!open) return null;
 
+  const empleadoIdForSections = initial?.employee_id ?? initial?.id ?? null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in-fade">
       <div className="absolute inset-0 bg-k-bg-sidebar/40 backdrop-blur-sm" onClick={onClose} />
@@ -203,6 +377,34 @@ function UserModal({
           </button>
         </div>
 
+        {/* Tabs */}
+        {mode === "edit" && (
+          <div className="flex gap-1 px-8 pt-4 bg-k-bg-card">
+            <button
+              onClick={() => setActiveTab("general")}
+              className={cx(
+                "px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-t-xl transition-colors border-b-2",
+                activeTab === "general"
+                  ? "text-k-text-h border-k-text-h bg-k-bg-card2/50"
+                  : "text-k-text-b border-transparent hover:text-k-text-h"
+              )}
+            >
+              General
+            </button>
+            <button
+              onClick={() => setActiveTab("secciones")}
+              className={cx(
+                "px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-t-xl transition-colors border-b-2",
+                activeTab === "secciones"
+                  ? "text-k-text-h border-k-text-h bg-k-bg-card2/50"
+                  : "text-k-text-b border-transparent hover:text-k-text-h"
+              )}
+            >
+              Secciones
+            </button>
+          </div>
+        )}
+
         {/* Body */}
         <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-k-bg-card">
           {err && (
@@ -212,236 +414,240 @@ function UserModal({
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Columna Izquierda: Acceso */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-k-border">
-                <Shield className="h-5 w-5 text-k-text-b" />
-                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Cuenta de Acceso</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Nombre completo *</label>
-                  <input
-                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                    placeholder="Ej. Juan Pérez"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
+          {activeTab === "secciones" && mode === "edit" && empleadoIdForSections ? (
+            <SeccionesTab empleadoId={empleadoIdForSections} canEdit={canEditSections} />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Columna Izquierda: Acceso */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+                  <Shield className="h-5 w-5 text-k-text-b" />
+                  <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Cuenta de Acceso</h3>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Correo electrónico *</label>
-                  <input
-                    type="email"
-                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                    placeholder="juan@empresa.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Rol del sistema *</label>
-                  <select
-                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all appearance-none"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as any)}
-                  >
-                    <option value="empleado">Empleado (Acceso básico)</option>
-                    <option value="supervisor">Supervisor (Gestión de equipo)</option>
-                    <option value="admin">Admin (Acceso total)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">
-                    Contraseña {mode === "edit" ? "(dejar vacío para no cambiar)" : "*"}
-                  </label>
-                  <div className="relative">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Nombre completo *</label>
                     <input
-                      type={showPassword ? "text" : "password"}
-                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 pr-12 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                      placeholder={mode === "create" ? "Mínimo 6 caracteres" : "Nueva contraseña (opcional)"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                      placeholder="Ej. Juan Pérez"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-k-text-b hover:text-k-text-h text-xs font-bold transition-colors"
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Correo electrónico *</label>
+                    <input
+                      type="email"
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                      placeholder="juan@empresa.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Rol del sistema *</label>
+                    <select
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all appearance-none"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as any)}
                     >
-                      {showPassword ? "Ocultar" : "Ver"}
-                    </button>
+                      <option value="empleado">Empleado (Acceso básico)</option>
+                      <option value="supervisor">Supervisor (Gestión de equipo)</option>
+                      <option value="admin">Admin (Acceso total)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">
+                      Contraseña {mode === "edit" ? "(dejar vacío para no cambiar)" : "*"}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 pr-12 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                        placeholder={mode === "create" ? "Mínimo 6 caracteres" : "Nueva contraseña (opcional)"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-k-text-b hover:text-k-text-h text-xs font-bold transition-colors"
+                      >
+                        {showPassword ? "Ocultar" : "Ver"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Documentación Oficial */}
+                <div className="flex items-center gap-3 pb-2 border-b border-k-border pt-6">
+                  <FileText className="h-5 w-5 text-k-text-b" />
+                  <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Documentación Oficial</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">RFC</label>
+                      <input
+                        className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                        placeholder="13 caracteres"
+                        value={rfc}
+                        onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                        maxLength={13}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">NSS</label>
+                      <input
+                        className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                        placeholder="11 dígitos"
+                        value={nss}
+                        onChange={(e) => setNss(e.target.value.replace(/\D/g, ''))}
+                        maxLength={11}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Expediente (PDF/Imagen)</label>
+                    <label className="flex items-center justify-center w-full min-h-[50px] relative overflow-hidden rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-2 hover:bg-neutral-100 transition-colors cursor-pointer group">
+                      <input
+                        type="file"
+                        accept=".pdf,image/*"
+                        onChange={(e) => setExpediente(e.target.files?.[0] || null)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <div className="flex items-center gap-2">
+                         <div className="h-8 w-8 rounded-xl bg-k-bg-card border border-k-border flex flex-col justify-center items-center group-hover:scale-105 transition-transform">
+                            <FileText className="h-4 w-4 text-k-text-h" />
+                         </div>
+                         <div className="flex flex-col text-left">
+                            <span className="text-[13px] font-bold text-neutral-700">
+                              {expediente ? expediente.name : "Subir archivo"}
+                            </span>
+                            <span className="text-[10px] items-center text-k-text-b font-medium">
+                              {expediente ? `${(expediente.size / 1024 / 1024).toFixed(2)} MB` : "Click para seleccionar o arrastra"}
+                            </span>
+                         </div>
+                      </div>
+                    </label>
+                    {mode === 'edit' && initial?.expediente_url && !expediente && (
+                      <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2 flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                           <div className="h-6 w-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                             <CheckCircle2 className="h-3.5 w-3.5" />
+                           </div>
+                           <span className="text-xs font-bold text-blue-800">Doc. actual subido</span>
+                         </div>
+                         <a 
+                           href={initial.expediente_url.startsWith('http') ? initial.expediente_url : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}${initial.expediente_url}`}
+                           target="_blank" 
+                           rel="noreferrer" 
+                           className="text-[11px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-800 transition-colors"
+                           onClick={(e) => e.stopPropagation()}
+                         >
+                           Ver Archivo
+                         </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Documentación Oficial */}
-              <div className="flex items-center gap-3 pb-2 border-b border-k-border pt-6">
-                <FileText className="h-5 w-5 text-k-text-b" />
-                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Documentación Oficial</h3>
-              </div>
-              <div className="space-y-4">
+              {/* Columna Derecha: Laboral & Nómina */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+                  <Briefcase className="h-5 w-5 text-k-text-b" />
+                  <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Datos Laborales</h3>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">RFC</label>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Nº Empleado</label>
                     <input
-                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                      placeholder="13 caracteres"
-                      value={rfc}
-                      onChange={(e) => setRfc(e.target.value.toUpperCase())}
-                      maxLength={13}
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-bold font-mono text-neutral-600 outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                      placeholder="Ej. EMP-001"
+                      value={employeeCode}
+                      onChange={(e) => setEmployeeCode(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">NSS</label>
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Puesto</label>
                     <input
                       className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                      placeholder="11 dígitos"
-                      value={nss}
-                      onChange={(e) => setNss(e.target.value.replace(/\D/g, ''))}
-                      maxLength={11}
+                      placeholder="Ej. Cajero"
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Fecha de ingreso</label>
+                    <input
+                      type="date"
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all text-neutral-600"
+                      value={hiredAt}
+                      onChange={(e) => setHiredAt(e.target.value)}
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Expediente (PDF/Imagen)</label>
-                  <label className="flex items-center justify-center w-full min-h-[50px] relative overflow-hidden rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-2 hover:bg-neutral-100 transition-colors cursor-pointer group">
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      onChange={(e) => setExpediente(e.target.files?.[0] || null)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                    <div className="flex items-center gap-2">
-                       <div className="h-8 w-8 rounded-xl bg-k-bg-card border border-k-border flex flex-col justify-center items-center group-hover:scale-105 transition-transform">
-                          <FileText className="h-4 w-4 text-k-text-h" />
-                       </div>
-                       <div className="flex flex-col text-left">
-                          <span className="text-[13px] font-bold text-neutral-700">
-                            {expediente ? expediente.name : "Subir archivo"}
-                          </span>
-                          <span className="text-[10px] items-center text-k-text-b font-medium">
-                            {expediente ? `${(expediente.size / 1024 / 1024).toFixed(2)} MB` : "Click para seleccionar o arrastra"}
-                          </span>
-                       </div>
+
+                <div className="flex items-center gap-3 pb-2 border-b border-k-border pt-2">
+                  <DollarSign className="h-5 w-5 text-k-text-b" />
+                  <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Nómina</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex rounded-2xl bg-neutral-100/50 p-1 border border-k-border">
+                    <button
+                      onClick={() => setPaymentType("hourly")}
+                      className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "hourly" ? "bg-k-bg-card text-k-text-h shadow-k-card" : "text-k-text-b hover:text-neutral-600")}
+                    >
+                      Por Hora
+                    </button>
+                    <button
+                      onClick={() => setPaymentType("daily")}
+                      className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "daily" ? "bg-k-bg-card text-k-text-h shadow-k-card" : "text-k-text-b hover:text-neutral-600")}
+                    >
+                      Por Día
+                    </button>
+                  </div>
+
+                  {paymentType === "hourly" ? (
+                    <div>
+                      <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Tarifa por hora</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-k-text-b font-bold">$</span>
+                        <input
+                          type="number" step="0.01" min="0"
+                          className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                          placeholder="0.00"
+                          value={hourlyRate}
+                          onChange={(e) => setHourlyRate(e.target.value)}
+                        />
+                      </div>
                     </div>
-                  </label>
-                  {mode === 'edit' && initial?.expediente_url && !expediente && (
-                    <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50/50 px-3 py-2 flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                         <div className="h-6 w-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                           <CheckCircle2 className="h-3.5 w-3.5" />
-                         </div>
-                         <span className="text-xs font-bold text-blue-800">Doc. actual subido</span>
-                       </div>
-                       <a 
-                         href={initial.expediente_url.startsWith('http') ? initial.expediente_url : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}${initial.expediente_url}`}
-                         target="_blank" 
-                         rel="noreferrer" 
-                         className="text-[11px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-800 transition-colors"
-                         onClick={(e) => e.stopPropagation()}
-                       >
-                         Ver Archivo
-                       </a>
+                  ) : (
+                    <div>
+                      <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Tarifa por día</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-k-text-b font-bold">$</span>
+                        <input
+                          type="number" step="0.01" min="0"
+                          className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                          placeholder="0.00"
+                          value={dailyRate}
+                          onChange={(e) => setDailyRate(e.target.value)}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-
-            {/* Columna Derecha: Laboral & Nómina */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-2 border-b border-k-border">
-                <Briefcase className="h-5 w-5 text-k-text-b" />
-                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Datos Laborales</h3>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Nº Empleado</label>
-                  <input
-                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-bold font-mono text-neutral-600 outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                    placeholder="Ej. EMP-001"
-                    value={employeeCode}
-                    onChange={(e) => setEmployeeCode(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Puesto</label>
-                  <input
-                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                    placeholder="Ej. Cajero"
-                    value={position}
-                    onChange={(e) => setPosition(e.target.value)}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Fecha de ingreso</label>
-                  <input
-                    type="date"
-                    className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all text-neutral-600"
-                    value={hiredAt}
-                    onChange={(e) => setHiredAt(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 pb-2 border-b border-k-border pt-2">
-                <DollarSign className="h-5 w-5 text-k-text-b" />
-                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Nómina</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex rounded-2xl bg-neutral-100/50 p-1 border border-k-border">
-                  <button
-                    onClick={() => setPaymentType("hourly")}
-                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "hourly" ? "bg-k-bg-card text-k-text-h shadow-k-card" : "text-k-text-b hover:text-neutral-600")}
-                  >
-                    Por Hora
-                  </button>
-                  <button
-                    onClick={() => setPaymentType("daily")}
-                    className={cx("flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-widest transition-all", paymentType === "daily" ? "bg-k-bg-card text-k-text-h shadow-k-card" : "text-k-text-b hover:text-neutral-600")}
-                  >
-                    Por Día
-                  </button>
-                </div>
-
-                {paymentType === "hourly" ? (
-                  <div>
-                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Tarifa por hora</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-k-text-b font-bold">$</span>
-                      <input
-                        type="number" step="0.01" min="0"
-                        className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                        placeholder="0.00"
-                        value={hourlyRate}
-                        onChange={(e) => setHourlyRate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Tarifa por día</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-k-text-b font-bold">$</span>
-                      <input
-                        type="number" step="0.01" min="0"
-                        className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 pl-8 pr-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
-                        placeholder="0.00"
-                        value={dailyRate}
-                        onChange={(e) => setDailyRate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          )}
         </div>
         {/* Welcome Email Banner */}
         {mode === "create" && (
@@ -464,14 +670,16 @@ function UserModal({
           >
             Cancelar
           </button>
-          <button
-            onClick={handleSave}
-            disabled={!canSave || saving}
-            className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
-          >
-            {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            {mode === "create" ? "Crear Usuario" : "Guardar Cambios"}
-          </button>
+          {activeTab === "general" && (
+            <button
+              onClick={handleSave}
+              disabled={!canSave || saving}
+              className="rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text shadow-md hover:opacity-90 hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              {mode === "create" ? "Crear Usuario" : "Guardar Cambios"}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -808,7 +1016,7 @@ export default function EmpleadosPage() {
               <table className="w-full text-sm">
                 <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
-                    {["Usuario", "Rol", "Puesto", "No. Empleado", "Estado", "Acciones"].map((h) => (
+                    {["Usuario", "Rol", "Puesto", "No. Empleado", "Secciones", "Estado", "Acciones"].map((h) => (
                       <th key={h} className={cx("text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]", h === "No. Empleado" ? "hidden md:table-cell" : "")}>{h}</th>
                     ))}
                   </tr>
@@ -840,6 +1048,9 @@ export default function EmpleadosPage() {
                       </td>
                       <td className="px-5 py-4 font-mono text-xs font-bold text-k-text-b hidden md:table-cell">
                         {user.employee_code ?? <span className="text-neutral-200">—</span>}
+                      </td>
+                      <td className="px-5 py-4">
+                        <SectionsCell empleadoId={user.employee_id ?? user.id} />
                       </td>
                       <td className="px-5 py-4">
                         <span className={cx(

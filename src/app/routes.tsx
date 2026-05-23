@@ -18,6 +18,7 @@ const EmployeeDashboard = lazy(() => import("@/features/dashboard/EmployeeDashbo
 // Tareas
 const TasksPageEmployee = lazy(() => import("@/features/tasks/EmployeeTasksPage"));
 const TareasManagerPage = lazy(() => import("@/features/tasks/TareasManagerPage"));
+const TareasHuerfanasPage = lazy(() => import("@/features/tasks/TareasHuerfanasPage"));
 const TaskAreasPage = lazy(() => import("@/features/tasks/TaskAreasPage"));
 const EmployeeTaskAreasPage = lazy(() => import("@/features/tasks/EmployeeTaskAreasPage"));
 const RoutineDetailPage = lazy(() => import("@/features/tasks/catalog/RoutineDetailPage"));
@@ -147,6 +148,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole allow={["admin", "supervisor"]}>
             <Suspended><TaskAreasPage /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/tareas/huerfanas",
+        element: (
+          <RequireRole allow={["admin", "supervisor"]}>
+            <Suspended><TareasHuerfanasPage /></Suspended>
           </RequireRole>
         ),
       },

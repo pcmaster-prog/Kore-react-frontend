@@ -84,6 +84,7 @@ export type AssigneeType = 'empleado' | 'position' | 'section_supervisor';
 export interface TaskAssignmentRule {
   id: string;
   taskTemplateId: string;
+  templateTitle?: string;
   assigneeType: AssigneeType;
   assigneeId?: string;
   sectionId?: string;
@@ -156,14 +157,21 @@ export interface ChecklistItem {
   done: boolean;
 }
 
+export type RoutineScheduleAssigneeType = 'empleado' | 'position' | 'section' | 'area' | null;
+
 export interface RoutineSchedule {
   id: string;
   routineId: string;
+  routineName?: string;
   triggerTime: string;
   triggerDays: number[];
   autoAssign: boolean;
   notifyPush: boolean;
   isActive: boolean;
+  assigneeType?: RoutineScheduleAssigneeType;
+  assigneeId?: string | null;
+  areaId?: string | null;
+  sectionId?: string | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -186,3 +194,27 @@ export type CreateIncidentPayload = Omit<Incident, 'id' | 'status' | 'resolvedBy
 
 export type CreateRoutineSchedulePayload = Omit<RoutineSchedule, 'id'>;
 export type UpdateRoutineSchedulePayload = Partial<Omit<RoutineSchedule, 'id'>>;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ④ NUEVOS TIPOS — Empleado-Secciones y Tareas Huérfanas
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface EmpleadoSection {
+  id: string;
+  empleado_id: string;
+  section_id: string;
+  section_name?: string;
+  area_name?: string;
+  is_primary: boolean;
+}
+
+export interface UnassignedTask {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: string;
+  area: { id: string; name: string } | null;
+  section: { id: string; name: string } | null;
+  unassigned_reason: string;
+  created_at: string;
+}

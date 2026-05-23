@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Toggle, formatWeekdays } from "./ui";
 import RoutineModal from "./RoutineModal";
+import RoutineScheduleModal from "@/features/tasks/components/RoutineScheduleModal";
 import type { Routine } from "./api";
 import {
   createRoutine,
@@ -8,7 +9,7 @@ import {
   listRoutines,
   updateRoutine,
 } from "./api";
-import { Calendar, Repeat, Eye, Edit2, Trash2, Plus, Zap } from "lucide-react";
+import { Calendar, Repeat, Eye, Edit2, Trash2, Plus, Zap, CalendarClock } from "lucide-react";
 
 export default function RoutinesPage({
   onOpenDetail,
@@ -25,6 +26,9 @@ export default function RoutinesPage({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selected, setSelected] = useState<Routine | null>(null);
+
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleRoutine, setScheduleRoutine] = useState<Routine | null>(null);
 
   async function load() {
     setLoading(true);
@@ -73,6 +77,11 @@ export default function RoutinesPage({
     } catch (e: any) {
       alert(e?.response?.data?.message ?? "No pude eliminar");
     }
+  }
+
+  function openScheduleModal(r: Routine) {
+    setScheduleRoutine(r);
+    setScheduleModalOpen(true);
   }
 
   return (
@@ -177,13 +186,23 @@ export default function RoutinesPage({
               </div>
 
               <div className="mt-auto flex items-center justify-between pt-4 border-t border-neutral-50 border-dashed">
-                <button
-                  onClick={() => onOpenDetail(r.id)}
-                  className="px-4 py-2 rounded-xl bg-neutral-100 text-obsidian text-[10px] font-black uppercase tracking-widest hover:bg-neutral-200 flex items-center gap-2 transition-colors"
-                >
-                  <Eye className="h-3 w-3" />
-                  Ver Rutina
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onOpenDetail(r.id)}
+                    className="px-4 py-2 rounded-xl bg-neutral-100 text-obsidian text-[10px] font-black uppercase tracking-widest hover:bg-neutral-200 flex items-center gap-2 transition-colors"
+                  >
+                    <Eye className="h-3 w-3" />
+                    Ver Rutina
+                  </button>
+                  <button
+                    onClick={() => openScheduleModal(r)}
+                    title="Programar Rutina"
+                    className="px-3 py-2 rounded-xl bg-obsidian text-white text-[10px] font-black uppercase tracking-widest hover:bg-gold hover:text-obsidian flex items-center gap-2 transition-colors"
+                  >
+                    <CalendarClock className="h-3 w-3" />
+                    Programar
+                  </button>
+                </div>
 
                 <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
@@ -237,6 +256,16 @@ export default function RoutinesPage({
         initial={selected}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
+      />
+
+      <RoutineScheduleModal
+        open={scheduleModalOpen}
+        onClose={() => {
+          setScheduleModalOpen(false);
+          setScheduleRoutine(null);
+        }}
+        routineId={scheduleRoutine?.id}
+        routineName={scheduleRoutine?.name}
       />
     </div>
   );

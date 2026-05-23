@@ -12,6 +12,8 @@ import type {
   RoutineSchedule,
   Incident,
   TaskV2,
+  EmpleadoSection,
+  UnassignedTask,
   CreateAreaPayload,
   UpdateAreaPayload,
   CreateSectionPayload,
@@ -68,6 +70,12 @@ import {
   mockGetTasksBySection,
   mockStartTask,
   mockFinishTask,
+  mockFetchEmpleadoSections,
+  mockAssignSectionToEmpleado,
+  mockRemoveSectionFromEmpleado,
+  mockFetchSectionEmpleados,
+  mockFetchUnassignedTasks,
+  mockReasignarTarea,
 } from "@/mocks/taskAreaMocks";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -298,6 +306,48 @@ export async function assignSupervisorSection(sectionId: string, supervisorId: s
 export async function deleteSupervisorSection(id: string): Promise<void> {
   if (USE_MOCKS) return mockDeleteSupervisorSection(id);
   await api.delete(`/supervisor-sections/${id}`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EMPLEADO-SECCIONES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function fetchEmpleadoSections(empleadoId: string): Promise<EmpleadoSection[]> {
+  if (USE_MOCKS) return mockFetchEmpleadoSections(empleadoId);
+  const res = await api.get(`/empleados/${empleadoId}/sections`);
+  return Array.isArray(res.data) ? res.data : (res.data.data ?? []);
+}
+
+export async function assignSectionToEmpleado(empleadoId: string, sectionId: string, isPrimary = false): Promise<EmpleadoSection> {
+  if (USE_MOCKS) return mockAssignSectionToEmpleado(empleadoId, sectionId, isPrimary);
+  const res = await api.post(`/empleados/${empleadoId}/sections`, { section_id: sectionId, is_primary: isPrimary });
+  return res.data.item ?? res.data;
+}
+
+export async function removeSectionFromEmpleado(empleadoId: string, sectionId: string): Promise<void> {
+  if (USE_MOCKS) return mockRemoveSectionFromEmpleado(empleadoId, sectionId);
+  await api.delete(`/empleados/${empleadoId}/sections/${sectionId}`);
+}
+
+export async function fetchSectionEmpleados(sectionId: string): Promise<{ id: string; full_name: string }[]> {
+  if (USE_MOCKS) return mockFetchSectionEmpleados(sectionId);
+  const res = await api.get(`/sections/${sectionId}/empleados`);
+  return Array.isArray(res.data) ? res.data : (res.data.data ?? []);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAREAS HUÉRFANAS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function fetchUnassignedTasks(): Promise<UnassignedTask[]> {
+  if (USE_MOCKS) return mockFetchUnassignedTasks();
+  const res = await api.get("/tareas/huerfanas");
+  return Array.isArray(res.data) ? res.data : (res.data.data ?? []);
+}
+
+export async function reasignarTarea(taskId: string, empleadoIds: string[]): Promise<void> {
+  if (USE_MOCKS) return mockReasignarTarea(taskId, empleadoIds);
+  await api.post(`/tareas/${taskId}/reasignar`, { empleado_ids: empleadoIds });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
