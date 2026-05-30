@@ -282,7 +282,7 @@ export async function cerrarJornadaMasiva(date: string, motivo?: string, hora?: 
   closed_count: number;
   employees: string[];
 }> {
-  const res = await api.post("/asistencia/cerrar-masivo", { date, motivo, hora });
+  const res = await api.post("/asistencia/cerrar-masivo", { date, motivo, time: hora });
   return res.data;
 }
 
