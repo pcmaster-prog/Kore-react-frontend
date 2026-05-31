@@ -19,12 +19,17 @@ import {
   type LateInfo,
   type AbsenceRequest,
 } from "./api";
+import { useAttendancePolling } from "./useAttendancePolling";
+import { useAttendanceAlerts } from "./useAttendanceAlerts";
 import LunchTimer from "./LunchTimer";
+import BreakTimer from "./BreakTimer";
+import MealSwapModal from "./MealSwapModal";
+import OvertimeRequestModal from "./OvertimeRequestModal";
 import {
   LogIn, LogOut, Coffee, Play, Moon, XCircle,
   Clock, CheckCircle2, AlertTriangle, Calendar,
   Timer, Wifi, Loader2, FileText, Send, ChevronDown, ChevronUp,
-  Sparkles,
+  Sparkles, UtensilsCrossed,
 } from "lucide-react";
 import { isEnabled } from "@/lib/featureFlags";
 
@@ -256,17 +261,19 @@ export default function EmployeeAttendancePage() {
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
   const [wifiBlocked, setWifiBlocked] = useState(false);
   const [liveMinutes, setLiveMinutes] = useState(0);
+  const [showMealSwap, setShowMealSwap] = useState(false);
+  const [showOvertime, setShowOvertime] = useState(false);
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3500);
   }
 
-  // Timer logic for Fase 4.7
+  // Timer logic for Fase 4.7 + Ley Silla (break_pauses_clock)
   useEffect(() => {
     if (today?.state === "working" && today.day?.first_check_in_at && isEnabled("newManagementEmployee")) {
       const start = new Date(today.day.first_check_in_at).getTime();
-      const breaks = today.totals?.break_minutes ?? 0;
+      const breaks = today.break_pauses_clock !== false ? (today.totals?.break_minutes ?? 0) : 0;
       
       const updateLive = () => {
         const now = new Date().getTime();
@@ -327,6 +334,15 @@ export default function EmployeeAttendancePage() {
     } catch (e) { reportError("Cargando asistencia", e); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekRange.from, weekRange.to]);
+
+  // ─── Polling + alerts (Fase 1: robustez sin depender de push) ───────────
+  useAttendancePolling(() => {
+    loadToday();
+    loadHistory();
+    loadLateInfo();
+  }, 30_000);
+
+  useAttendanceAlerts(today);
 
   useEffect(() => {
     loadToday();
@@ -403,6 +419,23 @@ export default function EmployeeAttendancePage() {
         <p className="text-[10px] font-bold text-k-text-b uppercase tracking-[0.2em] mb-1">Registro de Jornada</p>
         <h1 className="text-3xl font-black text-k-text-h tracking-tight">Mi Asistencia</h1>
       </div>
+
+      {/* ─── Banner de salida anticipada (FASE 2) ─────────────────────────── */}
+      {today?.early_departure_minutes && today.early_departure_minutes > 0 && (
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 flex items-start gap-4">
+          <div className="h-10 w-10 rounded-2xl bg-orange-100 flex items-center justify-center shrink-0 text-lg">
+            🚪
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-black text-orange-700 tracking-tight">
+              Salida anticipada
+            </div>
+            <p className="text-xs font-medium text-orange-600 mt-0.5">
+              Saliste {today.early_departure_minutes} minutos antes de tu horario. Quedó registrado en tu historial.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ─── Banner de retardos ───────────────────────────────────────────── */}
       {lateCount > 0 && (
@@ -525,6 +558,13 @@ export default function EmployeeAttendancePage() {
                   <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Salida</div>
                   <div className="text-lg font-black">{formatTime(dayInfo?.last_check_out_at)}</div>
                 </div>
+                {/* Salida estimada (FASE 2) */}
+                {today?.expected_exit_time && !dayInfo?.last_check_out_at && (
+                  <div>
+                    <div className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest">Salida estimada</div>
+                    <div className="text-lg font-black text-emerald-300">{formatTime(today.expected_exit_time)}</div>
+                  </div>
+                )}
                 {/* Retardo de hoy */}
                 {(dayInfo as any)?.late_minutes > 0 && (
                   <div>
@@ -612,6 +652,22 @@ export default function EmployeeAttendancePage() {
               )}
             </div>
 
+            {/* Contexto de salida no disponible (FASE 2) */}
+            {actions?.check_out === false && today?.expected_exit_time && (
+              <div className="mt-3 text-center">
+                <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">
+                  Salida disponible a las {formatTime(today.expected_exit_time)}
+                </span>
+              </div>
+            )}
+
+            {/* Timer de descanso (FASE 3) */}
+            {state === "break" && (
+              <BreakTimer
+                durationMinutes={today?.break_duration_minutes ?? 10}
+              />
+            )}
+
             {state === "out" && !today?.is_rest_day && today?.state !== "rest" && (
               <button
                 onClick={() => doAction(() => markRestDay(today!.date), "Día de descanso marcado")}
@@ -621,6 +677,22 @@ export default function EmployeeAttendancePage() {
                 <Moon className="h-4 w-4" />Marcar día de descanso
               </button>
             )}
+
+            {/* Acciones adicionales (FASE 4-5) */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowMealSwap(true)}
+                className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-700 hover:bg-amber-100 transition flex items-center justify-center gap-2"
+              >
+                <UtensilsCrossed className="h-4 w-4" /> Cambio de comida
+              </button>
+              <button
+                onClick={() => setShowOvertime(true)}
+                className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-xs font-bold text-violet-700 hover:bg-violet-100 transition flex items-center justify-center gap-2"
+              >
+                <Clock className="h-4 w-4" /> Horas extras
+              </button>
+            </div>
           </div>
           )}
 
@@ -640,6 +712,20 @@ export default function EmployeeAttendancePage() {
             />
           )}
         </>
+      )}
+
+      {/* ─── Modales ─────────────────────────────────────────────────────────── */}
+      {showMealSwap && (
+        <MealSwapModal
+          onClose={() => setShowMealSwap(false)}
+          onSaved={() => { setShowMealSwap(false); loadToday(); }}
+        />
+      )}
+      {showOvertime && (
+        <OvertimeRequestModal
+          onClose={() => setShowOvertime(false)}
+          onSaved={() => { setShowOvertime(false); loadToday(); }}
+        />
       )}
 
       {/* ─── Panel de solicitudes de ausencia ────────────────────────────────── */}

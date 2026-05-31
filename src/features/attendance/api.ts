@@ -33,6 +33,15 @@ export type TodayResponse = {
   };
   day: AttendanceDay | null;
   totals: AttendanceTotals | null;
+
+  // ─── Nuevos campos (FASE 2-3) ─────────────────────────────────────
+  expected_exit_time?: string | null;
+  early_departure_minutes?: number | null;
+  break_pauses_clock?: boolean;
+  meal_duration_minutes?: number;
+  break_duration_minutes?: number;
+  lunch_reminder_sent?: boolean;
+  exit_reminder_sent?: boolean;
 };
 
 export type MyDayRow = AttendanceDay & {
@@ -284,6 +293,100 @@ export async function cerrarJornadaMasiva(date: string, motivo?: string, hora?: 
 }> {
   const res = await api.post("/asistencia/cerrar-masivo", { date, motivo, time: hora });
   return res.data;
+}
+
+// ─── Meal Swap Requests (FASE 4) ──────────────────────────────────────────────
+
+export type MealSwapRequest = {
+  id: string;
+  solicitante_id: string;
+  solicitante_name: string;
+  receptor_id: string;
+  receptor_name: string;
+  fecha: string;
+  status: "pending" | "accepted" | "approved" | "rejected";
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+};
+
+export async function createMealSwap(receptorId: string, fecha: string): Promise<MealSwapRequest> {
+  const res = await api.post("/meal-swaps", { receptor_id: receptorId, fecha });
+  return res.data as MealSwapRequest;
+}
+
+export async function getMyMealSwaps(): Promise<MealSwapRequest[]> {
+  const res = await api.get("/meal-swaps/mis-solicitudes");
+  return (res.data.data ?? []) as MealSwapRequest[];
+}
+
+export async function acceptMealSwap(id: string): Promise<MealSwapRequest> {
+  const res = await api.post(`/meal-swaps/${id}/aceptar`);
+  return res.data as MealSwapRequest;
+}
+
+export async function getPendingMealSwaps(): Promise<MealSwapRequest[]> {
+  const res = await api.get("/meal-swaps/pendientes");
+  return (res.data.data ?? []) as MealSwapRequest[];
+}
+
+export async function reviewMealSwap(
+  id: string,
+  status: "approved" | "rejected",
+  reviewerNote?: string
+): Promise<MealSwapRequest> {
+  const res = await api.patch(`/meal-swaps/${id}/revisar`, {
+    status,
+    reviewer_note: reviewerNote ?? null,
+  });
+  return res.data as MealSwapRequest;
+}
+
+// ─── Overtime Requests (FASE 5) ───────────────────────────────────────────────
+
+export type OvertimeRequest = {
+  id: string;
+  empleado_id: string;
+  empleado_name?: string;
+  fecha: string;
+  motivo: string;
+  minutos_solicitados: number;
+  status: "pending" | "approved" | "rejected";
+  reviewer_note?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+};
+
+export async function createOvertimeRequest(data: {
+  fecha: string;
+  motivo: string;
+  minutos_solicitados: number;
+}): Promise<OvertimeRequest> {
+  const res = await api.post("/overtime-requests", data);
+  return res.data as OvertimeRequest;
+}
+
+export async function getMyOvertimeRequests(): Promise<OvertimeRequest[]> {
+  const res = await api.get("/overtime-requests/mias");
+  return (res.data.data ?? []) as OvertimeRequest[];
+}
+
+export async function getPendingOvertimeRequests(): Promise<OvertimeRequest[]> {
+  const res = await api.get("/overtime-requests/pendientes");
+  return (res.data.data ?? []) as OvertimeRequest[];
+}
+
+export async function reviewOvertimeRequest(
+  id: string,
+  status: "approved" | "rejected",
+  reviewerNote?: string
+): Promise<OvertimeRequest> {
+  const res = await api.patch(`/overtime-requests/${id}`, {
+    status,
+    reviewer_note: reviewerNote ?? null,
+  });
+  return res.data as OvertimeRequest;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

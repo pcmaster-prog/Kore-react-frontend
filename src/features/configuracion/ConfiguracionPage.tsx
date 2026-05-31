@@ -107,6 +107,8 @@ function HorariosTab() {
   const [autoCloseEnabled, setAutoCloseEnabled] = useState(false);
   const [autoCloseTime, setAutoCloseTime] = useState("17:00");
   const [autoCloseWeekday, setAutoCloseWeekday] = useState("-1"); // -1 = todos los días
+  const [breakDuration, setBreakDuration] = useState("10");
+  const [breakPausesClock, setBreakPausesClock] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -123,6 +125,8 @@ function HorariosTab() {
           setAutoCloseEnabled(!!o.auto_close_enabled);
           setAutoCloseTime(o.auto_close_time ?? "17:00");
           setAutoCloseWeekday(o.auto_close_weekday !== null && o.auto_close_weekday !== undefined ? String(o.auto_close_weekday) : "-1");
+          setBreakDuration(o.break_duration_minutes?.toString() ?? "10");
+          setBreakPausesClock(o.break_pauses_clock !== false);
         }
         const c = res.data.calendar;
         if (c && c.week_start !== undefined) {
@@ -145,6 +149,8 @@ function HorariosTab() {
           auto_close_enabled:  autoCloseEnabled,
           auto_close_time:     autoCloseEnabled ? autoCloseTime : null,
           auto_close_weekday:  autoCloseEnabled && autoCloseWeekday !== "-1" ? parseInt(autoCloseWeekday) : null,
+          break_duration_minutes: parseInt(breakDuration) || 10,
+          break_pauses_clock: breakPausesClock,
         }),
         api.patch("/empresa/settings/calendar", {
           week_start: parseInt(weekStart)
@@ -288,6 +294,27 @@ function HorariosTab() {
                 <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Jornada máx (Hrs)</label>
                 <input type="number" min={1} max={24} className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={maxHours} onChange={(e) => setMaxHours(e.target.value)} />
               </div>
+              <div>
+                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Descanso (min)</label>
+                <input type="number" min={1} max={60} className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all" value={breakDuration} onChange={(e) => setBreakDuration(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-k-border">
+              <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">El descanso pausa el reloj</span>
+              <button
+                type="button"
+                onClick={() => setBreakPausesClock(v => !v)}
+                className={cx(
+                  "h-6 w-11 rounded-full transition-all flex items-center px-0.5 border",
+                  breakPausesClock ? "bg-emerald-500 border-emerald-600" : "bg-neutral-200 border-neutral-300"
+                )}
+              >
+                <div className={cx(
+                  "h-4 w-4 rounded-full bg-k-bg-card shadow transition-transform duration-300",
+                  breakPausesClock ? "translate-x-5" : "translate-x-0"
+                )} />
+              </button>
             </div>
           </div>
         </div>
