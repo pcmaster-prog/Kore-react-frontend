@@ -437,6 +437,22 @@ export default function EmployeeAttendancePage() {
         </div>
       )}
 
+      {/* ─── Banner de jornada extendida (hoy) ────────────────────────────── */}
+      {today?.required_exit_time && (dayInfo as any)?.late_minutes > 0 && !dayInfo?.last_check_out_at && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-start gap-4">
+          <div className="h-10 w-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 text-lg">
+            ⏱️
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-black text-amber-700 tracking-tight">Jornada extendida</div>
+            <p className="text-xs font-medium text-amber-600 mt-0.5">
+              Llegaste con {(dayInfo as any).late_minutes} min de retardo. Para completar tus 8 horas debes salir a las {formatTime(today.required_exit_time)}.
+              Puedes salir antes, pero quedará registrado como salida anticipada.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ─── Banner de retardos ───────────────────────────────────────────── */}
       {lateCount > 0 && (
         <div className={cx(
@@ -565,6 +581,13 @@ export default function EmployeeAttendancePage() {
                     <div className="text-lg font-black text-emerald-300">{formatTime(today.expected_exit_time)}</div>
                   </div>
                 )}
+                {/* Jornada completa (hasta cuándo debe trabajar para cumplir 8h) */}
+                {today?.required_exit_time && !dayInfo?.last_check_out_at && (
+                  <div>
+                    <div className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">Jornada completa</div>
+                    <div className="text-lg font-black text-amber-300">{formatTime(today.required_exit_time)}</div>
+                  </div>
+                )}
                 {/* Retardo de hoy */}
                 {(dayInfo as any)?.late_minutes > 0 && (
                   <div>
@@ -642,7 +665,23 @@ export default function EmployeeAttendancePage() {
             <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-4 sm:mb-5">Acciones Rápidas</div>
             <div className="grid grid-cols-2 gap-4">
               <ActionBtn label="Entrada" icon={<LogIn className="h-5 w-5" />} enabled={actions?.check_in ?? false} busy={busy} variant="primary" onClick={() => doAction(checkIn, "Entrada registrada")} />
-              <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={actions?.check_out ?? false} busy={busy} variant="danger" onClick={() => doAction(checkOut, "Salida registrada", "¿Confirmas que deseas registrar tu salida?")} />
+              <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={!dayLocked && !!dayInfo?.first_check_in_at} busy={busy} variant="danger" onClick={() => {
+                const requiredTime = today?.required_exit_time || today?.expected_exit_time;
+                if (requiredTime && !dayInfo?.last_check_out_at) {
+                  const now = new Date();
+                  const required = new Date(requiredTime);
+                  // Ajustar required al día de hoy para comparación justa
+                  const todayStr = now.toISOString().slice(0, 10);
+                  const requiredAdjusted = new Date(`${todayStr}T${required.toISOString().slice(11, 16)}`);
+                  if (now < requiredAdjusted) {
+                    const diffMins = Math.ceil((requiredAdjusted.getTime() - now.getTime()) / 60000);
+                    const confirmMsg = `⚠️ Tu jornada completa es hasta ${formatTime(requiredTime)}.\nSi sales ahora, te faltan ${diffMins} minutos y quedará registrada como salida anticipada.\n\n¿Deseas continuar?`;
+                    doAction(checkOut, "Salida registrada", confirmMsg);
+                    return;
+                  }
+                }
+                doAction(checkOut, "Salida registrada", "¿Confirmas que deseas registrar tu salida?");
+              }} />
               
               {(!isEnabled("newManagementEmployee") || actions?.break_start) && (
                 <ActionBtn label="Inicio Descanso" icon={<Coffee className="h-5 w-5" />} enabled={actions?.break_start ?? false} busy={busy} variant="warning" onClick={() => doAction(breakStart, "Pausa iniciada", "¿Deseas iniciar tu pausa?")} />
@@ -652,11 +691,11 @@ export default function EmployeeAttendancePage() {
               )}
             </div>
 
-            {/* Contexto de salida no disponible (FASE 2) */}
-            {actions?.check_out === false && today?.expected_exit_time && (
+            {/* Contexto de salida anticipada (FASE 2+) */}
+            {today?.required_exit_time && !dayInfo?.last_check_out_at && (
               <div className="mt-3 text-center">
-                <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">
-                  Salida disponible a las {formatTime(today.expected_exit_time)}
+                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">
+                  Jornada completa: {formatTime(today.required_exit_time)} · Salir antes queda como anticipada
                 </span>
               </div>
             )}

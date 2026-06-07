@@ -529,8 +529,28 @@ function StatusBadge({ item, isAbsent }: { item?: ByDateItem; isAbsent?: boolean
 
   if (!checkedIn)
     return <span className="inline-flex items-center gap-1.5 rounded-lg border border-k-border bg-k-bg-card2 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-k-text-b"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />Ausente</span>;
-  if (closed)
+
+  if (closed) {
+    // Salida anticipada: cerró pero no completó sus horas
+    if (item.early_departure_minutes && item.early_departure_minutes > 0) {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />Salida anticipada
+        </span>
+      );
+    }
     return <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Presente</span>;
+  }
+
+  // En turno: mostrar si tiene jornada extendida pendiente
+  if (item.required_exit_time) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />En turno
+      </span>
+    );
+  }
+
   return (
     <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
       <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />En turno
@@ -830,8 +850,25 @@ export default function ManagerAttendancePage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-5 py-4 font-bold text-sm text-k-text-h">{item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}</td>
-                            <td className="px-5 py-4 text-sm text-k-text-b">{item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}</td>
+                            <td className="px-5 py-4 font-bold text-sm text-k-text-h">
+                              {item?.first_check_in_at ? formatTime(item.first_check_in_at) : "—"}
+                              {item?.late_minutes && item.late_minutes > 0 && (
+                                <span className="ml-1.5 text-[10px] font-bold text-amber-500">+{item.late_minutes}min</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-4 text-sm text-k-text-b">
+                              {item?.last_check_out_at ? formatTime(item.last_check_out_at) : "—"}
+                              {item?.early_departure_minutes && item.early_departure_minutes > 0 && (
+                                <div className="text-[10px] text-orange-500 font-bold mt-0.5">
+                                  -{item.early_departure_minutes}min de jornada
+                                </div>
+                              )}
+                              {item?.required_exit_time && !item?.last_check_out_at && (
+                                <div className="text-[10px] text-amber-500 font-bold mt-0.5">
+                                  Hasta {formatTime(item.required_exit_time)}
+                                </div>
+                              )}
+                            </td>
                             <td className="px-5 py-4">
                               <StatusBadge item={item} isAbsent={!item} />
                             </td>

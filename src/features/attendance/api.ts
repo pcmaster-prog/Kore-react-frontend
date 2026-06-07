@@ -35,7 +35,8 @@ export type TodayResponse = {
   totals: AttendanceTotals | null;
 
   // ─── Nuevos campos (FASE 2-3) ─────────────────────────────────────
-  expected_exit_time?: string | null;
+  expected_exit_time?: string | null;      // hora mínima para salir (ej. 17:00)
+  required_exit_time?: string | null;      // hora para completar 8h (ej. 17:30 si llegó tarde)
   early_departure_minutes?: number | null;
   break_pauses_clock?: boolean;
   meal_duration_minutes?: number;
@@ -50,6 +51,10 @@ export type MyDayRow = AttendanceDay & {
 
 export type ByDateItem = AttendanceDay & {
   totals: AttendanceTotals;
+  // Campos opcionales para salida anticipada / jornada completa (vista admin)
+  early_departure_minutes?: number | null;
+  required_exit_time?: string | null;
+  late_minutes?: number | null;
 };
 
 export type WeeklySummary = {
