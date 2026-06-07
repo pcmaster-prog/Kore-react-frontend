@@ -1,7 +1,7 @@
 // src/features/configuracion/ConfiguracionPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2, Bell, Send, Settings2, ExternalLink, ChevronRight, HelpCircle, ChevronDown } from "lucide-react";
+import { Users, Shield, DollarSign, Clock, Activity, Blocks, Wifi, AlertTriangle, CheckCircle2, Loader2, FileText, Trash2, Bell, Send, Settings2, ExternalLink, ChevronRight, HelpCircle, ChevronDown, CalendarDays } from "lucide-react";
 import api from "@/lib/http";
 import { auth } from "@/features/auth/store";
 import ActividadTab from "./ActividadTab";
@@ -98,6 +98,24 @@ function TarifasTab() {
   );
 }
 
+type WeekDaySchedule = {
+  weekday: number;
+  check_in_time: string;
+  check_out_time: string;
+  is_working_day: boolean;
+};
+
+const WEEKDAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+function buildDefaultWeekSchedule(checkIn: string, checkOut: string): WeekDaySchedule[] {
+  return WEEKDAY_NAMES.map((_, weekday) => ({
+    weekday,
+    check_in_time: checkIn,
+    check_out_time: checkOut,
+    is_working_day: true,
+  }));
+}
+
 function HorariosTab() {
   const [checkInTime, setCheckInTime] = useState("08:30");
   const [checkOutTime, setCheckOutTime] = useState("17:00");
@@ -109,6 +127,7 @@ function HorariosTab() {
   const [autoCloseWeekday, setAutoCloseWeekday] = useState("-1"); // -1 = todos los días
   const [breakDuration, setBreakDuration] = useState("10");
   const [breakPausesClock, setBreakPausesClock] = useState(true);
+  const [weekSchedule, setWeekSchedule] = useState<WeekDaySchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -118,8 +137,10 @@ function HorariosTab() {
       .then((res) => {
         const o = res.data.operativo;
         if (o) {
-          setCheckInTime(o.check_in_time);
-          setCheckOutTime(o.check_out_time);
+          const loadedCheckIn = o.check_in_time ?? "08:30";
+          const loadedCheckOut = o.check_out_time ?? "17:00";
+          setCheckInTime(loadedCheckIn);
+          setCheckOutTime(loadedCheckOut);
           setLateTolerance(o.late_tolerance.toString());
           setMaxHours(o.max_hours.toString());
           setAutoCloseEnabled(!!o.auto_close_enabled);
@@ -127,6 +148,17 @@ function HorariosTab() {
           setAutoCloseWeekday(o.auto_close_weekday !== null && o.auto_close_weekday !== undefined ? String(o.auto_close_weekday) : "-1");
           setBreakDuration(o.break_duration_minutes?.toString() ?? "10");
           setBreakPausesClock(o.break_pauses_clock !== false);
+
+          if (Array.isArray(o.week_schedule) && o.week_schedule.length === 7) {
+            setWeekSchedule(o.week_schedule.map((d: any) => ({
+              weekday: d.weekday ?? 0,
+              check_in_time: d.check_in_time ?? loadedCheckIn,
+              check_out_time: d.check_out_time ?? loadedCheckOut,
+              is_working_day: d.is_working_day !== false,
+            })));
+          } else {
+            setWeekSchedule(buildDefaultWeekSchedule(loadedCheckIn, loadedCheckOut));
+          }
         }
         const c = res.data.calendar;
         if (c && c.week_start !== undefined) {
@@ -151,6 +183,7 @@ function HorariosTab() {
           auto_close_weekday:  autoCloseEnabled && autoCloseWeekday !== "-1" ? parseInt(autoCloseWeekday) : null,
           break_duration_minutes: parseInt(breakDuration) || 10,
           break_pauses_clock: breakPausesClock,
+          week_schedule:       weekSchedule,
         }),
         api.patch("/empresa/settings/calendar", {
           week_start: parseInt(weekStart)
@@ -163,6 +196,36 @@ function HorariosTab() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function updateDay(weekday: number, patch: Partial<WeekDaySchedule>) {
+    setWeekSchedule(prev => prev.map(d => d.weekday === weekday ? { ...d, ...patch } : d));
+  }
+
+  function toggleWorkingDay(weekday: number) {
+    setWeekSchedule(prev => prev.map(d => d.weekday === weekday ? { ...d, is_working_day: !d.is_working_day } : d));
+  }
+
+  function applyStandardToWeek() {
+    setWeekSchedule(prev => prev.map(d => ({
+      ...d,
+      check_in_time: checkInTime,
+      check_out_time: checkOutTime,
+      is_working_day: true,
+    })));
+  }
+
+  function calculateDayHours(start: string, end: string): string {
+    const [sh, sm] = start.split(":").map(Number);
+    const [eh, em] = end.split(":").map(Number);
+    const startMins = sh * 60 + sm;
+    const endMins = eh * 60 + em;
+    const diff = endMins - startMins;
+    if (diff <= 0) return "0";
+    const h = Math.floor(diff / 60);
+    const m = diff % 60;
+    if (m === 0) return `${h}`;
+    return `${h}.${Math.round(m / 6)}`;
   }
 
   if (loading) return (
@@ -319,7 +382,81 @@ function HorariosTab() {
           </div>
         </div>
 
+        {/* Horario Semanal */}
+        <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-k-border">
+            <div className="flex items-center gap-3">
+              <CalendarDays className="h-5 w-5 text-k-text-b" />
+              <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Horario Semanal</h3>
+            </div>
+            <button
+              type="button"
+              onClick={applyStandardToWeek}
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 transition text-left sm:text-right"
+            >
+              Aplicar jornada standard a todos los días
+            </button>
+          </div>
 
+          <div className="space-y-3">
+            {weekSchedule.map((day) => (
+              <div key={day.weekday} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:w-44">
+                  <button
+                    type="button"
+                    onClick={() => toggleWorkingDay(day.weekday)}
+                    className={cx(
+                      "h-6 w-11 rounded-full transition-all flex items-center px-0.5 border shrink-0",
+                      day.is_working_day ? "bg-emerald-500 border-emerald-600" : "bg-neutral-200 border-neutral-300"
+                    )}
+                  >
+                    <div className={cx(
+                      "h-4 w-4 rounded-full bg-k-bg-card shadow transition-transform duration-300",
+                      day.is_working_day ? "translate-x-5" : "translate-x-0"
+                    )} />
+                  </button>
+                  <span className={cx("text-sm font-bold", !day.is_working_day && "text-k-text-b line-through")}>
+                    {WEEKDAY_NAMES[day.weekday]}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 flex-1">
+                  <input
+                    type="time"
+                    value={day.check_in_time}
+                    disabled={!day.is_working_day}
+                    onChange={(e) => updateDay(day.weekday, { check_in_time: e.target.value })}
+                    className={cx(
+                      "w-full sm:w-32 rounded-2xl border bg-k-bg-card px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all",
+                      day.is_working_day ? "border-k-border" : "border-k-border opacity-50 cursor-not-allowed"
+                    )}
+                  />
+                  <span className="text-k-text-b">→</span>
+                  <input
+                    type="time"
+                    value={day.check_out_time}
+                    disabled={!day.is_working_day}
+                    onChange={(e) => updateDay(day.weekday, { check_out_time: e.target.value })}
+                    className={cx(
+                      "w-full sm:w-32 rounded-2xl border bg-k-bg-card px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all",
+                      day.is_working_day ? "border-k-border" : "border-k-border opacity-50 cursor-not-allowed"
+                    )}
+                  />
+                  <span className="text-xs font-bold text-k-text-b w-14">
+                    {day.is_working_day ? `${calculateDayHours(day.check_in_time, day.check_out_time)}h` : "—"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-700 flex items-start gap-3">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>
+              Desactiva un día si no es laborable. El sistema usará estos horarios para calcular la salida esperada
+              y la jornada completa de cada día. Por ejemplo: Domingo 09:00–15:30 = 6.5h, Lunes a Sábado 09:00–17:00 = 8h.
+            </p>
+          </div>
+        </div>
 
         <HolidaysConfigSection />
 
