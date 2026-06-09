@@ -670,9 +670,10 @@ export default function EmployeeAttendancePage() {
                 if (requiredTime && !dayInfo?.last_check_out_at) {
                   const now = new Date();
                   const required = new Date(requiredTime);
-                  // Ajustar required al día de hoy para comparación justa
-                  const todayStr = now.toISOString().slice(0, 10);
-                  const requiredAdjusted = new Date(`${todayStr}T${required.toISOString().slice(11, 16)}`);
+                  // Ajustar required al día de hoy para comparación justa (usar hora LOCAL, no UTC)
+                  const fmt = (n: number) => String(n).padStart(2, '0');
+                  const todayStr = `${now.getFullYear()}-${fmt(now.getMonth() + 1)}-${fmt(now.getDate())}`;
+                  const requiredAdjusted = new Date(`${todayStr}T${fmt(required.getHours())}:${fmt(required.getMinutes())}`);
                   if (now < requiredAdjusted) {
                     const diffMins = Math.ceil((requiredAdjusted.getTime() - now.getTime()) / 60000);
                     const confirmMsg = `⚠️ Tu jornada completa es hasta ${formatTime(requiredTime)}.\nSi sales ahora, te faltan ${diffMins} minutos y quedará registrada como salida anticipada.\n\n¿Deseas continuar?`;
