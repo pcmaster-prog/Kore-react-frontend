@@ -42,21 +42,21 @@ const PuestoFormPage = lazy(() => import("@/features/puestos/pages/PuestoFormPag
 // Maderas
 const MaderasLayout = lazy(() => import("@/features/maderas/MaderasLayout"));
 const DashboardMaderasPage = lazy(() => import("@/features/maderas/pages/DashboardMaderasPage"));
-const InventarioPage = lazy(() => import("@/features/maderas/pages/InventarioPage"));
-const ProduccionPage = lazy(() => import("@/features/maderas/pages/ProduccionPage"));
-const EnsamblajePage = lazy(() => import("@/features/maderas/pages/EnsamblajePage"));
-const PedidoCalculadorPage = lazy(() => import("@/features/maderas/pages/PedidoCalculadorPage"));
-const PedidosHistorialPage = lazy(() => import("@/features/maderas/pages/PedidosHistorialPage"));
-const TemporadasPage = lazy(() => import("@/features/maderas/pages/TemporadasPage"));
-const CatalogoMaderasPage = lazy(() => import("@/features/maderas/pages/CatalogoPage"));
+const InventarioMaderasPage = lazy(() => import("@/features/maderas/pages/InventarioMaderasPage"));
+const ProduccionMaderasPage = lazy(() => import("@/features/maderas/pages/ProduccionMaderasPage"));
+const EnsamblajeMaderasPage = lazy(() => import("@/features/maderas/pages/EnsamblajeMaderasPage"));
+const CalculadoraPedidosPage = lazy(() => import("@/features/maderas/pages/CalculadoraPedidosPage"));
+const PedidosMaderasPage = lazy(() => import("@/features/maderas/pages/PedidosMaderasPage"));
+const TemporadasMaderasPage = lazy(() => import("@/features/maderas/pages/TemporadasMaderasPage"));
+const CatalogoMaderasPage = lazy(() => import("@/features/maderas/pages/CatalogoMaderasPage"));
 const TablasCortePage = lazy(() => import("@/features/maderas/pages/TablasCortePage"));
 
 // Pesaje
 const PesajeLayout = lazy(() => import("@/features/pesaje/PesajeLayout"));
 const DashboardPesajePage = lazy(() => import("@/features/pesaje/pages/DashboardPesajePage"));
-const RegistrarPesajePage = lazy(() => import("@/features/pesaje/pages/RegistrarPesajePage"));
+const RegistroPesajePage = lazy(() => import("@/features/pesaje/pages/RegistroPesajePage"));
 const HistorialPesajePage = lazy(() => import("@/features/pesaje/pages/HistorialPesajePage"));
-const SaboresPage = lazy(() => import("@/features/pesaje/pages/SaboresPage"));
+const SaboresPesajePage = lazy(() => import("@/features/pesaje/pages/SaboresPesajePage"));
 
 // Configuración
 const ConfiguracionPage = lazy(() => import("@/features/configuracion/ConfiguracionPage"));
@@ -345,13 +345,14 @@ export const router = createBrowserRouter([
         path: "maderas",
         element: <RequireModulo slug="produccion_maderas"><Suspended><MaderasLayout /></Suspended></RequireModulo>,
         children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
           { path: "dashboard", element: <Suspended><DashboardMaderasPage /></Suspended> },
-          { path: "inventario", element: <Suspended><InventarioPage /></Suspended> },
-          { path: "produccion", element: <Suspended><ProduccionPage /></Suspended> },
-          { path: "ensamblaje", element: <Suspended><EnsamblajePage /></Suspended> },
-          { path: "pedido/calcular", element: <Suspended><PedidoCalculadorPage /></Suspended> },
-          { path: "pedidos", element: <Suspended><PedidosHistorialPage /></Suspended> },
-          { path: "temporadas", element: <RequireRole allow={["admin"]}><Suspended><TemporadasPage /></Suspended></RequireRole> },
+          { path: "inventario", element: <Suspended><InventarioMaderasPage /></Suspended> },
+          { path: "produccion", element: <Suspended><ProduccionMaderasPage /></Suspended> },
+          { path: "ensamblaje", element: <Suspended><EnsamblajeMaderasPage /></Suspended> },
+          { path: "pedido/calcular", element: <Suspended><CalculadoraPedidosPage /></Suspended> },
+          { path: "pedidos", element: <Suspended><PedidosMaderasPage /></Suspended> },
+          { path: "temporadas", element: <RequireRole allow={["admin"]}><Suspended><TemporadasMaderasPage /></Suspended></RequireRole> },
           { path: "catalogo", element: <RequireRole allow={["admin"]}><Suspended><CatalogoMaderasPage /></Suspended></RequireRole> },
           { path: "tablas-corte", element: <RequireRole allow={["admin"]}><Suspended><TablasCortePage /></Suspended></RequireRole> },
         ]
@@ -363,9 +364,9 @@ export const router = createBrowserRouter([
         element: <RequireModulo slug="produccion_pesaje"><Suspended><PesajeLayout /></Suspended></RequireModulo>,
         children: [
           { path: "dashboard", element: <Suspended><DashboardPesajePage /></Suspended> },
-          { path: "registrar", element: <Suspended><RegistrarPesajePage /></Suspended> },
+          { path: "registrar", element: <Suspended><RegistroPesajePage /></Suspended> },
           { path: "historial", element: <Suspended><HistorialPesajePage /></Suspended> },
-          { path: "sabores", element: <RequireRole allow={["admin"]}><Suspended><SaboresPage /></Suspended></RequireRole> },
+          { path: "sabores", element: <RequireRole allow={["admin"]}><Suspended><SaboresPesajePage /></Suspended></RequireRole> },
         ]
       },
 
