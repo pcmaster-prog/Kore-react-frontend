@@ -1,6 +1,6 @@
 import { Clock, CheckCircle, Calculator, FileText, Plus } from "lucide-react";
 import { usePedidos } from "../hooks/usePedido";
-import { MaderasPedido } from "../types";
+import type { MaderasPedido } from "../types";
 
 export default function PedidosMaderasPage() {
   const { data: pedidos = [], isLoading } = usePedidos();

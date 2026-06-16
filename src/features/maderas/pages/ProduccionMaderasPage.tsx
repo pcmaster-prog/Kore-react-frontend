@@ -1,22 +1,9 @@
-import { useState } from "react";
-import { Plus, Package, Clock, Users, Flame, User, Hammer } from "lucide-react";
+import { Plus, Clock, User, Hammer } from "lucide-react";
 import { useProduccion } from "../hooks/useProduccion";
-import { MaderasProduccion } from "../types";
+import type { MaderasProduccion } from "../types";
 
 export default function ProduccionMaderasPage() {
   const { data: produccion = [], isLoading } = useProduccion();
-
-  const hoy = new Date().toISOString().split('T')[0];
-  
-  const produccionHoy = produccion
-    .filter((p: MaderasProduccion) => p.fecha_registro.startsWith(hoy))
-    .reduce((acc: number, p: MaderasProduccion) => acc + p.cantidad, 0);
-
-  const operariosActivos = new Set(
-    produccion
-      .filter((p: MaderasProduccion) => p.fecha_registro.startsWith(hoy))
-      .map((p: MaderasProduccion) => p.empleado_id)
-  ).size;
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,6 @@
 import { Combine, Layers, Plus } from "lucide-react";
 import { useEnsambles } from "../hooks/useEnsamblaje";
-import { MaderasEnsamble, MaderasEnsamblePieza } from "../types";
+import type { MaderasEnsamble, MaderasEnsamblePieza } from "../types";
 
 export default function EnsamblajeMaderasPage() {
   const { data: ensamblajes = [], isLoading } = useEnsambles();

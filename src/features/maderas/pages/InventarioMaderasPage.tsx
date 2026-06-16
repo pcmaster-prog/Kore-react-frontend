@@ -1,6 +1,6 @@
-import { Package, Search, AlertCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Package, AlertCircle, ArrowUpRight, Search } from "lucide-react";
 import { useInventario } from "../hooks/useInventario";
-import { MaderasInventario } from "../types";
+import type { MaderasInventario } from "../types";
 
 export default function InventarioMaderasPage() {
   const { data: inventario = [], isLoading } = useInventario();

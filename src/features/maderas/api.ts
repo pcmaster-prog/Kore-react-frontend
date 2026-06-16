@@ -33,6 +33,11 @@ export async function getTemporadas() {
   return res.data;
 }
 
+export async function getTemporadaActiva() {
+  const res = await api.get<MaderasTemporada>("/maderas/temporadas/activa");
+  return res.data;
+}
+
 // Inventario
 export async function getInventario() {
   const res = await api.get<MaderasInventario[]>("/maderas/inventario");
