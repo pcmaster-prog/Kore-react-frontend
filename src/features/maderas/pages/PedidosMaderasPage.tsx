@@ -157,17 +157,20 @@ export default function PedidosMaderasPage() {
 
   const handleCreateOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientName || !orderCode || items.length === 0) {
-      alert("Completa el cliente, código y agrega al menos un producto.");
+    if (!orderCode || (orderMode === 'manual' && items.length === 0)) {
+      alert("Completa el código y agrega al menos un producto.");
       return;
     }
 
     try {
       await createPedido({
         codigo: orderCode,
+        cliente: "Interno", // Legacy check
         total: totalGeneral,
         fecha_pedido: new Date().toISOString().split('T')[0],
         fecha_entrega: deliveryDate || undefined,
+        temporada_id: orderMode === 'auto' ? selectedSeason : undefined,
+        items: orderMode === 'manual' ? items : [],
       } as any);
       setShowModal(false);
     } catch (err: any) {
