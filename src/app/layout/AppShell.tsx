@@ -9,13 +9,12 @@ import { auth } from "@/features/auth/store";
 import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
   CalendarCheck, User, Users,
-  Settings, ChevronRight, Bell, Activity, BookOpen,
-  Receipt, Gift, FileBarChart, AlertTriangle,
+  Settings, ChevronRight, Bell, Activity,
+  Receipt, FileBarChart,
   Briefcase, Hammer, Scale
 } from "lucide-react";
 import { getPendientesSupervisor } from "@/features/semaforo/api";
 import { isEnabled } from "@/lib/featureFlags";
-import { useUnassignedTasks } from "@/features/tasks/hooks/useUnassignedTasks";
 
 import { cx } from "@/lib/utils";
 // ─── Link simple con Prefetch ─────────────────────────────────────────────────
@@ -124,8 +123,6 @@ function SidebarContent({
   const isEmployee = role === "empleado";
   const isAdmin = role === "admin";
   const [activeModules, setActiveModules] = useState(() => auth.getModules());
-  const { data: unassignedTasks } = useUnassignedTasks();
-  const orphanCount = unassignedTasks?.length ?? 0;
 
   useEffect(() => {
     const handleUpdate = () => setActiveModules(auth.getModules());
