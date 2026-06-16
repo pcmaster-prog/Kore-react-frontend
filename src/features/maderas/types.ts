@@ -70,11 +70,23 @@ export type MaderasEnsamble = {
   piezas?: MaderasEnsamblePieza[];
 };
 
+export type PedidoItem = {
+  categoria: string;
+  cantidad: number;
+  descripcion: string;
+  precio_unitario: number;
+  total: number;
+  piezas_calculadas?: number;
+  recibido?: number;
+};
+
 export type MaderasPedido = {
   id: number;
   codigo: string;
   cliente: string;
   total_unidades: number;
+  total_precio: number;
+  items: PedidoItem[];
   status: "pendiente" | "entregado";
   fecha_entrega: string | null;
   created_at: string;

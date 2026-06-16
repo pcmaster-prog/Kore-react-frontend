@@ -1,10 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPedidos, createPedido, updatePedido } from "../api";
+import { getPedidos, createPedido, updatePedido, calcularPedido } from "../api";
 
 export function usePedidos() {
   return useQuery({
     queryKey: ["maderas-pedidos"],
     queryFn: getPedidos,
+  });
+}
+
+export function useCalcularPedido() {
+  return useMutation({
+    mutationFn: (temporada_id: number) => calcularPedido(temporada_id),
   });
 }
 

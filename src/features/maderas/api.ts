@@ -107,13 +107,18 @@ export async function getPedidos() {
   return res.data;
 }
 
-export async function createPedido(data: Partial<MaderasPedido>) {
+export async function createPedido(data: Partial<MaderasPedido> & { temporada_id?: number }) {
   const res = await api.post<MaderasPedido>("/maderas/pedidos", data);
   return res.data;
 }
 
 export async function updatePedido(id: number, data: Partial<MaderasPedido>) {
   const res = await api.put<MaderasPedido>(`/maderas/pedidos/${id}`, data);
+  return res.data;
+}
+
+export async function calcularPedido(temporada_id: number) {
+  const res = await api.get(`/maderas/pedidos/calcular?temporada_id=${temporada_id}`);
   return res.data;
 }
 

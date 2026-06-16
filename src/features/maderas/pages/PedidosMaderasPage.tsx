@@ -1,80 +1,165 @@
-import { useState } from "react";
-import { Clock, CheckCircle, Calculator, FileText, Plus, Check } from "lucide-react";
-import { usePedidos, useCreatePedido, useUpdatePedido } from "../hooks/usePedido";
-import { useProductos } from "../hooks/useCatalogo";
-import { useTemporadaActiva } from "../hooks/useTemporada";
-import type { MaderasPedido } from "../types";
+import { useState, useMemo } from "react";
+import { Clock, CheckCircle, FileText, Plus, Trash2, Save, X, Eye } from "lucide-react";
+import { usePedidos, useCreatePedido, useUpdatePedido, useCalcularPedido } from "../hooks/usePedido";
+import { useTemporadas } from "../hooks/useTemporada";
+import type { MaderasPedido, PedidoItem } from "../types";
+import { cx } from "@/lib/utils";
+
+const CATEGORIAS = [
+  "Recorte Rectangular",
+  "Recorte Circular",
+  "Recorte Cuadrado",
+  "Tablas en Tiras",
+  "Otros Productos",
+];
 
 export default function PedidosMaderasPage() {
   const { data: pedidos = [], isLoading } = usePedidos();
-  const { mutateAsync: createPedido } = useCreatePedido();
+  const { mutateAsync: createPedido, isPending: creating } = useCreatePedido();
   const { mutateAsync: updatePedido } = useUpdatePedido();
 
-  const { data: productos = [], isLoading: loadingProd } = useProductos();
-  const { data: temporadaActiva } = useTemporadaActiva();
-
-  // Calculator State
-  const [calcProduct, setCalcProduct] = useState("");
-  const [calcQty, setCalcQty] = useState("");
-  const [calculation, setCalculation] = useState<{
-    productName: string;
-    qty: number;
-    multiplier: number;
-    seasonName: string;
-    bastonesNeeded: number;
-    insumosNeeded: number;
-  } | null>(null);
-
-  // Modal State
+  // State for form
   const [showModal, setShowModal] = useState(false);
   const [clientName, setClientName] = useState("");
   const [orderCode, setOrderCode] = useState("");
-  const [qtyValue, setQtyValue] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
+  const [items, setItems] = useState<PedidoItem[]>([]);
 
-  const handleCalculate = () => {
-    if (!calcProduct || !calcQty || parseInt(calcQty) <= 0) return;
+  // State for auto vs manual
+  const [orderMode, setOrderMode] = useState<"auto" | "manual">("auto");
+  const [selectedTemporada, setSelectedTemporada] = useState<string>("");
+  const [isCalculated, setIsCalculated] = useState(false);
+
+  const { data: temporadas = [] } = useTemporadas();
+  const { mutateAsync: calcularPedido, isPending: calculating } = useCalcularPedido();
+
+  // State for view modal
+  const [viewPedido, setViewPedido] = useState<MaderasPedido | null>(null);
+
+  const addItem = (categoria: string) => {
+    setItems([
+      ...items,
+      {
+        categoria,
+        cantidad: 1,
+        descripcion: "",
+        precio_unitario: 0,
+        total: 0,
+        piezas_calculadas: 0,
+      },
+    ]);
+  };
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const updateItem = (index: number, field: keyof PedidoItem, value: any) => {
+    const newItems = [...items];
+    const item = newItems[index];
     
-    const prod = productos.find(p => p.id === parseInt(calcProduct));
-    const qty = parseInt(calcQty);
-    const multiplier = temporadaActiva?.multiplicador ?? 1.0;
-    const seasonName = temporadaActiva?.nombre ?? "Estándar";
-
-    // Simple recipe: 1 product = 1 stick (baston) and 2 units of other material, scaled by season
-    const bastonesNeeded = Math.round(qty * 1.0 * multiplier);
-    const insumosNeeded = Math.round(qty * 1.5 * multiplier);
-
-    setCalculation({
-      productName: prod?.nombre ?? "Producto",
-      qty,
-      multiplier,
-      seasonName,
-      bastonesNeeded,
-      insumosNeeded
-    });
+    // @ts-ignore
+    item[field] = value;
+    
+    if (field === "cantidad" || field === "precio_unitario") {
+      item.total = Number(item.cantidad) * Number(item.precio_unitario);
+    }
+    
+    setItems(newItems);
   };
 
-  const openOrderModalFromCalc = () => {
-    if (!calculation) return;
-    setClientName("");
-    setOrderCode("PED-" + Math.floor(1000 + Math.random() * 9000));
-    setQtyValue(calculation.qty.toString());
-    setDeliveryDate("");
-    setShowModal(true);
-  };
+  const totalGeneral = useMemo(() => items.reduce((acc, item) => acc + (item.total || 0), 0), [items]);
+  const totalUnidades = useMemo(() => items.reduce((acc, item) => acc + Number(item.cantidad || 0), 0), [items]);
 
   const openNewOrderModal = () => {
     setClientName("");
     setOrderCode("PED-" + Math.floor(1000 + Math.random() * 9000));
-    setQtyValue("");
     setDeliveryDate("");
+    setOrderMode("auto");
+    setSelectedTemporada("");
+    setIsCalculated(false);
+    setItems([]);
     setShowModal(true);
+  };
+
+  const handleCalculate = async () => {
+    if (!selectedTemporada) {
+      alert("Selecciona una temporada primero.");
+      return;
+    }
+    
+    try {
+      const res = await calcularPedido(Number(selectedTemporada));
+      const data = res.data;
+      
+      const newItems: PedidoItem[] = [];
+      
+      // Mapear resultados a items del pedido
+      if (data.servicios_corte) {
+        data.servicios_corte.forEach((i: any) => {
+          let cat = "Otros Productos";
+          if (i.nombre.toLowerCase().includes("rectangular")) cat = "Recorte Rectangular";
+          if (i.nombre.toLowerCase().includes("circul")) cat = "Recorte Circular";
+          if (i.nombre.toLowerCase().includes("cuadra")) cat = "Recorte Cuadrado";
+          
+          newItems.push({
+            categoria: cat,
+            cantidad: i.cantidad,
+            descripcion: i.nombre,
+            precio_unitario: i.precio_unitario,
+            total: i.subtotal,
+          });
+        });
+      }
+
+      if (data.tablas_pino) {
+        data.tablas_pino.forEach((i: any) => {
+          newItems.push({
+            categoria: "Tablas en Tiras",
+            cantidad: i.cantidad,
+            descripcion: i.nombre,
+            precio_unitario: i.precio_unitario,
+            total: i.subtotal,
+          });
+        });
+      }
+
+      if (data.hojas_mdf) {
+        data.hojas_mdf.forEach((i: any) => {
+          newItems.push({
+            categoria: "Otros Productos", // Generalmente MDF
+            cantidad: i.cantidad,
+            descripcion: i.nombre,
+            precio_unitario: i.precio_unitario,
+            total: i.subtotal,
+            piezas_calculadas: i.cantidad,
+          });
+        });
+      }
+
+      if (data.consumibles) {
+        data.consumibles.forEach((i: any) => {
+          newItems.push({
+            categoria: "Otros Productos",
+            cantidad: i.cantidad,
+            descripcion: i.nombre,
+            precio_unitario: i.precio_unitario,
+            total: i.subtotal,
+          });
+        });
+      }
+
+      setItems(newItems);
+      setIsCalculated(true);
+    } catch (err: any) {
+      alert(err?.response?.data?.message ?? "Error al calcular el pedido.");
+    }
   };
 
   const handleCreateOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientName || !orderCode || !qtyValue || parseInt(qtyValue) <= 0) {
-      alert("Por favor completa todos los campos obligatorios.");
+    if (!clientName || !orderCode || items.length === 0) {
+      alert("Completa el cliente, código y agrega al menos un producto.");
       return;
     }
 
@@ -82,11 +167,12 @@ export default function PedidosMaderasPage() {
       await createPedido({
         codigo: orderCode,
         cliente: clientName,
-        total_unidades: parseInt(qtyValue),
+        total_unidades: totalUnidades,
+        total_precio: totalGeneral,
+        items,
         fecha_entrega: deliveryDate || undefined,
       });
       setShowModal(false);
-      setCalculation(null); // Clear calculator results
     } catch (err: any) {
       alert(err?.response?.data?.message ?? "Error al registrar el pedido.");
     }
@@ -104,146 +190,75 @@ export default function PedidosMaderasPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-k-text-h tracking-tight">Pedidos y Cotizaciones</h1>
+          <h1 className="text-2xl font-black text-k-text-h tracking-tight">Pedidos (Formato Cotización)</h1>
           <p className="text-k-text-b text-sm mt-1">
-            Calcula materiales y gestiona el historial de pedidos de maderas.
+            Genera y administra pedidos desglosados como en tu Excel.
           </p>
         </div>
         <button
           onClick={openNewOrderModal}
-          className="h-10 px-4 bg-k-primary hover:bg-k-primary-hover text-white rounded-xl font-bold text-sm transition-colors shadow-k-button flex items-center gap-2"
+          className="h-10 px-4 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-violet-500/20 flex items-center gap-2 hover:-translate-y-0.5"
         >
           <Plus className="h-4 w-4" />
-          Nuevo Pedido Directo
+          Nueva Cotización
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card h-fit">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-10 w-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-              <Calculator className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-bold text-k-text-h">Calculadora de Materiales</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Producto Requerido</label>
-              <select
-                value={calcProduct}
-                onChange={(e) => setCalcProduct(e.target.value)}
-                className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
-                disabled={loadingProd}
-              >
-                <option value="">Seleccionar producto...</option>
-                {productos.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Cantidad a Producir</label>
-              <input
-                type="number"
-                placeholder="Ej. 1000"
-                min="1"
-                value={calcQty}
-                onChange={(e) => setCalcQty(e.target.value)}
-                className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
-              />
-            </div>
-            <button
-              onClick={handleCalculate}
-              className="w-full h-11 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors shadow-lg mt-4 flex items-center justify-center gap-2"
-            >
-              <Calculator className="h-4 w-4" />
-              Calcular Materiales
-            </button>
-          </div>
-        </div>
-
-        {calculation ? (
-          <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4 border-b border-k-border pb-3">
-                <h3 className="text-sm font-bold text-k-text-h uppercase tracking-wider">Resultado del Cálculo</h3>
-                <span className="text-xs font-bold text-emerald-600 px-2 py-1 bg-emerald-50 rounded-lg">
-                  Factor Temp: {calculation.seasonName} (x{calculation.multiplier})
-                </span>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <span className="text-xs text-k-text-b font-medium block">Producto & Volumen</span>
-                  <span className="text-lg font-black text-k-text-h">{calculation.qty.toLocaleString()} unidades de {calculation.productName}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 border-t border-k-border pt-4">
-                  <div>
-                    <span className="text-xs text-k-text-b font-medium block">Bastones Necesarios</span>
-                    <span className="text-2xl font-black text-orange-600">{calculation.bastonesNeeded.toLocaleString()} <span className="text-xs font-bold text-k-text-b">pzas</span></span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-k-text-b font-medium block">Insumos/Otros</span>
-                    <span className="text-2xl font-black text-orange-600">{calculation.insumosNeeded.toLocaleString()} <span className="text-xs font-bold text-k-text-b">uds</span></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={openOrderModalFromCalc}
-              className="w-full h-11 bg-k-text-h text-white rounded-xl font-bold text-sm hover:bg-black transition-colors shadow-lg mt-6"
-            >
-              Convertir en Pedido
-            </button>
-          </div>
-        ) : (
-          <div className="bg-k-bg-card border border-dashed border-k-border rounded-3xl p-6 flex flex-col items-center justify-center text-center min-h-[280px]">
-            <FileText className="h-12 w-12 text-k-text-b opacity-20 mb-4" />
-            <h3 className="text-sm font-bold text-k-text-h mb-2">Esperando parámetros</h3>
-            <p className="text-xs text-k-text-b max-w-xs">
-              Ingresa el producto y la cantidad deseada para calcular los materiales y tiempos estimados antes de generar el pedido.
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card mt-8">
-        <h3 className="text-sm font-bold text-k-text-b uppercase tracking-widest mb-4">Historial de Pedidos</h3>
+      <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-sm">
+        <h3 className="text-sm font-bold text-k-text-b uppercase tracking-widest mb-4">Historial de Cotizaciones</h3>
         <div className="space-y-4">
           {isLoading ? (
-            <div className="text-center text-k-text-b py-8">Cargando pedidos...</div>
+            <div className="text-center text-k-text-b py-8 animate-pulse">Cargando pedidos...</div>
           ) : pedidos.length === 0 ? (
-            <div className="text-center text-k-text-b py-8">Aún no hay pedidos registrados.</div>
+            <div className="text-center text-k-text-b py-12 flex flex-col items-center border border-dashed border-k-border rounded-2xl">
+              <FileText className="h-10 w-10 text-k-text-b/40 mb-3" />
+              <p>Aún no hay pedidos registrados.</p>
+            </div>
           ) : (
             pedidos.map((pedido: MaderasPedido) => (
-              <div key={pedido.id} className="p-4 rounded-2xl bg-k-bg-card2 border border-k-border flex items-center justify-between hover:border-k-primary transition-colors group">
+              <div key={pedido.id} className="p-4 rounded-2xl bg-k-bg-card2 border border-k-border flex items-center justify-between hover:border-violet-500/30 transition-colors group">
                 <div className="flex items-center gap-4">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${pedido.status === 'entregado' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center border ${pedido.status === 'entregado' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}`}>
                     {pedido.status === 'entregado' ? <CheckCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                   </div>
                   <div>
                     <h4 className="font-bold text-k-text-h text-sm">{pedido.codigo} - {pedido.cliente}</h4>
-                    <div className="text-xs text-k-text-b">Entrega: {pedido.fecha_entrega ? new Date(pedido.fecha_entrega).toLocaleDateString() : "Sin fecha"}</div>
+                    <div className="text-xs text-k-text-b flex gap-3 mt-1">
+                      <span>Entrega: {pedido.fecha_entrega ? new Date(pedido.fecha_entrega).toLocaleDateString() : "Sin fecha"}</span>
+                      <span>•</span>
+                      <span>{pedido.total_unidades} unidades</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="font-black text-k-text-h">{pedido.total_unidades.toLocaleString()} uds</div>
-                    <span className="text-[10px] uppercase font-bold text-k-text-b">{pedido.status}</span>
+                    <div className="font-black text-k-text-h text-lg">${Number(pedido.total_precio).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                    <span className={cx(
+                      "text-[10px] uppercase font-bold px-2 py-0.5 rounded-full inline-block mt-1",
+                      pedido.status === 'entregado' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                    )}>{pedido.status}</span>
                   </div>
-                  {pedido.status === "pendiente" && (
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => handleMarkAsDelivered(pedido.id)}
-                      className="p-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-emerald-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Marcar como entregado"
+                      onClick={() => setViewPedido(pedido)}
+                      className="h-9 w-9 flex items-center justify-center bg-white border border-k-border hover:border-violet-300 hover:text-violet-600 rounded-xl transition-all shadow-sm"
+                      title="Ver detalle"
                     >
-                      <Check className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </button>
-                  )}
+                    {pedido.status === "pendiente" && (
+                      <button
+                        onClick={() => handleMarkAsDelivered(pedido.id)}
+                        className="h-9 w-9 flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-emerald-600 rounded-xl transition-all shadow-sm"
+                        title="Marcar como entregado"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
@@ -252,68 +267,310 @@ export default function PedidosMaderasPage() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-k-bg-card border border-k-border rounded-3xl w-full max-w-md shadow-2xl p-6">
-            <h2 className="text-xl font-bold text-k-text-h mb-4">Registrar Pedido</h2>
-            <form onSubmit={handleCreateOrderSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-k-bg-card border border-k-border rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-k-border flex items-center justify-between bg-k-bg-card2/50 shrink-0">
               <div>
-                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Código del Pedido</label>
-                <input
-                  type="text"
-                  value={orderCode}
-                  onChange={(e) => setOrderCode(e.target.value)}
-                  className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
-                  required
-                />
+                <h2 className="text-xl font-black text-k-text-h tracking-tight">ARTE PARA PASTELERIA "PAYPAL"</h2>
+                <p className="text-xs text-k-text-b font-medium mt-0.5">CALLE COLON 270 A ZONA CENTRO 4626269090</p>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Cliente</label>
-                <input
-                  type="text"
-                  placeholder="Ej. Comercializadora del Norte"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
-                  required
-                />
+              <button onClick={() => setShowModal(false)} className="p-2 text-k-text-b hover:bg-white rounded-xl transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateOrderSubmit} className="flex-1 overflow-y-auto p-6 space-y-8">
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-k-bg-card2 p-5 rounded-2xl border border-k-border">
+                <div>
+                  <label className="block text-[10px] font-bold text-k-text-b uppercase tracking-wider mb-1.5">Código Pedido</label>
+                  <input
+                    type="text"
+                    value={orderCode}
+                    onChange={(e) => setOrderCode(e.target.value)}
+                    className="w-full h-10 px-3 bg-white border border-k-border rounded-xl text-sm font-bold focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-k-text-b uppercase tracking-wider mb-1.5">Solicitó (Cliente)</label>
+                  <input
+                    type="text"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="w-full h-10 px-3 bg-white border border-k-border rounded-xl text-sm font-bold focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-k-text-b uppercase tracking-wider mb-1.5">Fecha Entrega</label>
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    className="w-full h-10 px-3 bg-white border border-k-border rounded-xl text-sm font-bold focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Total Unidades Pedidas</label>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Ej. 1500"
-                  value={qtyValue}
-                  onChange={(e) => setQtyValue(e.target.value)}
-                  className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Fecha Estimada de Entrega</label>
-                <input
-                  type="date"
-                  value={deliveryDate}
-                  onChange={(e) => setDeliveryDate(e.target.value)}
-                  className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
-                />
-              </div>
-              <div className="flex gap-3 justify-end pt-4">
+
+              <div className="flex border-b border-k-border mb-6">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
-                  className="h-10 px-4 border border-k-border rounded-xl font-bold text-sm text-k-text-b hover:bg-k-bg-page transition-colors"
+                  onClick={() => { setOrderMode("auto"); setIsCalculated(false); setItems([]); }}
+                  className={cx(
+                    "px-6 py-3 font-bold text-sm border-b-2 transition-colors",
+                    orderMode === "auto" ? "border-violet-600 text-violet-600" : "border-transparent text-k-text-b hover:text-k-text-h"
+                  )}
                 >
-                  Cancelar
+                  🔄 Generar Automático
                 </button>
                 <button
-                  type="submit"
-                  className="h-10 px-4 bg-k-primary text-white rounded-xl font-bold text-sm hover:bg-k-primary-hover transition-colors shadow"
+                  type="button"
+                  onClick={() => { 
+                    setOrderMode("manual"); 
+                    setIsCalculated(true);
+                    if (items.length === 0) {
+                      setItems([{ categoria: "Recorte Rectangular", cantidad: 1, descripcion: "HOJA MDF BLANCA 4,5MM", precio_unitario: 180, total: 180, piezas_calculadas: 0 }]);
+                    }
+                  }}
+                  className={cx(
+                    "px-6 py-3 font-bold text-sm border-b-2 transition-colors",
+                    orderMode === "manual" ? "border-violet-600 text-violet-600" : "border-transparent text-k-text-b hover:text-k-text-h"
+                  )}
                 >
-                  Confirmar Pedido
+                  ✏️ Crear Manualmente
                 </button>
               </div>
+
+              {orderMode === "auto" && !isCalculated ? (
+                <div className="bg-k-bg-card2 border border-k-border rounded-2xl p-8 text-center max-w-md mx-auto mb-8">
+                  <div className="mb-6">
+                    <label className="block text-sm font-bold text-k-text-b mb-2">Selecciona Temporada:</label>
+                    <select
+                      value={selectedTemporada}
+                      onChange={(e) => setSelectedTemporada(e.target.value)}
+                      className="w-full h-11 px-3 bg-white border border-k-border rounded-xl text-sm font-bold focus:border-violet-500 outline-none"
+                    >
+                      <option value="">-- Elige una temporada --</option>
+                      {temporadas.map((t: any) => (
+                        <option key={t.id} value={t.id}>{t.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCalculate}
+                    disabled={calculating || !selectedTemporada}
+                    className="w-full h-11 bg-violet-600 text-white rounded-xl font-bold text-sm shadow-md hover:bg-violet-700 transition-all disabled:opacity-50"
+                  >
+                    {calculating ? "Cargando..." : "CALCULAR AUTOMÁTICO"}
+                  </button>
+                </div>
+              ) : (
+              <div className="space-y-8">
+                {CATEGORIAS.map(cat => {
+                  const itemsCat = items.filter(i => i.categoria === cat);
+                  
+                  return (
+                    <div key={cat} className="space-y-3">
+                      <div className="flex items-center justify-between border-b-2 border-k-text-h pb-2">
+                        <h3 className="font-black text-k-text-h uppercase tracking-wider text-sm">{cat}</h3>
+                        <button
+                          type="button"
+                          onClick={() => addItem(cat)}
+                          className="text-xs font-bold text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-1 rounded-lg transition-colors flex items-center gap-1"
+                        >
+                          <Plus className="h-3 w-3" /> Agregar fila
+                        </button>
+                      </div>
+
+                      {itemsCat.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm whitespace-nowrap">
+                            <thead className="bg-k-bg-card2 text-k-text-h text-[10px] font-bold uppercase tracking-wider border-b border-k-border">
+                              <tr>
+                                <th className="px-3 py-2 w-20">Cant</th>
+                                <th className="px-3 py-2">Descripción</th>
+                                <th className="px-3 py-2 w-32">P/U ($)</th>
+                                <th className="px-3 py-2 w-32">Total ($)</th>
+                                <th className="px-3 py-2 w-24">Piezas</th>
+                                <th className="px-3 py-2 w-10"></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-k-border">
+                              {items.map((item, idx) => {
+                                if (item.categoria !== cat) return null;
+                                return (
+                                  <tr key={idx} className="group hover:bg-k-bg-card2/30">
+                                    <td className="px-2 py-2">
+                                      <input 
+                                        type="number" min="1" step="0.01" required
+                                        value={item.cantidad || ''} 
+                                        onChange={e => updateItem(idx, 'cantidad', parseFloat(e.target.value))}
+                                        className="w-full h-8 px-2 border border-transparent focus:border-violet-300 hover:border-k-border rounded bg-transparent focus:bg-white transition-all outline-none text-center font-bold"
+                                      />
+                                    </td>
+                                    <td className="px-2 py-2">
+                                      <input 
+                                        type="text" required placeholder="Ej. HOJA MDF BLANCA 40x60"
+                                        value={item.descripcion} 
+                                        onChange={e => updateItem(idx, 'descripcion', e.target.value)}
+                                        className="w-full h-8 px-2 border border-transparent focus:border-violet-300 hover:border-k-border rounded bg-transparent focus:bg-white transition-all outline-none"
+                                      />
+                                    </td>
+                                    <td className="px-2 py-2">
+                                      <input 
+                                        type="number" min="0" step="0.01" required
+                                        value={item.precio_unitario || ''} 
+                                        onChange={e => updateItem(idx, 'precio_unitario', parseFloat(e.target.value))}
+                                        className="w-full h-8 px-2 border border-transparent focus:border-violet-300 hover:border-k-border rounded bg-transparent focus:bg-white transition-all outline-none text-right"
+                                      />
+                                    </td>
+                                    <td className="px-2 py-2">
+                                      <div className="w-full h-8 flex items-center justify-end px-2 font-black text-k-text-h bg-k-bg-card2 rounded">
+                                        ${(item.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                      </div>
+                                    </td>
+                                    <td className="px-2 py-2">
+                                      <input 
+                                        type="number" min="0"
+                                        value={item.piezas_calculadas || ''} 
+                                        onChange={e => updateItem(idx, 'piezas_calculadas', parseInt(e.target.value))}
+                                        className="w-full h-8 px-2 border border-transparent focus:border-violet-300 hover:border-k-border rounded bg-transparent focus:bg-white transition-all outline-none text-center"
+                                        placeholder="Opcional"
+                                      />
+                                    </td>
+                                    <td className="px-2 py-2 text-right">
+                                      <button 
+                                        type="button"
+                                        onClick={() => removeItem(idx)}
+                                        className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-k-text-b italic py-2 px-3 border border-dashed border-k-border rounded-xl">
+                          Sin productos en esta categoría.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              )}
+
+              <div className="flex justify-end pt-6 border-t-2 border-k-text-h">
+                <div className="w-full max-w-sm">
+                  <div className="flex justify-between items-center py-3 px-4 bg-k-bg-card2 rounded-2xl border border-k-border">
+                    <span className="font-bold text-k-text-b uppercase tracking-widest text-sm">Total General</span>
+                    <span className="font-black text-3xl text-k-text-h">${totalGeneral.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  </div>
+                </div>
+              </div>
+
             </form>
+            <div className="p-5 border-t border-k-border bg-white flex justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="h-11 px-6 border border-k-border rounded-xl font-bold text-sm text-k-text-b hover:bg-k-bg-page transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateOrderSubmit}
+                disabled={creating}
+                className="h-11 px-8 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700 hover:-translate-y-0.5 transition-all shadow-md shadow-violet-500/20 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {creating ? "Guardando..." : "Guardar Cotización"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW MODAL */}
+      {viewPedido && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-k-bg-card border border-k-border rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-k-border flex items-center justify-between bg-k-bg-card2/50 shrink-0">
+              <div>
+                <h2 className="text-xl font-black text-k-text-h tracking-tight">ARTE PARA PASTELERIA "PAYPAL"</h2>
+                <p className="text-xs text-k-text-b font-medium mt-0.5">Detalle de Cotización / Pedido</p>
+              </div>
+              <button onClick={() => setViewPedido(null)} className="p-2 text-k-text-b hover:bg-white rounded-xl transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-white">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <div className="text-xs font-bold text-k-text-b uppercase tracking-wider">Solicitado Por</div>
+                  <div className="font-black text-lg text-k-text-h">{viewPedido.cliente}</div>
+                </div>
+                <div className="space-y-1 text-right">
+                  <div className="text-xs font-bold text-k-text-b uppercase tracking-wider">Fecha / Entrega</div>
+                  <div className="font-bold text-sm text-k-text-h">
+                    {new Date(viewPedido.created_at).toLocaleDateString()} / {viewPedido.fecha_entrega ? new Date(viewPedido.fecha_entrega).toLocaleDateString() : "TBD"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                {CATEGORIAS.map(cat => {
+                  const itemsCat = (viewPedido.items || []).filter(i => i.categoria === cat);
+                  if (itemsCat.length === 0) return null;
+                  
+                  return (
+                    <div key={cat} className="space-y-2">
+                      <h3 className="font-black text-k-text-h uppercase tracking-wider text-sm border-b-2 border-k-text-h pb-2">{cat}</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm whitespace-nowrap">
+                          <thead className="text-k-text-b text-[10px] font-bold uppercase tracking-wider border-b border-k-border">
+                            <tr>
+                              <th className="py-2 w-20">Cant</th>
+                              <th className="py-2">Descripción</th>
+                              <th className="py-2 w-32 text-right">P/U</th>
+                              <th className="py-2 w-32 text-right">Total</th>
+                              <th className="py-2 w-24 text-center">Piezas</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-k-border/50">
+                            {itemsCat.map((item, idx) => (
+                              <tr key={idx} className="hover:bg-k-bg-card2/30">
+                                <td className="py-2 font-bold">{item.cantidad}</td>
+                                <td className="py-2">{item.descripcion}</td>
+                                <td className="py-2 text-right">${Number(item.precio_unitario).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                <td className="py-2 text-right font-black text-k-text-h">${Number(item.total).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                <td className="py-2 text-center text-k-text-b">{item.piezas_calculadas || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-end pt-6">
+                <div className="w-full max-w-sm">
+                  <div className="flex justify-between items-center py-3 px-4 bg-k-bg-card2 rounded-2xl border border-k-border">
+                    <span className="font-bold text-k-text-b uppercase tracking-widest text-sm">Total General</span>
+                    <span className="font-black text-3xl text-k-text-h">${Number(viewPedido.total_precio).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
