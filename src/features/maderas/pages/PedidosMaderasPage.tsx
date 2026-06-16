@@ -225,25 +225,42 @@ export default function PedidosMaderasPage() {
                     {pedido.status === 'entregado' ? <CheckCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                   </div>
                   <div>
-                    <h4 className="font-bold text-k-text-h text-sm">{pedido.codigo} - {pedido.cliente}</h4>
+                    <h4 className="font-bold text-k-text-h text-sm">{pedido.codigo}</h4>
                     <div className="text-xs text-k-text-b flex gap-3 mt-1">
                       <span>Entrega: {pedido.fecha_entrega ? new Date(pedido.fecha_entrega).toLocaleDateString() : "Sin fecha"}</span>
                       <span>•</span>
-                      <span>{pedido.total_unidades} unidades</span>
+                      <span>{new Date(pedido.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="font-black text-k-text-h text-lg">${Number(pedido.total_precio).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                    <div className="font-black text-k-text-h text-lg">${Number(pedido.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                     <span className={cx(
                       "text-[10px] uppercase font-bold px-2 py-0.5 rounded-full inline-block mt-1",
                       pedido.status === 'entregado' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                     )}>{pedido.status}</span>
                   </div>
                   <div className="flex gap-2">
+                    <a
+                      href={`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app'}/api/v1/maderas/pedidos/${pedido.id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-9 w-9 flex items-center justify-center bg-white border border-k-border hover:border-violet-300 hover:text-violet-600 rounded-xl transition-all shadow-sm"
+                      title="Descargar PDF"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </a>
                     <button
-                      onClick={() => setViewPedido(pedido)}
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app'}/api/v1/maderas/pedidos/${pedido.id}`);
+                          const data = await res.json();
+                          setViewPedido(data);
+                        } catch (err) {
+                          alert("Error al cargar detalles del pedido");
+                        }
+                      }}
                       className="h-9 w-9 flex items-center justify-center bg-white border border-k-border hover:border-violet-300 hover:text-violet-600 rounded-xl transition-all shadow-sm"
                       title="Ver detalle"
                     >
@@ -503,7 +520,7 @@ export default function PedidosMaderasPage() {
           <div className="bg-k-bg-card border border-k-border rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-k-border flex items-center justify-between bg-k-bg-card2/50 shrink-0">
               <div>
-                <h2 className="text-xl font-black text-k-text-h tracking-tight">ARTE PARA PASTELERIA "PAYPAL"</h2>
+                <h2 className="text-xl font-black text-k-text-h tracking-tight">PEDIDO #{viewPedido.codigo}</h2>
                 <p className="text-xs text-k-text-b font-medium mt-0.5">Detalle de Cotización / Pedido</p>
               </div>
               <button onClick={() => setViewPedido(null)} className="p-2 text-k-text-b hover:bg-white rounded-xl transition-colors">
@@ -514,8 +531,8 @@ export default function PedidosMaderasPage() {
             <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-white">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <div className="text-xs font-bold text-k-text-b uppercase tracking-wider">Solicitado Por</div>
-                  <div className="font-black text-lg text-k-text-h">{viewPedido.cliente}</div>
+                  <div className="text-xs font-bold text-k-text-b uppercase tracking-wider">Creado El</div>
+                  <div className="font-black text-lg text-k-text-h">{new Date(viewPedido.created_at).toLocaleDateString()}</div>
                 </div>
                 <div className="space-y-1 text-right">
                   <div className="text-xs font-bold text-k-text-b uppercase tracking-wider">Fecha / Entrega</div>
@@ -527,7 +544,7 @@ export default function PedidosMaderasPage() {
 
               <div className="space-y-8">
                 {CATEGORIAS.map(cat => {
-                  const itemsCat = (viewPedido.items || []).filter(i => i.categoria === cat);
+                  const itemsCat = (viewPedido.detalles || []).filter(i => i.categoria === cat);
                   if (itemsCat.length === 0) return null;
                   
                   return (
@@ -548,10 +565,10 @@ export default function PedidosMaderasPage() {
                             {itemsCat.map((item, idx) => (
                               <tr key={idx} className="hover:bg-k-bg-card2/30">
                                 <td className="py-2 font-bold">{item.cantidad}</td>
-                                <td className="py-2">{item.descripcion}</td>
+                                <td className="py-2">{item.nombre_item}</td>
                                 <td className="py-2 text-right">${Number(item.precio_unitario).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                                <td className="py-2 text-right font-black text-k-text-h">${Number(item.total).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                                <td className="py-2 text-center text-k-text-b">{item.piezas_calculadas || '-'}</td>
+                                <td className="py-2 text-right font-black text-k-text-h">${Number(item.subtotal).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                <td className="py-2 text-center text-k-text-b">{'-'}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -566,7 +583,7 @@ export default function PedidosMaderasPage() {
                 <div className="w-full max-w-sm">
                   <div className="flex justify-between items-center py-3 px-4 bg-k-bg-card2 rounded-2xl border border-k-border">
                     <span className="font-bold text-k-text-b uppercase tracking-widest text-sm">Total General</span>
-                    <span className="font-black text-3xl text-k-text-h">${Number(viewPedido.total_precio).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span className="font-black text-3xl text-k-text-h">${Number(viewPedido.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                   </div>
                 </div>
               </div>

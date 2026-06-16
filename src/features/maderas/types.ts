@@ -82,13 +82,15 @@ export type PedidoItem = {
 
 export type MaderasPedido = {
   id: number;
+  empresa_id?: number;
   codigo: string;
-  cliente: string;
-  total_unidades: number;
-  total_precio: number;
-  items: PedidoItem[];
-  status: "pendiente" | "entregado";
-  fecha_entrega: string | null;
+  status: "pendiente" | "recibido" | "cancelado";
+  pdf_path?: string;
+  total: number;
+  fecha_pedido: string;
+  fecha_entrega?: string | null;
+  recibido_por?: number;
   created_at: string;
   updated_at: string;
+  detalles?: any[];
 };
