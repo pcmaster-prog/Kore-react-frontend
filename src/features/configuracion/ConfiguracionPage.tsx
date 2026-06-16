@@ -481,6 +481,8 @@ function ModulosTab() {
     { key: "tareas", label: "Módulo de Tareas", desc: "Digitalización de checklist, plantillas, evidencias fotográficas y rutinas diarias", icon: "📋", theme: "emerald" },
     { key: "asistencia", label: "Reloj Checador", desc: "Registro inteligente de jornadas, ingresos, escapes geolocalizados y pausas", icon: "🕒", theme: "amber" },
     { key: "nomina", label: "Nómina Automática", desc: "Integración de asistencia y salarios para el pre-cálculo financiero", icon: "💰", theme: "violet" },
+    { key: "produccion_maderas", label: "Producción Maderas", desc: "Gestión de pedidos, inventario, y líneas de producción", icon: "🪵", theme: "amber" },
+    { key: "produccion_pesaje", label: "Módulo Pesaje", desc: "Recepción de materias primas y control en báscula", icon: "⚖️", theme: "blue" },
     { key: "configuracion", label: "SysAdmin", desc: "Panel rector de comportamientos globales y seguridad inquebrantable", icon: "🛡️", theme: "obsidian", alwaysOn: true },
   ];
   const [modules, setModules] = useState<ModuleState[]>([]);
