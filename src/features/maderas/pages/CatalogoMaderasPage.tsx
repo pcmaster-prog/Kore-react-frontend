@@ -111,7 +111,7 @@ export default function CatalogoMaderasPage() {
                   <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Tipo</label>
                   <select
                     value={formData.tipo}
-                    onChange={e => setFormData({...formData, tipo: e.target.value})}
+                    onChange={e => setFormData({...formData, tipo: e.target.value as "producto_terminado" | "baston" | "insumo"})}
                     className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all"
                   >
                     <option value="producto_terminado">Producto Terminado</option>
