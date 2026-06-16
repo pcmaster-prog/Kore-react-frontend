@@ -1,15 +1,24 @@
 import { useState } from "react";
 import { Package, AlertCircle, ArrowUpRight, Search, Edit2 } from "lucide-react";
-import { useInventario, useUpdateInventario } from "../hooks/useInventario";
+import { useInventario, useCreateInventario, useUpdateInventario } from "../hooks/useInventario";
+import { useProductos, useBastones } from "../hooks/useCatalogo";
 import type { MaderasInventario } from "../types";
 
 export default function InventarioMaderasPage() {
   const { data: inventario = [], isLoading } = useInventario();
   const { mutateAsync: updateStock } = useUpdateInventario();
+  const { mutateAsync: createStock } = useCreateInventario();
+
+  const { data: productos = [] } = useProductos();
+  const { data: bastones = [] } = useBastones();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MaderasInventario | null>(null);
+  
+  // Modal form state
+  const [catalogoId, setCatalogoId] = useState("");
   const [stockVal, setStockVal] = useState(0);
   const [stockMinVal, setStockMinVal] = useState(0);
 
@@ -24,28 +33,50 @@ export default function InventarioMaderasPage() {
   const alertas = inventario.filter((item: MaderasInventario) => item.status === "critical" || item.status === "low").length;
 
   const handleEditClick = (item: MaderasInventario) => {
+    setIsEditing(true);
     setSelectedItem(item);
+    setCatalogoId(item.catalogo_id.toString());
     setStockVal(item.stock);
     setStockMinVal(item.stock_minimo);
     setShowModal(true);
   };
 
+  const handleAddNewClick = () => {
+    setIsEditing(false);
+    setSelectedItem(null);
+    setCatalogoId("");
+    setStockVal(0);
+    setStockMinVal(0);
+    setShowModal(true);
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedItem) return;
     try {
-      await updateStock({
-        id: selectedItem.id,
-        data: {
+      if (isEditing && selectedItem) {
+        await updateStock({
+          id: selectedItem.id,
+          data: {
+            stock: stockVal,
+            stock_minimo: stockMinVal,
+          },
+        });
+      } else {
+        if (!catalogoId) return;
+        await createStock({
+          catalogo_id: parseInt(catalogoId),
           stock: stockVal,
           stock_minimo: stockMinVal,
-        },
-      });
+        });
+      }
       setShowModal(false);
     } catch (err) {
-      console.error("Error updating inventory", err);
+      console.error("Error updating/creating inventory", err);
+      alert("Error al guardar el inventario. Es posible que el artículo ya esté en el inventario.");
     }
   };
+
+  const catalogItems = [...productos, ...bastones];
 
   const filteredInventario = inventario.filter((item) =>
     item.catalogo?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,6 +92,13 @@ export default function InventarioMaderasPage() {
             Gestión de stock de bastones y productos terminados.
           </p>
         </div>
+        <button
+          onClick={handleAddNewClick}
+          className="h-10 px-4 bg-k-primary hover:bg-k-primary-hover text-white rounded-xl font-bold text-sm transition-colors shadow-k-button flex items-center gap-2"
+        >
+          <Package className="h-4 w-4" />
+          Registrar Stock Inicial
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -185,14 +223,32 @@ export default function InventarioMaderasPage() {
         </div>
       </div>
 
-      {showModal && selectedItem && (
+      {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-k-bg-card border border-k-border rounded-3xl w-full max-w-md shadow-2xl p-6">
-            <h2 className="text-xl font-bold text-k-text-h mb-2">Ajustar Inventario</h2>
-            <p className="text-xs text-k-text-b mb-6">{selectedItem.catalogo?.nombre}</p>
+            <h2 className="text-xl font-bold text-k-text-h mb-2">{isEditing ? "Ajustar Inventario" : "Añadir Nuevo Inventario"}</h2>
+            <p className="text-xs text-k-text-b mb-6">{isEditing ? selectedItem?.catalogo?.nombre : "Ingresa el stock inicial para un artículo"}</p>
             <form onSubmit={handleSave} className="space-y-4">
+              {!isEditing && (
+                <div>
+                  <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Artículo del Catálogo</label>
+                  <select
+                    value={catalogoId}
+                    onChange={(e) => setCatalogoId(e.target.value)}
+                    className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
+                    required
+                  >
+                    <option value="">Seleccionar artículo...</option>
+                    {catalogItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        [{item.tipo === "producto_terminado" ? "PROD" : "MAT"}] {item.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
-                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Stock Actual</label>
+                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Stock {isEditing ? "Actual" : "Inicial"}</label>
                 <input
                   type="number"
                   min="0"

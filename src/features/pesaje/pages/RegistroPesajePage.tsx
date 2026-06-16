@@ -1,26 +1,30 @@
 import { useState } from "react";
 import { Scale, CheckCircle } from "lucide-react";
 import { useSabores, useCreatePesaje } from "../hooks/usePesaje";
+import { useEmployees } from "@/features/tasks/hooks/useEmployees";
 
 export default function RegistroPesajePage() {
   const { data: saboresResp } = useSabores();
   const saboresActivos = saboresResp?.data?.filter((s: any) => s.activo) || [];
   
   const { mutateAsync: createPesaje, isPending } = useCreatePesaje();
+  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   
+  const [empleadoId, setEmpleadoId] = useState("");
   const [saborId, setSaborId] = useState("");
   const [peso, setPeso] = useState("");
 
   const handleSubmit = async () => {
-    if (!saborId || !peso) {
-      alert("Selecciona un sabor y escribe el peso");
+    if (!empleadoId || !saborId || !peso) {
+      alert("Selecciona un operario, un sabor y escribe el peso");
       return;
     }
     try {
-      await createPesaje({ sabor_id: saborId, peso: parseFloat(peso) });
+      await createPesaje({ empleado_id: parseInt(empleadoId), sabor_id: saborId, peso: parseFloat(peso) });
       alert("Pesaje registrado correctamente");
       setSaborId("");
       setPeso("");
+      setEmpleadoId("");
     } catch (error: any) {
       alert(error.response?.data?.message || "Error al registrar el pesaje");
     }
@@ -41,6 +45,20 @@ export default function RegistroPesajePage() {
         <div className="bg-gradient-to-br from-k-bg-card to-k-bg-card2 border border-k-border rounded-3xl p-6 shadow-k-card">
           <h3 className="text-sm font-bold text-k-text-b uppercase tracking-widest mb-4">Captura Manual</h3>
           <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-k-text-b mb-1">Operario</label>
+              <select 
+                value={empleadoId}
+                onChange={e => setEmpleadoId(e.target.value)}
+                className="w-full bg-white border border-k-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                disabled={loadingEmployees}
+              >
+                <option value="">Seleccionar operario...</option>
+                {employees.map((emp: any) => (
+                  <option key={emp.id} value={emp.id}>{emp.full_name ?? emp.name}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-semibold text-k-text-b mb-1">Sabor / Producto</label>
               <select 
@@ -68,7 +86,7 @@ export default function RegistroPesajePage() {
             </div>
             <button 
               onClick={handleSubmit}
-              disabled={isPending || !saborId || !peso}
+              disabled={isPending || !saborId || !peso || !empleadoId}
               className="w-full h-12 bg-amber-500 text-white rounded-xl font-bold text-base hover:bg-amber-600 disabled:bg-gray-300 transition-colors shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 mt-2"
             >
               <Scale className="h-5 w-5" />
