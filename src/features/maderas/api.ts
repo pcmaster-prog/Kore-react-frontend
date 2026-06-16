@@ -6,14 +6,19 @@ import type {
 } from "./types";
 
 // Catálogos
-export async function getCatalogos() {
-  const res = await api.get<MaderasCatalogo[]>("/maderas/catalogo");
-  return res.data;
+export async function getProductos() {
+  const res = await api.get<{ data: MaderasCatalogo[] }>("/maderas/productos");
+  return res.data.data;
+}
+
+export async function getBastones() {
+  const res = await api.get<{ data: MaderasCatalogo[] }>("/maderas/bastones");
+  return res.data.data;
 }
 
 export async function createCatalogo(data: Partial<MaderasCatalogo>) {
-  const res = await api.post<MaderasCatalogo>("/maderas/catalogo", data);
-  return res.data;
+  const res = await api.post<{ data: MaderasCatalogo }>("/maderas/catalogo", data);
+  return res.data.data;
 }
 
 export async function deleteCatalogo(id: number) {
@@ -23,19 +28,29 @@ export async function deleteCatalogo(id: number) {
 
 // Tablas Corte
 export async function getTablasCortes() {
-  const res = await api.get<MaderasTablaCorte[]>("/maderas/tablas-corte");
-  return res.data;
+  const res = await api.get<{ data: MaderasTablaCorte[] }>("/maderas/tablas-cortes");
+  return res.data.data;
+}
+
+export async function createTablaCorte(data: Partial<MaderasTablaCorte>) {
+  const res = await api.post<{ data: MaderasTablaCorte }>("/maderas/tablas-cortes", data);
+  return res.data.data;
 }
 
 // Temporadas
 export async function getTemporadas() {
-  const res = await api.get<MaderasTemporada[]>("/maderas/temporadas");
-  return res.data;
+  const res = await api.get<{ data: MaderasTemporada[] }>("/maderas/temporadas");
+  return res.data.data;
+}
+
+export async function createTemporada(data: Partial<MaderasTemporada>) {
+  const res = await api.post<{ data: MaderasTemporada }>("/maderas/temporadas", data);
+  return res.data.data;
 }
 
 export async function getTemporadaActiva() {
-  const res = await api.get<MaderasTemporada>("/maderas/temporadas/activa");
-  return res.data;
+  const res = await api.get<{ data: MaderasTemporada | null }>("/maderas/temporadas/activa");
+  return res.data.data;
 }
 
 // Inventario

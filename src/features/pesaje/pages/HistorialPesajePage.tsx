@@ -1,11 +1,10 @@
 import { Search } from "lucide-react";
+import { useHistorialPesaje } from "../hooks/usePesaje";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export default function HistorialPesajePage() {
-  const MOCK_HISTORIAL = [
-    { id: 1, operario: "María García", sabor: "Fresa 500g", peso: 15.50, fecha: "10 Oct, 14:30", supervisor: "Admin" },
-    { id: 2, operario: "José Rodríguez", sabor: "Vainilla 1kg", peso: 22.10, fecha: "10 Oct, 12:15", supervisor: "Admin" },
-    { id: 3, operario: "Ana López", sabor: "Chocolate 500g", peso: 14.80, fecha: "09 Oct, 16:45", supervisor: "Admin" },
-  ];
+  const { data: historial, isLoading } = useHistorialPesaje();
 
   return (
     <div className="space-y-6">
@@ -41,18 +40,36 @@ export default function HistorialPesajePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-k-border bg-k-bg-card">
-              {MOCK_HISTORIAL.map((item) => (
-                <tr key={item.id} className="hover:bg-k-bg-card2 transition-colors">
-                  <td className="p-4">
-                    <span className="font-bold text-k-text-h text-sm">{item.operario}</span>
-                  </td>
-                  <td className="p-4 text-sm font-medium text-k-text-b">{item.sabor}</td>
-                  <td className="p-4">
-                    <span className="font-black text-k-primary">{item.peso.toFixed(2)} <span className="text-xs font-medium text-k-text-b">kg</span></span>
-                  </td>
-                  <td className="p-4 text-sm text-k-text-b">{item.fecha}</td>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-sm text-k-text-b">Cargando historial...</td>
                 </tr>
-              ))}
+              ) : historial?.data && historial.data.length > 0 ? (
+                historial.data.map((item: any) => (
+                  <tr key={item.id} className="hover:bg-k-bg-card2 transition-colors">
+                    <td className="p-4">
+                      <span className="font-bold text-k-text-h text-sm">
+                        {item.empleado ? `${item.empleado.nombres} ${item.empleado.apellidos}` : 'Usuario'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm font-medium text-k-text-b">
+                      {item.sabor ? `${item.sabor.nombre} ${item.sabor.presentacion ? `(${item.sabor.presentacion})` : ''}` : '-'}
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 font-bold text-sm">
+                        {item.peso} kg
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm text-k-text-b">
+                      {format(new Date(item.fecha_registro), "dd MMM, HH:mm", { locale: es })}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-sm text-k-text-b">No hay registros de pesaje.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

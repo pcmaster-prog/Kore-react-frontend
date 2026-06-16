@@ -19,3 +19,13 @@ export async function getSabores() {
   const res = await api.get("/pesaje/sabores");
   return res.data;
 }
+
+export async function createSabor(payload: any) {
+  const res = await api.post("/pesaje/sabores", payload);
+  return res.data;
+}
+
+export async function updateSabor(id: number, payload: any) {
+  const res = await api.put(`/pesaje/sabores/${id}`, payload);
+  return res.data;
+}
