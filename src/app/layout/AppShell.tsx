@@ -128,6 +128,10 @@ function SidebarContent({
   const { data: unassignedTasks } = useUnassignedTasks();
   const orphanCount = unassignedTasks?.length ?? 0;
 
+  const location = useLocation();
+  const isMaderasRoute = location.pathname.startsWith("/app/maderas");
+  const isPesajeRoute = location.pathname.startsWith("/app/pesaje");
+
   useEffect(() => {
     const handleUpdate = () => setActiveModules(auth.getModules());
     window.addEventListener("kore-modules-updated", handleUpdate);
@@ -177,19 +181,39 @@ function SidebarContent({
               <SidebarLink to="/app/employee/mis-recibos" label="Mis Recibos" icon={<Receipt className="h-4.5 w-4.5" />} onClick={onNav} />
             </NavGroup>
 
-            {hasModule("produccion_maderas") && (
-              <NavGroup label="Maderas">
-                <SidebarLink to="/app/maderas/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/maderas/produccion"  label="Producción"  icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/maderas/ensamblaje"  label="Ensamblaje"  icon={<Combine className="h-4.5 w-4.5" />} onClick={onNav} />
-              </NavGroup>
-            )}
+            {(hasModule("produccion_maderas") || hasModule("produccion_pesaje")) && (
+              <NavGroup label="Producción">
+                {/* Maderas */}
+                {hasModule("produccion_maderas") && !isMaderasRoute && (
+                  <SidebarLink to="/app/maderas/dashboard" label="Maderas" icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
+                )}
+                {hasModule("produccion_maderas") && isMaderasRoute && (
+                  <div className="bg-k-bg-sidebar-hover/50 rounded-2xl py-1 mt-1 mb-2">
+                    <div className="px-4 py-2 flex items-center gap-3 text-k-sb-active font-bold">
+                      <Hammer className="h-4.5 w-4.5" />
+                      <span>Maderas</span>
+                    </div>
+                    <SidebarLink indent to="/app/maderas/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/maderas/produccion"  label="Producción"  icon={<Hammer className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/maderas/ensamblaje"  label="Ensamblaje"  icon={<Combine className="h-4 w-4" />} onClick={onNav} />
+                  </div>
+                )}
 
-            {hasModule("produccion_pesaje") && (
-              <NavGroup label="Pesaje">
-                <SidebarLink to="/app/pesaje/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/pesaje/registrar"   label="Registrar"   icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/pesaje/historial"   label="Historial"   icon={<FileText className="h-4.5 w-4.5" />} onClick={onNav} />
+                {/* Pesaje */}
+                {hasModule("produccion_pesaje") && !isPesajeRoute && (
+                  <SidebarLink to="/app/pesaje/dashboard" label="Pesaje" icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
+                )}
+                {hasModule("produccion_pesaje") && isPesajeRoute && (
+                  <div className="bg-k-bg-sidebar-hover/50 rounded-2xl py-1 mt-1 mb-2">
+                    <div className="px-4 py-2 flex items-center gap-3 text-k-sb-active font-bold">
+                      <Scale className="h-4.5 w-4.5" />
+                      <span>Pesaje</span>
+                    </div>
+                    <SidebarLink indent to="/app/pesaje/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/pesaje/registrar"   label="Registrar"   icon={<Scale className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/pesaje/historial"   label="Historial"   icon={<FileText className="h-4 w-4" />} onClick={onNav} />
+                  </div>
+                )}
               </NavGroup>
             )}
 
@@ -232,26 +256,46 @@ function SidebarContent({
               </NavGroup>
             )}
 
-            {hasModule("produccion_maderas") && (
-              <NavGroup label="Maderas">
-                <SidebarLink to="/app/maderas/dashboard"       label="Dashboard"   icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/maderas/inventario"       label="Inventario"  icon={<Package className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/maderas/produccion"       label="Producción"  icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/maderas/ensamblaje"       label="Ensamblaje"  icon={<Combine className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/maderas/pedido/calcular"  label="Nuevo Pedido" icon={<Calculator className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/maderas/pedidos"          label="Pedidos"     icon={<FileText className="h-4.5 w-4.5" />} onClick={onNav} />
-                {isAdmin && <SidebarLink to="/app/maderas/temporadas"  label="Temporadas"  icon={<Calendar className="h-4.5 w-4.5" />} onClick={onNav} />}
-                {isAdmin && <SidebarLink to="/app/maderas/catalogo"    label="Catálogo"    icon={<BookOpen className="h-4.5 w-4.5" />} onClick={onNav} />}
-                {isAdmin && <SidebarLink to="/app/maderas/tablas-corte" label="Tablas Corte" icon={<Scissors className="h-4.5 w-4.5" />} onClick={onNav} />}
-              </NavGroup>
-            )}
+            {(hasModule("produccion_maderas") || hasModule("produccion_pesaje")) && (
+              <NavGroup label="Producción">
+                {/* Maderas */}
+                {hasModule("produccion_maderas") && !isMaderasRoute && (
+                  <SidebarLink to="/app/maderas/dashboard" label="Maderas" icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
+                )}
+                {hasModule("produccion_maderas") && isMaderasRoute && (
+                  <div className="bg-k-bg-sidebar-hover/30 rounded-2xl py-1 mt-1 mb-2 border border-k-sb-active/10">
+                    <div className="px-4 py-2 flex items-center gap-3 text-k-sb-active font-bold">
+                      <Hammer className="h-4.5 w-4.5" />
+                      <span>Maderas</span>
+                    </div>
+                    <SidebarLink indent to="/app/maderas/dashboard"       label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/maderas/inventario"       label="Inventario"  icon={<Package className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/maderas/produccion"       label="Producción"  icon={<Hammer className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/maderas/ensamblaje"       label="Ensamblaje"  icon={<Combine className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/maderas/pedido/calcular"  label="Nuevo Pedido" icon={<Calculator className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/maderas/pedidos"          label="Pedidos"     icon={<FileText className="h-4 w-4" />} onClick={onNav} />
+                    {isAdmin && <SidebarLink indent to="/app/maderas/temporadas"  label="Temporadas"  icon={<Calendar className="h-4 w-4" />} onClick={onNav} />}
+                    {isAdmin && <SidebarLink indent to="/app/maderas/catalogo"    label="Catálogo"    icon={<BookOpen className="h-4 w-4" />} onClick={onNav} />}
+                    {isAdmin && <SidebarLink indent to="/app/maderas/tablas-corte" label="Tablas Corte" icon={<Scissors className="h-4 w-4" />} onClick={onNav} />}
+                  </div>
+                )}
 
-            {hasModule("produccion_pesaje") && (
-              <NavGroup label="Pesaje">
-                <SidebarLink to="/app/pesaje/dashboard"   label="Dashboard"  icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/pesaje/registrar"   label="Registrar"  icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
-                <SidebarLink to="/app/pesaje/historial"   label="Historial"  icon={<FileText className="h-4.5 w-4.5" />} onClick={onNav} />
-                {isAdmin && <SidebarLink to="/app/pesaje/sabores" label="Sabores" icon={<BookOpen className="h-4.5 w-4.5" />} onClick={onNav} />}
+                {/* Pesaje */}
+                {hasModule("produccion_pesaje") && !isPesajeRoute && (
+                  <SidebarLink to="/app/pesaje/dashboard" label="Pesaje" icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
+                )}
+                {hasModule("produccion_pesaje") && isPesajeRoute && (
+                  <div className="bg-k-bg-sidebar-hover/30 rounded-2xl py-1 mt-1 mb-2 border border-k-sb-active/10">
+                    <div className="px-4 py-2 flex items-center gap-3 text-k-sb-active font-bold">
+                      <Scale className="h-4.5 w-4.5" />
+                      <span>Pesaje</span>
+                    </div>
+                    <SidebarLink indent to="/app/pesaje/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/pesaje/registrar"   label="Registrar"   icon={<Scale className="h-4 w-4" />} onClick={onNav} />
+                    <SidebarLink indent to="/app/pesaje/historial"   label="Historial"   icon={<FileText className="h-4 w-4" />} onClick={onNav} />
+                    {isAdmin && <SidebarLink indent to="/app/pesaje/sabores"     label="Sabores"     icon={<BookOpen className="h-4 w-4" />} onClick={onNav} />}
+                  </div>
+                )}
               </NavGroup>
             )}
 
