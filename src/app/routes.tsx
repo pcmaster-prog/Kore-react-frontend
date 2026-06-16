@@ -40,6 +40,7 @@ const PuestosPage = lazy(() => import("@/features/puestos/pages/PuestosPage"));
 const PuestoFormPage = lazy(() => import("@/features/puestos/pages/PuestoFormPage"));
 
 // Maderas
+const MaderasLayout = lazy(() => import("@/features/maderas/MaderasLayout"));
 const DashboardMaderasPage = lazy(() => import("@/features/maderas/pages/DashboardMaderasPage"));
 const InventarioPage = lazy(() => import("@/features/maderas/pages/InventarioPage"));
 const ProduccionPage = lazy(() => import("@/features/maderas/pages/ProduccionPage"));
@@ -51,6 +52,7 @@ const CatalogoMaderasPage = lazy(() => import("@/features/maderas/pages/Catalogo
 const TablasCortePage = lazy(() => import("@/features/maderas/pages/TablasCortePage"));
 
 // Pesaje
+const PesajeLayout = lazy(() => import("@/features/pesaje/PesajeLayout"));
 const DashboardPesajePage = lazy(() => import("@/features/pesaje/pages/DashboardPesajePage"));
 const RegistrarPesajePage = lazy(() => import("@/features/pesaje/pages/RegistrarPesajePage"));
 const HistorialPesajePage = lazy(() => import("@/features/pesaje/pages/HistorialPesajePage"));
@@ -340,58 +342,31 @@ export const router = createBrowserRouter([
 
       // ── Maderas (módulo produccion_maderas) ──
       {
-        path: "maderas/dashboard",
-        element: <RequireModulo slug="produccion_maderas"><Suspended><DashboardMaderasPage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "maderas/inventario",
-        element: <RequireModulo slug="produccion_maderas"><Suspended><InventarioPage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "maderas/produccion",
-        element: <RequireModulo slug="produccion_maderas"><Suspended><ProduccionPage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "maderas/ensamblaje",
-        element: <RequireModulo slug="produccion_maderas"><Suspended><EnsamblajePage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "maderas/pedido/calcular",
-        element: <RequireModulo slug="produccion_maderas"><Suspended><PedidoCalculadorPage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "maderas/pedidos",
-        element: <RequireModulo slug="produccion_maderas"><Suspended><PedidosHistorialPage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "maderas/temporadas",
-        element: <RequireModulo slug="produccion_maderas"><RequireRole allow={["admin"]}><Suspended><TemporadasPage /></Suspended></RequireRole></RequireModulo>,
-      },
-      {
-        path: "maderas/catalogo",
-        element: <RequireModulo slug="produccion_maderas"><RequireRole allow={["admin"]}><Suspended><CatalogoMaderasPage /></Suspended></RequireRole></RequireModulo>,
-      },
-      {
-        path: "maderas/tablas-corte",
-        element: <RequireModulo slug="produccion_maderas"><RequireRole allow={["admin"]}><Suspended><TablasCortePage /></Suspended></RequireRole></RequireModulo>,
+        path: "maderas",
+        element: <RequireModulo slug="produccion_maderas"><Suspended><MaderasLayout /></Suspended></RequireModulo>,
+        children: [
+          { path: "dashboard", element: <Suspended><DashboardMaderasPage /></Suspended> },
+          { path: "inventario", element: <Suspended><InventarioPage /></Suspended> },
+          { path: "produccion", element: <Suspended><ProduccionPage /></Suspended> },
+          { path: "ensamblaje", element: <Suspended><EnsamblajePage /></Suspended> },
+          { path: "pedido/calcular", element: <Suspended><PedidoCalculadorPage /></Suspended> },
+          { path: "pedidos", element: <Suspended><PedidosHistorialPage /></Suspended> },
+          { path: "temporadas", element: <RequireRole allow={["admin"]}><Suspended><TemporadasPage /></Suspended></RequireRole> },
+          { path: "catalogo", element: <RequireRole allow={["admin"]}><Suspended><CatalogoMaderasPage /></Suspended></RequireRole> },
+          { path: "tablas-corte", element: <RequireRole allow={["admin"]}><Suspended><TablasCortePage /></Suspended></RequireRole> },
+        ]
       },
 
       // ── Pesaje (módulo produccion_pesaje) ──
       {
-        path: "pesaje/dashboard",
-        element: <RequireModulo slug="produccion_pesaje"><Suspended><DashboardPesajePage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "pesaje/registrar",
-        element: <RequireModulo slug="produccion_pesaje"><Suspended><RegistrarPesajePage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "pesaje/historial",
-        element: <RequireModulo slug="produccion_pesaje"><Suspended><HistorialPesajePage /></Suspended></RequireModulo>,
-      },
-      {
-        path: "pesaje/sabores",
-        element: <RequireModulo slug="produccion_pesaje"><RequireRole allow={["admin"]}><Suspended><SaboresPage /></Suspended></RequireRole></RequireModulo>,
+        path: "pesaje",
+        element: <RequireModulo slug="produccion_pesaje"><Suspended><PesajeLayout /></Suspended></RequireModulo>,
+        children: [
+          { path: "dashboard", element: <Suspended><DashboardPesajePage /></Suspended> },
+          { path: "registrar", element: <Suspended><RegistrarPesajePage /></Suspended> },
+          { path: "historial", element: <Suspended><HistorialPesajePage /></Suspended> },
+          { path: "sabores", element: <RequireRole allow={["admin"]}><Suspended><SaboresPage /></Suspended></RequireRole> },
+        ]
       },
 
       { path: "*", element: <Navigate to="/login" replace /> },

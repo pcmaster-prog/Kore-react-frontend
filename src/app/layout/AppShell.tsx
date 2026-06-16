@@ -11,8 +11,7 @@ import {
   CalendarCheck, User, Users,
   Settings, ChevronRight, Bell, Activity, BookOpen,
   Receipt, Gift, FileBarChart, AlertTriangle,
-  Briefcase, Hammer, Package, Combine, Calculator,
-  FileText, Calendar, Scissors, Scale
+  Briefcase, Hammer, Scale
 } from "lucide-react";
 import { getPendientesSupervisor } from "@/features/semaforo/api";
 import { isEnabled } from "@/lib/featureFlags";
@@ -56,38 +55,6 @@ function SidebarLink({
   );
 }
 
-// ─── Componente Accordion para Sidebar ────────────────────────────────────────
-function SidebarAccordion({
-  label, icon, expanded, onToggle, children, isActive
-}: {
-  label: string; icon: React.ReactNode; expanded: boolean; onToggle: () => void; children: React.ReactNode; isActive: boolean;
-}) {
-  return (
-    <div className={cx("rounded-2xl transition-all", expanded ? "bg-k-bg-sidebar-hover/30 border border-k-sb-active/10 py-1 mt-1 mb-2" : "")}>
-      <div 
-        className={cx(
-          "group flex items-center justify-between cursor-pointer rounded-2xl px-4 py-2.5 text-sm transition-all duration-200",
-          expanded 
-            ? "text-k-sb-active font-bold" 
-            : (isActive ? "bg-k-sb-active-bg text-k-sb-active shadow-sm font-medium" : "text-k-sb-text hover:bg-k-bg-sidebar-hover hover:text-k-sb-active font-medium")
-        )}
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-3">
-          <span className={cx("shrink-0 transition-colors uppercase", "group-hover:text-k-sb-active")}>{icon}</span>
-          <span className="tracking-wide">{label}</span>
-        </div>
-        <ChevronRight className={cx("h-4 w-4 transition-transform", expanded ? "rotate-90" : "")} />
-      </div>
-      {expanded && (
-        <div className="mt-1 pb-1">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Grupo de links con label ─────────────────────────────────────────────────
 function NavGroup({
   label, children,
@@ -121,7 +88,7 @@ function Breadcrumbs() {
   const parts = location.pathname.split("/").filter(Boolean);
   
   const crumbs = parts
-    .filter((p) => p !== "app")
+    .filter((p: string) => p !== "app")
     .map(toTitleCase);
 
   // Fase 1.4: Ocultar breadcrumb en desktop
@@ -134,7 +101,7 @@ function Breadcrumbs() {
       <span className="text-neutral-500 hover:text-neutral-900 transition-colors cursor-default">Kore</span>
       {/* Desktop: full crumbs · Mobile: last only */}
       {/* On mobile the lg:hidden parent handles visibility; show last crumb */}
-      {(hideDesktop ? mobileCrumbs : crumbs).map((c, i) => (
+      {(hideDesktop ? mobileCrumbs : crumbs).map((c: string, i: number) => (
         <span key={`${c}-${i}`} className="flex items-center gap-2">
           <ChevronRight className="h-3.5 w-3.5 text-neutral-300" strokeWidth={3} />
           <span className={cx(
@@ -159,21 +126,6 @@ function SidebarContent({
   const [activeModules, setActiveModules] = useState(() => auth.getModules());
   const { data: unassignedTasks } = useUnassignedTasks();
   const orphanCount = unassignedTasks?.length ?? 0;
-
-  const location = useLocation();
-  const isMaderasRoute = location.pathname.startsWith("/app/maderas");
-  const isPesajeRoute = location.pathname.startsWith("/app/pesaje");
-
-  const [maderasExpanded, setMaderasExpanded] = useState(isMaderasRoute);
-  const [pesajeExpanded, setPesajeExpanded] = useState(isPesajeRoute);
-
-  useEffect(() => {
-    if (isMaderasRoute) setMaderasExpanded(true);
-  }, [isMaderasRoute]);
-
-  useEffect(() => {
-    if (isPesajeRoute) setPesajeExpanded(true);
-  }, [isPesajeRoute]);
 
   useEffect(() => {
     const handleUpdate = () => setActiveModules(auth.getModules());
@@ -228,32 +180,12 @@ function SidebarContent({
               <NavGroup label="Producción">
                 {/* Maderas */}
                 {hasModule("produccion_maderas") && (
-                  <SidebarAccordion
-                    label="Maderas"
-                    icon={<Hammer className="h-4.5 w-4.5" />}
-                    expanded={maderasExpanded}
-                    onToggle={() => setMaderasExpanded(!maderasExpanded)}
-                    isActive={isMaderasRoute}
-                  >
-                    <SidebarLink indent to="/app/maderas/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/maderas/produccion"  label="Producción"  icon={<Hammer className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/maderas/ensamblaje"  label="Ensamblaje"  icon={<Combine className="h-4 w-4" />} onClick={onNav} />
-                  </SidebarAccordion>
+                  <SidebarLink to="/app/maderas/dashboard" label="Maderas" icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
                 )}
 
                 {/* Pesaje */}
                 {hasModule("produccion_pesaje") && (
-                  <SidebarAccordion
-                    label="Pesaje"
-                    icon={<Scale className="h-4.5 w-4.5" />}
-                    expanded={pesajeExpanded}
-                    onToggle={() => setPesajeExpanded(!pesajeExpanded)}
-                    isActive={isPesajeRoute}
-                  >
-                    <SidebarLink indent to="/app/pesaje/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/pesaje/registrar"   label="Registrar"   icon={<Scale className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/pesaje/historial"   label="Historial"   icon={<FileText className="h-4 w-4" />} onClick={onNav} />
-                  </SidebarAccordion>
+                  <SidebarLink to="/app/pesaje/dashboard" label="Pesaje" icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
                 )}
               </NavGroup>
             )}
@@ -301,39 +233,12 @@ function SidebarContent({
               <NavGroup label="Producción">
                 {/* Maderas */}
                 {hasModule("produccion_maderas") && (
-                  <SidebarAccordion
-                    label="Maderas"
-                    icon={<Hammer className="h-4.5 w-4.5" />}
-                    expanded={maderasExpanded}
-                    onToggle={() => setMaderasExpanded(!maderasExpanded)}
-                    isActive={isMaderasRoute}
-                  >
-                    <SidebarLink indent to="/app/maderas/dashboard"       label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/maderas/inventario"       label="Inventario"  icon={<Package className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/maderas/produccion"       label="Producción"  icon={<Hammer className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/maderas/ensamblaje"       label="Ensamblaje"  icon={<Combine className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/maderas/pedido/calcular"  label="Nuevo Pedido" icon={<Calculator className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/maderas/pedidos"          label="Pedidos"     icon={<FileText className="h-4 w-4" />} onClick={onNav} />
-                    {isAdmin && <SidebarLink indent to="/app/maderas/temporadas"  label="Temporadas"  icon={<Calendar className="h-4 w-4" />} onClick={onNav} />}
-                    {isAdmin && <SidebarLink indent to="/app/maderas/catalogo"    label="Catálogo"    icon={<BookOpen className="h-4 w-4" />} onClick={onNav} />}
-                    {isAdmin && <SidebarLink indent to="/app/maderas/tablas-corte" label="Tablas Corte" icon={<Scissors className="h-4 w-4" />} onClick={onNav} />}
-                  </SidebarAccordion>
+                  <SidebarLink to="/app/maderas/dashboard" label="Maderas" icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
                 )}
 
                 {/* Pesaje */}
                 {hasModule("produccion_pesaje") && (
-                  <SidebarAccordion
-                    label="Pesaje"
-                    icon={<Scale className="h-4.5 w-4.5" />}
-                    expanded={pesajeExpanded}
-                    onToggle={() => setPesajeExpanded(!pesajeExpanded)}
-                    isActive={isPesajeRoute}
-                  >
-                    <SidebarLink indent to="/app/pesaje/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/pesaje/registrar"   label="Registrar"   icon={<Scale className="h-4 w-4" />} onClick={onNav} />
-                    <SidebarLink indent to="/app/pesaje/historial"   label="Historial"   icon={<FileText className="h-4 w-4" />} onClick={onNav} />
-                    {isAdmin && <SidebarLink indent to="/app/pesaje/sabores"     label="Sabores"     icon={<BookOpen className="h-4 w-4" />} onClick={onNav} />}
-                  </SidebarAccordion>
+                  <SidebarLink to="/app/pesaje/dashboard" label="Pesaje" icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
                 )}
               </NavGroup>
             )}
