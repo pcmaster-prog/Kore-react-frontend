@@ -45,7 +45,6 @@ const DashboardMaderasPage = lazy(() => import("@/features/maderas/pages/Dashboa
 const InventarioMaderasPage = lazy(() => import("@/features/maderas/pages/InventarioMaderasPage"));
 const ProduccionMaderasPage = lazy(() => import("@/features/maderas/pages/ProduccionMaderasPage"));
 const EnsamblajeMaderasPage = lazy(() => import("@/features/maderas/pages/EnsamblajeMaderasPage"));
-const CalculadoraPedidosPage = lazy(() => import("@/features/maderas/pages/CalculadoraPedidosPage"));
 const PedidosMaderasPage = lazy(() => import("@/features/maderas/pages/PedidosMaderasPage"));
 const TemporadasMaderasPage = lazy(() => import("@/features/maderas/pages/TemporadasMaderasPage"));
 const CatalogoMaderasPage = lazy(() => import("@/features/maderas/pages/CatalogoMaderasPage"));
@@ -350,7 +349,6 @@ export const router = createBrowserRouter([
           { path: "inventario", element: <Suspended><InventarioMaderasPage /></Suspended> },
           { path: "produccion", element: <Suspended><ProduccionMaderasPage /></Suspended> },
           { path: "ensamblaje", element: <Suspended><EnsamblajeMaderasPage /></Suspended> },
-          { path: "pedido/calcular", element: <Suspended><CalculadoraPedidosPage /></Suspended> },
           { path: "pedidos", element: <Suspended><PedidosMaderasPage /></Suspended> },
           { path: "temporadas", element: <RequireRole allow={["admin"]}><Suspended><TemporadasMaderasPage /></Suspended></RequireRole> },
           { path: "catalogo", element: <RequireRole allow={["admin"]}><Suspended><CatalogoMaderasPage /></Suspended></RequireRole> },

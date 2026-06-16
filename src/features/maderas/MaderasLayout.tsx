@@ -8,7 +8,6 @@ const MADERAS_TABS = [
   { path: "/app/maderas/inventario", label: "Inventario", icon: <Package className="h-4 w-4" /> },
   { path: "/app/maderas/produccion", label: "Producción", icon: <Hammer className="h-4 w-4" /> },
   { path: "/app/maderas/ensamblaje", label: "Ensamblaje", icon: <Combine className="h-4 w-4" /> },
-  { path: "/app/maderas/pedido/calcular", label: "Nuevo Pedido", icon: <Calculator className="h-4 w-4" /> },
   { path: "/app/maderas/pedidos", label: "Pedidos", icon: <FileText className="h-4 w-4" /> },
   { path: "/app/maderas/temporadas", label: "Temporadas", icon: <Calendar className="h-4 w-4" />, adminOnly: true },
   { path: "/app/maderas/catalogo", label: "Catálogo", icon: <BookOpen className="h-4 w-4" />, adminOnly: true },
