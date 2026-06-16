@@ -11,7 +11,7 @@ const PESAJE_TABS = [
 ];
 
 export default function PesajeLayout() {
-  const isAdmin = useAuthStore((s: any) => s.hasRole("admin"));
+  const isAdmin = useAuthStore((s: any) => s.user?.role === "admin");
   const tabs = PESAJE_TABS.filter((t) => !t.adminOnly || isAdmin);
 
   return (

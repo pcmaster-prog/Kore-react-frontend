@@ -16,7 +16,7 @@ const MADERAS_TABS = [
 ];
 
 export default function MaderasLayout() {
-  const isAdmin = useAuthStore((s: any) => s.hasRole("admin"));
+  const isAdmin = useAuthStore((s: any) => s.user?.role === "admin");
   const tabs = MADERAS_TABS.filter((t) => !t.adminOnly || isAdmin);
 
   return (
