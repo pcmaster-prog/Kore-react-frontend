@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { LayoutDashboard, Package, Hammer, Combine, Calculator, FileText, Calendar, BookOpen, Scissors } from "lucide-react";
+import { LayoutDashboard, Package, Hammer, Combine, FileText, Calendar, BookOpen, Scissors } from "lucide-react";
 import { cx } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/authStore";
 
