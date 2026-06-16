@@ -20,6 +20,7 @@ import { cx } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/authStore";
 import { useEmpleadoSections, useAssignSectionToEmpleado, useRemoveSectionFromEmpleado } from "@/features/tasks/hooks/useEmpleadoSections";
 import { useAreasWithSections } from "@/features/tasks/hooks/useAreas";
+import { EmpleadoModulosPanel } from "@/features/puestos/components/EmpleadoModulosPanel";
 
 // ─── Avatar ──────────────────────────────────────────────────────────────────
 function Avatar({ name }: { name?: string | null }) {
@@ -255,7 +256,7 @@ function UserModal({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<"general" | "secciones">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "secciones" | "modulos">("general");
 
   useEffect(() => {
     if (!open) return;
@@ -402,6 +403,17 @@ function UserModal({
             >
               Secciones
             </button>
+            <button
+              onClick={() => setActiveTab("modulos")}
+              className={cx(
+                "px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-t-xl transition-colors border-b-2",
+                activeTab === "modulos"
+                  ? "text-k-text-h border-k-text-h bg-k-bg-card2/50"
+                  : "text-k-text-b border-transparent hover:text-k-text-h"
+              )}
+            >
+              Módulos
+            </button>
           </div>
         )}
 
@@ -416,6 +428,8 @@ function UserModal({
 
           {activeTab === "secciones" && mode === "edit" && empleadoIdForSections ? (
             <SeccionesTab empleadoId={empleadoIdForSections} canEdit={canEditSections} />
+          ) : activeTab === "modulos" && mode === "edit" && empleadoIdForSections ? (
+            <EmpleadoModulosPanel empleadoId={empleadoIdForSections} />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Columna Izquierda: Acceso */}

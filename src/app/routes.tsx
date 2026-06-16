@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, useRouteError } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { RequireAuth } from "./guards/RequireAuth";
 import { RequireRole } from "./guards/RequireRole";
+import { RequireModulo } from "./guards/RequireModulo";
 import AppShell from "./layout/AppShell";
 import PageSkeleton from "@/components/PageSkeleton";
 import { useAuthStore } from "@/features/auth/store";
@@ -33,6 +34,27 @@ const ManagerAttendancePage = lazy(() => import("@/features/attendance/ManagerAt
 // Perfil / Empleados
 const ProfilePage = lazy(() => import("@/features/profile/ProfilePage"));
 const EmpleadosPage = lazy(() => import("@/features/employees/EmpleadosPage"));
+
+// Puestos
+const PuestosPage = lazy(() => import("@/features/puestos/pages/PuestosPage"));
+const PuestoFormPage = lazy(() => import("@/features/puestos/pages/PuestoFormPage"));
+
+// Maderas
+const DashboardMaderasPage = lazy(() => import("@/features/maderas/pages/DashboardMaderasPage"));
+const InventarioPage = lazy(() => import("@/features/maderas/pages/InventarioPage"));
+const ProduccionPage = lazy(() => import("@/features/maderas/pages/ProduccionPage"));
+const EnsamblajePage = lazy(() => import("@/features/maderas/pages/EnsamblajePage"));
+const PedidoCalculadorPage = lazy(() => import("@/features/maderas/pages/PedidoCalculadorPage"));
+const PedidosHistorialPage = lazy(() => import("@/features/maderas/pages/PedidosHistorialPage"));
+const TemporadasPage = lazy(() => import("@/features/maderas/pages/TemporadasPage"));
+const CatalogoMaderasPage = lazy(() => import("@/features/maderas/pages/CatalogoPage"));
+const TablasCortePage = lazy(() => import("@/features/maderas/pages/TablasCortePage"));
+
+// Pesaje
+const DashboardPesajePage = lazy(() => import("@/features/pesaje/pages/DashboardPesajePage"));
+const RegistrarPesajePage = lazy(() => import("@/features/pesaje/pages/RegistrarPesajePage"));
+const HistorialPesajePage = lazy(() => import("@/features/pesaje/pages/HistorialPesajePage"));
+const SaboresPage = lazy(() => import("@/features/pesaje/pages/SaboresPage"));
 
 // Configuración
 const ConfiguracionPage = lazy(() => import("@/features/configuracion/ConfiguracionPage"));
@@ -192,6 +214,30 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "manager/puestos",
+        element: (
+          <RequireRole allow={["admin"]}>
+            <Suspended><PuestosPage /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/puestos/nuevo",
+        element: (
+          <RequireRole allow={["admin"]}>
+            <Suspended><PuestoFormPage /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
+        path: "manager/puestos/:id",
+        element: (
+          <RequireRole allow={["admin"]}>
+            <Suspended><PuestoFormPage /></Suspended>
+          </RequireRole>
+        ),
+      },
+      {
         path: "manager/configuracion",
         element: (
           <RequireRole allow={["admin"]}>
@@ -290,6 +336,62 @@ export const router = createBrowserRouter([
             <Suspended><ProfilePage /></Suspended>
           </RequireAuth>
         ),
+      },
+
+      // ── Maderas (módulo produccion_maderas) ──
+      {
+        path: "maderas/dashboard",
+        element: <RequireModulo slug="produccion_maderas"><Suspended><DashboardMaderasPage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "maderas/inventario",
+        element: <RequireModulo slug="produccion_maderas"><Suspended><InventarioPage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "maderas/produccion",
+        element: <RequireModulo slug="produccion_maderas"><Suspended><ProduccionPage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "maderas/ensamblaje",
+        element: <RequireModulo slug="produccion_maderas"><Suspended><EnsamblajePage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "maderas/pedido/calcular",
+        element: <RequireModulo slug="produccion_maderas"><Suspended><PedidoCalculadorPage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "maderas/pedidos",
+        element: <RequireModulo slug="produccion_maderas"><Suspended><PedidosHistorialPage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "maderas/temporadas",
+        element: <RequireModulo slug="produccion_maderas"><RequireRole allow={["admin"]}><Suspended><TemporadasPage /></Suspended></RequireRole></RequireModulo>,
+      },
+      {
+        path: "maderas/catalogo",
+        element: <RequireModulo slug="produccion_maderas"><RequireRole allow={["admin"]}><Suspended><CatalogoMaderasPage /></Suspended></RequireRole></RequireModulo>,
+      },
+      {
+        path: "maderas/tablas-corte",
+        element: <RequireModulo slug="produccion_maderas"><RequireRole allow={["admin"]}><Suspended><TablasCortePage /></Suspended></RequireRole></RequireModulo>,
+      },
+
+      // ── Pesaje (módulo produccion_pesaje) ──
+      {
+        path: "pesaje/dashboard",
+        element: <RequireModulo slug="produccion_pesaje"><Suspended><DashboardPesajePage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "pesaje/registrar",
+        element: <RequireModulo slug="produccion_pesaje"><Suspended><RegistrarPesajePage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "pesaje/historial",
+        element: <RequireModulo slug="produccion_pesaje"><Suspended><HistorialPesajePage /></Suspended></RequireModulo>,
+      },
+      {
+        path: "pesaje/sabores",
+        element: <RequireModulo slug="produccion_pesaje"><RequireRole allow={["admin"]}><Suspended><SaboresPage /></Suspended></RequireRole></RequireModulo>,
       },
 
       { path: "*", element: <Navigate to="/login" replace /> },

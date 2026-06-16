@@ -3,6 +3,13 @@
 // Cada flag controla un grupo de cambios. Poner en false para revertir.
 
 export const featureFlags = {
+  /** Módulo DecorArte: Puestos con permisos de módulo */
+  puestosModule: true,
+  /** Módulo DecorArte: Producción Maderas */
+  maderasModule: true,
+  /** Módulo DecorArte: Producción Pesaje */
+  pesajeModule: true,
+
   /** Fase 1: Nuevo <PageHeader> unificado (reemplaza hero oscuro + card) */
   newHeader: true,
 

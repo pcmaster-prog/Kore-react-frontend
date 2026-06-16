@@ -10,7 +10,9 @@ import {
   Menu, X, LogOut, LayoutDashboard, ClipboardList,
   CalendarCheck, User, Users,
   Settings, ChevronRight, Bell, Activity, BookOpen,
-  Receipt, Gift, FileBarChart, AlertTriangle
+  Receipt, Gift, FileBarChart, AlertTriangle,
+  Briefcase, Hammer, Package, Combine, Calculator,
+  FileText, Calendar, Scissors, Scale
 } from "lucide-react";
 import { getPendientesSupervisor } from "@/features/semaforo/api";
 import { isEnabled } from "@/lib/featureFlags";
@@ -74,6 +76,10 @@ function NavGroup({
 function toTitleCase(str: string): string {
   if (str === "mis-tareas") return "Mis Tareas";
   if (str === "gondola-relleno") return "Góndolas";
+  if (str === "maderas") return "Maderas";
+  if (str === "pesaje") return "Pesaje";
+  if (str === "tablas-corte") return "Tablas Corte";
+  if (str === "puestos") return "Puestos";
   return str.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 }
 
@@ -170,6 +176,23 @@ function SidebarContent({
               <SidebarLink to="/app/employee/asistencia" label="Asistencia" icon={<CalendarCheck className="h-4.5 w-4.5" />} onClick={onNav} />
               <SidebarLink to="/app/employee/mis-recibos" label="Mis Recibos" icon={<Receipt className="h-4.5 w-4.5" />} onClick={onNav} />
             </NavGroup>
+
+            {hasModule("produccion_maderas") && (
+              <NavGroup label="Maderas">
+                <SidebarLink to="/app/maderas/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/maderas/produccion"  label="Producción"  icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/maderas/ensamblaje"  label="Ensamblaje"  icon={<Combine className="h-4.5 w-4.5" />} onClick={onNav} />
+              </NavGroup>
+            )}
+
+            {hasModule("produccion_pesaje") && (
+              <NavGroup label="Pesaje">
+                <SidebarLink to="/app/pesaje/dashboard"   label="Dashboard"   icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/pesaje/registrar"   label="Registrar"   icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/pesaje/historial"   label="Historial"   icon={<FileText className="h-4.5 w-4.5" />} onClick={onNav} />
+              </NavGroup>
+            )}
+
             <NavGroup label="Usuario">
               <SidebarLink to="/app/perfil" label="Mi Perfil" icon={<User className="h-4.5 w-4.5" />} onClick={onNav} />
             </NavGroup>
@@ -209,8 +232,32 @@ function SidebarContent({
               </NavGroup>
             )}
 
+            {hasModule("produccion_maderas") && (
+              <NavGroup label="Maderas">
+                <SidebarLink to="/app/maderas/dashboard"       label="Dashboard"   icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/maderas/inventario"       label="Inventario"  icon={<Package className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/maderas/produccion"       label="Producción"  icon={<Hammer className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/maderas/ensamblaje"       label="Ensamblaje"  icon={<Combine className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/maderas/pedido/calcular"  label="Nuevo Pedido" icon={<Calculator className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/maderas/pedidos"          label="Pedidos"     icon={<FileText className="h-4.5 w-4.5" />} onClick={onNav} />
+                {isAdmin && <SidebarLink to="/app/maderas/temporadas"  label="Temporadas"  icon={<Calendar className="h-4.5 w-4.5" />} onClick={onNav} />}
+                {isAdmin && <SidebarLink to="/app/maderas/catalogo"    label="Catálogo"    icon={<BookOpen className="h-4.5 w-4.5" />} onClick={onNav} />}
+                {isAdmin && <SidebarLink to="/app/maderas/tablas-corte" label="Tablas Corte" icon={<Scissors className="h-4.5 w-4.5" />} onClick={onNav} />}
+              </NavGroup>
+            )}
+
+            {hasModule("produccion_pesaje") && (
+              <NavGroup label="Pesaje">
+                <SidebarLink to="/app/pesaje/dashboard"   label="Dashboard"  icon={<LayoutDashboard className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/pesaje/registrar"   label="Registrar"  icon={<Scale className="h-4.5 w-4.5" />} onClick={onNav} />
+                <SidebarLink to="/app/pesaje/historial"   label="Historial"  icon={<FileText className="h-4.5 w-4.5" />} onClick={onNav} />
+                {isAdmin && <SidebarLink to="/app/pesaje/sabores" label="Sabores" icon={<BookOpen className="h-4.5 w-4.5" />} onClick={onNav} />}
+              </NavGroup>
+            )}
+
             <NavGroup label="Sistema">
               {isAdmin && <SidebarLink to="/app/manager/configuracion" label="Ajustes" icon={<Settings className="h-4.5 w-4.5" />} onClick={onNav} />}
+              {isAdmin && <SidebarLink to="/app/manager/puestos" label="Puestos" icon={<Briefcase className="h-4.5 w-4.5" />} onClick={onNav} />}
             </NavGroup>
 
             <NavGroup label="Usuario">

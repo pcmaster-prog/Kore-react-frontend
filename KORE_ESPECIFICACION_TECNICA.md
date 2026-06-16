@@ -1,4 +1,4 @@
-# 📋 Kore — Especificación Técnica de Correcciones y Mejoras
+6# 📋 Kore — Especificación Técnica de Correcciones y Mejoras
 
 > **Destinatario:** Antigravity (Agente de Implementación)  
 > **Proyecto:** Kore — Gestión de Empleados, Asistencia, Tareas y Nómina  

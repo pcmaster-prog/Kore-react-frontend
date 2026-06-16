@@ -99,6 +99,11 @@ export default function LoginPage() {
 
       // Guardar auth y resetear contadores
       auth.set({ token: res.token, user: res.user });
+      try {
+        const { default: api } = await import("@/lib/http");
+        const modRes = await api.get("/me/modulos");
+        auth.setModules(modRes.data?.modulos ?? []);
+      } catch { /* silently continue — modules will be empty */ }
       setFailCount(0);
       setCooldownEnd(null);
 
