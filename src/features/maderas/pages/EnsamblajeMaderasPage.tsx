@@ -1,10 +1,13 @@
 import { Combine, Layers, Plus } from "lucide-react";
+import { useEnsambles } from "../hooks/useEnsamblaje";
+import { MaderasEnsamble, MaderasEnsamblePieza } from "../types";
 
 export default function EnsamblajeMaderasPage() {
-  const MOCK_ENSAMBLAJES = [
-    { id: 1, producto: "Trapeador Premium", piezas: ["Bastón Cedro 120cm", "Mechudo Algodón"], cantidad: 50, fecha: "10 Oct, 08:00 AM", status: "listo" },
-    { id: 2, producto: "Escoba de Plástico", piezas: ["Bastón Pino 100cm", "Cepillo Duro"], cantidad: 200, fecha: "10 Oct, 11:30 AM", status: "en_proceso" },
-  ];
+  const { data: ensamblajes = [], isLoading } = useEnsambles();
+  
+  const ensamblesCompletados = ensamblajes
+    .filter((e: MaderasEnsamble) => e.status === "listo")
+    .reduce((acc: number, e: MaderasEnsamble) => acc + e.cantidad_generada, 0);
 
   return (
     <div className="space-y-6">
@@ -36,10 +39,10 @@ export default function EnsamblajeMaderasPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <span className="text-xs font-semibold text-k-text-b uppercase">Completados</span>
-                <span className="text-2xl font-black text-k-text-h">250</span>
+                <span className="text-2xl font-black text-k-text-h">{ensamblesCompletados}</span>
               </div>
               <div className="w-full bg-k-bg-card2 rounded-full h-2">
-                <div className="bg-violet-500 h-2 rounded-full" style={{ width: '70%' }}></div>
+                <div className="bg-violet-500 h-2 rounded-full" style={{ width: ensamblajes.length > 0 ? '100%' : '0%' }}></div>
               </div>
             </div>
           </div>
@@ -56,34 +59,42 @@ export default function EnsamblajeMaderasPage() {
           <h3 className="text-sm font-bold text-k-text-b uppercase tracking-widest mb-6">Órdenes de Ensamblaje</h3>
           
           <div className="space-y-4">
-            {MOCK_ENSAMBLAJES.map(item => (
-              <div key={item.id} className="p-5 rounded-2xl bg-k-bg-card2 border border-k-border flex flex-col sm:flex-row gap-4 sm:items-center justify-between hover:border-violet-300 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-white border border-k-border flex items-center justify-center text-violet-600 flex-shrink-0">
-                    <Combine className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-base font-bold text-k-text-h flex items-center gap-2">
-                      {item.producto}
-                      {item.status === 'listo' && (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Finalizado</span>
-                      )}
-                      {item.status === 'en_proceso' && (
-                        <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-bold uppercase">En Proceso</span>
-                      )}
-                    </h4>
-                    <div className="text-xs text-k-text-b mt-1 flex gap-2">
-                      <span>Piezas:</span>
-                      <span className="font-medium">{item.piezas.join(", ")}</span>
+            {isLoading ? (
+              <div className="text-center text-k-text-b py-8">Cargando ensambles...</div>
+            ) : ensamblajes.length === 0 ? (
+              <div className="text-center text-k-text-b py-8">Aún no hay ensambles registrados.</div>
+            ) : (
+              ensamblajes.map((item: MaderasEnsamble) => (
+                <div key={item.id} className="p-5 rounded-2xl bg-k-bg-card2 border border-k-border flex flex-col sm:flex-row gap-4 sm:items-center justify-between hover:border-violet-300 transition-colors">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-white border border-k-border flex items-center justify-center text-violet-600 flex-shrink-0">
+                      <Combine className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-k-text-h flex items-center gap-2">
+                        {item.catalogo?.nombre}
+                        {item.status === 'listo' && (
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Finalizado</span>
+                        )}
+                        {item.status === 'en_proceso' && (
+                          <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[10px] font-bold uppercase">En Proceso</span>
+                        )}
+                      </h4>
+                      <div className="text-xs text-k-text-b mt-1 flex gap-2">
+                        <span>Piezas:</span>
+                        <span className="font-medium">
+                          {item.piezas?.map((p: MaderasEnsamblePieza) => `${p.cantidad_usada}x ${p.catalogo?.nombre}`).join(", ")}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                  <div className="text-left sm:text-right">
+                    <div className="text-xl font-black text-k-text-h">{item.cantidad_generada} <span className="text-xs font-medium text-k-text-b">uds</span></div>
+                    <div className="text-xs text-k-text-b mt-0.5">{new Date(item.created_at).toLocaleDateString()}</div>
+                  </div>
                 </div>
-                <div className="text-left sm:text-right">
-                  <div className="text-xl font-black text-k-text-h">{item.cantidad} <span className="text-xs font-medium text-k-text-b">uds</span></div>
-                  <div className="text-xs text-k-text-b mt-0.5">{item.fecha}</div>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
