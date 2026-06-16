@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getInventario, ajustarInventario, getBastones } from "../api";
+import { getInventario, createInventario } from "../api";
 
 export function useInventario() {
   return useQuery({
@@ -8,20 +8,12 @@ export function useInventario() {
   });
 }
 
-export function useBastones() {
-  return useQuery({
-    queryKey: ["maderas-bastones"],
-    queryFn: getBastones,
-  });
-}
-
-export function useAjustarInventario() {
+export function useCreateInventario() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ajustarInventario,
+    mutationFn: createInventario,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["maderas-inventario"] });
-      queryClient.invalidateQueries({ queryKey: ["maderas-bastones"] });
     },
   });
 }

@@ -1,12 +1,19 @@
 import { Package, Search, AlertCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useInventario } from "../hooks/useInventario";
+import { MaderasInventario } from "../types";
 
 export default function InventarioMaderasPage() {
-  const MOCK_STOCK = [
-    { id: 1, tipo: "Bastón Maderas", variante: "Pino 100cm", stock: 1250, unidad: "uds", status: "ok" },
-    { id: 2, tipo: "Producto Terminado", variante: "Palo Escoba", stock: 150, unidad: "uds", status: "low" },
-    { id: 3, tipo: "Bastón Maderas", variante: "Cedro 120cm", stock: 3200, unidad: "uds", status: "ok" },
-    { id: 4, tipo: "Producto Terminado", variante: "Mango Trapeador", stock: 80, unidad: "uds", status: "critical" },
-  ];
+  const { data: inventario = [], isLoading } = useInventario();
+
+  const totalStockBastones = inventario
+    .filter((item: MaderasInventario) => item.catalogo?.tipo === "baston")
+    .reduce((acc: number, item: MaderasInventario) => acc + item.stock, 0);
+
+  const totalStockProductos = inventario
+    .filter((item: MaderasInventario) => item.catalogo?.tipo === "producto_terminado")
+    .reduce((acc: number, item: MaderasInventario) => acc + item.stock, 0);
+
+  const alertas = inventario.filter((item: MaderasInventario) => item.status === "critical" || item.status === "low").length;
 
   return (
     <div className="space-y-6">
@@ -32,9 +39,9 @@ export default function InventarioMaderasPage() {
             </div>
           </div>
           <div className="flex items-end justify-between">
-            <span className="text-3xl font-black text-k-text-h">4,450</span>
+            <span className="text-3xl font-black text-k-text-h">{totalStockBastones.toLocaleString()}</span>
             <span className="text-xs font-medium text-emerald-500 flex items-center bg-emerald-50 px-2 py-1 rounded-lg">
-              <ArrowUpRight className="h-3 w-3 mr-1" />+12%
+              <ArrowUpRight className="h-3 w-3 mr-1" />+0%
             </span>
           </div>
         </div>
@@ -46,9 +53,9 @@ export default function InventarioMaderasPage() {
             </div>
           </div>
           <div className="flex items-end justify-between">
-            <span className="text-3xl font-black text-k-text-h">230</span>
-            <span className="text-xs font-medium text-rose-500 flex items-center bg-rose-50 px-2 py-1 rounded-lg">
-              <ArrowDownRight className="h-3 w-3 mr-1" />-5%
+            <span className="text-3xl font-black text-k-text-h">{totalStockProductos.toLocaleString()}</span>
+            <span className="text-xs font-medium text-emerald-500 flex items-center bg-emerald-50 px-2 py-1 rounded-lg">
+              <ArrowUpRight className="h-3 w-3 mr-1" />+0%
             </span>
           </div>
         </div>
@@ -60,7 +67,7 @@ export default function InventarioMaderasPage() {
             </div>
           </div>
           <div className="flex items-end justify-between">
-            <span className="text-3xl font-black text-k-text-h">2</span>
+            <span className="text-3xl font-black text-k-text-h">{alertas}</span>
             <span className="text-xs font-medium text-rose-600">Artículos críticos</span>
           </div>
         </div>
@@ -89,35 +96,45 @@ export default function InventarioMaderasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-k-border bg-k-bg-card">
-              {MOCK_STOCK.map((item) => (
-                <tr key={item.id} className="hover:bg-k-bg-card2 transition-colors">
-                  <td className="p-4">
-                    <span className="font-medium text-k-text-h text-sm">{item.tipo}</span>
-                  </td>
-                  <td className="p-4 text-sm text-k-text-b">{item.variante}</td>
-                  <td className="p-4">
-                    <span className="font-bold text-k-text-h">{item.stock.toLocaleString()}</span>
-                    <span className="text-xs text-k-text-b ml-1">{item.unidad}</span>
-                  </td>
-                  <td className="p-4">
-                    {item.status === 'ok' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                        Óptimo
-                      </span>
-                    )}
-                    {item.status === 'low' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                        Bajo
-                      </span>
-                    )}
-                    {item.status === 'critical' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
-                        Crítico
-                      </span>
-                    )}
-                  </td>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-k-text-b">Cargando inventario...</td>
                 </tr>
-              ))}
+              ) : inventario.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center text-k-text-b">No hay items en el inventario.</td>
+                </tr>
+              ) : (
+                inventario.map((item: MaderasInventario) => (
+                  <tr key={item.id} className="hover:bg-k-bg-card2 transition-colors">
+                    <td className="p-4">
+                      <span className="font-medium text-k-text-h text-sm capitalize">{item.catalogo?.tipo.replace("_", " ")}</span>
+                    </td>
+                    <td className="p-4 text-sm text-k-text-b">{item.catalogo?.nombre}</td>
+                    <td className="p-4">
+                      <span className="font-bold text-k-text-h">{item.stock.toLocaleString()}</span>
+                      <span className="text-xs text-k-text-b ml-1">{item.catalogo?.unidad_medida}</span>
+                    </td>
+                    <td className="p-4">
+                      {item.status === "ok" && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-600">
+                          Adecuado
+                        </span>
+                      )}
+                      {item.status === "low" && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-600">
+                          Bajo ({item.stock_minimo} min)
+                        </span>
+                      )}
+                      {item.status === "critical" && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-rose-50 text-rose-600">
+                          Crítico ({item.stock_minimo} min)
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

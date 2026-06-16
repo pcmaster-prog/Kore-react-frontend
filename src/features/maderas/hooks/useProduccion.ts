@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProduccion, createProduccion, anularProduccion } from "../api";
 
-export function useProduccion(params?: any) {
+export function useProduccion() {
   return useQuery({
-    queryKey: ["maderas-produccion", params],
-    queryFn: () => getProduccion(params),
+    queryKey: ["maderas-produccion"],
+    queryFn: getProduccion,
   });
 }
 
@@ -14,8 +14,8 @@ export function useCreateProduccion() {
     mutationFn: createProduccion,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["maderas-produccion"] });
+      // Produccion modifies inventario too
       queryClient.invalidateQueries({ queryKey: ["maderas-inventario"] });
-      queryClient.invalidateQueries({ queryKey: ["maderas-bastones"] });
     },
   });
 }
@@ -27,7 +27,6 @@ export function useAnularProduccion() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["maderas-produccion"] });
       queryClient.invalidateQueries({ queryKey: ["maderas-inventario"] });
-      queryClient.invalidateQueries({ queryKey: ["maderas-bastones"] });
     },
   });
 }

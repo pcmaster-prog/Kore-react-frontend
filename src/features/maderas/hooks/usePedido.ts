@@ -1,5 +1,5 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { getPedidos, calcularPedido, downloadPedidoPdf } from "../api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getPedidos, createPedido, updatePedido } from "../api";
 
 export function usePedidos() {
   return useQuery({
@@ -8,16 +8,22 @@ export function usePedidos() {
   });
 }
 
-export function useCalcularPedido() {
-  return useQuery({
-    queryKey: ["maderas-calcular-pedido"],
-    queryFn: calcularPedido,
-    staleTime: 0, // Siempre re-calcular
+export function useCreatePedido() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPedido,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maderas-pedidos"] });
+    },
   });
 }
 
-export function useDownloadPedido() {
+export function useUpdatePedido() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: downloadPedidoPdf,
+    mutationFn: ({ id, data }: { id: number; data: any }) => updatePedido(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maderas-pedidos"] });
+    },
   });
 }

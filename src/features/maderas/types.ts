@@ -1,56 +1,82 @@
-export type ProductoMadera = {
-  id: string;
-  sku: string;
+export type MaderasCatalogo = {
+  id: number;
   nombre: string;
-  tipo: "base" | "bolsa";
-  activo: boolean;
+  tipo: "baston" | "producto_terminado" | "insumo";
+  unidad_medida: string;
+  created_at: string;
+  updated_at: string;
 };
 
-export type RecetaMadera = {
-  id: string;
-  producto_id: string;
-  baston_id: string;
-  cortes_por_baston: number;
-  medida_corte_cm: number;
+export type MaderasTablaCorte = {
+  id: number;
+  nombre: string;
+  rendimiento_esperado: number;
+  created_at: string;
+  updated_at: string;
 };
 
-export type BastonMadera = {
-  id: string;
-  grosor_mm: number;
-  largo_cm: number;
+export type MaderasTemporada = {
+  id: number;
+  nombre: string;
+  mes_inicio: number;
+  mes_fin: number;
+  multiplicador: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MaderasInventario = {
+  id: number;
+  catalogo_id: number;
   stock: number;
+  stock_minimo: number;
+  status: "ok" | "low" | "critical";
+  created_at: string;
+  updated_at: string;
+  catalogo?: MaderasCatalogo;
 };
 
-export type RegistroProduccion = {
-  id: string;
-  fecha: string;
-  producto_id: string;
+export type MaderasProduccion = {
+  id: number;
+  empleado_id: string; // UUID
+  catalogo_id: number;
+  maquina: string | null;
   cantidad: number;
-  user_id: string;
-  notas: string | null;
-  anulado: boolean;
-  producto?: ProductoMadera;
+  fecha_registro: string;
+  created_at: string;
+  updated_at: string;
+  empleado?: any; // To do: add Empleado type
+  catalogo?: MaderasCatalogo;
 };
 
-export type Ensamblaje = {
-  id: string;
-  fecha: string;
-  producto_id: string; // debe ser tipo bolsa
-  cantidad_bolsas: number;
-  user_id: string;
+export type MaderasEnsamblePieza = {
+  id: number;
+  ensamble_id: number;
+  catalogo_id: number;
+  cantidad_usada: number;
+  created_at: string;
+  updated_at: string;
+  catalogo?: MaderasCatalogo;
 };
 
-export type TemporadaMadera = {
-  id: string;
-  nombre: string;
-  fecha_inicio: string;
-  fecha_fin: string;
-  meta_bolsas: number;
-  activa: boolean;
+export type MaderasEnsamble = {
+  id: number;
+  catalogo_id: number;
+  cantidad_generada: number;
+  status: "en_proceso" | "listo";
+  created_at: string;
+  updated_at: string;
+  catalogo?: MaderasCatalogo;
+  piezas?: MaderasEnsamblePieza[];
 };
 
-export type TablaCortePXT = {
-  id: string;
-  medida_cm: number;
-  piezas_por_tabla: number;
+export type MaderasPedido = {
+  id: number;
+  codigo: string;
+  cliente: string;
+  total_unidades: number;
+  status: "pendiente" | "entregado";
+  fecha_entrega: string | null;
+  created_at: string;
+  updated_at: string;
 };

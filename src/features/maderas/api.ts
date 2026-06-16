@@ -1,100 +1,93 @@
 import api from "@/lib/http";
 import type { 
-  ProductoMadera, BastonMadera, RegistroProduccion, 
-  Ensamblaje, TemporadaMadera, TablaCortePXT 
+  MaderasCatalogo, MaderasTablaCorte, MaderasTemporada, 
+  MaderasInventario, MaderasProduccion, MaderasEnsamble, 
+  MaderasPedido 
 } from "./types";
 
-// Dashboard
-export async function getDashboard() {
-  const res = await api.get("/maderas/dashboard");
+// Catálogos
+export async function getCatalogos() {
+  const res = await api.get<MaderasCatalogo[]>("/maderas/catalogo");
   return res.data;
 }
 
-// Inventario
-export async function getInventario() {
-  const res = await api.get("/maderas/inventario");
+export async function createCatalogo(data: Partial<MaderasCatalogo>) {
+  const res = await api.post<MaderasCatalogo>("/maderas/catalogo", data);
   return res.data;
 }
 
-export async function ajustarInventario(payload: any) {
-  const res = await api.post("/maderas/inventario/ajuste", payload);
+export async function deleteCatalogo(id: number) {
+  const res = await api.delete(`/maderas/catalogo/${id}`);
   return res.data;
 }
 
 // Tablas Corte
 export async function getTablasCortes() {
-  const res = await api.get("/maderas/tablas-cortes");
-  return res.data.data as TablaCortePXT[];
-}
-
-// Productos & Catálogo
-export async function getProductos() {
-  const res = await api.get("/maderas/productos");
-  return res.data.data as ProductoMadera[];
-}
-
-// Bastones
-export async function getBastones() {
-  const res = await api.get("/maderas/bastones");
-  return res.data.data as BastonMadera[];
+  const res = await api.get<MaderasTablaCorte[]>("/maderas/tablas-corte");
+  return res.data;
 }
 
 // Temporadas
 export async function getTemporadas() {
-  const res = await api.get("/maderas/temporadas");
-  return res.data.data as TemporadaMadera[];
+  const res = await api.get<MaderasTemporada[]>("/maderas/temporadas");
+  return res.data;
 }
 
-export async function getTemporadaActiva() {
-  const res = await api.get("/maderas/temporadas/activa");
-  return res.data.data as TemporadaMadera;
+// Inventario
+export async function getInventario() {
+  const res = await api.get<MaderasInventario[]>("/maderas/inventario");
+  return res.data;
+}
+
+export async function createInventario(data: Partial<MaderasInventario>) {
+  const res = await api.post<MaderasInventario>("/maderas/inventario", data);
+  return res.data;
 }
 
 // Producción
-export async function getProduccion(params?: any) {
-  const res = await api.get("/maderas/produccion", { params });
+export async function getProduccion() {
+  const res = await api.get<MaderasProduccion[]>("/maderas/produccion");
   return res.data;
 }
 
-export async function createProduccion(payload: { producto_id: string; cantidad: number; notas?: string }) {
-  const res = await api.post("/maderas/produccion", payload);
-  return res.data.data as RegistroProduccion;
-}
-
-export async function anularProduccion(id: string) {
-  const res = await api.put(`/maderas/produccion/${id}/anular`);
+export async function createProduccion(data: Partial<MaderasProduccion>) {
+  const res = await api.post<MaderasProduccion>("/maderas/produccion", data);
   return res.data;
 }
 
-// Ensamblaje
-export async function getEnsamblajes(params?: any) {
-  const res = await api.get("/maderas/ensamblaje", { params });
+export async function anularProduccion(id: number) {
+  const res = await api.delete(`/maderas/produccion/${id}`);
   return res.data;
 }
 
-export async function createEnsamblaje(payload: { producto_id: string; cantidad_bolsas: number }) {
-  const res = await api.post("/maderas/ensamblaje", payload);
-  return res.data.data as Ensamblaje;
+// Ensambles
+export async function getEnsambles() {
+  const res = await api.get<MaderasEnsamble[]>("/maderas/ensambles");
+  return res.data;
+}
+
+export async function createEnsamble(data: any) {
+  const res = await api.post<MaderasEnsamble>("/maderas/ensambles", data);
+  return res.data;
+}
+
+export async function updateEnsamble(id: number, data: Partial<MaderasEnsamble>) {
+  const res = await api.put<MaderasEnsamble>(`/maderas/ensambles/${id}`, data);
+  return res.data;
 }
 
 // Pedidos
-export async function calcularPedido() {
-  const res = await api.get("/maderas/pedidos/calcular");
-  return res.data;
-}
-
 export async function getPedidos() {
-  const res = await api.get("/maderas/pedidos");
+  const res = await api.get<MaderasPedido[]>("/maderas/pedidos");
   return res.data;
 }
 
-export async function downloadPedidoPdf(id: string) {
-  const res = await api.get(`/maderas/pedidos/${id}/pdf`, { responseType: 'blob' });
-  const url = window.URL.createObjectURL(new Blob([res.data]));
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `pedido-${id}.pdf`);
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+export async function createPedido(data: Partial<MaderasPedido>) {
+  const res = await api.post<MaderasPedido>("/maderas/pedidos", data);
+  return res.data;
+}
+
+export async function updatePedido(id: number, data: Partial<MaderasPedido>) {
+  const res = await api.put<MaderasPedido>(`/maderas/pedidos/${id}`, data);
+  return res.data;
 }
