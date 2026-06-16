@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Plus, Package, Ruler } from "lucide-react";
+import { Plus, Package, Ruler } from "lucide-react";
 import { useProductos, useBastones, useCreateCatalogo } from "../hooks/useCatalogo";
 
 export default function CatalogoMaderasPage() {
@@ -8,7 +8,11 @@ export default function CatalogoMaderasPage() {
   const { mutateAsync: createItem } = useCreateCatalogo();
 
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nombre: string;
+    tipo: "producto_terminado" | "baston" | "insumo";
+    unidad_medida: string;
+  }>({
     nombre: "",
     tipo: "producto_terminado",
     unidad_medida: "uds",

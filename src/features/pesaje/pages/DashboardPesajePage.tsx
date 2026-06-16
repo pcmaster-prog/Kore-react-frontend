@@ -1,7 +1,5 @@
 import { LayoutDashboard, TrendingUp, TrendingDown, Scale, Route } from "lucide-react";
 import { useDashboardPesaje } from "../hooks/usePesaje";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 export default function DashboardPesajePage() {
   const { data: dashboard, isLoading } = useDashboardPesaje();
@@ -61,7 +59,9 @@ export default function DashboardPesajePage() {
                     </div>
                     <div className="text-right">
                       <p className="font-black text-amber-600">{viaje.peso} kg</p>
-                      <p className="text-xs text-k-text-b">{format(new Date(viaje.fecha_registro), "HH:mm", { locale: es })}</p>
+                      <p className="text-xs text-k-text-b">
+                        {new Intl.DateTimeFormat('es-MX', { hour: '2-digit', minute: '2-digit' }).format(new Date(viaje.fecha_registro))}
+                      </p>
                     </div>
                   </li>
                 ))}

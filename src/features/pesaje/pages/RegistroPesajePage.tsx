@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Scale, CheckCircle } from "lucide-react";
 import { useSabores, useCreatePesaje } from "../hooks/usePesaje";
-import toast from "react-hot-toast";
 
 export default function RegistroPesajePage() {
-  const { data: saboresResp, isLoading: loadingSabores } = useSabores();
+  const { data: saboresResp } = useSabores();
   const saboresActivos = saboresResp?.data?.filter((s: any) => s.activo) || [];
   
   const { mutateAsync: createPesaje, isPending } = useCreatePesaje();
@@ -14,16 +13,16 @@ export default function RegistroPesajePage() {
 
   const handleSubmit = async () => {
     if (!saborId || !peso) {
-      toast.error("Selecciona un sabor y escribe el peso");
+      alert("Selecciona un sabor y escribe el peso");
       return;
     }
     try {
       await createPesaje({ sabor_id: saborId, peso: parseFloat(peso) });
-      toast.success("Pesaje registrado correctamente");
+      alert("Pesaje registrado correctamente");
       setSaborId("");
       setPeso("");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Error al registrar el pesaje");
+      alert(error.response?.data?.message || "Error al registrar el pesaje");
     }
   };
 

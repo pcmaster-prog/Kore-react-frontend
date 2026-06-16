@@ -1,7 +1,5 @@
 import { Search } from "lucide-react";
 import { useHistorialPesaje } from "../hooks/usePesaje";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 export default function HistorialPesajePage() {
   const { data: historial, isLoading } = useHistorialPesaje();
@@ -61,7 +59,7 @@ export default function HistorialPesajePage() {
                       </span>
                     </td>
                     <td className="p-4 text-sm text-k-text-b">
-                      {format(new Date(item.fecha_registro), "dd MMM, HH:mm", { locale: es })}
+                      {new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(item.fecha_registro))}
                     </td>
                   </tr>
                 ))
