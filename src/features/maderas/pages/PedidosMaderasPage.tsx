@@ -69,7 +69,6 @@ export default function PedidosMaderasPage() {
   };
 
   const totalGeneral = useMemo(() => items.reduce((acc, item) => acc + (item.total || 0), 0), [items]);
-  const totalUnidades = useMemo(() => items.reduce((acc, item) => acc + Number(item.cantidad || 0), 0), [items]);
 
   const openNewOrderModal = () => {
     setClientName("");
@@ -166,12 +165,10 @@ export default function PedidosMaderasPage() {
     try {
       await createPedido({
         codigo: orderCode,
-        cliente: clientName,
-        total_unidades: totalUnidades,
-        total_precio: totalGeneral,
-        items,
+        total: totalGeneral,
+        fecha_pedido: new Date().toISOString().split('T')[0],
         fecha_entrega: deliveryDate || undefined,
-      });
+      } as any);
       setShowModal(false);
     } catch (err: any) {
       alert(err?.response?.data?.message ?? "Error al registrar el pedido.");
@@ -182,7 +179,7 @@ export default function PedidosMaderasPage() {
     try {
       await updatePedido({
         id,
-        data: { status: "entregado" }
+        data: { status: "recibido" }
       });
     } catch (err: any) {
       alert(err?.response?.data?.message ?? "Error al actualizar pedido.");
@@ -221,8 +218,8 @@ export default function PedidosMaderasPage() {
             pedidos.map((pedido: MaderasPedido) => (
               <div key={pedido.id} className="p-4 rounded-2xl bg-k-bg-card2 border border-k-border flex items-center justify-between hover:border-violet-500/30 transition-colors group">
                 <div className="flex items-center gap-4">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center border ${pedido.status === 'entregado' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}`}>
-                    {pedido.status === 'entregado' ? <CheckCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center border ${pedido.status === 'recibido' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}`}>
+                    {pedido.status === 'recibido' ? <CheckCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                   </div>
                   <div>
                     <h4 className="font-bold text-k-text-h text-sm">{pedido.codigo}</h4>
@@ -238,7 +235,7 @@ export default function PedidosMaderasPage() {
                     <div className="font-black text-k-text-h text-lg">${Number(pedido.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                     <span className={cx(
                       "text-[10px] uppercase font-bold px-2 py-0.5 rounded-full inline-block mt-1",
-                      pedido.status === 'entregado' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                      pedido.status === 'recibido' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                     )}>{pedido.status}</span>
                   </div>
                   <div className="flex gap-2">
