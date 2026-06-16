@@ -1,9 +1,17 @@
-import { Package, AlertCircle, ArrowUpRight, Search } from "lucide-react";
-import { useInventario } from "../hooks/useInventario";
+import { useState } from "react";
+import { Package, AlertCircle, ArrowUpRight, Search, Edit2 } from "lucide-react";
+import { useInventario, useUpdateInventario } from "../hooks/useInventario";
 import type { MaderasInventario } from "../types";
 
 export default function InventarioMaderasPage() {
   const { data: inventario = [], isLoading } = useInventario();
+  const { mutateAsync: updateStock } = useUpdateInventario();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MaderasInventario | null>(null);
+  const [stockVal, setStockVal] = useState(0);
+  const [stockMinVal, setStockMinVal] = useState(0);
 
   const totalStockBastones = inventario
     .filter((item: MaderasInventario) => item.catalogo?.tipo === "baston")
@@ -15,6 +23,35 @@ export default function InventarioMaderasPage() {
 
   const alertas = inventario.filter((item: MaderasInventario) => item.status === "critical" || item.status === "low").length;
 
+  const handleEditClick = (item: MaderasInventario) => {
+    setSelectedItem(item);
+    setStockVal(item.stock);
+    setStockMinVal(item.stock_minimo);
+    setShowModal(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedItem) return;
+    try {
+      await updateStock({
+        id: selectedItem.id,
+        data: {
+          stock: stockVal,
+          stock_minimo: stockMinVal,
+        },
+      });
+      setShowModal(false);
+    } catch (err) {
+      console.error("Error updating inventory", err);
+    }
+  };
+
+  const filteredInventario = inventario.filter((item) =>
+    item.catalogo?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.catalogo?.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -24,10 +61,6 @@ export default function InventarioMaderasPage() {
             Gestión de stock de bastones y productos terminados.
           </p>
         </div>
-        <button className="h-10 px-4 bg-k-primary hover:bg-k-primary-hover text-white rounded-xl font-bold text-sm transition-colors shadow-k-button flex items-center gap-2">
-          <Package className="h-4 w-4" />
-          Ajuste de Stock
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -81,6 +114,8 @@ export default function InventarioMaderasPage() {
             <input
               type="text"
               placeholder="Buscar material..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 bg-k-bg-card border border-k-border rounded-xl text-sm w-64 focus:outline-none focus:ring-2 focus:ring-k-primary"
             />
           </div>
@@ -93,19 +128,20 @@ export default function InventarioMaderasPage() {
                 <th className="p-4 text-xs font-bold text-k-text-b uppercase tracking-wider">Variante</th>
                 <th className="p-4 text-xs font-bold text-k-text-b uppercase tracking-wider">Stock</th>
                 <th className="p-4 text-xs font-bold text-k-text-b uppercase tracking-wider">Estado</th>
+                <th className="p-4 text-xs font-bold text-k-text-b uppercase tracking-wider text-right">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-k-border bg-k-bg-card">
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-k-text-b">Cargando inventario...</td>
+                  <td colSpan={5} className="p-8 text-center text-k-text-b">Cargando inventario...</td>
                 </tr>
-              ) : inventario.length === 0 ? (
+              ) : filteredInventario.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-k-text-b">No hay items en el inventario.</td>
+                  <td colSpan={5} className="p-8 text-center text-k-text-b">No se encontraron items.</td>
                 </tr>
               ) : (
-                inventario.map((item: MaderasInventario) => (
+                filteredInventario.map((item: MaderasInventario) => (
                   <tr key={item.id} className="hover:bg-k-bg-card2 transition-colors">
                     <td className="p-4">
                       <span className="font-medium text-k-text-h text-sm capitalize">{item.catalogo?.tipo.replace("_", " ")}</span>
@@ -132,6 +168,15 @@ export default function InventarioMaderasPage() {
                         </span>
                       )}
                     </td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-k-bg-page border border-k-border text-k-text-h hover:border-k-primary text-xs font-bold rounded-lg transition-colors"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                        Ajustar
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -139,6 +184,54 @@ export default function InventarioMaderasPage() {
           </table>
         </div>
       </div>
+
+      {showModal && selectedItem && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-k-bg-card border border-k-border rounded-3xl w-full max-w-md shadow-2xl p-6">
+            <h2 className="text-xl font-bold text-k-text-h mb-2">Ajustar Inventario</h2>
+            <p className="text-xs text-k-text-b mb-6">{selectedItem.catalogo?.nombre}</p>
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Stock Actual</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={stockVal}
+                  onChange={(e) => setStockVal(parseInt(e.target.value) || 0)}
+                  className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-k-text-b uppercase tracking-wider mb-2">Stock Mínimo Alerta</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={stockMinVal}
+                  onChange={(e) => setStockMinVal(parseInt(e.target.value) || 0)}
+                  className="w-full h-11 px-4 bg-k-bg-page border border-k-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-k-primary text-k-text-h"
+                  required
+                />
+              </div>
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="h-10 px-4 border border-k-border rounded-xl font-bold text-sm text-k-text-b hover:bg-k-bg-page transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="h-10 px-4 bg-k-text-h text-white rounded-xl font-bold text-sm hover:bg-black transition-colors"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

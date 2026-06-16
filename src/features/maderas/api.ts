@@ -64,6 +64,11 @@ export async function createInventario(data: Partial<MaderasInventario>) {
   return res.data;
 }
 
+export async function updateInventario(id: number, data: Partial<MaderasInventario>) {
+  const res = await api.put<MaderasInventario>(`/maderas/inventario/${id}`, data);
+  return res.data;
+}
+
 // Producción
 export async function getProduccion() {
   const res = await api.get<MaderasProduccion[]>("/maderas/produccion");
@@ -109,5 +114,18 @@ export async function createPedido(data: Partial<MaderasPedido>) {
 
 export async function updatePedido(id: number, data: Partial<MaderasPedido>) {
   const res = await api.put<MaderasPedido>(`/maderas/pedidos/${id}`, data);
+  return res.data;
+}
+
+// Dashboard
+export async function getDashboardMaderas() {
+  const res = await api.get<{
+    total_productos: number;
+    total_bastones: number;
+    produccion_hoy: number;
+    pedidos_pendientes: number;
+    stock_bajo: number;
+    ensambles_proceso: number;
+  }>("/maderas/dashboard");
   return res.data;
 }
