@@ -169,7 +169,7 @@ export default function PedidosMaderasPage() {
         total: totalGeneral,
         fecha_pedido: new Date().toISOString().split('T')[0],
         fecha_entrega: deliveryDate || undefined,
-        temporada_id: orderMode === 'auto' ? selectedSeason : undefined,
+        temporada_id: orderMode === 'auto' ? Number(selectedTemporada) : undefined,
         items: orderMode === 'manual' ? items : [],
       } as any);
       setShowModal(false);
