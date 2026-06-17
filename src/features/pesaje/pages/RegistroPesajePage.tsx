@@ -20,7 +20,7 @@ export default function RegistroPesajePage() {
       return;
     }
     try {
-      await createPesaje({ empleado_id: parseInt(empleadoId), sabor_id: saborId, peso: parseFloat(peso) });
+      await createPesaje({ empleado_id: empleadoId, sabor_id: saborId, peso: parseFloat(peso) });
       alert("Pesaje registrado correctamente");
       setSaborId("");
       setPeso("");

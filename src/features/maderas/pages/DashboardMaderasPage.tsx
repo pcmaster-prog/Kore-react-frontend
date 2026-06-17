@@ -74,18 +74,14 @@ export default function DashboardMaderasPage() {
           {cards.map((card, i) => {
             const Icon = card.icon;
             return (
-              <Link
+              <div
                 key={i}
-                to={card.link}
-                className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card hover:border-k-primary/50 transition-all duration-300 group block"
+                className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card transition-all duration-300 block"
               >
                 <div className="flex justify-between items-start">
                   <div className={`p-3 rounded-2xl ${card.color}`}>
                     <Icon className="h-6 w-6" />
                   </div>
-                  <span className="text-xs font-bold text-k-text-b opacity-0 group-hover:opacity-100 transition-opacity">
-                    Ver más →
-                  </span>
                 </div>
                 <div className="mt-6">
                   <h3 className="text-sm font-bold text-k-text-b uppercase tracking-wider">
@@ -98,7 +94,7 @@ export default function DashboardMaderasPage() {
                     {card.description}
                   </p>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
