@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getPedidos, createPedido, updatePedido, calcularPedido } from "../api";
+import { getPedidos, createPedido, updatePedido, deletePedido, calcularPedido } from "../api";
 
 export function usePedidos() {
   return useQuery({
@@ -28,6 +28,16 @@ export function useUpdatePedido() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) => updatePedido(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maderas-pedidos"] });
+    },
+  });
+}
+
+export function useDeletePedido() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deletePedido(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["maderas-pedidos"] });
     },

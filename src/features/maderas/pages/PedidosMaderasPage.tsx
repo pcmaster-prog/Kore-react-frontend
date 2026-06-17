@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Clock, CheckCircle, FileText, Plus, Trash2, Save, X, Eye } from "lucide-react";
-import { usePedidos, useCreatePedido, useUpdatePedido, useCalcularPedido } from "../hooks/usePedido";
+import { usePedidos, useCreatePedido, useUpdatePedido, useCalcularPedido, useDeletePedido } from "../hooks/usePedido";
 import { useTemporadas } from "../hooks/useTemporada";
 import type { MaderasPedido, PedidoItem } from "../types";
 import { cx } from "@/lib/utils";
@@ -18,6 +18,7 @@ export default function PedidosMaderasPage() {
   const { data: pedidos = [], isLoading } = usePedidos();
   const { mutateAsync: createPedido, isPending: creating } = useCreatePedido();
   const { mutateAsync: updatePedido } = useUpdatePedido();
+  const { mutateAsync: deletePedido } = useDeletePedido();
 
   // State for form
   const [showModal, setShowModal] = useState(false);
@@ -190,6 +191,33 @@ export default function PedidosMaderasPage() {
     }
   };
 
+  const handleDeleteOrder = async (id: number) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este pedido?")) return;
+    try {
+      await deletePedido(id);
+    } catch (err: any) {
+      alert("Error al eliminar pedido.");
+    }
+  };
+
+  const handleLoadExcel = () => {
+    setOrderMode("manual");
+    setItems([
+      { categoria: 'Recorte Rectangular', cantidad: 7, descripcion: 'HOJA MDF BLANCA 4.5MM 40 x 60', precio_unitario: 180, total: 1260, piezas_calculadas: 84 },
+      { categoria: 'Recorte Rectangular', cantidad: 4, descripcion: 'HOJA MDF BLANCA 4.5MM 40 x 50', precio_unitario: 180, total: 720, piezas_calculadas: 48 },
+      { categoria: 'Recorte Rectangular', cantidad: 12, descripcion: 'HOJA MDF BLANCA 4.5MM 50 x 70', precio_unitario: 180, total: 2160, piezas_calculadas: 72 },
+      { categoria: 'Recorte Rectangular', cantidad: 23, descripcion: 'RECORTES RECTANGULA / CUADRADO X HOJA', precio_unitario: 30, total: 690 },
+      { categoria: 'Recorte Circular', cantidad: 2, descripcion: 'HOJA MDF BLANCA 4.5MM 30 cm', precio_unitario: 210, total: 420, piezas_calculadas: 64 },
+      { categoria: 'Recorte Circular', cantidad: 10, descripcion: 'HOJA MDF BLANCA 4.5MM 45 cm', precio_unitario: 210, total: 2100, piezas_calculadas: 100 },
+      { categoria: 'Recorte Circular', cantidad: 12, descripcion: 'RECORTES DE HOJAS EN CIRCULOS', precio_unitario: 80, total: 960 },
+      { categoria: 'Recorte Cuadrado', cantidad: 5, descripcion: 'RECORTES RECTANGULA / CUADRADO X HOJA', precio_unitario: 30, total: 150 },
+      { categoria: 'Tablas en Tiras', cantidad: 7, descripcion: 'TABLAS RECORTADAS EN TIRAS', precio_unitario: 260, total: 1820 },
+      { categoria: 'Otros Productos', cantidad: 2, descripcion: 'PAQUETES GRAPAS DE 3/8', precio_unitario: 26, total: 52, piezas_calculadas: 2 },
+      { categoria: 'Otros Productos', cantidad: 1, descripcion: 'GALONES RESISTOL', precio_unitario: 368, total: 368, piezas_calculadas: 1 },
+      { categoria: 'Otros Productos', cantidad: 2, descripcion: 'HOJAS DE 3MM', precio_unitario: 0, total: 0, piezas_calculadas: 0 },
+    ]);
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -272,6 +300,13 @@ export default function PedidosMaderasPage() {
                     >
                       <Eye className="h-4 w-4" />
                     </button>
+                    <button
+                      onClick={() => handleDeleteOrder(pedido.id)}
+                      className="h-9 w-9 flex items-center justify-center bg-white border border-k-border hover:border-red-300 hover:text-red-600 rounded-xl transition-all shadow-sm"
+                      title="Eliminar Pedido"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                     {pedido.status === "pendiente" && (
                       <button
                         onClick={() => handleMarkAsDelivered(pedido.id)}
@@ -293,8 +328,8 @@ export default function PedidosMaderasPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-k-bg-card border border-k-border rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-k-border flex items-center justify-between bg-k-bg-card2/50 shrink-0">
-              <div>
-                <h2 className="text-xl font-black text-k-text-h tracking-tight">ARTE PARA PASTELERIA "PAYPAL"</h2>
+              <div className="mb-8 relative">
+                <h2 className="text-xl font-black text-k-text-h tracking-tight">DecorArte</h2>
                 <p className="text-xs text-k-text-b font-medium mt-0.5">CALLE COLON 270 A ZONA CENTRO 4626269090</p>
               </div>
               <button onClick={() => setShowModal(false)} className="p-2 text-k-text-b hover:bg-white rounded-xl transition-colors">
@@ -336,16 +371,16 @@ export default function PedidosMaderasPage() {
                 </div>
               </div>
 
-              <div className="flex border-b border-k-border mb-6">
+              <div className="flex gap-2 mb-6">
                 <button
                   type="button"
                   onClick={() => { setOrderMode("auto"); setIsCalculated(false); setItems([]); }}
                   className={cx(
-                    "px-6 py-3 font-bold text-sm border-b-2 transition-colors",
+                    "flex-1 h-12 flex items-center justify-center gap-2 font-bold text-sm border-b-2 transition-colors",
                     orderMode === "auto" ? "border-violet-600 text-violet-600" : "border-transparent text-k-text-b hover:text-k-text-h"
                   )}
                 >
-                  🔄 Generar Automático
+                  <CheckCircle className="h-4 w-4" /> Generar Automático
                 </button>
                 <button
                   type="button"
@@ -357,11 +392,18 @@ export default function PedidosMaderasPage() {
                     }
                   }}
                   className={cx(
-                    "px-6 py-3 font-bold text-sm border-b-2 transition-colors",
+                    "flex-1 h-12 flex items-center justify-center gap-2 font-bold text-sm border-b-2 transition-colors",
                     orderMode === "manual" ? "border-violet-600 text-violet-600" : "border-transparent text-k-text-b hover:text-k-text-h"
                   )}
                 >
-                  ✏️ Crear Manualmente
+                  <Plus className="h-4 w-4" /> Crear Manualmente
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLoadExcel}
+                  className="flex-1 h-12 flex items-center justify-center gap-2 font-bold text-sm border-b-2 border-transparent text-k-text-b hover:text-blue-600 transition-colors"
+                >
+                  <FileText className="h-4 w-4" /> Cargar Excel Default
                 </button>
               </div>
 

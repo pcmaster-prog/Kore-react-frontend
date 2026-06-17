@@ -117,6 +117,11 @@ export async function updatePedido(id: number, data: Partial<MaderasPedido>) {
   return res.data;
 }
 
+export async function deletePedido(id: number) {
+  const res = await api.delete(`/maderas/pedidos/${id}`);
+  return res.data;
+}
+
 export async function calcularPedido(temporada_id: number) {
   const res = await api.get(`/maderas/pedidos/calcular?temporada_id=${temporada_id}`);
   return res.data;
