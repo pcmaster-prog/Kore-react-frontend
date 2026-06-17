@@ -1,7 +1,5 @@
 import { Package, Layers, PlayCircle, ShoppingBag, AlertTriangle, Hammer } from "lucide-react";
 import { useDashboardMaderas } from "../hooks/useDashboard";
-import { Link } from "react-router-dom";
-
 export default function DashboardMaderasPage() {
   const { data: metrics, isLoading } = useDashboardMaderas();
 
