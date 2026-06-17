@@ -243,7 +243,7 @@ export default function PedidosMaderasPage() {
                   </div>
                   <div className="flex gap-2">
                     <a
-                      href={`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app'}/api/v1/maderas/pedidos/${pedido.id}/pdf`}
+                      href={`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app/api/v1'}/maderas/pedidos/${pedido.id}/pdf`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="h-9 w-9 flex items-center justify-center bg-white border border-k-border hover:border-violet-300 hover:text-violet-600 rounded-xl transition-all shadow-sm"
@@ -254,7 +254,7 @@ export default function PedidosMaderasPage() {
                     <button
                       onClick={async () => {
                         try {
-                          const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app'}/api/v1/maderas/pedidos/${pedido.id}`);
+                          const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app/api/v1'}/maderas/pedidos/${pedido.id}`);
                           const data = await res.json();
                           setViewPedido(data);
                         } catch (err) {
