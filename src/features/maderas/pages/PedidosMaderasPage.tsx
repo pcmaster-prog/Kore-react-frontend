@@ -4,6 +4,7 @@ import { usePedidos, useCreatePedido, useUpdatePedido, useCalcularPedido } from 
 import { useTemporadas } from "../hooks/useTemporada";
 import type { MaderasPedido, PedidoItem } from "../types";
 import { cx } from "@/lib/utils";
+import api from "@/lib/http";
 
 const CATEGORIAS = [
   "Recorte Rectangular",
@@ -227,9 +228,9 @@ export default function PedidosMaderasPage() {
                   <div>
                     <h4 className="font-bold text-k-text-h text-sm">{pedido.codigo}</h4>
                     <div className="text-xs text-k-text-b flex gap-3 mt-1">
-                      <span>Entrega: {pedido.fecha_entrega ? new Date(pedido.fecha_entrega).toLocaleDateString() : "Sin fecha"}</span>
+                      <span>Entrega: {pedido.fecha_entrega ? pedido.fecha_entrega.substring(0, 10) : "Sin fecha"}</span>
                       <span>•</span>
-                      <span>{new Date(pedido.created_at).toLocaleDateString()}</span>
+                      <span>{pedido.created_at ? pedido.created_at.substring(0, 10) : "N/A"}</span>
                     </div>
                   </div>
                 </div>
@@ -242,21 +243,26 @@ export default function PedidosMaderasPage() {
                     )}>{pedido.status}</span>
                   </div>
                   <div className="flex gap-2">
-                    <a
-                      href={`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app/api/v1'}/maderas/pedidos/${pedido.id}/pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await api.get(`/maderas/pedidos/${pedido.id}/pdf`, { responseType: 'blob' });
+                          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+                          window.open(url, '_blank');
+                        } catch (err) {
+                          alert("Error al descargar el PDF");
+                        }
+                      }}
                       className="h-9 w-9 flex items-center justify-center bg-white border border-k-border hover:border-violet-300 hover:text-violet-600 rounded-xl transition-all shadow-sm"
                       title="Descargar PDF"
                     >
                       <FileText className="h-4 w-4" />
-                    </a>
+                    </button>
                     <button
                       onClick={async () => {
                         try {
-                          const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://kore-laravel-backend-production.up.railway.app/api/v1'}/maderas/pedidos/${pedido.id}`);
-                          const data = await res.json();
-                          setViewPedido(data);
+                          const res = await api.get(`/maderas/pedidos/${pedido.id}`);
+                          setViewPedido(res.data);
                         } catch (err) {
                           alert("Error al cargar detalles del pedido");
                         }
@@ -532,24 +538,29 @@ export default function PedidosMaderasPage() {
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <div className="text-xs font-bold text-k-text-b uppercase tracking-wider">Creado El</div>
-                  <div className="font-black text-lg text-k-text-h">{new Date(viewPedido.created_at).toLocaleDateString()}</div>
+                  <div className="font-black text-lg text-k-text-h">{viewPedido.created_at ? viewPedido.created_at.substring(0, 10) : 'N/A'}</div>
                 </div>
                 <div className="space-y-1 text-right">
                   <div className="text-xs font-bold text-k-text-b uppercase tracking-wider">Fecha / Entrega</div>
                   <div className="font-bold text-sm text-k-text-h">
-                    {new Date(viewPedido.created_at).toLocaleDateString()} / {viewPedido.fecha_entrega ? new Date(viewPedido.fecha_entrega).toLocaleDateString() : "TBD"}
+                    {viewPedido.created_at ? viewPedido.created_at.substring(0, 10) : 'N/A'} / {viewPedido.fecha_entrega ? viewPedido.fecha_entrega.substring(0, 10) : "TBD"}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-8">
-                {CATEGORIAS.map(cat => {
-                  const itemsCat = (viewPedido.detalles || []).filter(i => i.categoria === cat);
+                {[
+                  { id: 'hojas_mdf', label: 'Hojas y Tableros (MDF / Triplay)' },
+                  { id: 'tablas_pino', label: 'Tablas de Pino' },
+                  { id: 'consumibles', label: 'Consumibles' },
+                  { id: 'servicios_corte', label: 'Servicios de Corte' },
+                ].map(sec => {
+                  const itemsCat = (viewPedido.detalles || []).filter((i: any) => i.seccion_pdf === sec.id);
                   if (itemsCat.length === 0) return null;
                   
                   return (
-                    <div key={cat} className="space-y-2">
-                      <h3 className="font-black text-k-text-h uppercase tracking-wider text-sm border-b-2 border-k-text-h pb-2">{cat}</h3>
+                    <div key={sec.id} className="space-y-2">
+                      <h3 className="font-black text-k-text-h uppercase tracking-wider text-sm border-b-2 border-k-text-h pb-2">{sec.label}</h3>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">
                           <thead className="text-k-text-b text-[10px] font-bold uppercase tracking-wider border-b border-k-border">
@@ -562,7 +573,7 @@ export default function PedidosMaderasPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-k-border/50">
-                            {itemsCat.map((item, idx) => (
+                            {itemsCat.map((item: any, idx: number) => (
                               <tr key={idx} className="hover:bg-k-bg-card2/30">
                                 <td className="py-2 font-bold">{item.cantidad}</td>
                                 <td className="py-2">{item.nombre_item}</td>
