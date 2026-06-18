@@ -19,7 +19,8 @@ export default function RecruitmentJobs() {
     requirements: '',
     salary_range: '',
     schedule: '',
-    status: 'open' as 'open' | 'draft' | 'closed'
+    status: 'open' as 'open' | 'draft' | 'closed',
+    image_url: ''
   });
 
   const fetchJobs = async () => {
@@ -46,7 +47,8 @@ export default function RecruitmentJobs() {
         requirements: job.requirements ? job.requirements.join('\n') : '',
         salary_range: job.salary_range || '',
         schedule: job.schedule || '',
-        status: job.status
+        status: job.status,
+        image_url: job.image_url || ''
       });
     } else {
       setEditingJob(null);
@@ -56,7 +58,8 @@ export default function RecruitmentJobs() {
         requirements: '',
         salary_range: '',
         schedule: '',
-        status: 'open'
+        status: 'open',
+        image_url: ''
       });
     }
     setIsModalOpen(true);
@@ -234,6 +237,17 @@ export default function RecruitmentJobs() {
                     placeholder="Ej. Lunes a Sábado 8am - 4pm"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-k-text-h mb-1">URL de la Imagen</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                  placeholder="https://ejemplo.com/imagen.jpg (Opcional)"
+                />
               </div>
 
               <div>

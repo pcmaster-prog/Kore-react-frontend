@@ -6,6 +6,7 @@ export interface JobOpening {
     requirements?: string[];
     salary_range?: string;
     schedule?: string;
+    image_url?: string;
     status: 'draft' | 'open' | 'closed';
     created_at: string;
     updated_at: string;
