@@ -3,9 +3,9 @@ import { Briefcase, Users, LayoutDashboard } from "lucide-react";
 
 export default function RecruitmentLayout() {
   const tabs = [
-    { to: "/manager/reclutamiento", icon: LayoutDashboard, label: "Dashboard", exact: true },
-    { to: "/manager/reclutamiento/vacantes", icon: Briefcase, label: "Vacantes" },
-    { to: "/manager/reclutamiento/candidatos", icon: Users, label: "Candidatos" },
+    { to: "/app/manager/reclutamiento", icon: LayoutDashboard, label: "Dashboard", exact: true },
+    { to: "/app/manager/reclutamiento/vacantes", icon: Briefcase, label: "Vacantes" },
+    { to: "/app/manager/reclutamiento/candidatos", icon: Users, label: "Candidatos" },
   ];
 
   return (

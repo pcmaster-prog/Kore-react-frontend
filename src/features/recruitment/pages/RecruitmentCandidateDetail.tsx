@@ -35,7 +35,7 @@ export default function RecruitmentCandidateDetail() {
     try {
       await recruitmentApi.hireTrial(id, 1, Number(salary), []);
       alert("Candidato contratado a prueba");
-      navigate("/manager/reclutamiento/candidatos");
+      navigate("/app/manager/reclutamiento/candidatos");
     } catch(e) {
       alert("Error al contratar");
     }
@@ -49,7 +49,7 @@ export default function RecruitmentCandidateDetail() {
     try {
       await recruitmentApi.reject(id, reason, true);
       alert("Candidato rechazado");
-      navigate("/manager/reclutamiento/candidatos");
+      navigate("/app/manager/reclutamiento/candidatos");
     } catch(e) {
       alert("Error al rechazar");
     }

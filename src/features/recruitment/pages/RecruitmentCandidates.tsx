@@ -57,7 +57,7 @@ export default function RecruitmentCandidates() {
                   {appsInStage.map(app => (
                     <Link 
                       key={app.id} 
-                      to={`/manager/reclutamiento/candidatos/${app.id}`}
+                      to={`/app/manager/reclutamiento/candidatos/${app.id}`}
                       className="block bg-k-bg-card border border-k-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all hover:border-k-accent/30 group"
                     >
                       <div className="flex items-center space-x-3 mb-3">
