@@ -60,6 +60,13 @@ const SaboresPesajePage = lazy(() => import("@/features/pesaje/pages/SaboresPesa
 // Configuración
 const ConfiguracionPage = lazy(() => import("@/features/configuracion/ConfiguracionPage"));
 
+// Reclutamiento (ATS)
+const RecruitmentLayout = lazy(() => import("@/features/recruitment/RecruitmentLayout"));
+const RecruitmentDashboard = lazy(() => import("@/features/recruitment/pages/RecruitmentDashboard"));
+const RecruitmentJobs = lazy(() => import("@/features/recruitment/pages/RecruitmentJobs"));
+const RecruitmentCandidates = lazy(() => import("@/features/recruitment/pages/RecruitmentCandidates"));
+const RecruitmentCandidateDetail = lazy(() => import("@/features/recruitment/pages/RecruitmentCandidateDetail"));
+
 // Nómina
 const NominaPage = lazy(() => import("@/features/nomina/NominaPage"));
 
@@ -237,6 +244,20 @@ export const router = createBrowserRouter([
             <Suspended><PuestoFormPage /></Suspended>
           </RequireRole>
         ),
+      },
+      {
+        path: "manager/reclutamiento",
+        element: (
+          <RequireRole allow={["admin"]}>
+            <Suspended><RecruitmentLayout /></Suspended>
+          </RequireRole>
+        ),
+        children: [
+          { index: true, element: <Suspended><RecruitmentDashboard /></Suspended> },
+          { path: "vacantes", element: <Suspended><RecruitmentJobs /></Suspended> },
+          { path: "candidatos", element: <Suspended><RecruitmentCandidates /></Suspended> },
+          { path: "candidatos/:id", element: <Suspended><RecruitmentCandidateDetail /></Suspended> },
+        ],
       },
       {
         path: "manager/configuracion",
