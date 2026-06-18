@@ -113,7 +113,7 @@ export default function RecruitmentJobs() {
         </div>
         <button 
           onClick={() => openModal()}
-          className="flex items-center space-x-2 bg-k-accent text-white px-4 py-2 rounded-xl font-bold hover:bg-opacity-90 transition-all"
+          className="flex items-center space-x-2 bg-k-accent-btn text-white px-4 py-2 rounded-xl font-bold hover:bg-opacity-90 transition-all"
         >
           <Plus className="w-5 h-5" />
           <span>Nueva Vacante</span>
@@ -135,10 +135,10 @@ export default function RecruitmentJobs() {
               <p className="text-k-text-b text-sm mt-2 line-clamp-2">{job.description}</p>
               
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="text-xs bg-k-bg-secondary text-k-text-b px-2 py-1 rounded-lg">
+                <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
                   {job.schedule}
                 </span>
-                <span className="text-xs bg-k-bg-secondary text-k-text-b px-2 py-1 rounded-lg">
+                <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
                   {job.salary_range}
                 </span>
               </div>
@@ -146,7 +146,7 @@ export default function RecruitmentJobs() {
               <div className="mt-6 flex justify-end space-x-3 border-t border-k-border pt-4">
                 <button 
                   onClick={() => openModal(job)}
-                  className="text-sm font-bold text-k-text-b hover:text-k-accent transition-colors"
+                  className="text-sm font-bold text-k-text-b hover:text-k-accent-btn transition-colors"
                 >
                   Editar
                 </button>
@@ -260,7 +260,7 @@ export default function RecruitmentJobs() {
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="px-6 py-2 rounded-xl font-bold text-white bg-k-accent hover:bg-opacity-90 disabled:opacity-50 transition-colors"
+                  className="px-6 py-2 rounded-xl font-bold text-white bg-k-accent-btn hover:bg-opacity-90 disabled:opacity-50 transition-colors"
                 >
                   {isSubmitting ? 'Guardando...' : 'Guardar Vacante'}
                 </button>

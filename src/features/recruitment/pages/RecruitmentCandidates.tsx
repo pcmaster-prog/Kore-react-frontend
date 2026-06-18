@@ -45,7 +45,7 @@ export default function RecruitmentCandidates() {
           {stages.map(stage => {
             const appsInStage = applications.filter(a => a.status === stage.id);
             return (
-              <div key={stage.id} className="min-w-[300px] w-[300px] flex-shrink-0 bg-k-bg-secondary rounded-3xl p-4 flex flex-col h-[calc(100vh-250px)]">
+              <div key={stage.id} className="min-w-[300px] w-[300px] flex-shrink-0 bg-k-bg-card2 rounded-3xl p-4 flex flex-col h-[calc(100vh-250px)]">
                 <div className="flex justify-between items-center mb-4 px-2">
                   <h3 className="font-black text-k-text-h uppercase text-sm tracking-wider">{stage.label}</h3>
                   <span className="bg-k-bg-card text-k-text-b text-xs font-bold px-2 py-1 rounded-xl shadow-sm">
@@ -65,7 +65,7 @@ export default function RecruitmentCandidates() {
                           {app.user?.name?.charAt(0) || '?'}
                         </div>
                         <div>
-                          <p className="font-bold text-k-text-h text-sm leading-tight group-hover:text-k-accent transition-colors">
+                          <p className="font-bold text-k-text-h text-sm leading-tight group-hover:text-k-accent-btn transition-colors">
                             {app.user?.name}
                           </p>
                           <p className="text-xs text-k-text-b truncate max-w-[150px]">
@@ -78,7 +78,7 @@ export default function RecruitmentCandidates() {
                         <span className="text-[10px] uppercase font-bold text-k-text-b tracking-wider">
                           Ver Detalle
                         </span>
-                        <ChevronRight className="w-4 h-4 text-k-text-b group-hover:text-k-accent transition-transform group-hover:translate-x-1" />
+                        <ChevronRight className="w-4 h-4 text-k-text-b group-hover:text-k-accent-btn transition-transform group-hover:translate-x-1" />
                       </div>
                     </Link>
                   ))}
