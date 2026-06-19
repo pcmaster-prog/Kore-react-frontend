@@ -237,7 +237,7 @@ function SidebarContent({
             )}
 
             <NavGroup label="Sistema">
-              {isAdmin && <SidebarLink to="/app/manager/reclutamiento" label="Reclutamiento" icon={<UserPlus className="h-4.5 w-4.5" />} onClick={onNav} />}
+              {(isAdmin || hasModule("reclutamiento")) && <SidebarLink to="/app/manager/reclutamiento" label="Reclutamiento" icon={<UserPlus className="h-4.5 w-4.5" />} onClick={onNav} />}
               {isAdmin && <SidebarLink to="/app/manager/configuracion" label="Ajustes" icon={<Settings className="h-4.5 w-4.5" />} onClick={onNav} />}
               {isAdmin && <SidebarLink to="/app/manager/puestos" label="Puestos" icon={<Briefcase className="h-4.5 w-4.5" />} onClick={onNav} />}
             </NavGroup>

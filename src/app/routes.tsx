@@ -249,7 +249,9 @@ export const router = createBrowserRouter([
         path: "manager/reclutamiento",
         element: (
           <RequireRole allow={["admin"]}>
-            <Suspended><RecruitmentLayout /></Suspended>
+            <RequireModulo slug="reclutamiento">
+              <Suspended><RecruitmentLayout /></Suspended>
+            </RequireModulo>
           </RequireRole>
         ),
         children: [

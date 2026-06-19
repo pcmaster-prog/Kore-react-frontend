@@ -1,3 +1,5 @@
+export type JobOpeningStatus = 'draft' | 'open' | 'closed';
+
 export interface JobOpening {
     id: string;
     empresa_id: string;
@@ -7,10 +9,18 @@ export interface JobOpening {
     salary_range?: string;
     schedule?: string;
     image_url?: string;
-    status: 'draft' | 'open' | 'closed';
+    status: JobOpeningStatus;
     created_at: string;
     updated_at: string;
 }
+
+export type ApplicationStatus =
+    | 'new'
+    | 'screening'
+    | 'interview-requested'
+    | 'interviewing'
+    | 'hired'
+    | 'rejected';
 
 export interface ApplicationDocument {
     id: string;
@@ -40,19 +50,33 @@ export interface Application {
     empresa_id: string;
     job_opening_id: string;
     user_id: string;
-    status: string;
-    contact_info?: Record<string, any>;
-    education?: Record<string, any>;
-    experience?: Record<string, any>;
+    status: ApplicationStatus;
+    contact_info?: {
+        full_name?: string;
+        email?: string;
+        phone?: string;
+        address?: string;
+        rfc?: string;
+        curp?: string;
+        nss?: string;
+        [key: string]: unknown;
+    };
+    education?: Record<string, unknown>;
+    experience?: Record<string, unknown>;
     has_induction_video_watched: boolean;
     induction_video_watched_at?: string;
-    screening_test_results?: Record<string, any>;
+    screening_test_results?: {
+        score?: number;
+        answers?: unknown[];
+        submitted_at?: string;
+        [key: string]: unknown;
+    };
     interview_scheduled_at?: string;
     interview_notes?: string;
     interview_result?: string;
     created_at: string;
     updated_at: string;
-    
+
     // Relaciones
     jobOpening?: JobOpening;
     user?: {
