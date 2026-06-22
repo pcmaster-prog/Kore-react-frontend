@@ -1,5 +1,6 @@
 // src/features/attendance/EmployeeAttendancePage.tsx
 import { useEffect, useState, useCallback } from "react";
+import { getApiErrorMessage } from "@/lib/error";
 import {
   getMyToday,
   getMyDays,
@@ -14,6 +15,7 @@ import {
   getMyLateInfo,
   getMyAbsenceRequests,
   createAbsenceRequest,
+  createLateArrivalRequest,
   type TodayResponse,
   type MyDayRow,
   type LateInfo,
@@ -141,8 +143,8 @@ function AbsencePanel() {
       setDate("");
       setMotivo("");
       loadRequests();
-    } catch (e: any) {
-      showToast("err", e?.response?.data?.message ?? "No se pudo enviar la solicitud.");
+    } catch (e) {
+      showToast("err", getApiErrorMessage(e, "No se pudo enviar la solicitud."));
     } finally {
       setSending(false);
     }
@@ -263,6 +265,9 @@ export default function EmployeeAttendancePage() {
   const [liveMinutes, setLiveMinutes] = useState(0);
   const [showMealSwap, setShowMealSwap] = useState(false);
   const [showOvertime, setShowOvertime] = useState(false);
+  const [lateBlocked, setLateBlocked] = useState(false);
+  const [lateRequestMotivo, setLateRequestMotivo] = useState("");
+  const [showLateRequestForm, setShowLateRequestForm] = useState(false);
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
@@ -294,8 +299,8 @@ export default function EmployeeAttendancePage() {
     try {
       const res = await getMyToday();
       setToday(res);
-    } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "No se pudo cargar tu asistencia");
+    } catch (e) {
+      setErr(getApiErrorMessage(e, "No se pudo cargar tu asistencia"));
     } finally {
       setLoadingToday(false);
     }
@@ -307,6 +312,8 @@ export default function EmployeeAttendancePage() {
       setLateInfo(info);
     } catch (e) { reportError("Cargando asistencia", e); }
   }, []);
+
+
 
   // ─── Rango de semana Dom→Sáb ──────────────────────────────────────────────
   function getCurrentWeekRange(): { from: string; to: string } {
@@ -350,10 +357,18 @@ export default function EmployeeAttendancePage() {
     loadLateInfo();
   }, [loadToday, loadHistory, loadLateInfo]);
 
+  // Si el admin aprueba/rechaza la oportunidad, limpiar el estado de bloqueo
+  useEffect(() => {
+    if (today?.has_approved_late_request || today?.pending_late_request) {
+      setLateBlocked(false);
+    }
+  }, [today?.has_approved_late_request, today?.pending_late_request]);
+
   async function doAction(fn: () => Promise<any>, msg: string, confirmMsg?: string) {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
     setBusy(true);
     setWifiBlocked(false);
+    setLateBlocked(false);
     setErr(null);
 
     // Immediate visual feedback — show a processing toast
@@ -365,15 +380,19 @@ export default function EmployeeAttendancePage() {
       showToast("ok", msg);
       // Refresh all data from server (source of truth for nómina)
       await Promise.all([loadToday(), loadHistory(), loadLateInfo()]);
-    } catch (e: any) {
-      const code = e?.response?.data?.code ?? "";
+    } catch (e) {
+      const code = (e as { response?: { data?: { code?: string; message?: string } } }).response?.data?.code ?? "";
+      const message = (e as { response?: { data?: { message?: string } } }).response?.data?.message ?? "";
       if (code === "NETWORK_RESTRICTED") {
         setWifiBlocked(true);
         showToast("err", "Debes estar conectado a la red WiFi de la empresa.");
       } else if (code === "REST_ALREADY_USED") {
         showToast("err", "Ya usaste tu día de descanso esta semana.");
+      } else if (code === "CHECK_IN_LATE_BLOCKED") {
+        setLateBlocked(true);
+        showToast("err", message || "Llegaste tarde. Solicita una oportunidad a tu administrador.");
       } else {
-        showToast("err", e?.response?.data?.message ?? "No se pudo completar");
+        showToast("err", getApiErrorMessage(e, "No se pudo completar"));
       }
     } finally {
       setBusy(false);
@@ -388,6 +407,26 @@ export default function EmployeeAttendancePage() {
     state === "closed" ||
     (today as any)?.admin_closed === true ||
     !!today?.day?.last_check_out_at;
+
+  async function handleSubmitLateRequest(e: React.FormEvent) {
+    e.preventDefault();
+    if (lateRequestMotivo.trim().length < 5) {
+      showToast("err", "Escribe un motivo de al menos 5 caracteres.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await createLateArrivalRequest(lateRequestMotivo.trim());
+      showToast("ok", "Solicitud enviada. Espera la respuesta del administrador.");
+      setLateRequestMotivo("");
+      setShowLateRequestForm(false);
+      await loadToday();
+    } catch (err) {
+      showToast("err", getApiErrorMessage(err, "No se pudo enviar la solicitud."));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const todayMinutes = today?.totals?.worked_minutes ?? 0;
   const historyMinutes = history
@@ -419,6 +458,24 @@ export default function EmployeeAttendancePage() {
         <p className="text-[10px] font-bold text-k-text-b uppercase tracking-[0.2em] mb-1">Registro de Jornada</p>
         <h1 className="text-3xl font-black text-k-text-h tracking-tight">Mi Asistencia</h1>
       </div>
+
+      {/* ─── Banner de hora de llegada ────────────────────────────────────── */}
+      {today?.employee_check_in_time && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 flex items-start gap-4">
+          <div className="h-10 w-10 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 text-lg">
+            🕘
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-black text-blue-700 tracking-tight">Hora de llegada</div>
+            <p className="text-xs font-medium text-blue-600 mt-0.5">
+              Tu hora programada es <strong>{today.employee_check_in_time}</strong>.
+              {today.late_window_closes_at && (
+                <> Tienes hasta las <strong>{today.late_window_closes_at}</strong> para marcar sin necesidad de oportunidad.</>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ─── Banner de salida anticipada (FASE 2) ─────────────────────────── */}
       {today?.early_departure_minutes && today.early_departure_minutes > 0 && (
@@ -640,6 +697,86 @@ export default function EmployeeAttendancePage() {
               </div>
             )}
           </div>
+
+          {/* Panel de oportunidad de llegada tarde */}
+          {(lateBlocked || today?.pending_late_request || today?.has_approved_late_request) && !dayLocked && state === "out" && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+              {today?.has_approved_late_request ? (
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0 text-lg">✅</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-black text-emerald-700 tracking-tight">Oportunidad aprobada</div>
+                    <p className="text-xs font-medium text-emerald-600 mt-0.5">
+                      Tu administrador aprobó tu llegada tarde. Puedes marcar tu entrada; se registrará el retardo correspondiente.
+                    </p>
+                  </div>
+                </div>
+              ) : today?.pending_late_request ? (
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 text-lg">⏳</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-black text-amber-700 tracking-tight">Solicitud en revisión</div>
+                    <p className="text-xs font-medium text-amber-600 mt-0.5">
+                      Envíaste una solicitud de oportunidad. Espera la respuesta del administrador.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="h-10 w-10 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0 text-lg">🚫</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-black text-rose-700 tracking-tight">Entrada bloqueada</div>
+                      <p className="text-xs font-medium text-rose-600 mt-0.5">
+                        Llegaste tarde. No puedes registrar tu entrada sin una oportunidad autorizada por el administrador.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!showLateRequestForm ? (
+                    <button
+                      onClick={() => setShowLateRequestForm(true)}
+                      disabled={busy}
+                      className="inline-flex items-center gap-2 rounded-xl bg-amber-100 border border-amber-200 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-200 transition disabled:opacity-50"
+                    >
+                      Solicitar oportunidad
+                    </button>
+                  ) : (
+                    <form onSubmit={handleSubmitLateRequest} className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Motivo / Justificación</label>
+                        <textarea
+                          value={lateRequestMotivo}
+                          onChange={(e) => setLateRequestMotivo(e.target.value)}
+                          rows={2}
+                          placeholder="Ej. Tráfico, transporte público retrasado..."
+                          className="w-full rounded-2xl border border-k-border bg-white px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all resize-none"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          disabled={busy || lateRequestMotivo.trim().length < 5}
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50"
+                        >
+                          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                          Enviar solicitud
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowLateRequestForm(false)}
+                          disabled={busy}
+                          className="inline-flex items-center gap-2 rounded-xl bg-k-bg-card2 border border-k-border px-4 py-2 text-xs font-bold text-k-text-b hover:bg-neutral-100 transition disabled:opacity-50"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Action buttons or Locked Banner */}
           {dayLocked ? (

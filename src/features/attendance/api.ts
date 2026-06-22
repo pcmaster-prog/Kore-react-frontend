@@ -43,6 +43,12 @@ export type TodayResponse = {
   break_duration_minutes?: number;
   lunch_reminder_sent?: boolean;
   exit_reminder_sent?: boolean;
+
+  // FASE: hora de llegada + oportunidad
+  employee_check_in_time?: string | null;
+  late_window_closes_at?: string | null;
+  has_approved_late_request?: boolean;
+  pending_late_request?: { id: string; status: string; motivo: string } | null;
 };
 
 export type MyDayRow = AttendanceDay & {
@@ -217,6 +223,50 @@ export type LateInfo = {
 export async function getMyLateInfo(): Promise<LateInfo> {
   const res = await api.get("/asistencia/mis-retardos");
   return res.data as LateInfo;
+}
+
+// ─── Solicitudes de oportunidad de llegada tarde ─────────────────────────────
+
+export type LateArrivalRequest = {
+  id: string;
+  empresa_id: string;
+  empleado_id: string;
+  empleado_name: string;
+  user_id: string;
+  date: string;
+  motivo: string;
+  status: "pending" | "approved" | "rejected";
+  reviewer_note?: string | null;
+  reviewer_name?: string | null;
+  created_at: string;
+  reviewed_at?: string | null;
+};
+
+export async function createLateArrivalRequest(motivo: string): Promise<LateArrivalRequest> {
+  const res = await api.post("/late-arrival-requests", { motivo });
+  return res.data.request as LateArrivalRequest;
+}
+
+export async function getMyLateArrivalRequests(): Promise<LateArrivalRequest[]> {
+  const res = await api.get("/late-arrival-requests/mis-solicitudes");
+  return (res.data.data ?? []) as LateArrivalRequest[];
+}
+
+export async function getPendingLateArrivalRequests(): Promise<LateArrivalRequest[]> {
+  const res = await api.get("/late-arrival-requests/pendientes");
+  return (res.data.data ?? []) as LateArrivalRequest[];
+}
+
+export async function reviewLateArrivalRequest(
+  id: string,
+  status: "approved" | "rejected",
+  reviewerNote?: string
+): Promise<LateArrivalRequest> {
+  const res = await api.patch(`/late-arrival-requests/${id}`, {
+    status,
+    reviewer_note: reviewerNote ?? null,
+  });
+  return res.data.request as LateArrivalRequest;
 }
 
 // ─── Solicitudes de Ausencia ─────────────────────────────────────────────────

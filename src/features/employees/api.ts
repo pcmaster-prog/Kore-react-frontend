@@ -17,6 +17,7 @@ export type UserItem = {
   nss?: string | null;
   curp?: string | null;
   expediente_url?: string | null;
+  check_in_time?: string | null;
   // Campos de nómina
   payment_type?: "hourly" | "daily" | null;
   hourly_rate?: number | null;
@@ -38,12 +39,14 @@ export type CreateUserPayload = {
   payment_type?: "hourly" | "daily";
   hourly_rate?: number;
   daily_rate?: number;
+  check_in_time?: string;
 };
 
 export type UpdateUserPayload = Partial<Omit<CreateUserPayload, "password"> & {
   password?: string;
   is_active?: boolean;
 }>;
+
 
 export async function listUsers(params?: {
   search?: string;

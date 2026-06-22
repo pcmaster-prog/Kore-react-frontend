@@ -1,5 +1,6 @@
 // src/features/employees/EmpleadosPage.tsx
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { getApiErrorMessage } from "@/lib/error";
 import {
   listUsers,
   createUser,
@@ -252,6 +253,7 @@ function UserModal({
   const [dailyRate, setDailyRate] = useState("");
   const [rfc, setRfc] = useState("");
   const [nss, setNss] = useState("");
+  const [checkInTime, setCheckInTime] = useState("");
   const [expediente, setExpediente] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -276,6 +278,7 @@ function UserModal({
       setDailyRate(String(initial.daily_rate ?? ""));
       setRfc(initial.rfc ?? "");
       setNss(initial.nss ?? "");
+      setCheckInTime(initial.check_in_time ?? "");
       setExpediente(null);
     } else {
       setName("");
@@ -289,6 +292,7 @@ function UserModal({
       setDailyRate("");
       setRfc("");
       setNss("");
+      setCheckInTime("");
       setExpediente(null);
     }
   }, [open, initial, suggestedCode]);
@@ -312,6 +316,7 @@ function UserModal({
           position_title: position.trim() || undefined,
           employee_code: employeeCode.trim() || undefined,
           hired_at: hiredAt || undefined,
+          check_in_time: checkInTime || undefined,
           payment_type: paymentType,
           hourly_rate: hourlyRate ? parseFloat(hourlyRate) : undefined,
           daily_rate: dailyRate ? parseFloat(dailyRate) : undefined,
@@ -328,6 +333,7 @@ function UserModal({
           position_title: position.trim() || undefined,
           employee_code: employeeCode.trim() || undefined,
           hired_at: hiredAt || undefined,
+          check_in_time: checkInTime || undefined,
           payment_type: paymentType,
           hourly_rate: hourlyRate ? parseFloat(hourlyRate) : undefined,
           daily_rate: dailyRate ? parseFloat(dailyRate) : undefined,
@@ -340,8 +346,8 @@ function UserModal({
       }
       onSaved(item);
       onClose();
-    } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "Error al guardar");
+    } catch (e) {
+      setErr(getApiErrorMessage(e, "Error al guardar"));
     } finally {
       setSaving(false);
     }
@@ -606,6 +612,16 @@ function UserModal({
                       onChange={(e) => setHiredAt(e.target.value)}
                     />
                   </div>
+                  <div className="col-span-2">
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Hora de llegada</label>
+                    <input
+                      type="time"
+                      className="w-full rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all text-neutral-600"
+                      value={checkInTime}
+                      onChange={(e) => setCheckInTime(e.target.value)}
+                    />
+                    <p className="text-[10px] text-k-text-b mt-1.5">Si no se especifica, se usará el horario de la empresa.</p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 pb-2 border-b border-k-border pt-2">
@@ -851,8 +867,8 @@ export default function EmpleadosPage() {
         role: roleFilter || undefined,
       });
       setUsers((res.data ?? []).filter((u): u is UserItem => !!u && typeof u.id === "string"));
-    } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "No se pudo cargar usuarios");
+    } catch (e) {
+      setErr(getApiErrorMessage(e, "No se pudo cargar usuarios"));
     } finally {
       setLoading(false);
     }
@@ -901,8 +917,8 @@ export default function EmpleadosPage() {
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       showToast("ok", updated.is_active ? "Usuario activado" : "Usuario desactivado");
       setToggleTarget(null);
-    } catch (e: any) {
-      showToast("err", e?.response?.data?.message ?? "Error al cambiar estado");
+    } catch (e) {
+      showToast("err", getApiErrorMessage(e, "Error al cambiar estado"));
     } finally {
       setToggling(false);
     }
@@ -916,8 +932,8 @@ export default function EmpleadosPage() {
       setUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
       showToast("ok", "Empleado eliminado permanentemente");
       setDeleteTarget(null);
-    } catch (e: any) {
-      showToast("err", e?.response?.data?.message ?? "Error al eliminar");
+    } catch (e) {
+      showToast("err", getApiErrorMessage(e, "Error al eliminar"));
     } finally {
       setDeleting(false);
     }
