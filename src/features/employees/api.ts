@@ -24,6 +24,26 @@ export type UserItem = {
   daily_rate?: number | null;
 };
 
+function normalizeDate(value: unknown): string | null {
+  if (!value || value === "") return null;
+  if (typeof value === "string") {
+    // datetime ISO -> YYYY-MM-DD
+    if (value.includes("T")) return value.slice(0, 10);
+    return value;
+  }
+  return String(value);
+}
+
+function normalizeTime(value: unknown): string | null {
+  if (!value || value === "") return null;
+  if (typeof value === "string") {
+    // datetime ISO -> HH:mm
+    if (value.includes("T")) return value.slice(11, 16) || null;
+    return value.slice(0, 5) || null;
+  }
+  return String(value).slice(0, 5) || null;
+}
+
 function normalizeUser(user: any): UserItem {
   if (!user || typeof user !== "object") return user;
   const emp = user.empleado ?? {};
@@ -32,11 +52,11 @@ function normalizeUser(user: any): UserItem {
     employee_id: emp.id ?? user.employee_id ?? null,
     employee_code: emp.employee_code ?? user.employee_code ?? null,
     position_title: emp.position_title ?? user.position_title ?? null,
-    hired_at: emp.hired_at ?? user.hired_at ?? null,
+    hired_at: normalizeDate(emp.hired_at ?? user.hired_at),
     rfc: emp.rfc ?? user.rfc ?? null,
     nss: emp.nss ?? user.nss ?? null,
     curp: emp.curp ?? user.curp ?? null,
-    check_in_time: emp.check_in_time ?? user.check_in_time ?? null,
+    check_in_time: normalizeTime(emp.check_in_time ?? user.check_in_time),
     payment_type: emp.payment_type ?? user.payment_type ?? null,
     hourly_rate: emp.hourly_rate ?? user.hourly_rate ?? null,
     daily_rate: emp.daily_rate ?? user.daily_rate ?? null,
