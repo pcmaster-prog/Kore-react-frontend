@@ -24,6 +24,18 @@ export type UserItem = {
   daily_rate?: number | null;
 };
 
+function extractUser(responseData: any): any {
+  if (
+    responseData &&
+    typeof responseData === "object" &&
+    "data" in responseData &&
+    !("id" in responseData)
+  ) {
+    return responseData.data;
+  }
+  return responseData;
+}
+
 function normalizeDate(value: unknown): string | null {
   if (!value || value === "") return null;
   if (typeof value === "string") {
@@ -116,7 +128,7 @@ export async function createUser(payload: CreateUserPayload) {
   const res = await api.post("/usuarios", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return normalizeUser(res.data);
+  return normalizeUser(extractUser(res.data));
 }
 
 export async function updateUser(id: string, payload: UpdateUserPayload) {
@@ -131,12 +143,12 @@ export async function updateUser(id: string, payload: UpdateUserPayload) {
   const res = await api.post(`/usuarios/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return normalizeUser(res.data);
+  return normalizeUser(extractUser(res.data));
 }
 
 export async function toggleUserStatus(id: string) {
   const res = await api.patch(`/usuarios/${id}/toggle-status`);
-  return normalizeUser(res.data);
+  return normalizeUser(extractUser(res.data));
 }
 
 export async function deleteUser(id: string): Promise<void> {
