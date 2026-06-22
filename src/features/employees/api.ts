@@ -50,8 +50,15 @@ function normalizeTime(value: unknown): string | null {
   if (!value || value === "") return null;
   let str = "";
   if (typeof value === "string") {
-    // datetime ISO -> HH:mm
-    str = value.includes("T") ? value.slice(11, 16) : value.slice(0, 5);
+    if (value.includes("T")) {
+      // datetime ISO -> HH:mm
+      str = value.slice(11, 16);
+    } else if (value.length > 5) {
+      // "Y-m-d H:i:s" o "H:i:s" -> HH:mm
+      str = value.slice(-8, -3);
+    } else {
+      str = value.slice(0, 5);
+    }
   } else {
     str = String(value).slice(0, 5);
   }
