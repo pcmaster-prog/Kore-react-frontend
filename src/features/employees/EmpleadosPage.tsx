@@ -61,7 +61,10 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 // ─── Celda de secciones en tabla ─────────────────────────────────────────────
-function SectionsCell({ empleadoId }: { empleadoId: string }) {
+function SectionsCell({ empleadoId }: { empleadoId: string | null }) {
+  if (!empleadoId) {
+    return <span className="text-neutral-300 text-xs">—</span>;
+  }
   const { data: sections = [] } = useEmpleadoSections(empleadoId);
   if (sections.length === 0) {
     return <span className="text-neutral-300 text-xs">—</span>;
@@ -355,7 +358,7 @@ function UserModal({
 
   if (!open) return null;
 
-  const empleadoIdForSections = initial?.employee_id ?? initial?.id ?? null;
+  const empleadoIdForSections = initial?.employee_id ?? null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in-fade">
@@ -1080,7 +1083,7 @@ export default function EmpleadosPage() {
                         {user.employee_code ?? <span className="text-neutral-200">—</span>}
                       </td>
                       <td className="px-5 py-4">
-                        <SectionsCell empleadoId={user.employee_id ?? user.id} />
+                        <SectionsCell empleadoId={user.employee_id ?? null} />
                       </td>
                       <td className="px-5 py-4">
                         <span className={cx(
