@@ -48,12 +48,15 @@ function normalizeDate(value: unknown): string | null {
 
 function normalizeTime(value: unknown): string | null {
   if (!value || value === "") return null;
+  let str = "";
   if (typeof value === "string") {
     // datetime ISO -> HH:mm
-    if (value.includes("T")) return value.slice(11, 16) || null;
-    return value.slice(0, 5) || null;
+    str = value.includes("T") ? value.slice(11, 16) : value.slice(0, 5);
+  } else {
+    str = String(value).slice(0, 5);
   }
-  return String(value).slice(0, 5) || null;
+  // Si el valor truncado no es HH:mm válido, descartarlo.
+  return /^\d{2}:\d{2}$/.test(str) ? str : null;
 }
 
 function normalizeUser(user: any): UserItem {
