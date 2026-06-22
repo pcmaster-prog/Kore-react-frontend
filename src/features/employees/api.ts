@@ -24,6 +24,25 @@ export type UserItem = {
   daily_rate?: number | null;
 };
 
+function normalizeUser(user: any): UserItem {
+  if (!user || typeof user !== "object") return user;
+  const emp = user.empleado ?? {};
+  return {
+    ...user,
+    employee_id: emp.id ?? user.employee_id ?? null,
+    employee_code: emp.employee_code ?? user.employee_code ?? null,
+    position_title: emp.position_title ?? user.position_title ?? null,
+    hired_at: emp.hired_at ?? user.hired_at ?? null,
+    rfc: emp.rfc ?? user.rfc ?? null,
+    nss: emp.nss ?? user.nss ?? null,
+    curp: emp.curp ?? user.curp ?? null,
+    check_in_time: emp.check_in_time ?? user.check_in_time ?? null,
+    payment_type: emp.payment_type ?? user.payment_type ?? null,
+    hourly_rate: emp.hourly_rate ?? user.hourly_rate ?? null,
+    daily_rate: emp.daily_rate ?? user.daily_rate ?? null,
+  };
+}
+
 export type CreateUserPayload = {
   name: string;
   email: string;
@@ -54,11 +73,15 @@ export async function listUsers(params?: {
   page?: number;
 }) {
   const res = await api.get("/usuarios", { params });
-  return res.data as {
-    data: UserItem[];
+  const raw = res.data as {
+    data: any[];
     total: number;
     current_page: number;
     last_page: number;
+  };
+  return {
+    ...raw,
+    data: raw.data.map(normalizeUser),
   };
 }
 
@@ -73,7 +96,7 @@ export async function createUser(payload: CreateUserPayload) {
   const res = await api.post("/usuarios", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return res.data.item as UserItem;
+  return normalizeUser(res.data);
 }
 
 export async function updateUser(id: string, payload: UpdateUserPayload) {
@@ -88,12 +111,12 @@ export async function updateUser(id: string, payload: UpdateUserPayload) {
   const res = await api.post(`/usuarios/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return res.data.item as UserItem;
+  return normalizeUser(res.data);
 }
 
 export async function toggleUserStatus(id: string) {
   const res = await api.patch(`/usuarios/${id}/toggle-status`);
-  return res.data.item as UserItem;
+  return normalizeUser(res.data);
 }
 
 export async function deleteUser(id: string): Promise<void> {
