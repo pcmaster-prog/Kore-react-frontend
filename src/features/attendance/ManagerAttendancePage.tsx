@@ -6,26 +6,29 @@ import {
   getWeeklySummary,
   getPendingAbsences,
   reviewAbsence,
-  getPendingMealSwaps,
-  reviewMealSwap,
   getPendingOvertimeRequests,
   reviewOvertimeRequest,
   getPendingLateArrivalRequests,
   reviewLateArrivalRequest,
+  getEnComida,
+  getPendingMealScheduleChangeRequests,
+  reviewMealScheduleChangeRequest,
   minutesToHHMM,
   formatTime,
   type ByDateItem,
   type WeeklySummary,
   type AbsenceRequest,
-  type MealSwapRequest,
   type OvertimeRequest,
   type LateArrivalRequest,
+  type EnComidaRow,
+  type MealScheduleChangeRequest,
   getAbsenceRequesterName,
 } from "./api";
 import {
   Users, UserX, Clock, RefreshCw, Calendar,
   CheckCircle2, AlertTriangle, Timer, Loader2, Pencil,
   FileText, ThumbsUp, ThumbsDown, MessageSquare, Lock,
+  UtensilsCrossed,
 } from "lucide-react";
 import AjustarAsistenciaModal from "./AjustarAsistenciaModal";
 import DiaDescansoAdminModal from "./DiaDescansoAdminModal";
@@ -215,8 +218,8 @@ function AbsenceRequestsTab() {
 }
 
 // ─── Panel de cambios de comida (Admin) ────────────────────────────────────
-function MealSwapRequestsTab() {
-  const [requests, setRequests] = useState<MealSwapRequest[]>([]);
+function MealScheduleChangeRequestsTab() {
+  const [requests, setRequests] = useState<MealScheduleChangeRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [reviewLoading, setReviewLoading] = useState<string | null>(null);
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
@@ -230,10 +233,10 @@ function MealSwapRequestsTab() {
   const loadRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getPendingMealSwaps();
+      const data = await getPendingMealScheduleChangeRequests();
       setRequests(data);
     } catch (e) {
-      showToast("err", getApiErrorMessage(e, "No se pudieron cargar"));
+      showToast("err", getApiErrorMessage(e, "No se pudieron cargar las solicitudes"));
     } finally {
       setLoading(false);
     }
@@ -244,18 +247,18 @@ function MealSwapRequestsTab() {
   async function handleReview(id: string, status: "approved" | "rejected") {
     setReviewLoading(id + status);
     try {
-      const updated = await reviewMealSwap(id, status, noteInputs[id] ?? "");
+      const updated = await reviewMealScheduleChangeRequest(id, status, noteInputs[id] ?? "");
       setRequests(prev => prev.map(r => r.id === id ? updated : r));
-      showToast("ok", status === "approved" ? "Cambio aprobado" : "Cambio rechazado");
+      showToast("ok", status === "approved" ? "Solicitud aprobada" : "Solicitud rechazada");
     } catch (e) {
-      showToast("err", getApiErrorMessage(e, "No se pudo procesar"));
+      showToast("err", getApiErrorMessage(e, "No se pudo procesar la solicitud"));
     } finally {
       setReviewLoading(null);
     }
   }
 
-  const pending = requests.filter(r => r.status === "accepted");
-  const reviewed = requests.filter(r => r.status !== "accepted");
+  const pending = requests.filter(r => r.status === "pending");
+  const reviewed = requests.filter(r => r.status !== "pending");
 
   return (
     <div className="space-y-4">
@@ -270,7 +273,7 @@ function MealSwapRequestsTab() {
         <div className="px-8 py-6 border-b border-k-border flex items-center justify-between">
           <div>
             <h3 className="text-lg font-black text-k-text-h tracking-tight">Cambios de Horario de Comida</h3>
-            <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">{pending.length} pendiente{pending.length !== 1 ? "s" : ""} de aprobación</p>
+            <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">{pending.length} pendiente{pending.length !== 1 ? "s" : ""} de revisión</p>
           </div>
           <button onClick={loadRequests} disabled={loading} className="h-9 w-9 rounded-xl border border-k-border flex items-center justify-center hover:bg-k-bg-card2 transition">
             <RefreshCw className={cx("h-4 w-4 text-k-text-b", loading && "animate-spin")} />
@@ -285,7 +288,7 @@ function MealSwapRequestsTab() {
         ) : pending.length === 0 ? (
           <div className="py-16 text-center">
             <FileText className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
-            <p className="text-xs font-bold text-k-text-b uppercase tracking-widest">Sin cambios pendientes</p>
+            <p className="text-xs font-bold text-k-text-b uppercase tracking-widest">Sin solicitudes pendientes</p>
           </div>
         ) : (
           <div className="divide-y divide-neutral-50">
@@ -294,18 +297,21 @@ function MealSwapRequestsTab() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="h-10 w-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                      <Calendar className="h-5 w-5 text-amber-500" />
+                      <UtensilsCrossed className="h-5 w-5 text-amber-500" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-black text-k-text-h">{req.solicitante_name} ↔ {req.receptor_name}</div>
+                      <div className="text-sm font-black text-k-text-h">{req.empleado_name ?? "—"}</div>
                       <div className="text-xs font-bold text-k-text-b mt-0.5">
-                        {new Date((req.fecha ?? "") + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                        {req.current_meal_start_time ? `Hora actual: ${req.current_meal_start_time} → ` : ""}Solicita: {req.requested_meal_start_time} · {req.duration_minutes} min
                       </div>
                     </div>
                   </div>
                   <AbsenceStatusBadge status={req.status} />
                 </div>
-                <div className="mt-4 ml-13 pl-0 sm:pl-13">
+                <div className="mt-3 text-sm text-k-text-b bg-neutral-50 rounded-xl px-4 py-2.5">
+                  <span className="font-bold">Justificación:</span> {req.justification}
+                </div>
+                <div className="mt-4">
                   <div className="flex items-center gap-2 mb-2">
                     <MessageSquare className="h-3.5 w-3.5 text-k-text-b shrink-0" />
                     <input type="text" placeholder="Nota opcional..." value={noteInputs[req.id] ?? ""} onChange={e => setNoteInputs(prev => ({ ...prev, [req.id]: e.target.value }))} className="flex-1 rounded-xl border border-k-border bg-k-bg-card2 px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition" />
@@ -335,9 +341,9 @@ function MealSwapRequestsTab() {
               <div key={req.id} className="px-8 py-4 flex items-start gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-k-text-h">{req.solicitante_name} ↔ {req.receptor_name}</span>
+                    <span className="text-sm font-bold text-k-text-h">{req.empleado_name ?? "—"}</span>
                     <span className="text-k-text-b">·</span>
-                    <span className="text-xs text-k-text-b">{new Date((req.fecha ?? "") + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" })}</span>
+                    <span className="text-xs text-k-text-b">{req.requested_meal_start_time} · {req.duration_minutes} min</span>
                   </div>
                 </div>
                 <AbsenceStatusBadge status={req.status} />
@@ -346,6 +352,105 @@ function MealSwapRequestsTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function EnComidaTab() {
+  const [rows, setRows] = useState<EnComidaRow[]>([]);
+  const [meta, setMeta] = useState<{ current_server_time: string; meal_duration_minutes: number; count: number } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [now, setNow] = useState(new Date());
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getEnComida();
+      setRows(res.data);
+      setMeta(res.meta);
+      setErr(null);
+    } catch (e) {
+      setErr(getApiErrorMessage(e, "No se pudo cargar el estado de comidas"));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const i = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(i);
+  }, []);
+
+  useEffect(() => {
+    const i = setInterval(load, 60000);
+    return () => clearInterval(i);
+  }, [load]);
+
+  return (
+    <div className="space-y-4">
+      {err && (
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-medium text-rose-700 flex items-center gap-3">
+          <AlertTriangle className="h-4 w-4 shrink-0" />{err}
+        </div>
+      )}
+
+      <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+        <div className="px-8 py-6 border-b border-k-border flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-black text-k-text-h tracking-tight">En comida</h3>
+            <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-1">
+              {rows.length} empleado{rows.length !== 1 ? "s" : ""} · Duración configurada: {meta?.meal_duration_minutes ?? 30} min
+            </p>
+          </div>
+          <button onClick={load} disabled={loading} className="h-9 w-9 rounded-xl border border-k-border flex items-center justify-center hover:bg-k-bg-card2 transition">
+            <RefreshCw className={cx("h-4 w-4 text-k-text-b", loading && "animate-spin")} />
+          </button>
+        </div>
+
+        {loading && rows.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-k-text-b">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="py-16 text-center">
+            <UtensilsCrossed className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
+            <p className="text-xs font-bold text-k-text-b uppercase tracking-widest">Nadie está en comida ahora</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-neutral-50">
+            {rows.map(row => {
+              const start = new Date(row.lunch_start_at);
+              const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 60000));
+              const overtime = Math.max(0, elapsed - (meta?.meal_duration_minutes ?? 30));
+              return (
+                <div key={row.attendance_day_id} className={cx("px-8 py-5 flex items-center justify-between gap-4", row.is_overtime && "bg-rose-50/40")}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cx("h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 border", row.is_overtime ? "bg-rose-50 border-rose-100 text-rose-500" : "bg-emerald-50 border-emerald-100 text-emerald-500")}>
+                      <UtensilsCrossed className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-black text-k-text-h truncate">{row.employee_name}</div>
+                      <div className="text-xs text-k-text-b">Inició a las {start.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className={cx("text-lg font-black tabular-nums", row.is_overtime ? "text-rose-600" : "text-k-text-h")}>
+                      {minutesToHHMM(elapsed)}
+                    </div>
+                    {overtime > 0 && (
+                      <div className="text-xs font-bold text-rose-500">+{minutesToHHMM(overtime)} excedido</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -783,7 +888,7 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
 }
 
 export default function ManagerAttendancePage() {
-  const [tab, setTab] = useState<"daily" | "weekly" | "requests" | "meal-swaps" | "overtime" | "late-arrivals">("daily");
+  const [tab, setTab] = useState<"daily" | "weekly" | "requests" | "meal-schedule" | "en-comida" | "overtime" | "late-arrivals">("daily");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [items, setItems] = useState<ByDateItem[]>([]);
@@ -857,12 +962,13 @@ export default function ManagerAttendancePage() {
 
       <div className="flex items-center gap-1 bg-neutral-100/80 rounded-2xl p-1">
         {([
-          { key: "daily",         label: "Por Día" },
-          { key: "weekly",        label: "Por Semana" },
-          { key: "requests",      label: "Ausencias" },
-          { key: "meal-swaps",    label: "Cambios de Comida" },
-          { key: "overtime",      label: "Horas Extras" },
-          { key: "late-arrivals", label: "Oportunidades" },
+          { key: "daily",          label: "Por Día" },
+          { key: "weekly",         label: "Por Semana" },
+          { key: "requests",       label: "Ausencias" },
+          { key: "meal-schedule",  label: "Horarios de Comida" },
+          { key: "en-comida",      label: "En Comida" },
+          { key: "overtime",       label: "Horas Extras" },
+          { key: "late-arrivals",  label: "Oportunidades" },
         ] as const).map(t => (
           <button
             key={t.key}
@@ -1062,8 +1168,10 @@ export default function ManagerAttendancePage() {
         </>
       ) : tab === "weekly" ? (
         <WeeklyPanel employees={employees} date={date} />
-      ) : tab === "meal-swaps" ? (
-        <MealSwapRequestsTab />
+      ) : tab === "meal-schedule" ? (
+        <MealScheduleChangeRequestsTab />
+      ) : tab === "en-comida" ? (
+        <EnComidaTab />
       ) : tab === "overtime" ? (
         <OvertimeRequestsTab />
       ) : tab === "late-arrivals" ? (

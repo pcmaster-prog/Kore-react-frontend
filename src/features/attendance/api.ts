@@ -42,6 +42,8 @@ export type TodayResponse = {
   meal_duration_minutes?: number;
   break_duration_minutes?: number;
   lunch_reminder_sent?: boolean;
+  lunch_pre_reminder_sent?: boolean;
+  lunch_end_reminder_sent?: boolean;
   exit_reminder_sent?: boolean;
 
   // FASE: hora de llegada + oportunidad
@@ -442,6 +444,86 @@ export async function reviewOvertimeRequest(
     reviewer_note: reviewerNote ?? null,
   });
   return res.data as OvertimeRequest;
+}
+
+// ─── Meal Schedule Change Requests ────────────────────────────────────────────
+
+export type MealScheduleChangeRequest = {
+  id: string;
+  empresa_id: string;
+  empleado_id: string;
+  empleado_name?: string;
+  current_meal_start_time?: string | null;
+  requested_meal_start_time: string;
+  duration_minutes: number;
+  justification: string;
+  status: "pending" | "approved" | "rejected";
+  reviewer_note?: string | null;
+  reviewer_name?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+};
+
+export async function createMealScheduleChangeRequest(data: {
+  requested_meal_start_time: string;
+  duration_minutes: number;
+  justification: string;
+}): Promise<MealScheduleChangeRequest> {
+  const res = await api.post("/asistencia/meal-schedule-change-requests", data);
+  return res.data.data as MealScheduleChangeRequest;
+}
+
+export async function getMyMealScheduleChangeRequests(): Promise<MealScheduleChangeRequest[]> {
+  const res = await api.get("/asistencia/meal-schedule-change-requests");
+  return (res.data.data ?? []) as MealScheduleChangeRequest[];
+}
+
+export async function getPendingMealScheduleChangeRequests(): Promise<MealScheduleChangeRequest[]> {
+  const res = await api.get("/asistencia/meal-schedule-change-requests", {
+    params: { status: "pending" },
+  });
+  return (res.data.data ?? []) as MealScheduleChangeRequest[];
+}
+
+export async function reviewMealScheduleChangeRequest(
+  id: string,
+  status: "approved" | "rejected",
+  reviewerNote?: string
+): Promise<MealScheduleChangeRequest> {
+  const res = await api.patch(`/asistencia/meal-schedule-change-requests/${id}/review`, {
+    status,
+    reviewer_note: reviewerNote ?? null,
+  });
+  return res.data.data as MealScheduleChangeRequest;
+}
+
+export async function cancelMealScheduleChangeRequest(id: string): Promise<void> {
+  await api.delete(`/asistencia/meal-schedule-change-requests/${id}`);
+}
+
+// ─── Admin: En comida ─────────────────────────────────────────────────────────
+
+export type EnComidaRow = {
+  attendance_day_id: string;
+  empleado_id: string;
+  employee_name: string;
+  avatar_url?: string | null;
+  lunch_start_at: string;
+  elapsed_minutes: number;
+  meal_duration_minutes: number;
+  overtime_minutes: number;
+  is_overtime: boolean;
+};
+
+export async function getEnComida(): Promise<{
+  data: EnComidaRow[];
+  meta: { current_server_time: string; meal_duration_minutes: number; count: number };
+}> {
+  const res = await api.get("/asistencia/en-comida");
+  return res.data as {
+    data: EnComidaRow[];
+    meta: { current_server_time: string; meal_duration_minutes: number; count: number };
+  };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -25,7 +25,7 @@ import { useAttendancePolling } from "./useAttendancePolling";
 import { useAttendanceAlerts } from "./useAttendanceAlerts";
 import LunchTimer from "./LunchTimer";
 import BreakTimer from "./BreakTimer";
-import MealSwapModal from "./MealSwapModal";
+import MealScheduleChangeRequestModal from "./MealScheduleChangeRequestModal";
 import OvertimeRequestModal from "./OvertimeRequestModal";
 import {
   LogIn, LogOut, Coffee, Play, Moon, XCircle,
@@ -263,7 +263,7 @@ export default function EmployeeAttendancePage() {
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
   const [wifiBlocked, setWifiBlocked] = useState(false);
   const [liveMinutes, setLiveMinutes] = useState(0);
-  const [showMealSwap, setShowMealSwap] = useState(false);
+  const [showMealScheduleChange, setShowMealScheduleChange] = useState(false);
   const [showOvertime, setShowOvertime] = useState(false);
   const [lateBlocked, setLateBlocked] = useState(false);
   const [lateRequestMotivo, setLateRequestMotivo] = useState("");
@@ -858,10 +858,10 @@ export default function EmployeeAttendancePage() {
             {/* Acciones adicionales (FASE 4-5) */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <button
-                onClick={() => setShowMealSwap(true)}
+                onClick={() => setShowMealScheduleChange(true)}
                 className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-700 hover:bg-amber-100 transition flex items-center justify-center gap-2"
               >
-                <UtensilsCrossed className="h-4 w-4" /> Cambio de comida
+                <UtensilsCrossed className="h-4 w-4" /> Cambiar horario de comida
               </button>
               <button
                 onClick={() => setShowOvertime(true)}
@@ -892,10 +892,10 @@ export default function EmployeeAttendancePage() {
       )}
 
       {/* ─── Modales ─────────────────────────────────────────────────────────── */}
-      {showMealSwap && (
-        <MealSwapModal
-          onClose={() => setShowMealSwap(false)}
-          onSaved={() => { setShowMealSwap(false); loadToday(); }}
+      {showMealScheduleChange && (
+        <MealScheduleChangeRequestModal
+          onClose={() => setShowMealScheduleChange(false)}
+          onSaved={() => { setShowMealScheduleChange(false); loadToday(); }}
         />
       )}
       {showOvertime && (

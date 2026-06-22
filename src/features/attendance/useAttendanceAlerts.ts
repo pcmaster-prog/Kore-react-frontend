@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import type { TodayResponse } from "./api";
 
 export type AttendanceAlert = {
-  type: "check_in" | "break_start" | "break_end" | "check_out" | "lunch" | "exit_soon";
+  type: "check_in" | "break_start" | "break_end" | "check_out" | "lunch" | "lunch_soon" | "lunch_ending" | "exit_soon";
   title: string;
   body: string;
 };
@@ -82,6 +82,26 @@ export function useAttendanceAlerts(today: TodayResponse | null) {
         type: "lunch",
         title: "🍽️ Es hora de comer",
         body: "Tu horario de comida ha comenzado. Presiona 'Iniciar tiempo de comida'.",
+      });
+    }
+
+    const prevLunchPre = (prev as any)?.lunch_pre_reminder_sent ?? false;
+    const currLunchPre = (today as any)?.lunch_pre_reminder_sent ?? false;
+    if (!prevLunchPre && currLunchPre) {
+      dispatchAlert({
+        type: "lunch_soon",
+        title: "🍽️ Comida pronto",
+        body: "Tu tiempo de comida comienza en 5 minutos.",
+      });
+    }
+
+    const prevLunchEnd = (prev as any)?.lunch_end_reminder_sent ?? false;
+    const currLunchEnd = (today as any)?.lunch_end_reminder_sent ?? false;
+    if (!prevLunchEnd && currLunchEnd) {
+      dispatchAlert({
+        type: "lunch_ending",
+        title: "⏱️ Comida por terminar",
+        body: "Te quedan 5 minutos para terminar tu comida.",
       });
     }
 
