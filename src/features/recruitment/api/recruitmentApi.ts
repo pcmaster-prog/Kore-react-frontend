@@ -62,5 +62,12 @@ export const recruitmentApi = {
             notify_whatsapp: notifyWhatsapp 
         });
         return data;
+    },
+    toggleManualReview: async (id: string, manualReviewRequired: boolean, reason?: string) => {
+        const { data } = await http.post<{ data: Application }>(`/ats/applications/${id}/manual-review`, {
+            manual_review_required: manualReviewRequired,
+            manual_review_reason: reason,
+        });
+        return data.data;
     }
 };

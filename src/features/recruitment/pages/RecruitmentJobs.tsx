@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { recruitmentApi } from "../api/recruitmentApi";
 import type { JobOpening } from "../types/recruitment";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Share2, Link as LinkIcon, Copy, Check } from "lucide-react";
 
 export default function RecruitmentJobs() {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
@@ -20,8 +20,17 @@ export default function RecruitmentJobs() {
     salary_range: '',
     schedule: '',
     status: 'open' as 'open' | 'draft' | 'closed',
-    image_url: ''
+    image_url: '',
+    induction_video_url: '',
+    screening_pass_score: '7',
+    screening_questions: [] as { question: string; options: string; correctIndex: string }[]
   });
+
+  // Share modal state
+  const [shareJob, setShareJob] = useState<JobOpening | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const portalBaseUrl = import.meta.env.VITE_PORTAL_URL || window.location.origin;
 
   const fetchJobs = async () => {
     try {
@@ -48,7 +57,14 @@ export default function RecruitmentJobs() {
         salary_range: job.salary_range || '',
         schedule: job.schedule || '',
         status: job.status,
-        image_url: job.image_url || ''
+        image_url: job.image_url || '',
+        induction_video_url: job.induction_video_url || '',
+        screening_pass_score: String(job.screening_pass_score ?? 7),
+        screening_questions: (job.screening_questions || []).map(q => ({
+          question: q.question,
+          options: (q.options || []).join('\n'),
+          correctIndex: String(q.correctIndex ?? 0)
+        }))
       });
     } else {
       setEditingJob(null);
@@ -59,7 +75,10 @@ export default function RecruitmentJobs() {
         salary_range: '',
         schedule: '',
         status: 'open',
-        image_url: ''
+        image_url: '',
+        induction_video_url: '',
+        screening_pass_score: '7',
+        screening_questions: []
       });
     }
     setIsModalOpen(true);
@@ -76,7 +95,16 @@ export default function RecruitmentJobs() {
     try {
       const payload = {
         ...formData,
-        requirements: formData.requirements.split('\n').map(r => r.trim()).filter(r => r)
+        requirements: formData.requirements.split('\n').map(r => r.trim()).filter(r => r),
+        induction_video_url: formData.induction_video_url || undefined,
+        screening_pass_score: parseInt(formData.screening_pass_score, 10),
+        screening_questions: formData.screening_questions
+          .filter(q => q.question.trim())
+          .map(q => ({
+            question: q.question.trim(),
+            options: q.options.split('\n').map(o => o.trim()).filter(o => o),
+            correctIndex: parseInt(q.correctIndex, 10) || 0
+          }))
       };
 
       if (editingJob) {
@@ -92,6 +120,41 @@ export default function RecruitmentJobs() {
       alert("Hubo un error al guardar la vacante.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const addQuestion = () => {
+    setFormData(prev => ({
+      ...prev,
+      screening_questions: [...prev.screening_questions, { question: '', options: '', correctIndex: '0' }]
+    }));
+  };
+
+  const removeQuestion = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      screening_questions: prev.screening_questions.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateQuestion = (index: number, field: 'question' | 'options' | 'correctIndex', value: string) => {
+    setFormData(prev => {
+      const next = [...prev.screening_questions];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, screening_questions: next };
+    });
+  };
+
+  const publicJobUrl = (job: JobOpening) => `${portalBaseUrl}/jobs/${job.id}`;
+  const qrCodeUrl = (job: JobOpening) => `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(publicJobUrl(job))}`;
+
+  const copyToClipboard = async (job: JobOpening) => {
+    try {
+      await navigator.clipboard.writeText(publicJobUrl(job));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert('No se pudo copiar el enlace.');
     }
   };
 
@@ -147,6 +210,13 @@ export default function RecruitmentJobs() {
               </div>
               
               <div className="mt-6 flex justify-end space-x-3 border-t border-k-border pt-4">
+                <button
+                  onClick={() => setShareJob(job)}
+                  className="text-sm font-bold text-k-text-b hover:text-k-accent-btn transition-colors flex items-center gap-1"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Compartir
+                </button>
                 <button 
                   onClick={() => openModal(job)}
                   className="text-sm font-bold text-k-text-b hover:text-k-accent-btn transition-colors"
@@ -251,6 +321,83 @@ export default function RecruitmentJobs() {
               </div>
 
               <div>
+                <label className="block text-sm font-bold text-k-text-h mb-1">Video de Inducción (URL)</label>
+                <input
+                  type="text"
+                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                  value={formData.induction_video_url}
+                  onChange={(e) => setFormData({...formData, induction_video_url: e.target.value})}
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+                <p className="text-xs text-k-text-b mt-1">Si lo dejas vacío, el portal usará el video de bienvenida general.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Puntaje mínimo para aprobar</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.screening_pass_score}
+                    onChange={(e) => setFormData({...formData, screening_pass_score: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-bold text-k-text-h">Preguntas de Autoevaluación</label>
+                  <button
+                    type="button"
+                    onClick={addQuestion}
+                    className="text-xs font-bold text-k-accent-btn hover:underline"
+                  >
+                    + Agregar pregunta
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {formData.screening_questions.map((q, idx) => (
+                    <div key={idx} className="bg-k-bg-primary border border-k-border rounded-xl p-3 space-y-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <input
+                          type="text"
+                          placeholder="Pregunta"
+                          className="flex-1 bg-white border border-k-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-k-accent"
+                          value={q.question}
+                          onChange={(e) => updateQuestion(idx, 'question', e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(idx)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <textarea
+                        placeholder="Opciones (una por línea)"
+                        className="w-full bg-white border border-k-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-k-accent h-16"
+                        value={q.options}
+                        onChange={(e) => updateQuestion(idx, 'options', e.target.value)}
+                      />
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-k-text-b">Índice de respuesta correcta (0-based):</label>
+                        <input
+                          type="number"
+                          min={0}
+                          className="w-16 bg-white border border-k-border rounded-lg px-2 py-1 text-sm"
+                          value={q.correctIndex}
+                          onChange={(e) => updateQuestion(idx, 'correctIndex', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-bold text-k-text-h mb-1">Estado</label>
                 <select 
                   className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
@@ -280,6 +427,55 @@ export default function RecruitmentJobs() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {shareJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-k-text-h flex items-center gap-2">
+                <LinkIcon className="w-5 h-5" />
+                Compartir vacante
+              </h2>
+              <button onClick={() => setShareJob(null)} className="text-gray-400 hover:text-gray-700">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <p className="text-sm text-k-text-b mb-2">{shareJob.title}</p>
+
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="text"
+                readOnly
+                value={publicJobUrl(shareJob)}
+                className="flex-1 bg-k-bg-primary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+              />
+              <button
+                onClick={() => copyToClipboard(shareJob)}
+                className="p-2 rounded-xl bg-k-accent-btn text-white hover:bg-opacity-90"
+                title="Copiar enlace"
+              >
+                {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center justify-center p-4 bg-k-bg-primary rounded-2xl border border-k-border">
+              <img
+                src={qrCodeUrl(shareJob)}
+                alt="Código QR de la vacante"
+                className="w-48 h-48"
+              />
+              <p className="text-xs text-k-text-b mt-2">Escanea para abrir el portal del aspirante</p>
+            </div>
+
+            {!import.meta.env.VITE_PORTAL_URL && (
+              <p className="text-xs text-amber-600 mt-3">
+                Nota: configura VITE_PORTAL_URL para generar el enlace correcto del portal.
+              </p>
+            )}
           </div>
         </div>
       )}

@@ -1,5 +1,11 @@
 export type JobOpeningStatus = 'draft' | 'open' | 'closed';
 
+export interface ScreeningQuestion {
+    question: string;
+    options: string[];
+    correctIndex: number;
+}
+
 export interface JobOpening {
     id: string;
     empresa_id: string;
@@ -9,6 +15,9 @@ export interface JobOpening {
     salary_range?: string;
     schedule?: string;
     image_url?: string;
+    induction_video_url?: string;
+    screening_questions?: ScreeningQuestion[];
+    screening_pass_score?: number;
     status: JobOpeningStatus;
     created_at: string;
     updated_at: string;
@@ -74,6 +83,8 @@ export interface Application {
     interview_scheduled_at?: string;
     interview_notes?: string;
     interview_result?: string;
+    manual_review_required?: boolean;
+    manual_review_reason?: string;
     created_at: string;
     updated_at: string;
 
