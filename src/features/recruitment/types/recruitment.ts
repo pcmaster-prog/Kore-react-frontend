@@ -46,6 +46,7 @@ export type ApplicationStatus =
     | 'screening'
     | 'interview-requested'
     | 'interviewing'
+    | 'offer-sent'
     | 'hired'
     | 'rejected';
 
@@ -70,6 +71,61 @@ export interface ApplicationStatusLog {
         id: string;
         name: string;
     };
+}
+
+export interface ApplicationOffer {
+    id: string;
+    application_id: string;
+    position_id?: string;
+    salary: number;
+    trial_months: number;
+    status: 'draft' | 'sent' | 'accepted' | 'rejected';
+    sent_at?: string;
+    accepted_at?: string;
+    rejected_at?: string;
+    notes?: string;
+    created_by?: string;
+    position?: {
+        id: string;
+        name: string;
+    };
+    creator?: {
+        id: string;
+        name: string;
+    };
+    created_at: string;
+    updated_at: string;
+}
+
+export interface OnboardingDocument {
+    type: string;
+    label: string;
+    uploaded: boolean;
+    verified: boolean;
+    url?: string;
+    uploaded_at?: string;
+}
+
+export interface PipelineAnalytics {
+    totals: Record<ApplicationStatus, number>;
+    funnel: { stage: string; count: number }[];
+    average_times: Record<string, number | null>;
+    rejection_reasons: { notes: string; count: number }[];
+    open_jobs: (JobOpening & {
+        total_applications: number;
+        interviewing_count: number;
+        offer_sent_count: number;
+        hired_count: number;
+    })[];
+    upcoming_interviews: {
+        id: string;
+        candidate_name?: string;
+        job_title?: string;
+        scheduled_at: string;
+        method?: InterviewMethod;
+        location?: string;
+        meeting_url?: string;
+    }[];
 }
 
 export interface Application {
@@ -117,6 +173,7 @@ export interface Application {
     documents?: ApplicationDocument[];
     statusLogs?: ApplicationStatusLog[];
     interviews?: Interview[];
+    offer?: ApplicationOffer;
 }
 
 export interface ScorecardCriterion {

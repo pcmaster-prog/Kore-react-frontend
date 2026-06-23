@@ -1,5 +1,5 @@
 import http from '@/lib/http';
-import type { JobOpening, JobOpeningTemplate, Application, Interview, RehireCheck } from '../types/recruitment';
+import type { JobOpening, JobOpeningTemplate, Application, ApplicationDocument, ApplicationOffer, Interview, OnboardingDocument, PipelineAnalytics, RehireCheck } from '../types/recruitment';
 
 export const recruitmentApi = {
     // === JOBS ===
@@ -117,5 +117,39 @@ export const recruitmentApi = {
     },
     deleteInterview: async (id: string) => {
         await http.delete(`/ats/interviews/${id}`);
+    },
+
+    // === OFFERS ===
+    sendOffer: async (id: string, payload: { salary: number; trial_months: number; position_id?: string; notes?: string }) => {
+        const { data } = await http.post<{ data: ApplicationOffer }>(`/ats/applications/${id}/offer`, payload);
+        return data.data;
+    },
+    getOffer: async (id: string) => {
+        const { data } = await http.get<{ data: ApplicationOffer }>(`/ats/applications/${id}/offer`);
+        return data.data;
+    },
+    resendOffer: async (id: string) => {
+        const { data } = await http.post<{ data: ApplicationOffer }>(`/ats/applications/${id}/offer/resend`);
+        return data.data;
+    },
+
+    // === ONBOARDING DOCUMENTS ===
+    getOnboardingDocuments: async (id: string) => {
+        const { data } = await http.get<{ data: OnboardingDocument[] }>(`/ats/applications/${id}/onboarding-documents`);
+        return data.data;
+    },
+    verifyOnboardingDocument: async (id: string, type: string) => {
+        const { data } = await http.post<{ data: ApplicationDocument }>(`/ats/applications/${id}/onboarding-documents/${type}/verify`);
+        return data.data;
+    },
+    unverifyOnboardingDocument: async (id: string, type: string) => {
+        const { data } = await http.post<{ data: ApplicationDocument }>(`/ats/applications/${id}/onboarding-documents/${type}/unverify`);
+        return data.data;
+    },
+
+    // === ANALYTICS ===
+    getPipelineAnalytics: async (params?: { date_from?: string; date_to?: string; job_opening_id?: string }) => {
+        const { data } = await http.get<{ data: PipelineAnalytics }>('/ats/analytics/pipeline', { params });
+        return data.data;
     },
 };

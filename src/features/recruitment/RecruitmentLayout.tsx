@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Briefcase, Users, LayoutDashboard, FileStack } from "lucide-react";
+import { Briefcase, Users, LayoutDashboard, FileStack, BarChart3 } from "lucide-react";
 
 export default function RecruitmentLayout() {
   const tabs = [
@@ -7,6 +7,7 @@ export default function RecruitmentLayout() {
     { to: "/app/manager/reclutamiento/vacantes", icon: Briefcase, label: "Vacantes" },
     { to: "/app/manager/reclutamiento/plantillas", icon: FileStack, label: "Plantillas" },
     { to: "/app/manager/reclutamiento/candidatos", icon: Users, label: "Candidatos" },
+    { to: "/app/manager/reclutamiento/reportes", icon: BarChart3, label: "Reportes" },
   ];
 
   return (

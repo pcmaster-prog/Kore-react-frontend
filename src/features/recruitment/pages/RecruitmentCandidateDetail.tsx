@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { recruitmentApi } from "../api/recruitmentApi";
-import type { Application, ApplicationStatus, Interview, RehireCheck, ScorecardCriterion } from "../types/recruitment";
+import type { Application, ApplicationStatus, Interview, OnboardingDocument, RehireCheck, ScorecardCriterion } from "../types/recruitment";
 import {
   ArrowLeft,
   FileText,
@@ -18,6 +18,10 @@ import {
   Video,
   MapPinned,
   Clock,
+  Send,
+  FileCheck,
+  Check,
+  X,
 } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
@@ -25,6 +29,7 @@ const statusLabels: Record<string, string> = {
   screening: "En evaluación",
   "interview-requested": "Entrevista solicitada",
   interviewing: "En entrevista",
+  "offer-sent": "Oferta enviada",
   hired: "Contratado",
   rejected: "Rechazado",
 };
@@ -80,6 +85,17 @@ export default function RecruitmentCandidateDetail() {
   const [showRehireForm, setShowRehireForm] = useState(false);
   const [rehireSalary, setRehireSalary] = useState("");
 
+  // Offer
+  const [showOfferForm, setShowOfferForm] = useState(false);
+  const [offerSalary, setOfferSalary] = useState("");
+  const [offerMonths, setOfferMonths] = useState("1");
+  const [offerPositionId, setOfferPositionId] = useState("");
+  const [offerNotes, setOfferNotes] = useState("");
+  const [positions, setPositions] = useState<{ id: string; name: string }[]>([]);
+
+  // Onboarding documents
+  const [onboardingDocs, setOnboardingDocs] = useState<OnboardingDocument[]>([]);
+
   const fetchApp = async () => {
     try {
       if (id) {
@@ -113,10 +129,31 @@ export default function RecruitmentCandidateDetail() {
     }
   };
 
+  const fetchOnboardingDocuments = async () => {
+    if (!id) return;
+    try {
+      const data = await recruitmentApi.getOnboardingDocuments(id);
+      setOnboardingDocs(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchPositions = async () => {
+    try {
+      const res = await import("@/features/puestos/api").then((m) => m.listPuestos());
+      setPositions((res.data ?? []).map((p) => ({ id: p.id, name: p.nombre })));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchApp();
     fetchInterviews();
     fetchRehireCheck();
+    fetchOnboardingDocuments();
+    fetchPositions();
   }, [id]);
 
   const runAction = async (action: () => Promise<unknown>, after?: () => void) => {
@@ -125,6 +162,7 @@ export default function RecruitmentCandidateDetail() {
       await action();
       await fetchApp();
       await fetchInterviews();
+      await fetchOnboardingDocuments();
       after?.();
     } catch (error) {
       console.error(error);
@@ -261,6 +299,45 @@ export default function RecruitmentCandidateDetail() {
     });
   };
 
+  const handleSendOffer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !offerSalary) return;
+    runAction(async () => {
+      await recruitmentApi.sendOffer(id, {
+        salary: Number(offerSalary),
+        trial_months: Number(offerMonths) || 1,
+        position_id: offerPositionId || undefined,
+        notes: offerNotes || undefined,
+      });
+      setShowOfferForm(false);
+      setOfferSalary("");
+      setOfferMonths("1");
+      setOfferPositionId("");
+      setOfferNotes("");
+    });
+  };
+
+  const handleResendOffer = () => {
+    if (!id) return;
+    runAction(() => recruitmentApi.resendOffer(id));
+  };
+
+  const handleVerifyDocument = (type: string) => {
+    if (!id) return;
+    runAction(async () => {
+      await recruitmentApi.verifyOnboardingDocument(id, type);
+      await fetchOnboardingDocuments();
+    });
+  };
+
+  const handleUnverifyDocument = (type: string) => {
+    if (!id) return;
+    runAction(async () => {
+      await recruitmentApi.unverifyOnboardingDocument(id, type);
+      await fetchOnboardingDocuments();
+    });
+  };
+
   const recommendationPreview = useMemo(() => calculateRecommendation(scorecardDraft), [scorecardDraft]);
 
   if (loading) return <p className="text-k-text-b">Cargando detalles...</p>;
@@ -349,6 +426,24 @@ export default function RecruitmentCandidateDetail() {
                 className="px-4 py-2 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors"
               >
                 {showHireForm ? "Cancelar" : "Contratar a prueba"}
+              </button>
+            )}
+
+            {(status === "interviewing" || status === "offer-sent") && (
+              <button
+                onClick={() => setShowOfferForm((s) => !s)}
+                className="px-4 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-600 transition-colors"
+              >
+                {showOfferForm ? "Cancelar" : app.offer?.status === "sent" ? "Editar oferta" : "Enviar oferta"}
+              </button>
+            )}
+
+            {status === "offer-sent" && app.offer?.status === "sent" && (
+              <button
+                onClick={handleResendOffer}
+                className="px-4 py-2 rounded-xl bg-indigo-500/80 text-white text-sm font-bold hover:bg-indigo-600 transition-colors"
+              >
+                Reenviar oferta
               </button>
             )}
 
@@ -538,6 +633,79 @@ export default function RecruitmentCandidateDetail() {
               className="px-4 py-2 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors"
             >
               Confirmar contratación
+            </button>
+          </form>
+        )}
+
+        {showOfferForm && (
+          <form
+            onSubmit={handleSendOffer}
+            className="mt-4 space-y-3 border-t border-k-border pt-4"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-k-text-b mb-1">
+                  Salario diario
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={offerSalary}
+                  onChange={(e) => setOfferSalary(e.target.value)}
+                  className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-k-text-b mb-1">
+                  Meses de prueba
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="3"
+                  required
+                  value={offerMonths}
+                  onChange={(e) => setOfferMonths(e.target.value)}
+                  className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-k-text-b mb-1">
+                  Puesto
+                </label>
+                <select
+                  value={offerPositionId}
+                  onChange={(e) => setOfferPositionId(e.target.value)}
+                  className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                >
+                  <option value="">Sin puesto asignado</option>
+                  {positions.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-k-text-b mb-1">
+                Notas para el candidato
+              </label>
+              <textarea
+                value={offerNotes}
+                onChange={(e) => setOfferNotes(e.target.value)}
+                className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                rows={3}
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-600 transition-colors"
+            >
+              Enviar oferta al candidato
             </button>
           </form>
         )}
@@ -741,6 +909,136 @@ export default function RecruitmentCandidateDetail() {
             <p className="text-k-text-b text-sm">No hay documentos subidos.</p>
           )}
         </div>
+
+        {/* Offer & Onboarding */}
+        {(status === "offer-sent" || status === "hired") && (
+          <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-sm md:col-span-2">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-indigo-500/10 text-indigo-500 rounded-xl">
+                <Send className="w-5 h-5" />
+              </div>
+              <h3 className="font-black text-k-text-h text-lg">Oferta y onboarding</h3>
+            </div>
+
+            {app.offer && (
+              <div className="bg-k-bg-secondary/40 border border-k-border rounded-2xl p-4 mb-4">
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <span className="font-bold text-k-text-h text-sm">Oferta</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
+                      app.offer.status === "accepted"
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : app.offer.status === "rejected"
+                          ? "bg-rose-500/10 text-rose-600"
+                          : "bg-indigo-500/10 text-indigo-600"
+                    }`}
+                  >
+                    {app.offer.status === "sent" && "Enviada"}
+                    {app.offer.status === "accepted" && "Aceptada"}
+                    {app.offer.status === "rejected" && "Rechazada"}
+                    {app.offer.status === "draft" && "Borrador"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                  <p className="text-k-text-b">
+                    <span className="font-bold text-k-text-h">Salario diario:</span> ${app.offer.salary}
+                  </p>
+                  <p className="text-k-text-b">
+                    <span className="font-bold text-k-text-h">Periodo de prueba:</span>{" "}
+                    {app.offer.trial_months} mes{app.offer.trial_months !== 1 ? "es" : ""}
+                  </p>
+                  {app.offer.position && (
+                    <p className="text-k-text-b">
+                      <span className="font-bold text-k-text-h">Puesto:</span> {app.offer.position.name}
+                    </p>
+                  )}
+                </div>
+                {app.offer.notes && (
+                  <p className="text-k-text-b text-sm mt-2">
+                    <span className="font-bold text-k-text-h">Notas:</span> {app.offer.notes}
+                  </p>
+                )}
+                {app.offer.sent_at && (
+                  <p className="text-k-text-b text-xs mt-2">
+                    Enviada el {new Date(app.offer.sent_at).toLocaleString()}
+                  </p>
+                )}
+                {app.offer.accepted_at && (
+                  <p className="text-k-text-b text-xs mt-2">
+                    Aceptada el {new Date(app.offer.accepted_at).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {status === "hired" && (
+              <div>
+                <h4 className="font-bold text-k-text-h text-sm mb-3">Checklist de documentos de alta</h4>
+                {onboardingDocs.length === 0 ? (
+                  <p className="text-k-text-b text-sm">Cargando documentos…</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {onboardingDocs.map((doc) => (
+                      <div
+                        key={doc.type}
+                        className="bg-k-bg-secondary/40 border border-k-border rounded-xl p-3 flex items-start justify-between gap-3"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {doc.verified ? (
+                              <Check className="w-4 h-4 text-emerald-500" />
+                            ) : doc.uploaded ? (
+                              <FileCheck className="w-4 h-4 text-amber-500" />
+                            ) : (
+                              <X className="w-4 h-4 text-k-text-b" />
+                            )}
+                            <span className="text-sm font-bold text-k-text-h">{doc.label}</span>
+                          </div>
+                          <p className="text-xs text-k-text-b mt-1">
+                            {doc.verified
+                              ? "Verificado"
+                              : doc.uploaded
+                                ? "Pendiente de verificación"
+                                : "No subido"}
+                          </p>
+                          {doc.url && (
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-k-accent font-bold hover:underline mt-1 inline-block"
+                            >
+                              Ver documento
+                            </a>
+                          )}
+                        </div>
+                        {doc.uploaded && (
+                          <div className="flex items-center gap-2">
+                            {!doc.verified ? (
+                              <button
+                                onClick={() => handleVerifyDocument(doc.type)}
+                                className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 text-xs font-bold hover:bg-emerald-500/20 transition-colors"
+                              >
+                                Verificar
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleUnverifyDocument(doc.type)}
+                                className="px-2 py-1 rounded-lg bg-k-bg-secondary text-k-text-b text-xs font-bold hover:bg-k-border transition-colors"
+                              >
+                                Desverificar
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Interviews */}
         <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-sm md:col-span-2">
