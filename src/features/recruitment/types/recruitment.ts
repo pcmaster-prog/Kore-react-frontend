@@ -23,6 +23,24 @@ export interface JobOpening {
     updated_at: string;
 }
 
+export interface JobOpeningTemplate {
+    id: string;
+    empresa_id: string;
+    title: string;
+    description?: string;
+    requirements?: string[];
+    salary_range?: string;
+    schedule?: string;
+    image_url?: string;
+    induction_video_url?: string;
+    screening_questions?: ScreeningQuestion[];
+    screening_pass_score?: number;
+    status: JobOpeningStatus;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export type ApplicationStatus =
     | 'new'
     | 'screening'
@@ -98,4 +116,46 @@ export interface Application {
     };
     documents?: ApplicationDocument[];
     statusLogs?: ApplicationStatusLog[];
+    interviews?: Interview[];
+}
+
+export interface ScorecardCriterion {
+    name: string;
+    score: number;
+    notes?: string;
+}
+
+export type InterviewResult = 'pending' | 'passed' | 'failed';
+export type InterviewMethod = 'in-person' | 'video' | 'phone';
+
+export interface Interview {
+    id: string;
+    application_id: string;
+    interviewer_id?: string;
+    interviewer?: {
+        id: string;
+        name: string;
+    };
+    scheduled_at: string;
+    method: InterviewMethod;
+    location?: string;
+    meeting_url?: string;
+    notes?: string;
+    scorecard?: ScorecardCriterion[];
+    recommendation?: string;
+    result: InterviewResult;
+    created_by?: string;
+    creator?: {
+        id: string;
+        name: string;
+    };
+    created_at: string;
+    updated_at: string;
+}
+
+export interface RehireCheck {
+    is_rehire: boolean;
+    previous_empleado_id?: string;
+    previous_full_name?: string;
+    previous_hired_at?: string;
 }

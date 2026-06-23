@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { recruitmentApi } from "../api/recruitmentApi";
-import type { Application, ApplicationStatus } from "../types/recruitment";
+import type { Application, ApplicationStatus, Interview, RehireCheck, ScorecardCriterion } from "../types/recruitment";
 import {
   ArrowLeft,
   FileText,
@@ -12,6 +12,12 @@ import {
   GraduationCap,
   Award,
   PlayCircle,
+  Star,
+  Plus,
+  Trash2,
+  Video,
+  MapPinned,
+  Clock,
 } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
@@ -22,6 +28,21 @@ const statusLabels: Record<string, string> = {
   hired: "Contratado",
   rejected: "Rechazado",
 };
+
+const methodLabels: Record<string, string> = {
+  "in-person": "Presencial",
+  video: "Videollamada",
+  phone: "Teléfono",
+};
+
+function calculateRecommendation(scorecard: ScorecardCriterion[]): string {
+  if (!scorecard.length) return "";
+  const avg = scorecard.reduce((sum, c) => sum + c.score, 0) / scorecard.length;
+  if (avg >= 4.5) return "Excelente elección";
+  if (avg >= 3.5) return "Buena elección";
+  if (avg >= 2.5) return "Regular";
+  return "No recomendado";
+}
 
 export default function RecruitmentCandidateDetail() {
   const { id } = useParams();
@@ -34,6 +55,9 @@ export default function RecruitmentCandidateDetail() {
   const [showInterviewForm, setShowInterviewForm] = useState(false);
   const [interviewDate, setInterviewDate] = useState("");
   const [interviewNotes, setInterviewNotes] = useState("");
+  const [interviewMethod, setInterviewMethod] = useState<"in-person" | "video" | "phone" | "">("");
+  const [interviewLocation, setInterviewLocation] = useState("");
+  const [interviewMeetingUrl, setInterviewMeetingUrl] = useState("");
   const [notifyWhatsapp, setNotifyWhatsapp] = useState(false);
 
   const [showResultForm, setShowResultForm] = useState(false);
@@ -43,6 +67,18 @@ export default function RecruitmentCandidateDetail() {
   const [showHireForm, setShowHireForm] = useState(false);
   const [hireSalary, setHireSalary] = useState("");
   const [hireMonths, setHireMonths] = useState("1");
+
+  // Interviews & scorecards
+  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [editingInterviewId, setEditingInterviewId] = useState<string | null>(null);
+  const [scorecardDraft, setScorecardDraft] = useState<ScorecardCriterion[]>([]);
+  const [scorecardNotesDraft, setScorecardNotesDraft] = useState("");
+  const [scorecardResultDraft, setScorecardResultDraft] = useState<"pending" | "passed" | "failed">("pending");
+
+  // Rehire
+  const [rehireCheck, setRehireCheck] = useState<RehireCheck | null>(null);
+  const [showRehireForm, setShowRehireForm] = useState(false);
+  const [rehireSalary, setRehireSalary] = useState("");
 
   const fetchApp = async () => {
     try {
@@ -57,15 +93,39 @@ export default function RecruitmentCandidateDetail() {
     }
   };
 
+  const fetchInterviews = async () => {
+    if (!id) return;
+    try {
+      const data = await recruitmentApi.getInterviews(id);
+      setInterviews(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchRehireCheck = async () => {
+    if (!id) return;
+    try {
+      const data = await recruitmentApi.checkRehire(id);
+      setRehireCheck(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchApp();
+    fetchInterviews();
+    fetchRehireCheck();
   }, [id]);
 
-  const runAction = async (action: () => Promise<unknown>) => {
+  const runAction = async (action: () => Promise<unknown>, after?: () => void) => {
     setBusy(true);
     try {
       await action();
       await fetchApp();
+      await fetchInterviews();
+      after?.();
     } catch (error) {
       console.error(error);
       alert("Error al ejecutar la acción. Revisa la consola.");
@@ -83,15 +143,20 @@ export default function RecruitmentCandidateDetail() {
     e.preventDefault();
     if (!id || !interviewDate) return;
     runAction(async () => {
-      await recruitmentApi.scheduleInterview(
-        id,
-        new Date(interviewDate).toISOString(),
-        interviewNotes,
-        notifyWhatsapp
-      );
+      await recruitmentApi.scheduleInterview(id, {
+        interview_scheduled_at: new Date(interviewDate).toISOString(),
+        notes: interviewNotes,
+        notify_whatsapp: notifyWhatsapp,
+        method: interviewMethod || undefined,
+        location: interviewLocation || undefined,
+        meeting_url: interviewMeetingUrl || undefined,
+      });
       setShowInterviewForm(false);
       setInterviewDate("");
       setInterviewNotes("");
+      setInterviewMethod("");
+      setInterviewLocation("");
+      setInterviewMeetingUrl("");
       setNotifyWhatsapp(false);
     });
   };
@@ -135,6 +200,69 @@ export default function RecruitmentCandidateDetail() {
     runAction(() => recruitmentApi.reject(id, reason, true));
   };
 
+  const handleDeleteInterview = (interviewId: string) => {
+    if (!confirm("¿Eliminar esta entrevista?")) return;
+    runAction(() => recruitmentApi.deleteInterview(interviewId));
+  };
+
+  const startEditingScorecard = (interview: Interview) => {
+    setEditingInterviewId(interview.id);
+    setScorecardDraft(interview.scorecard?.length ? [...interview.scorecard] : [{ name: "", score: 3 }]);
+    setScorecardNotesDraft(interview.notes || "");
+    setScorecardResultDraft(interview.result || "pending");
+  };
+
+  const cancelEditingScorecard = () => {
+    setEditingInterviewId(null);
+    setScorecardDraft([]);
+    setScorecardNotesDraft("");
+    setScorecardResultDraft("pending");
+  };
+
+  const updateCriterion = (index: number, field: keyof ScorecardCriterion, value: string | number) => {
+    setScorecardDraft((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const addCriterion = () => {
+    setScorecardDraft((prev) => [...prev, { name: "", score: 3 }]);
+  };
+
+  const removeCriterion = (index: number) => {
+    setScorecardDraft((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveScorecard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInterviewId) return;
+    const cleanScorecard = scorecardDraft
+      .map((c) => ({ ...c, score: Number(c.score) || 0 }))
+      .filter((c) => c.name.trim() !== "");
+    await runAction(async () => {
+      await recruitmentApi.updateInterview(editingInterviewId, {
+        scorecard: cleanScorecard,
+        notes: scorecardNotesDraft,
+        result: scorecardResultDraft,
+      });
+      cancelEditingScorecard();
+    });
+  };
+
+  const handleRehire = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !rehireSalary) return;
+    runAction(async () => {
+      await recruitmentApi.rehire(id, { salary: Number(rehireSalary) });
+      setShowRehireForm(false);
+      setRehireSalary("");
+    });
+  };
+
+  const recommendationPreview = useMemo(() => calculateRecommendation(scorecardDraft), [scorecardDraft]);
+
   if (loading) return <p className="text-k-text-b">Cargando detalles...</p>;
   if (!app) return <p className="text-red-500">No encontrado</p>;
 
@@ -167,9 +295,16 @@ export default function RecruitmentCandidateDetail() {
               </p>
               <p className="text-k-text-b text-sm mt-1">{app.user?.email}</p>
             </div>
-            <span className="self-start bg-k-bg-secondary text-k-text-b px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wider">
-              {statusLabels[status] || status}
-            </span>
+            <div className="flex flex-wrap items-center gap-2 self-start">
+              {rehireCheck?.is_rehire && (
+                <span className="bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider">
+                  Ex-empleado
+                </span>
+              )}
+              <span className="bg-k-bg-secondary text-k-text-b px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wider">
+                {statusLabels[status] || status}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -217,6 +352,15 @@ export default function RecruitmentCandidateDetail() {
               </button>
             )}
 
+            {status !== "hired" && status !== "rejected" && rehireCheck?.is_rehire && (
+              <button
+                onClick={() => setShowRehireForm((s) => !s)}
+                className="px-4 py-2 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-600 transition-colors"
+              >
+                {showRehireForm ? "Cancelar" : "Recontratar rápido"}
+              </button>
+            )}
+
             {status !== "hired" && status !== "rejected" && (
               <button
                 onClick={handleReject}
@@ -233,17 +377,60 @@ export default function RecruitmentCandidateDetail() {
             onSubmit={handleScheduleInterview}
             className="mt-4 space-y-3 border-t border-k-border pt-4"
           >
-            <div>
-              <label className="block text-xs font-bold text-k-text-b mb-1">
-                Fecha y hora de entrevista
-              </label>
-              <input
-                type="datetime-local"
-                required
-                value={interviewDate}
-                onChange={(e) => setInterviewDate(e.target.value)}
-                className="w-full md:w-auto bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-k-text-b mb-1">
+                  Fecha y hora de entrevista
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={interviewDate}
+                  onChange={(e) => setInterviewDate(e.target.value)}
+                  className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-k-text-b mb-1">
+                  Método
+                </label>
+                <select
+                  value={interviewMethod}
+                  onChange={(e) => setInterviewMethod(e.target.value as Interview["method"] | "")}
+                  className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                >
+                  <option value="">Seleccionar…</option>
+                  <option value="in-person">Presencial</option>
+                  <option value="video">Videollamada</option>
+                  <option value="phone">Teléfono</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-k-text-b mb-1">
+                  Ubicación / Lugar
+                </label>
+                <input
+                  type="text"
+                  value={interviewLocation}
+                  onChange={(e) => setInterviewLocation(e.target.value)}
+                  placeholder="Ej. Oficina central, Sala 3"
+                  className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-k-text-b mb-1">
+                  Enlace de meeting
+                </label>
+                <input
+                  type="url"
+                  value={interviewMeetingUrl}
+                  onChange={(e) => setInterviewMeetingUrl(e.target.value)}
+                  placeholder="https://…"
+                  className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-k-text-b mb-1">
@@ -351,6 +538,43 @@ export default function RecruitmentCandidateDetail() {
               className="px-4 py-2 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors"
             >
               Confirmar contratación
+            </button>
+          </form>
+        )}
+
+        {showRehireForm && (
+          <form
+            onSubmit={handleRehire}
+            className="mt-4 space-y-3 border-t border-k-border pt-4"
+          >
+            <div className="bg-sky-500/10 text-sky-700 border border-sky-500/20 rounded-xl p-3 text-sm">
+              <p className="font-bold">Recontratación rápida</p>
+              <p>
+                Este candidato coincide con el ex-empleado{" "}
+                <span className="font-bold">{rehireCheck?.previous_full_name || "—"}</span>.
+                Se reactivará su expediente anterior.
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-k-text-b mb-1">
+                Salario diario
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={rehireSalary}
+                onChange={(e) => setRehireSalary(e.target.value)}
+                className="w-full md:w-64 bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                placeholder="0.00"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-600 transition-colors"
+            >
+              Confirmar recontratación
             </button>
           </form>
         )}
@@ -518,37 +742,268 @@ export default function RecruitmentCandidateDetail() {
           )}
         </div>
 
-        {/* Interview info */}
-        {(app.interview_scheduled_at || app.interview_result) && (
-          <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-sm md:col-span-2">
-            <div className="flex items-center space-x-3 mb-6">
+        {/* Interviews */}
+        <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-sm md:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
               <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
                 <Calendar className="w-5 h-5" />
               </div>
-              <h3 className="font-black text-k-text-h text-lg">Entrevista</h3>
+              <h3 className="font-black text-k-text-h text-lg">Entrevistas</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              {app.interview_scheduled_at && (
-                <p className="text-k-text-b">
-                  <span className="font-bold text-k-text-h">Programada:</span>{" "}
-                  {new Date(app.interview_scheduled_at).toLocaleString()}
-                </p>
-              )}
-              {app.interview_result && (
-                <p className="text-k-text-b">
-                  <span className="font-bold text-k-text-h">Resultado:</span>{" "}
-                  {app.interview_result === "passed" ? "Aprobado" : app.interview_result === "failed" ? "Rechazado" : app.interview_result}
-                </p>
-              )}
-              {app.interview_notes && (
-                <p className="text-k-text-b md:col-span-3">
-                  <span className="font-bold text-k-text-h">Notas:</span>{" "}
-                  {app.interview_notes}
-                </p>
-              )}
-            </div>
+            <span className="text-xs text-k-text-b font-bold">
+              {interviews.length} registrada{interviews.length !== 1 ? "s" : ""}
+            </span>
           </div>
-        )}
+
+          {interviews.length === 0 ? (
+            <p className="text-k-text-b text-sm">No hay entrevistas programadas.</p>
+          ) : (
+            <div className="space-y-4">
+              {interviews.map((interview) => {
+                const isEditing = editingInterviewId === interview.id;
+                return (
+                  <div
+                    key={interview.id}
+                    className="border border-k-border rounded-2xl p-4 bg-k-bg-secondary/40"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="flex items-center gap-1.5 text-k-text-h font-bold">
+                            <Clock className="w-4 h-4 text-k-accent" />
+                            {new Date(interview.scheduled_at).toLocaleString()}
+                          </span>
+                          {interview.method && (
+                            <span className="px-2 py-0.5 rounded-lg bg-k-bg-secondary border border-k-border text-k-text-b text-xs font-bold">
+                              {methodLabels[interview.method] || interview.method}
+                            </span>
+                          )}
+                          {interview.result && interview.result !== "pending" && (
+                            <span
+                              className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
+                                interview.result === "passed"
+                                  ? "bg-emerald-500/10 text-emerald-600"
+                                  : "bg-rose-500/10 text-rose-600"
+                              }`}
+                            >
+                              {interview.result === "passed" ? "Aprobado" : "No aprobado"}
+                            </span>
+                          )}
+                        </div>
+                        {interview.location && (
+                          <p className="flex items-center gap-2 text-k-text-b">
+                            <MapPinned className="w-4 h-4 text-k-accent" />
+                            {interview.location}
+                          </p>
+                        )}
+                        {interview.meeting_url && (
+                          <p className="flex items-center gap-2 text-k-text-b">
+                            <Video className="w-4 h-4 text-k-accent" />
+                            <a
+                              href={interview.meeting_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-k-accent font-bold hover:underline truncate max-w-md"
+                            >
+                              {interview.meeting_url}
+                            </a>
+                          </p>
+                        )}
+                        {interview.notes && (
+                          <p className="text-k-text-b">
+                            <span className="font-bold text-k-text-h">Notas:</span>{" "}
+                            {interview.notes}
+                          </p>
+                        )}
+                        {interview.interviewer && (
+                          <p className="text-k-text-b text-xs">
+                            Entrevistador: {interview.interviewer.name}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => startEditingScorecard(interview)}
+                          className="px-3 py-1.5 rounded-lg bg-violet-500/10 text-violet-600 text-xs font-bold hover:bg-violet-500/20 transition-colors"
+                        >
+                          {interview.scorecard?.length ? "Editar scorecard" : "Agregar scorecard"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteInterview(interview.id)}
+                          className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 transition-colors"
+                          title="Eliminar entrevista"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {interview.scorecard && interview.scorecard.length > 0 && !isEditing && (
+                      <div className="mt-4 pt-4 border-t border-k-border/50">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {interview.scorecard.map((criterion, idx) => (
+                            <div
+                              key={idx}
+                              className="bg-k-bg-secondary border border-k-border rounded-xl p-3"
+                            >
+                              <p className="text-xs font-bold text-k-text-h mb-1">
+                                {criterion.name}
+                              </p>
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < criterion.score
+                                        ? "text-amber-400 fill-amber-400"
+                                        : "text-k-border"
+                                    }`}
+                                  />
+                                ))}
+                                <span className="text-xs text-k-text-b ml-1">
+                                  {criterion.score}/5
+                                </span>
+                              </div>
+                              {criterion.notes && (
+                                <p className="text-xs text-k-text-b mt-1">{criterion.notes}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {interview.recommendation && (
+                          <p className="mt-3 text-sm font-bold text-k-text-h">
+                            Recomendación:{" "}
+                            <span className="text-k-accent">{interview.recommendation}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {isEditing && (
+                      <form
+                        onSubmit={handleSaveScorecard}
+                        className="mt-4 pt-4 border-t border-k-border/50 space-y-4"
+                      >
+                        <div className="space-y-3">
+                          {scorecardDraft.map((criterion, idx) => (
+                            <div
+                              key={idx}
+                              className="bg-k-bg-secondary border border-k-border rounded-xl p-3 space-y-2"
+                            >
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="text"
+                                  value={criterion.name}
+                                  onChange={(e) => updateCriterion(idx, "name", e.target.value)}
+                                  placeholder="Criterio"
+                                  className="flex-1 bg-k-bg-card border border-k-border rounded-lg px-3 py-1.5 text-sm text-k-text-h"
+                                />
+                                <div className="flex items-center gap-1">
+                                  {[1, 2, 3, 4, 5].map((score) => (
+                                    <button
+                                      key={score}
+                                      type="button"
+                                      onClick={() => updateCriterion(idx, "score", score)}
+                                      className="p-1"
+                                    >
+                                      <Star
+                                        className={`w-5 h-5 ${
+                                          score <= criterion.score
+                                            ? "text-amber-400 fill-amber-400"
+                                            : "text-k-border"
+                                        }`}
+                                      />
+                                    </button>
+                                  ))}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeCriterion(idx)}
+                                  className="p-1.5 text-rose-600 hover:bg-rose-500/10 rounded-lg"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <textarea
+                                value={criterion.notes || ""}
+                                onChange={(e) => updateCriterion(idx, "notes", e.target.value)}
+                                placeholder="Notas del criterio"
+                                rows={2}
+                                className="w-full bg-k-bg-card border border-k-border rounded-lg px-3 py-1.5 text-sm text-k-text-h"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={addCriterion}
+                          className="flex items-center gap-1.5 text-sm font-bold text-k-accent hover:text-k-accent/80"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Agregar criterio
+                        </button>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-k-text-b mb-1">
+                              Resultado
+                            </label>
+                            <select
+                              value={scorecardResultDraft}
+                              onChange={(e) =>
+                                setScorecardResultDraft(e.target.value as Interview["result"])
+                              }
+                              className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                            >
+                              <option value="pending">Pendiente</option>
+                              <option value="passed">Aprobado</option>
+                              <option value="failed">No aprobado</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-k-text-b mb-1">
+                              Notas generales
+                            </label>
+                            <input
+                              type="text"
+                              value={scorecardNotesDraft}
+                              onChange={(e) => setScorecardNotesDraft(e.target.value)}
+                              className="w-full bg-k-bg-secondary border border-k-border rounded-xl px-3 py-2 text-sm text-k-text-h"
+                            />
+                          </div>
+                        </div>
+
+                        {recommendationPreview && (
+                          <p className="text-sm font-bold text-k-text-h">
+                            Recomendación automática:{" "}
+                            <span className="text-k-accent">{recommendationPreview}</span>
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="submit"
+                            className="px-4 py-2 rounded-xl bg-violet-500 text-white text-sm font-bold hover:bg-violet-600 transition-colors"
+                          >
+                            Guardar scorecard
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditingScorecard}
+                            className="px-4 py-2 rounded-xl bg-k-bg-secondary text-k-text-b text-sm font-bold hover:bg-k-border transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* History */}
         <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-sm md:col-span-2">

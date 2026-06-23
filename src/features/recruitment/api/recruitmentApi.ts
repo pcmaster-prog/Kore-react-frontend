@@ -1,5 +1,5 @@
 import http from '@/lib/http';
-import type { JobOpening, Application } from '../types/recruitment';
+import type { JobOpening, JobOpeningTemplate, Application, Interview, RehireCheck } from '../types/recruitment';
 
 export const recruitmentApi = {
     // === JOBS ===
@@ -23,6 +23,31 @@ export const recruitmentApi = {
         await http.delete(`/ats/jobs/${id}`);
     },
 
+    // === JOB TEMPLATES ===
+    getJobTemplates: async () => {
+        const { data } = await http.get<{ data: JobOpeningTemplate[] }>('/ats/job-templates');
+        return data.data;
+    },
+    getJobTemplate: async (id: string) => {
+        const { data } = await http.get<{ data: JobOpeningTemplate }>(`/ats/job-templates/${id}`);
+        return data.data;
+    },
+    createJobTemplate: async (payload: Partial<JobOpeningTemplate>) => {
+        const { data } = await http.post<{ data: JobOpeningTemplate }>('/ats/job-templates', payload);
+        return data.data;
+    },
+    updateJobTemplate: async (id: string, payload: Partial<JobOpeningTemplate>) => {
+        const { data } = await http.put<{ data: JobOpeningTemplate }>(`/ats/job-templates/${id}`, payload);
+        return data.data;
+    },
+    deleteJobTemplate: async (id: string) => {
+        await http.delete(`/ats/job-templates/${id}`);
+    },
+    duplicateJobTemplate: async (id: string) => {
+        const { data } = await http.post<{ data: JobOpeningTemplate }>(`/ats/job-templates/${id}/duplicate`);
+        return data.data;
+    },
+
     // === APPLICATIONS ===
     getApplications: async () => {
         const { data } = await http.get<{ data: Application[] }>('/ats/applications');
@@ -36,12 +61,8 @@ export const recruitmentApi = {
         const { data } = await http.post<{ data: Application }>(`/ats/applications/${id}/status`, { status, notes });
         return data.data;
     },
-    scheduleInterview: async (id: string, date: string, notes?: string, notifyWhatsapp = false) => {
-        const { data } = await http.post<{ data: Application }>(`/ats/applications/${id}/interview`, { 
-            interview_scheduled_at: date, 
-            notes, 
-            notify_whatsapp: notifyWhatsapp 
-        });
+    scheduleInterview: async (id: string, payload: { interview_scheduled_at: string; notes?: string; notify_whatsapp?: boolean; method?: 'in-person' | 'video' | 'phone'; location?: string; meeting_url?: string }) => {
+        const { data } = await http.post<{ data: Application }>(`/ats/applications/${id}/interview`, payload);
         return data.data;
     },
     recordInterviewResult: async (id: string, result: string, notes?: string) => {
@@ -69,5 +90,32 @@ export const recruitmentApi = {
             manual_review_reason: reason,
         });
         return data.data;
-    }
+    },
+
+    // === REHIRE ===
+    checkRehire: async (id: string) => {
+        const { data } = await http.get<{ data: RehireCheck }>(`/ats/applications/${id}/rehire-check`);
+        return data.data;
+    },
+    rehire: async (id: string, payload: { salary: number; modules?: string[]; position_id?: string }) => {
+        const { data } = await http.post(`/ats/applications/${id}/rehire`, payload);
+        return data;
+    },
+
+    // === INTERVIEWS ===
+    getInterviews: async (applicationId: string) => {
+        const { data } = await http.get<{ data: Interview[] }>(`/ats/applications/${applicationId}/interviews`);
+        return data.data;
+    },
+    createInterview: async (applicationId: string, payload: Partial<Interview>) => {
+        const { data } = await http.post<{ data: Interview }>(`/ats/applications/${applicationId}/interviews`, payload);
+        return data.data;
+    },
+    updateInterview: async (id: string, payload: Partial<Interview>) => {
+        const { data } = await http.put<{ data: Interview }>(`/ats/interviews/${id}`, payload);
+        return data.data;
+    },
+    deleteInterview: async (id: string) => {
+        await http.delete(`/ats/interviews/${id}`);
+    },
 };

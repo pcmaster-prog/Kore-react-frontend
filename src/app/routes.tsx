@@ -66,6 +66,7 @@ const RecruitmentDashboard = lazy(() => import("@/features/recruitment/pages/Rec
 const RecruitmentJobs = lazy(() => import("@/features/recruitment/pages/RecruitmentJobs"));
 const RecruitmentCandidates = lazy(() => import("@/features/recruitment/pages/RecruitmentCandidates"));
 const RecruitmentCandidateDetail = lazy(() => import("@/features/recruitment/pages/RecruitmentCandidateDetail"));
+const RecruitmentJobTemplates = lazy(() => import("@/features/recruitment/pages/RecruitmentJobTemplates"));
 
 // Nómina
 const NominaPage = lazy(() => import("@/features/nomina/NominaPage"));
@@ -257,6 +258,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Suspended><RecruitmentDashboard /></Suspended> },
           { path: "vacantes", element: <Suspended><RecruitmentJobs /></Suspended> },
+          { path: "plantillas", element: <Suspended><RecruitmentJobTemplates /></Suspended> },
           { path: "candidatos", element: <Suspended><RecruitmentCandidates /></Suspended> },
           { path: "candidatos/:id", element: <Suspended><RecruitmentCandidateDetail /></Suspended> },
         ],

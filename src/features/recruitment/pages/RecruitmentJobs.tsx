@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { recruitmentApi } from "../api/recruitmentApi";
-import type { JobOpening } from "../types/recruitment";
+import type { JobOpening, JobOpeningTemplate, ScreeningQuestion } from "../types/recruitment";
 import { Plus, X, Share2, Link as LinkIcon, Copy, Check } from "lucide-react";
 
 export default function RecruitmentJobs() {
@@ -29,6 +30,7 @@ export default function RecruitmentJobs() {
   // Share modal state
   const [shareJob, setShareJob] = useState<JobOpening | null>(null);
   const [copied, setCopied] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const portalBaseUrl = import.meta.env.VITE_PORTAL_URL || window.location.origin;
 
@@ -46,6 +48,39 @@ export default function RecruitmentJobs() {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  useEffect(() => {
+    const templateId = searchParams.get('templateId');
+    if (templateId) {
+      recruitmentApi.getJobTemplate(templateId)
+        .then(template => openModalFromTemplate(template))
+        .catch(error => {
+          console.error(error);
+          alert('No se pudo cargar la plantilla.');
+        });
+    }
+  }, [searchParams]);
+
+  const openModalFromTemplate = (template: JobOpeningTemplate) => {
+    setEditingJob(null);
+    setFormData({
+      title: template.title,
+      description: template.description || '',
+      requirements: template.requirements ? template.requirements.join('\n') : '',
+      salary_range: template.salary_range || '',
+      schedule: template.schedule || '',
+      status: 'draft',
+      image_url: template.image_url || '',
+      induction_video_url: template.induction_video_url || '',
+      screening_pass_score: String(template.screening_pass_score ?? 7),
+      screening_questions: (template.screening_questions || []).map((q: ScreeningQuestion) => ({
+        question: q.question,
+        options: (q.options || []).join('\n'),
+        correctIndex: String(q.correctIndex ?? 0)
+      }))
+    });
+    setIsModalOpen(true);
+  };
 
   const openModal = (job?: JobOpening) => {
     if (job) {
