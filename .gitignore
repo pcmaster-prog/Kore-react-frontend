@@ -27,3 +27,5 @@ android/
 *.sln
 *.sw?
 dev-dist/
+
+.vercel
