@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { recruitmentApi } from "../api/recruitmentApi";
 import type { JobOpening, JobOpeningTemplate, ScreeningQuestion } from "../types/recruitment";
-import { Plus, X, Share2, Link as LinkIcon, Copy, Check } from "lucide-react";
+import { Plus, X, Share2, Link as LinkIcon, Copy, Check, MessageCircle, Facebook, Linkedin } from "lucide-react";
 
 export default function RecruitmentJobs() {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
@@ -20,6 +20,15 @@ export default function RecruitmentJobs() {
     requirements: '',
     salary_range: '',
     schedule: '',
+    location: '',
+    job_type: '',
+    department: '',
+    vacancies_count: '1',
+    benefits: '',
+    tags: '',
+    is_featured: false,
+    published_at: '',
+    slug: '',
     status: 'open' as 'open' | 'draft' | 'closed',
     image_url: '',
     induction_video_url: '',
@@ -69,6 +78,15 @@ export default function RecruitmentJobs() {
       requirements: template.requirements ? template.requirements.join('\n') : '',
       salary_range: template.salary_range || '',
       schedule: template.schedule || '',
+      location: '',
+      job_type: '',
+      department: '',
+      vacancies_count: '1',
+      benefits: '',
+      tags: '',
+      is_featured: false,
+      published_at: '',
+      slug: '',
       status: 'draft',
       image_url: template.image_url || '',
       induction_video_url: template.induction_video_url || '',
@@ -91,6 +109,15 @@ export default function RecruitmentJobs() {
         requirements: job.requirements ? job.requirements.join('\n') : '',
         salary_range: job.salary_range || '',
         schedule: job.schedule || '',
+        location: job.location || '',
+        job_type: job.job_type || '',
+        department: job.department || '',
+        vacancies_count: String(job.vacancies_count ?? 1),
+        benefits: job.benefits ? job.benefits.join('\n') : '',
+        tags: job.tags ? job.tags.join('\n') : '',
+        is_featured: job.is_featured || false,
+        published_at: job.published_at ? job.published_at.slice(0, 16) : '',
+        slug: job.slug || '',
         status: job.status,
         image_url: job.image_url || '',
         induction_video_url: job.induction_video_url || '',
@@ -109,6 +136,15 @@ export default function RecruitmentJobs() {
         requirements: '',
         salary_range: '',
         schedule: '',
+        location: '',
+        job_type: '',
+        department: '',
+        vacancies_count: '1',
+        benefits: '',
+        tags: '',
+        is_featured: false,
+        published_at: '',
+        slug: '',
         status: 'open',
         image_url: '',
         induction_video_url: '',
@@ -131,6 +167,11 @@ export default function RecruitmentJobs() {
       const payload = {
         ...formData,
         requirements: formData.requirements.split('\n').map(r => r.trim()).filter(r => r),
+        benefits: formData.benefits.split('\n').map(r => r.trim()).filter(r => r),
+        tags: formData.tags.split('\n').map(r => r.trim()).filter(r => r),
+        vacancies_count: parseInt(formData.vacancies_count, 10) || 1,
+        published_at: formData.published_at || undefined,
+        slug: formData.slug || undefined,
         induction_video_url: formData.induction_video_url || undefined,
         screening_pass_score: parseInt(formData.screening_pass_score, 10),
         screening_questions: formData.screening_questions
@@ -193,6 +234,20 @@ export default function RecruitmentJobs() {
     }
   };
 
+  const shareText = (job: JobOpening) => `¡Vacante de ${job.title} en Decorarte! ${publicJobUrl(job)}`;
+
+  const shareWhatsApp = (job: JobOpening) => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText(job))}`, '_blank');
+  };
+
+  const shareFacebook = (job: JobOpening) => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicJobUrl(job))}`, '_blank');
+  };
+
+  const shareLinkedIn = (job: JobOpening) => {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicJobUrl(job))}`, '_blank');
+  };
+
   const handleDelete = async (id: string) => {
     if (confirm("¿Estás seguro de que deseas eliminar o cerrar esta vacante?")) {
       try {
@@ -236,15 +291,39 @@ export default function RecruitmentJobs() {
               <p className="text-k-text-b text-sm mt-2 line-clamp-2">{job.description}</p>
               
               <div className="mt-4 flex flex-wrap gap-2">
+                {job.location && (
+                  <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
+                    {job.location}
+                  </span>
+                )}
+                {job.job_type && (
+                  <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
+                    {job.job_type}
+                  </span>
+                )}
+                {job.department && (
+                  <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
+                    {job.department}
+                  </span>
+                )}
                 <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
                   {job.schedule}
                 </span>
                 <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
                   {job.salary_range}
                 </span>
+                {job.is_featured && (
+                  <span className="text-xs bg-k-accent-btn/10 text-k-accent-btn px-2 py-1 rounded-lg font-bold">
+                    Destacada
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-2 text-xs text-k-text-b">
+                {typeof job.views_count === 'number' ? `${job.views_count} vista${job.views_count === 1 ? '' : 's'}` : ''}
               </div>
               
-              <div className="mt-6 flex justify-end space-x-3 border-t border-k-border pt-4">
+              <div className="mt-4 flex justify-end space-x-3 border-t border-k-border pt-4">
                 <button
                   onClick={() => setShareJob(job)}
                   className="text-sm font-bold text-k-text-b hover:text-k-accent-btn transition-colors flex items-center gap-1"
@@ -341,6 +420,109 @@ export default function RecruitmentJobs() {
                     onChange={(e) => setFormData({...formData, schedule: e.target.value})}
                     placeholder="Ej. Lunes a Sábado 8am - 4pm"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Ubicación</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    placeholder="Ej. Ciudad de México"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Tipo de empleo</label>
+                  <select
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.job_type}
+                    onChange={(e) => setFormData({...formData, job_type: e.target.value})}
+                  >
+                    <option value="">Selecciona...</option>
+                    <option value="full-time">Tiempo completo</option>
+                    <option value="part-time">Medio tiempo</option>
+                    <option value="intern">Prácticas</option>
+                    <option value="temporary">Temporal</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Departamento</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.department}
+                    onChange={(e) => setFormData({...formData, department: e.target.value})}
+                    placeholder="Ej. Operaciones"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Número de vacantes</label>
+                  <input 
+                    type="number" 
+                    min={1}
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.vacancies_count}
+                    onChange={(e) => setFormData({...formData, vacancies_count: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Fecha de publicación</label>
+                  <input 
+                    type="datetime-local" 
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.published_at}
+                    onChange={(e) => setFormData({...formData, published_at: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Beneficios (uno por línea)</label>
+                  <textarea 
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
+                    value={formData.benefits}
+                    onChange={(e) => setFormData({...formData, benefits: e.target.value})}
+                    placeholder="Seguro social&#10;Vales de despensa"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Tags (uno por línea)</label>
+                  <textarea 
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
+                    value={formData.tags}
+                    onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                    placeholder="urgente&#10;nuevo"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Slug (URL amigable)</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({...formData, slug: e.target.value})}
+                    placeholder="dejar en blanco para generar automáticamente"
+                  />
+                </div>
+                <div className="flex items-center gap-2 h-full pt-6">
+                  <input
+                    id="is_featured"
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-k-border text-k-accent-btn focus:ring-k-accent-btn"
+                    checked={formData.is_featured}
+                    onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
+                  />
+                  <label htmlFor="is_featured" className="text-sm font-bold text-k-text-h">Vacante destacada</label>
                 </div>
               </div>
 
@@ -494,6 +676,27 @@ export default function RecruitmentJobs() {
                 title="Copiar enlace"
               >
                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <button
+                onClick={() => shareWhatsApp(shareJob)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-opacity-90"
+              >
+                <MessageCircle className="w-4 h-4" /> WhatsApp
+              </button>
+              <button
+                onClick={() => shareFacebook(shareJob)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-opacity-90"
+              >
+                <Facebook className="w-4 h-4" /> Facebook
+              </button>
+              <button
+                onClick={() => shareLinkedIn(shareJob)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-700 text-white text-sm font-bold hover:bg-opacity-90"
+              >
+                <Linkedin className="w-4 h-4" /> LinkedIn
               </button>
             </div>
 

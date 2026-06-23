@@ -14,11 +14,21 @@ export interface JobOpening {
     requirements?: string[];
     salary_range?: string;
     schedule?: string;
+    location?: string;
+    job_type?: string;
+    department?: string;
+    vacancies_count?: number;
+    benefits?: string[];
+    tags?: string[];
+    is_featured?: boolean;
+    published_at?: string;
+    slug?: string;
     image_url?: string;
     induction_video_url?: string;
     screening_questions?: ScreeningQuestion[];
     screening_pass_score?: number;
     status: JobOpeningStatus;
+    views_count?: number;
     created_at: string;
     updated_at: string;
 }
@@ -215,4 +225,23 @@ export interface RehireCheck {
     previous_empleado_id?: string;
     previous_full_name?: string;
     previous_hired_at?: string;
+}
+
+export type EmailTemplateType =
+    | 'application_received'
+    | 'interview_scheduled'
+    | 'interview_reminder'
+    | 'offer_sent'
+    | 'hired'
+    | 'rejected';
+
+export interface EmailTemplate {
+    id: string;
+    empresa_id: string;
+    type: EmailTemplateType;
+    subject: string;
+    body: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }

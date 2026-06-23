@@ -1,5 +1,5 @@
 import http from '@/lib/http';
-import type { JobOpening, JobOpeningTemplate, Application, ApplicationDocument, ApplicationOffer, Interview, OnboardingDocument, PipelineAnalytics, RehireCheck } from '../types/recruitment';
+import type { JobOpening, JobOpeningTemplate, Application, ApplicationDocument, ApplicationOffer, Interview, OnboardingDocument, PipelineAnalytics, RehireCheck, EmailTemplate, EmailTemplateType } from '../types/recruitment';
 
 export const recruitmentApi = {
     // === JOBS ===
@@ -151,5 +151,26 @@ export const recruitmentApi = {
     getPipelineAnalytics: async (params?: { date_from?: string; date_to?: string; job_opening_id?: string }) => {
         const { data } = await http.get<{ data: PipelineAnalytics }>('/ats/analytics/pipeline', { params });
         return data.data;
+    },
+
+    // === EMAIL TEMPLATES ===
+    getEmailTemplates: async () => {
+        const { data } = await http.get<{ data: EmailTemplate[] }>('/ats/email-templates');
+        return data.data;
+    },
+    getEmailTemplateTypes: async () => {
+        const { data } = await http.get<{ data: EmailTemplateType[] }>('/ats/email-templates/types');
+        return data.data;
+    },
+    createEmailTemplate: async (payload: Partial<EmailTemplate>) => {
+        const { data } = await http.post<{ data: EmailTemplate }>('/ats/email-templates', payload);
+        return data.data;
+    },
+    updateEmailTemplate: async (id: string, payload: Partial<EmailTemplate>) => {
+        const { data } = await http.put<{ data: EmailTemplate }>(`/ats/email-templates/${id}`, payload);
+        return data.data;
+    },
+    deleteEmailTemplate: async (id: string) => {
+        await http.delete(`/ats/email-templates/${id}`);
     },
 };
