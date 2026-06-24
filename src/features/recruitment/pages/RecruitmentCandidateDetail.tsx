@@ -141,10 +141,12 @@ export default function RecruitmentCandidateDetail() {
 
   const fetchPositions = async () => {
     try {
-      const res = await import("@/features/puestos/api").then((m) => m.listPuestos());
-      setPositions((res.data ?? []).map((p) => ({ id: p.id, name: p.nombre })));
-    } catch (error) {
-      console.error(error);
+      const res = await import("@/lib/http").then(({ default: http }) =>
+        http.get<{ data: { id: string; name: string }[] }>("/positions")
+      );
+      setPositions((res.data.data ?? []).map((p) => ({ id: p.id, name: p.name })));
+    } catch {
+      // positions are optional – ignore if endpoint fails
     }
   };
 
