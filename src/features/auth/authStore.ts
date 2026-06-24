@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Role = "admin" | "supervisor" | "empleado";
+export type Role = "admin" | "supervisor" | "empleado" | "empleado_prueba";
 
 export type AuthUser = {
   id: string;
