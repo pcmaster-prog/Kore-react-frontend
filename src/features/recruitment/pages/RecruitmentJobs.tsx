@@ -3,6 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { recruitmentApi } from "../api/recruitmentApi";
 import type { JobOpening, JobOpeningTemplate, ScreeningQuestion } from "../types/recruitment";
 import { Plus, X, Share2, Link as LinkIcon, Copy, Check, MessageCircle, Facebook, Linkedin } from "lucide-react";
+import BulletListField from "../components/BulletListField";
+
+const splitLines = (value: string) =>
+  value.split('\n').map((line) => line.trim()).filter((line) => line.length > 0);
 
 export default function RecruitmentJobs() {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
@@ -32,6 +36,16 @@ export default function RecruitmentJobs() {
     status: 'open' as 'open' | 'draft' | 'closed',
     image_url: '',
     induction_video_url: '',
+    about_us: '',
+    objective: '',
+    responsibilities: '',
+    education_requirements: '',
+    experience_requirements: '',
+    knowledge_requirements: '',
+    competencies: '',
+    performance_indicators: '',
+    offer_details: '',
+    closing_statement: '',
     screening_pass_score: '7',
     screening_questions: [] as { question: string; options: string; correctIndex: string }[]
   });
@@ -90,6 +104,16 @@ export default function RecruitmentJobs() {
       status: 'draft',
       image_url: template.image_url || '',
       induction_video_url: template.induction_video_url || '',
+      about_us: template.about_us || '',
+      objective: template.objective || '',
+      responsibilities: template.responsibilities ? template.responsibilities.join('\n') : '',
+      education_requirements: template.education_requirements ? template.education_requirements.join('\n') : '',
+      experience_requirements: template.experience_requirements ? template.experience_requirements.join('\n') : '',
+      knowledge_requirements: template.knowledge_requirements ? template.knowledge_requirements.join('\n') : '',
+      competencies: template.competencies ? template.competencies.join('\n') : '',
+      performance_indicators: template.performance_indicators ? template.performance_indicators.join('\n') : '',
+      offer_details: template.offer_details ? template.offer_details.join('\n') : '',
+      closing_statement: template.closing_statement || '',
       screening_pass_score: String(template.screening_pass_score ?? 7),
       screening_questions: (template.screening_questions || []).map((q: ScreeningQuestion) => ({
         question: q.question,
@@ -121,6 +145,16 @@ export default function RecruitmentJobs() {
         status: job.status,
         image_url: job.image_url || '',
         induction_video_url: job.induction_video_url || '',
+        about_us: job.about_us || '',
+        objective: job.objective || '',
+        responsibilities: job.responsibilities ? job.responsibilities.join('\n') : '',
+        education_requirements: job.education_requirements ? job.education_requirements.join('\n') : '',
+        experience_requirements: job.experience_requirements ? job.experience_requirements.join('\n') : '',
+        knowledge_requirements: job.knowledge_requirements ? job.knowledge_requirements.join('\n') : '',
+        competencies: job.competencies ? job.competencies.join('\n') : '',
+        performance_indicators: job.performance_indicators ? job.performance_indicators.join('\n') : '',
+        offer_details: job.offer_details ? job.offer_details.join('\n') : '',
+        closing_statement: job.closing_statement || '',
         screening_pass_score: String(job.screening_pass_score ?? 7),
         screening_questions: (job.screening_questions || []).map(q => ({
           question: q.question,
@@ -148,6 +182,16 @@ export default function RecruitmentJobs() {
         status: 'open',
         image_url: '',
         induction_video_url: '',
+        about_us: '',
+        objective: '',
+        responsibilities: '',
+        education_requirements: '',
+        experience_requirements: '',
+        knowledge_requirements: '',
+        competencies: '',
+        performance_indicators: '',
+        offer_details: '',
+        closing_statement: '',
         screening_pass_score: '7',
         screening_questions: []
       });
@@ -166,9 +210,16 @@ export default function RecruitmentJobs() {
     try {
       const payload = {
         ...formData,
-        requirements: formData.requirements.split('\n').map(r => r.trim()).filter(r => r),
-        benefits: formData.benefits.split('\n').map(r => r.trim()).filter(r => r),
-        tags: formData.tags.split('\n').map(r => r.trim()).filter(r => r),
+        requirements: splitLines(formData.requirements),
+        benefits: splitLines(formData.benefits),
+        tags: splitLines(formData.tags),
+        responsibilities: splitLines(formData.responsibilities),
+        education_requirements: splitLines(formData.education_requirements),
+        experience_requirements: splitLines(formData.experience_requirements),
+        knowledge_requirements: splitLines(formData.knowledge_requirements),
+        competencies: splitLines(formData.competencies),
+        performance_indicators: splitLines(formData.performance_indicators),
+        offer_details: splitLines(formData.offer_details),
         vacancies_count: parseInt(formData.vacancies_count, 10) || 1,
         published_at: formData.published_at || undefined,
         slug: formData.slug || undefined,
@@ -370,267 +421,361 @@ export default function RecruitmentJobs() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-k-text-h mb-1">Título de la Vacante</label>
-                <input 
-                  type="text" 
-                  required
-                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="Ej. Ayudante General"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-k-text-h mb-1">Descripción</label>
-                <textarea 
-                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Breve descripción del puesto"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-k-text-h mb-1">Requisitos (Uno por línea)</label>
-                <textarea 
-                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
-                  value={formData.requirements}
-                  onChange={(e) => setFormData({...formData, requirements: e.target.value})}
-                  placeholder="Disponibilidad de horario&#10;Gusto por repostería"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Información general */}
+              <section className="bg-k-bg-card border border-k-border rounded-3xl p-4 space-y-4">
+                <h3 className="text-base font-black text-k-text-h">Información general</h3>
                 <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Rango Salarial</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.salary_range}
-                    onChange={(e) => setFormData({...formData, salary_range: e.target.value})}
-                    placeholder="Ej. $1,500 - $1,800 semanales"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Horario</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.schedule}
-                    onChange={(e) => setFormData({...formData, schedule: e.target.value})}
-                    placeholder="Ej. Lunes a Sábado 8am - 4pm"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Ubicación</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    placeholder="Ej. Ciudad de México"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Tipo de empleo</label>
-                  <select
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.job_type}
-                    onChange={(e) => setFormData({...formData, job_type: e.target.value})}
-                  >
-                    <option value="">Selecciona...</option>
-                    <option value="full-time">Tiempo completo</option>
-                    <option value="part-time">Medio tiempo</option>
-                    <option value="intern">Prácticas</option>
-                    <option value="temporary">Temporal</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Departamento</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.department}
-                    onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    placeholder="Ej. Operaciones"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Número de vacantes</label>
-                  <input 
-                    type="number" 
-                    min={1}
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.vacancies_count}
-                    onChange={(e) => setFormData({...formData, vacancies_count: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Fecha de publicación</label>
-                  <input 
-                    type="datetime-local" 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.published_at}
-                    onChange={(e) => setFormData({...formData, published_at: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Beneficios (uno por línea)</label>
-                  <textarea 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
-                    value={formData.benefits}
-                    onChange={(e) => setFormData({...formData, benefits: e.target.value})}
-                    placeholder="Seguro social&#10;Vales de despensa"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Tags (uno por línea)</label>
-                  <textarea 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                    placeholder="urgente&#10;nuevo"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Slug (URL amigable)</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({...formData, slug: e.target.value})}
-                    placeholder="dejar en blanco para generar automáticamente"
-                  />
-                </div>
-                <div className="flex items-center gap-2 h-full pt-6">
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Título de la Vacante</label>
                   <input
-                    id="is_featured"
-                    type="checkbox"
-                    className="w-5 h-5 rounded border-k-border text-k-accent-btn focus:ring-k-accent-btn"
-                    checked={formData.is_featured}
-                    onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
-                  />
-                  <label htmlFor="is_featured" className="text-sm font-bold text-k-text-h">Vacante destacada</label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-k-text-h mb-1">URL de la Imagen</label>
-                <input 
-                  type="text" 
-                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                  placeholder="https://ejemplo.com/imagen.jpg (Opcional)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-k-text-h mb-1">Video de Inducción (URL)</label>
-                <input
-                  type="text"
-                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                  value={formData.induction_video_url}
-                  onChange={(e) => setFormData({...formData, induction_video_url: e.target.value})}
-                  placeholder="https://youtube.com/watch?v=..."
-                />
-                <p className="text-xs text-k-text-b mt-1">Si lo dejas vacío, el portal usará el video de bienvenida general.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-k-text-h mb-1">Puntaje mínimo para aprobar</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={10}
+                    type="text"
+                    required
                     className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                    value={formData.screening_pass_score}
-                    onChange={(e) => setFormData({...formData, screening_pass_score: e.target.value})}
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    placeholder="Ej. Ayudante General"
                   />
                 </div>
-              </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-bold text-k-text-h">Preguntas de Autoevaluación</label>
-                  <button
-                    type="button"
-                    onClick={addQuestion}
-                    className="text-xs font-bold text-k-accent-btn hover:underline"
-                  >
-                    + Agregar pregunta
-                  </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Departamento</label>
+                    <input
+                      type="text"
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.department}
+                      onChange={(e) => setFormData({...formData, department: e.target.value})}
+                      placeholder="Ej. Operaciones"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Tipo de empleo</label>
+                    <select
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.job_type}
+                      onChange={(e) => setFormData({...formData, job_type: e.target.value})}
+                    >
+                      <option value="">Selecciona...</option>
+                      <option value="full-time">Tiempo completo</option>
+                      <option value="part-time">Medio tiempo</option>
+                      <option value="intern">Prácticas</option>
+                      <option value="temporary">Temporal</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  {formData.screening_questions.map((q, idx) => (
-                    <div key={idx} className="bg-k-bg-primary border border-k-border rounded-xl p-3 space-y-2">
-                      <div className="flex justify-between items-start gap-2">
-                        <input
-                          type="text"
-                          placeholder="Pregunta"
-                          className="flex-1 bg-white border border-k-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-k-accent"
-                          value={q.question}
-                          onChange={(e) => updateQuestion(idx, 'question', e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeQuestion(idx)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <textarea
-                        placeholder="Opciones (una por línea)"
-                        className="w-full bg-white border border-k-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-k-accent h-16"
-                        value={q.options}
-                        onChange={(e) => updateQuestion(idx, 'options', e.target.value)}
-                      />
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs text-k-text-b">Índice de respuesta correcta (0-based):</label>
-                        <input
-                          type="number"
-                          min={0}
-                          className="w-16 bg-white border border-k-border rounded-lg px-2 py-1 text-sm"
-                          value={q.correctIndex}
-                          onChange={(e) => updateQuestion(idx, 'correctIndex', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  ))}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Ubicación</label>
+                    <input
+                      type="text"
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.location}
+                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      placeholder="Ej. Ciudad de México"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Rango Salarial</label>
+                    <input
+                      type="text"
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.salary_range}
+                      onChange={(e) => setFormData({...formData, salary_range: e.target.value})}
+                      placeholder="Ej. $1,500 - $1,800 semanales"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Horario</label>
+                    <input
+                      type="text"
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.schedule}
+                      onChange={(e) => setFormData({...formData, schedule: e.target.value})}
+                      placeholder="Ej. Lunes a Sábado 8am - 4pm"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-bold text-k-text-h mb-1">Estado</label>
-                <select 
-                  className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
-                  value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value as 'open' | 'draft' | 'closed'})}
-                >
-                  <option value="open">Abierta (Visible)</option>
-                  <option value="draft">Borrador (Oculta)</option>
-                  <option value="closed">Cerrada</option>
-                </select>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Número de vacantes</label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.vacancies_count}
+                      onChange={(e) => setFormData({...formData, vacancies_count: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Estado</label>
+                    <select
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.status}
+                      onChange={(e) => setFormData({...formData, status: e.target.value as 'open' | 'draft' | 'closed'})}
+                    >
+                      <option value="open">Abierta (Visible)</option>
+                      <option value="draft">Borrador (Oculta)</option>
+                      <option value="closed">Cerrada</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2 h-full pt-6">
+                    <input
+                      id="is_featured"
+                      type="checkbox"
+                      className="w-5 h-5 rounded border-k-border text-k-accent-btn focus:ring-k-accent-btn"
+                      checked={formData.is_featured}
+                      onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
+                    />
+                    <label htmlFor="is_featured" className="text-sm font-bold text-k-text-h">Vacante destacada</label>
+                  </div>
+                </div>
+              </section>
 
-              <div className="pt-4 flex justify-end gap-3">
+              {/* Sobre la empresa y objetivo */}
+              <section className="bg-k-bg-card border border-k-border rounded-3xl p-4 space-y-4">
+                <h3 className="text-base font-black text-k-text-h">Sobre la empresa y objetivo</h3>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Sobre nosotros</label>
+                  <textarea
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
+                    value={formData.about_us}
+                    onChange={(e) => setFormData({...formData, about_us: e.target.value})}
+                    placeholder="Breve descripción de la empresa para el aspirante"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Objetivo del puesto</label>
+                  <textarea
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
+                    value={formData.objective}
+                    onChange={(e) => setFormData({...formData, objective: e.target.value})}
+                    placeholder="Propósito principal de la vacante"
+                  />
+                </div>
+              </section>
+
+              {/* Perfil del candidato */}
+              <section className="bg-k-bg-card border border-k-border rounded-3xl p-4 space-y-4">
+                <h3 className="text-base font-black text-k-text-h">Perfil del candidato</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <BulletListField
+                    label="Formación académica"
+                    value={formData.education_requirements}
+                    onChange={(v) => setFormData({...formData, education_requirements: v})}
+                    placeholder="Licenciatura en Administración&#10;Ingeniería Industrial"
+                  />
+                  <BulletListField
+                    label="Experiencia requerida"
+                    value={formData.experience_requirements}
+                    onChange={(v) => setFormData({...formData, experience_requirements: v})}
+                    placeholder="2 años en puesto similar&#10;Manejo de personal"
+                  />
+                  <BulletListField
+                    label="Conocimientos técnicos"
+                    value={formData.knowledge_requirements}
+                    onChange={(v) => setFormData({...formData, knowledge_requirements: v})}
+                    placeholder="Paquetería Office&#10;Manejo de CRM"
+                  />
+                  <BulletListField
+                    label="Requisitos generales"
+                    value={formData.requirements}
+                    onChange={(v) => setFormData({...formData, requirements: v})}
+                    placeholder="Disponibilidad de horario&#10;Gusto por repostería"
+                  />
+                </div>
+              </section>
+
+              {/* Responsabilidades y competencias */}
+              <section className="bg-k-bg-card border border-k-border rounded-3xl p-4 space-y-4">
+                <h3 className="text-base font-black text-k-text-h">Responsabilidades y competencias</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <BulletListField
+                    label="Responsabilidades"
+                    value={formData.responsibilities}
+                    onChange={(v) => setFormData({...formData, responsibilities: v})}
+                    placeholder="Atención al cliente&#10;Cierre de caja"
+                  />
+                  <BulletListField
+                    label="Competencias"
+                    value={formData.competencies}
+                    onChange={(v) => setFormData({...formData, competencies: v})}
+                    placeholder="Comunicación asertiva&#10;Trabajo en equipo"
+                  />
+                </div>
+              </section>
+
+              {/* Indicadores y oferta */}
+              <section className="bg-k-bg-card border border-k-border rounded-3xl p-4 space-y-4">
+                <h3 className="text-base font-black text-k-text-h">Indicadores y oferta</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <BulletListField
+                    label="Indicadores de desempeño"
+                    value={formData.performance_indicators}
+                    onChange={(v) => setFormData({...formData, performance_indicators: v})}
+                    placeholder="Cumplimiento de metas mensuales&#10;Nivel de satisfacción del cliente"
+                  />
+                  <BulletListField
+                    label="Detalles de la oferta"
+                    value={formData.offer_details}
+                    onChange={(v) => setFormData({...formData, offer_details: v})}
+                    placeholder="Contrato indefinido&#10;Capacitación pagada"
+                  />
+                </div>
+                <BulletListField
+                  label="Beneficios"
+                  value={formData.benefits}
+                  onChange={(v) => setFormData({...formData, benefits: v})}
+                  placeholder="Seguro social&#10;Vales de despensa"
+                />
+              </section>
+
+              {/* Descripción libre y cierre */}
+              <section className="bg-k-bg-card border border-k-border rounded-3xl p-4 space-y-4">
+                <h3 className="text-base font-black text-k-text-h">Descripción libre y cierre</h3>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Descripción general</label>
+                  <textarea
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Breve descripción del puesto"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Cierre / Llamado a la acción</label>
+                  <textarea
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent h-24"
+                    value={formData.closing_statement}
+                    onChange={(e) => setFormData({...formData, closing_statement: e.target.value})}
+                    placeholder="¿Te interesa? Postúlate hoy y únete al equipo."
+                  />
+                </div>
+              </section>
+
+              {/* Configuración avanzada */}
+              <section className="bg-k-bg-card border border-k-border rounded-3xl p-4 space-y-4">
+                <h3 className="text-base font-black text-k-text-h">Configuración avanzada</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Slug (URL amigable)</label>
+                    <input
+                      type="text"
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.slug}
+                      onChange={(e) => setFormData({...formData, slug: e.target.value})}
+                      placeholder="dejar en blanco para generar automáticamente"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Fecha de publicación</label>
+                    <input
+                      type="datetime-local"
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.published_at}
+                      onChange={(e) => setFormData({...formData, published_at: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <BulletListField
+                  label="Tags"
+                  value={formData.tags}
+                  onChange={(v) => setFormData({...formData, tags: v})}
+                  placeholder="urgente&#10;nuevo"
+                />
+
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">URL de la Imagen</label>
+                  <input
+                    type="text"
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                    placeholder="https://ejemplo.com/imagen.jpg (Opcional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-k-text-h mb-1">Video de Inducción (URL)</label>
+                  <input
+                    type="text"
+                    className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                    value={formData.induction_video_url}
+                    onChange={(e) => setFormData({...formData, induction_video_url: e.target.value})}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                  <p className="text-xs text-k-text-b mt-1">Si lo dejas vacío, el portal usará el video de bienvenida general.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-k-text-h mb-1">Puntaje mínimo para aprobar</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      className="w-full bg-k-bg-primary border border-k-border rounded-xl px-4 py-2 focus:outline-none focus:border-k-accent"
+                      value={formData.screening_pass_score}
+                      onChange={(e) => setFormData({...formData, screening_pass_score: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-bold text-k-text-h">Preguntas de Autoevaluación</label>
+                    <button
+                      type="button"
+                      onClick={addQuestion}
+                      className="text-xs font-bold text-k-accent-btn hover:underline"
+                    >
+                      + Agregar pregunta
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {formData.screening_questions.map((q, idx) => (
+                      <div key={idx} className="bg-k-bg-primary border border-k-border rounded-xl p-3 space-y-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <input
+                            type="text"
+                            placeholder="Pregunta"
+                            className="flex-1 bg-white border border-k-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-k-accent"
+                            value={q.question}
+                            onChange={(e) => updateQuestion(idx, 'question', e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeQuestion(idx)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <textarea
+                          placeholder="Opciones (una por línea)"
+                          className="w-full bg-white border border-k-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-k-accent h-16"
+                          value={q.options}
+                          onChange={(e) => updateQuestion(idx, 'options', e.target.value)}
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-k-text-b">Índice de respuesta correcta (0-based):</label>
+                          <input
+                            type="number"
+                            min={0}
+                            className="w-16 bg-white border border-k-border rounded-lg px-2 py-1 text-sm"
+                            value={q.correctIndex}
+                            onChange={(e) => updateQuestion(idx, 'correctIndex', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <div className="pt-2 flex justify-end gap-3">
                 <button 
                   type="button" 
                   onClick={closeModal}
