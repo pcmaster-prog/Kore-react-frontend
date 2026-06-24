@@ -221,7 +221,10 @@ export default function RecruitmentJobs() {
     });
   };
 
-  const publicJobUrl = (job: JobOpening) => `${portalBaseUrl}/jobs/${job.id}`;
+  const publicJobUrl = (job: JobOpening) => {
+    const identifier = job.slug || job.id;
+    return `${portalBaseUrl}/jobs/${identifier}`;
+  };
   const qrCodeUrl = (job: JobOpening) => `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(publicJobUrl(job))}`;
 
   const copyToClipboard = async (job: JobOpening) => {

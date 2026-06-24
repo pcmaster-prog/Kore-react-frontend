@@ -16,7 +16,7 @@ const VARIABLES_BY_TYPE: Record<EmailTemplateType, string[]> = {
   application_received: ["candidateName", "jobTitle", "empresaName"],
   interview_scheduled: ["candidateName", "jobTitle", "scheduledAt", "method", "location", "meetingUrl", "empresaName"],
   interview_reminder: ["recipientName", "candidateName", "jobTitle", "scheduledAt", "method", "location", "meetingUrl", "role", "empresaName"],
-  offer_sent: ["candidateName", "jobTitle", "empresaName"],
+  offer_sent: ["candidateName", "jobTitle", "empresaName", "offerUrl"],
   hired: ["candidateName", "jobTitle", "empresaName"],
   rejected: ["candidateName", "jobTitle", "reason", "empresaName"],
 };
