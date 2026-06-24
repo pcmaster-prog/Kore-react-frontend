@@ -10,6 +10,7 @@ import { useAuthStore } from "@/features/auth/store";
 // Vistas inmediatas (no lazy)
 import LoginPage from "@/features/auth/LoginPage";
 import RegisterPage from "@/features/auth/RegisterPage";
+import SetPasswordPage from "@/features/auth/SetPasswordPage";
 
 // ─── Lazy Loaded Components ──────────────────────────────────────────────────
 // Dashboards
@@ -145,6 +146,7 @@ function RoleAwareRedirect() {
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
+  { path: "/set-password", element: <SetPasswordPage /> },
 
   {
     path: "/app",
