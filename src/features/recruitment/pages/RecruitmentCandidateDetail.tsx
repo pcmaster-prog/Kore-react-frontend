@@ -177,6 +177,12 @@ export default function RecruitmentCandidateDetail() {
     runAction(() => recruitmentApi.changeStatus(id, nextStatus, notes));
   };
 
+  const handleResetScreening = () => {
+    if (!id) return;
+    if (!window.confirm('¿Reiniciar la evaluación? El aspirante podrá presentar la autoevaluación nuevamente desde el portal.')) return;
+    runAction(() => recruitmentApi.resetScreening(id));
+  };
+
   const handleScheduleInterview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!id || !interviewDate) return;
@@ -453,6 +459,16 @@ export default function RecruitmentCandidateDetail() {
                 className="px-4 py-2 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-600 transition-colors"
               >
                 {showRehireForm ? "Cancelar" : "Recontratar rápido"}
+              </button>
+            )}
+
+            {status === "rejected" && app?.screening_test_results != null && (
+              <button
+                onClick={handleResetScreening}
+                disabled={busy}
+                className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              >
+                🔄 Reintentar evaluación
               </button>
             )}
 

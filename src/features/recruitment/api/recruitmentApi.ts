@@ -91,6 +91,10 @@ export const recruitmentApi = {
         });
         return data.data;
     },
+    resetScreening: async (id: string) => {
+        const { data } = await http.post<{ data: Application; message: string }>(`/ats/applications/${id}/reset-screening`);
+        return data;
+    },
 
     // === REHIRE ===
     checkRehire: async (id: string) => {
