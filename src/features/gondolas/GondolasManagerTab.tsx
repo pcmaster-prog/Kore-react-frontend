@@ -373,7 +373,7 @@ export default function GondolasManagerTab() {
       {/* Sub-header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Tabs */}
-        <div className="flex p-1 bg-neutral-100/50 border border-neutral-100 rounded-2xl w-fit">
+        <div className="flex p-1 bg-neutral-100/50 border border-neutral-100 rounded-full w-fit">
           {[
             {
               key: "gondolas",
@@ -390,7 +390,7 @@ export default function GondolasManagerTab() {
               key={t.key}
               onClick={() => setTab(t.key as InnerTab)}
               className={cx(
-                "flex items-center gap-2 px-4 h-8 rounded-xl text-xs font-bold transition-all duration-300",
+                "flex items-center gap-1.5 px-4 h-8 rounded-full text-xs font-bold transition-all duration-300",
                 tab === t.key
                   ? "bg-white text-obsidian shadow-sm"
                   : "text-neutral-400 hover:text-obsidian hover:bg-white",

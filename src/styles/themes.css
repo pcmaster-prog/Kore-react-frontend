@@ -195,6 +195,39 @@
   --shadow: 0 1px 4px rgba(0,0,0,0.9), 0 4px 24px rgba(0,0,0,0.95);
 }
 
+/* ═══════════════════════════════════════════════════════════ */
+/* ⑦ DARK MODE FALLBACK (cuando .dark se aplica sobre         */
+/*    temas claros sin data-theme="oscuro"/"black")           */
+/* ═══════════════════════════════════════════════════════════ */
+html.dark:not([data-theme="oscuro"]):not([data-theme="black"]) {
+  --bg-page: #07090f;
+  --bg-sidebar: #030508;
+  --bg-sidebar-hover: rgba(255,255,255,0.04);
+  --bg-card: #0e1220;
+  --bg-card2: #090d18;
+  --sb-text: #4b6385;
+  --sb-active-bg: #0c1a34;
+  --sb-active: #a8c8ff;
+  --accent-btn: #0ea5e9;
+  --accent-btn-text: #ffffff;
+  --text-h: #d8e4f5;
+  --text-b: #5d7a9e;
+  --badge-p-bg: #0c2348;
+  --badge-p-c: #60a5fa;
+  --badge-a-bg: #271500;
+  --badge-a-c: #fbbf24;
+  --badge-b-bg: #022614;
+  --badge-b-c: #34d399;
+  --bar1: #0ea5e9;
+  --bar2: #38bdf8;
+  --bar3: #7dd3fc;
+  --dot1: #34d399;
+  --dot2: #38bdf8;
+  --dot3: #a78bfa;
+  --border: #0d1826;
+  --shadow: 0 1px 4px rgba(0,0,0,0.5), 0 4px 24px rgba(0,0,0,0.6);
+}
+
 /* Transición global para TODOS los elementos */
 *, *::before, *::after {
   transition: background-color var(--t), 

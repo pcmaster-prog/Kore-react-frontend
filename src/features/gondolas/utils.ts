@@ -14,7 +14,7 @@ export const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   },
   en_proceso: {
     label: "En proceso",
-    color: "bg-indigo-100 text-indigo-700 border-indigo-200",
+    color: "bg-amber-100 text-amber-700 border-amber-200",
   },
   completado: {
     label: "Completado",

@@ -147,9 +147,24 @@ export async function getMyDays(params?: { from?: string; to?: string; page?: nu
 
 // ─── Manager ──────────────────────────────────────────────────────────────────
 
+export type AttendanceSummary = {
+  date: string;
+  total_employees: number;
+  present: number;
+  absent: number;
+  on_shift: number;
+  closed: number;
+  attendance_rate: number;
+};
+
 export async function getByDate(date: string) {
   const res = await api.get("/asistencia/por-fecha", { params: { date } });
   return res.data as { date: string; items: ByDateItem[] };
+}
+
+export async function getSummary(date: string): Promise<AttendanceSummary> {
+  const res = await api.get("/attendance/summary", { params: { date } });
+  return res.data as AttendanceSummary;
 }
 
 export async function getWeeklySummary(empleado_id: string, date: string) {

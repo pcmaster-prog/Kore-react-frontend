@@ -2,19 +2,22 @@ import { useEffect, useState } from "react";
 import { Toggle, formatWeekdays } from "./ui";
 import RoutineModal from "./RoutineModal";
 import RoutineScheduleModal from "@/features/tasks/components/RoutineScheduleModal";
+import ActionMenu from "@/components/ActionMenu";
 import type { Routine } from "./api";
 import {
   createRoutine,
   deleteRoutine,
   listRoutines,
   updateRoutine,
+  getRoutine,
+  addRoutineItems,
 } from "./api";
-import { Calendar, Repeat, Eye, Edit2, Trash2, Plus, Zap, CalendarClock } from "lucide-react";
+import { Calendar, Repeat, Eye, Edit2, Trash2, Plus, Zap, CalendarClock, Copy } from "lucide-react";
 
 export default function RoutinesPage({
   onOpenDetail,
 }: {
-  onOpenDetail: (routineId: string) => void;
+  onOpenDetail?: (routineId: string) => void;
 }) {
   const [items, setItems] = useState<Routine[]>([]);
   const [page, setPage] = useState(1);
@@ -79,9 +82,43 @@ export default function RoutinesPage({
     }
   }
 
+  async function handleDuplicate(r: Routine) {
+    const payload: Partial<Routine> = {
+      name: `Copia de ${r.name}`,
+      description: r.description,
+      recurrence: r.recurrence,
+      weekdays: r.weekdays,
+      start_date: r.start_date,
+      end_date: r.end_date,
+      is_active: true,
+      show_in_dashboard: r.show_in_dashboard,
+    };
+    try {
+      const created = await createRoutine(payload);
+      if (created?.id) {
+        const full = await getRoutine(r.id);
+        const templateIds = (full?.items ?? [])
+          .map((it) => it.template_id)
+          .filter(Boolean);
+        if (templateIds.length) {
+          await addRoutineItems(created.id, templateIds);
+        }
+      }
+      await load();
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? "No pude duplicar la rutina");
+    }
+  }
+
   function openScheduleModal(r: Routine) {
     setScheduleRoutine(r);
     setScheduleModalOpen(true);
+  }
+
+  function handleOpenDetail(r: Routine) {
+    if (onOpenDetail) {
+      onOpenDetail(r.id);
+    }
   }
 
   return (
@@ -146,7 +183,18 @@ export default function RoutinesPage({
               key={r.id}
               className="bg-white rounded-[32px] p-6 border border-neutral-100 shadow-sm hover:shadow-xl hover:shadow-obsidian/5 hover:border-neutral-200 transition-all flex flex-col group relative overflow-hidden"
             >
-              <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="absolute top-4 right-4 z-10">
+                <ActionMenu
+                  actions={[
+                    { label: "Ver rutina", icon: Eye, onClick: () => handleOpenDetail(r) },
+                    { label: "Editar", icon: Edit2, onClick: () => openEdit(r) },
+                    { label: "Duplicar", icon: Copy, onClick: () => handleDuplicate(r) },
+                    { label: "Eliminar", icon: Trash2, onClick: () => handleDelete(r), danger: true },
+                  ]}
+                />
+              </div>
+
+              <div className="flex items-start justify-between gap-4 mb-4 pr-12">
                 <div className="flex-1">
                   <h3 className="font-bold text-obsidian line-clamp-2 leading-tight">
                     {r.name}
@@ -188,8 +236,8 @@ export default function RoutinesPage({
               <div className="mt-auto flex items-center justify-between pt-4 border-t border-neutral-50 border-dashed">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onOpenDetail(r.id)}
-                    className="px-4 py-2 rounded-xl bg-neutral-100 text-obsidian text-[10px] font-black uppercase tracking-widest hover:bg-neutral-200 flex items-center gap-2 transition-colors"
+                    onClick={() => handleOpenDetail(r)}
+                    className="h-11 px-4 rounded-xl bg-neutral-100 text-obsidian text-[10px] font-black uppercase tracking-widest hover:bg-neutral-200 flex items-center gap-2 transition-colors"
                   >
                     <Eye className="h-3 w-3" />
                     Ver Rutina
@@ -197,7 +245,7 @@ export default function RoutinesPage({
                   <button
                     onClick={() => openScheduleModal(r)}
                     title="Programar Rutina"
-                    className="px-3 py-2 rounded-xl bg-obsidian text-white text-[10px] font-black uppercase tracking-widest hover:bg-gold hover:text-obsidian flex items-center gap-2 transition-colors"
+                    className="h-11 px-3 rounded-xl bg-obsidian text-white text-[10px] font-black uppercase tracking-widest hover:bg-gold hover:text-obsidian flex items-center gap-2 transition-colors"
                   >
                     <CalendarClock className="h-3 w-3" />
                     Programar
@@ -208,16 +256,16 @@ export default function RoutinesPage({
                   <button
                     onClick={() => openEdit(r)}
                     title="Editar"
-                    className="h-11 w-11 md:h-8 md:w-8 rounded-xl bg-neutral-50 border border-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-white hover:text-obsidian hover:border-neutral-200 transition-colors"
+                    className="h-11 w-11 rounded-xl bg-neutral-50 border border-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-white hover:text-obsidian hover:border-neutral-200 transition-colors"
                   >
-                    <Edit2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                    <Edit2 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(r)}
                     title="Eliminar"
-                    className="h-11 w-11 md:h-8 md:w-8 rounded-xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center hover:bg-rose-100 hover:text-rose-600 transition-colors"
+                    className="h-11 w-11 rounded-xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center hover:bg-rose-100 hover:text-rose-600 transition-colors"
                   >
-                    <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>

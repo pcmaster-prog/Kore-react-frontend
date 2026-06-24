@@ -1,6 +1,9 @@
 // src/features/attendance/ManagerAttendancePage.tsx
 import { useEffect, useState, useCallback } from "react";
 import { getApiErrorMessage } from "@/lib/error";
+import { formatDateShort } from "@/lib/date";
+import PageHeader from "@/components/PageHeader";
+import ActionMenu from "@/components/ActionMenu";
 import {
   getByDate,
   getWeeklySummary,
@@ -743,66 +746,73 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
+type BadgeTone = "emerald" | "rose" | "amber" | "sky" | "violet" | "orange" | "neutral";
+
+function Badge({
+  children,
+  tone,
+  dot,
+  pulse,
+}: {
+  children: React.ReactNode;
+  tone: BadgeTone;
+  dot?: boolean;
+  pulse?: boolean;
+}) {
+  const toneStyles: Record<BadgeTone, string> = {
+    emerald: "border-emerald-100 bg-emerald-50 text-emerald-600",
+    rose: "border-rose-100 bg-rose-50 text-rose-600",
+    amber: "border-amber-100 bg-amber-50 text-amber-600",
+    sky: "border-sky-100 bg-sky-50 text-sky-600",
+    violet: "border-violet-100 bg-violet-50 text-violet-600",
+    orange: "border-orange-200 bg-orange-50 text-orange-700",
+    neutral: "border-k-border bg-k-bg-card2 text-k-text-b",
+  };
+  const dotColor: Record<BadgeTone, string> = {
+    emerald: "bg-emerald-500",
+    rose: "bg-rose-500",
+    amber: "bg-amber-400",
+    sky: "bg-sky-500",
+    violet: "bg-violet-500",
+    orange: "bg-orange-500",
+    neutral: "bg-neutral-400",
+  };
+  return (
+    <span className={cx("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", toneStyles[tone])}>
+      {dot && <span className={cx("h-1.5 w-1.5 rounded-full", dotColor[tone], pulse && "animate-pulse")} />}
+      {children}
+    </span>
+  );
+}
+
 function StatusBadge({ item, isAbsent }: { item?: ByDateItem; isAbsent?: boolean }) {
-  // Sin registro alguno → Falta
+  // Sin registro alguno → Ausente
   if (!item || isAbsent) {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-rose-100 bg-rose-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-600">
-        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />Falta
-      </span>
-    );
+    return <Badge tone="rose" dot>Ausente</Badge>;
   }
 
   const checkedIn = !!item.first_check_in_at;
   const closed = item.status === "closed" || !!item.last_check_out_at;
 
-  if (item.status === "holiday")
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-violet-100 bg-violet-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-violet-600">
-        <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />Festivo
-      </span>
-    );
+  if (item.status === "holiday") return <Badge tone="violet" dot>Festivo</Badge>;
 
   if ((item as any).is_rest_day || (item as any).state === "rest")
-    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-100 bg-sky-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-600">Descanso</span>;
+    return <Badge tone="sky">Descanso</Badge>;
 
   // Retardo: llegó, pero el backend lo marcó como "late"
-  if (item.status === "late")
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700">
-        ⏰ Retardo
-      </span>
-    );
+  if (item.status === "late") return <Badge tone="amber" dot>Retardo</Badge>;
 
-  if (!checkedIn)
-    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-k-border bg-k-bg-card2 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-k-text-b"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />Ausente</span>;
+  if (!checkedIn) return <Badge tone="neutral" dot>Ausente</Badge>;
 
   if (closed) {
     // Salida anticipada: cerró pero no completó sus horas
     if (item.early_departure_minutes && item.early_departure_minutes > 0) {
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-700">
-          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />Salida anticipada
-        </span>
-      );
+      return <Badge tone="orange" dot>Salida anticipada</Badge>;
     }
-    return <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Presente</span>;
+    return <Badge tone="emerald" dot>Presente</Badge>;
   }
 
-  // En turno: mostrar si tiene jornada extendida pendiente
-  if (item.required_exit_time) {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />En turno
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />En turno
-    </span>
-  );
+  return <Badge tone="amber" dot pulse>En turno</Badge>;
 }
 
 function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string }) {
@@ -922,43 +932,41 @@ export default function ManagerAttendancePage() {
   const absent = Math.max(0, employees.length - checkedIn);
   const totalEmps = employees.length || 1;
 
-  const dateLabel = new Date(date + "T12:00:00").toLocaleDateString("es-MX", {
-    weekday: "long", day: "numeric", month: "long",
-  });
+  const dateLabel = formatDateShort(date + "T12:00:00");
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-k-bg-card p-4 rounded-[32px] border border-k-border shadow-k-card flex-wrap">
-        <div>
-          <h1 className="text-xl font-black text-k-text-h tracking-tight">
-            Control de Asistencia <span className="text-k-text-b font-medium ml-2 capitalize">· {dateLabel}</span>
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <input
-            type="date"
-            className="rounded-xl border border-k-border bg-k-bg-card2 px-3 py-2 text-xs font-bold text-k-text-h outline-none focus:ring-2 focus:ring-obsidian/10"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-          {onShift > 0 && (
+      <PageHeader
+        compact
+        title={`Control de Asistencia · ${dateLabel}`}
+        actions={
+          <>
+            <input
+              type="date"
+              className="rounded-xl border border-k-border bg-k-bg-card2 px-3 py-2 text-xs font-bold text-k-text-h outline-none focus:ring-2 focus:ring-obsidian/10"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+            {onShift > 0 && (
+              <button
+                onClick={() => setCerrarMasivo(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
+                title="Cerrar jornada de todos los empleados en turno"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Cerrar jornada masiva</span>
+                <span className="sm:hidden">Cerrar</span>
+              </button>
+            )}
             <button
-              onClick={() => setCerrarMasivo(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
-              title="Cerrar jornada de todos los empleados en turno"
+              onClick={loadDay}
+              className="h-9 w-9 rounded-xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 flex items-center justify-center transition"
             >
-              <Lock className="h-3.5 w-3.5" />
-              Cerrar jornada masiva
+              <RefreshCw className={cx("h-4 w-4 text-k-text-b", loading && "animate-spin")} />
             </button>
-          )}
-          <button
-            onClick={loadDay}
-            className="h-9 w-9 rounded-xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 flex items-center justify-center transition"
-          >
-            <RefreshCw className={cx("h-4 w-4 text-k-text-b", loading && "animate-spin")} />
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="flex items-center gap-1 bg-neutral-100/80 rounded-2xl p-1">
         {([
@@ -1000,36 +1008,46 @@ export default function ManagerAttendancePage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* KPIs Asistencia */}
-                <div className="rounded-[32px] border border-k-border bg-k-bg-card p-6 shadow-k-card flex items-center justify-between gap-2">
+                <div className="rounded-[24px] border border-k-border bg-k-bg-card p-4 shadow-k-card flex items-stretch">
                   {[
-                    { label: "Presentes", val: checkedIn, pct: Math.round((checkedIn / totalEmps) * 100), icon: Users, numCls: "text-emerald-500" },
-                    { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, numCls: "text-k-text-b" },
-                    { label: "En turno", val: onShift, pct: Math.round((onShift / totalEmps) * 100), icon: Clock, numCls: "text-amber-500" },
+                    { label: "Presentes", val: checkedIn, pct: Math.round((checkedIn / totalEmps) * 100), icon: Users, numCls: "text-emerald-500", labelCls: "text-emerald-600" },
+                    { label: "Ausentes", val: absent, pct: Math.round((absent / totalEmps) * 100), icon: UserX, numCls: "text-rose-500", labelCls: "text-rose-600" },
+                    { label: "En turno", val: onShift, pct: Math.round((onShift / totalEmps) * 100), icon: Clock, numCls: "text-sky-500", labelCls: "text-sky-600" },
                   ].map(k => (
-                     <div key={k.label} className="flex-1 text-center border-r border-k-border last:border-0">
-                       <k.icon className={`h-5 w-5 mx-auto mb-2 ${k.numCls}`} />
-                       <div className="text-xl font-black text-k-text-h flex items-center justify-center gap-1">
-                         {k.val} <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">{k.label}</span>
-                       </div>
-                       <div className="text-[9px] font-bold text-k-text-b mt-0.5">{k.pct}%</div>
-                     </div>
+                    <div key={k.label} className="flex-1 flex flex-col items-center justify-center text-center border-r border-k-border last:border-0 px-2 py-1">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <k.icon className={cx("h-4 w-4", k.numCls)} />
+                        <span className={cx("text-[10px] font-bold uppercase tracking-wider", k.labelCls)}>{k.label}</span>
+                      </div>
+                      <div className="text-2xl font-black text-k-text-h leading-none">{k.val}</div>
+                      <div className="text-[9px] font-bold text-k-text-b mt-0.5">{k.pct}%</div>
+                    </div>
                   ))}
                 </div>
 
                 {/* Resumen del día */}
-                <div className="rounded-[32px] border border-k-border bg-k-bg-card p-6 shadow-k-card flex flex-col justify-center gap-3">
-                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-k-text-b bg-k-bg-card2 px-4 py-2 rounded-xl border border-k-border">
-                    <span>Cerrados: <span className="text-k-text-h">{closed}</span></span>
-                    <span>Activos: <span className="text-k-text-h">{onShift}</span></span>
-                    <span>Sin entrada: <span className="text-k-text-h">{absent}</span></span>
+                <div className="rounded-[24px] border border-k-border bg-k-bg-card p-4 shadow-k-card flex flex-col justify-center gap-2">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-k-text-b">Turnos cerrados</div>
+                      <div className="text-base font-black text-k-text-h">{closed}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-k-text-b">En turno activo</div>
+                      <div className="text-base font-black text-k-text-h">{onShift}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-k-text-b">Sin entrada</div>
+                      <div className="text-base font-black text-k-text-h">{absent}</div>
+                    </div>
                   </div>
-                  <div className="mt-2 px-2">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">
-                      <span>Asistencia Global</span>
+                  <div className="mt-1">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1">
+                      <span>Asistencia</span>
                       <span className="text-k-text-h">{Math.round((checkedIn / totalEmps) * 100)}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-k-bg-sidebar rounded-full" style={{ width: `${Math.round((checkedIn / totalEmps) * 100)}%` }} />
+                    <div className="h-1 w-full bg-neutral-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.round((checkedIn / totalEmps) * 100)}%` }} />
                     </div>
                   </div>
                 </div>
@@ -1125,7 +1143,38 @@ export default function ManagerAttendancePage() {
                               {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
                             </td>
                             <td className="px-5 py-4">
-                              <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                              {/* Mobile: ActionMenu always visible */}
+                              <div className="md:hidden">
+                                <ActionMenu
+                                  actions={[
+                                    {
+                                      label: item?.first_check_in_at ? "Ajustar horario" : "Registrar entrada",
+                                      icon: Pencil,
+                                      onClick: () => setAjustando({
+                                        empleadoId: emp.id,
+                                        empleadoNombre: empName,
+                                        checkIn: item?.first_check_in_at
+                                          ? new Date(item.first_check_in_at).toTimeString().slice(0, 5)
+                                          : undefined,
+                                        checkOut: item?.last_check_out_at
+                                          ? new Date(item.last_check_out_at).toTimeString().slice(0, 5)
+                                          : undefined,
+                                      }),
+                                    },
+                                    {
+                                      label: tieneDiaDescanso ? "Quitar descanso" : "Marcar descanso",
+                                      icon: Calendar,
+                                      onClick: () => setDescansoAdmin({
+                                        empleadoId: emp.id,
+                                        empleadoNombre: empName,
+                                        tieneDiaDescanso,
+                                      }),
+                                    },
+                                  ]}
+                                />
+                              </div>
+                              {/* Desktop: visible buttons */}
+                              <div className="hidden md:flex gap-1">
                                 <button
                                   onClick={() => setAjustando({
                                     empleadoId: emp.id,

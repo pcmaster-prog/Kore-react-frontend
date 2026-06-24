@@ -20,7 +20,7 @@ import SupervisorDashboard from "./SupervisorDashboard";
 import TaskCatalogPanel from "@/features/tasks/TaskCatalogPanel";
 import {
   AlertTriangle, CheckCircle2, Clock, ClipboardList,
-  CalendarCheck, PlusCircle, FileText, ArrowRight, ChevronDown,
+  CalendarCheck, PlusCircle, FileText, ArrowRight, ChevronDown, User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { isEnabled } from "@/lib/featureFlags";
@@ -30,6 +30,7 @@ import KpiCard from "@/components/KpiCard";
 import PageSkeleton from "@/components/PageSkeleton";
 
 import { cx, reportError } from "@/lib/utils";
+import { timeAgo } from "@/lib/date";
 type AttendanceSnap = {
   date: string;
   employees_total: number;
@@ -46,7 +47,7 @@ type ManagerDash = {
 };
 
 // ─── Activity feed types ────────────────────────────────────────────────────────────
-type ActivityItem = { id: string | number; text: string; time: string };
+type ActivityItem = { id: string | number; text: string; created_at: string; action: string };
 
 // ─── Admin Dashboard (Fase 2 Refactored) ─────────────────────────────────────
 
@@ -117,9 +118,7 @@ function AdminDashboard() {
              else if (i.action.startsWith("user.created")) text = `Usuario creado: ${i.meta?.user_name ?? "Nuevo"}`;
              else text = i.action.replace(/\./g, " ").replace(/_/g, " ");
   
-             const timeStr = new Date(i.created_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-             
-             return { id: i.id, text, time: `a las ${timeStr}` };
+             return { id: i.id, text, created_at: i.created_at, action: i.action };
           });
           setActivityFeed(adapted);
         }
@@ -177,6 +176,7 @@ function AdminDashboard() {
       {/* ── 2.1 · Header Unificado Inteligente ─────────────────────── */}
       {useNewLayout ? (
         <PageHeader
+          compact
           title={`Buenos días, ${userName} · ${todayFull}`}
           actions={
             <>
@@ -229,12 +229,17 @@ function AdminDashboard() {
 
       {/* ── Fila de Métricas Rápidas (Completadas + Asistencia) ───── */}
       {useNewLayout && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-k-bg-card border border-k-border shadow-k-card shrink-0">
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm font-bold text-k-text-h">
-              Completadas hoy: {data?.today?.completed ?? 0}
-            </span>
+        <div className="flex flex-col sm:flex-row items-stretch gap-4">
+          <div className="shrink-0">
+            <KpiCard
+              label="Completadas hoy"
+              value={data?.today?.completed ?? 0}
+              icon={CheckCircle2}
+              color="green"
+              compact
+              forceShow
+              hideIfZero={false}
+            />
           </div>
 
           {data?.attendance && (
@@ -310,20 +315,23 @@ function AdminDashboard() {
           {activityOpen && (
             <div className="p-6 pt-0 space-y-3 border-t border-k-border animate-in-fade">
               {activityFeed.length > 0 ? (
-                activityFeed.map(item => (
-                  <div
-                    key={item.id}
-                    className="flex items-start gap-3 p-3 rounded-2xl hover:bg-k-bg-card2 transition-colors group"
-                  >
-                    <div className="h-8 w-8 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 group-hover:bg-neutral-200 transition-colors">
-                      <ClipboardList className="h-4 w-4 text-k-text-b" />
+                activityFeed.map(item => {
+                  const Icon = getActivityIcon(item.action);
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-start gap-3 p-3 rounded-2xl hover:bg-k-bg-card2 transition-colors group"
+                    >
+                      <div className="h-8 w-8 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 group-hover:bg-neutral-200 transition-colors">
+                        <Icon className="h-4 w-4 text-k-text-b" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="text-sm font-medium text-neutral-700 truncate">{item.text}</div>
+                        <div className="text-[10px] font-bold text-k-text-b uppercase tracking-wider mt-0.5">{timeAgo(item.created_at)}</div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <div className="text-sm font-medium text-neutral-700 truncate">{item.text}</div>
-                      <div className="text-[10px] font-bold text-k-text-b uppercase tracking-wider mt-0.5">{item.time}</div>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="text-sm text-k-text-b text-center py-4">No hay actividad reciente</div>
               )}
@@ -427,6 +435,16 @@ function AdminDashboard() {
       )}
     </div>
   );
+}
+
+// ─── Activity icon mapper ──────────────────────────────────────────────────
+function getActivityIcon(action: string) {
+  const a = action.toLowerCase();
+  if (a.includes("attendance")) return CalendarCheck;
+  if (a.includes("approve") || a.includes("revision")) return CheckCircle2;
+  if (a.includes("task")) return ClipboardList;
+  if (a.includes("user") || a.includes("empleado")) return User;
+  return ClipboardList;
 }
 
 // ─── Legacy StatCard (for feature flag fallback) ─────────────────────────────

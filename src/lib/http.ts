@@ -67,4 +67,24 @@ api.interceptors.response.use(
   }
 );
 
+// ─── Configuración de horarios ───────────────────────────────────────────────
+export interface SchedulePayload {
+  entry_time?: string;
+  exit_time?: string;
+  week_start_day?: number;
+  tolerance_minutes?: number;
+  max_hours?: number;
+  auto_close_shift?: boolean;
+  week_schedule?: Array<{
+    weekday: number;
+    check_in_time: string;
+    check_out_time: string;
+    is_working_day: boolean;
+  }>;
+}
+
+export async function saveSchedule(payload: SchedulePayload) {
+  return api.put("/settings/schedule", payload);
+}
+
 export default api;

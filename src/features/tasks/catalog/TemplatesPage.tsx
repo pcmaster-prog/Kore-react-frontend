@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Toggle } from "./ui";
 import TemplateModal from "./TemplateModal";
+import ActionMenu from "@/components/ActionMenu";
 import type { Template } from "./api";
 import {
   createTemplate,
@@ -8,7 +9,7 @@ import {
   listTemplates,
   updateTemplate,
 } from "./api";
-import { Clock, Plus, Search, Edit2, Trash2, BookTemplate } from "lucide-react";
+import { Clock, Plus, Search, Edit2, Trash2, BookTemplate, Copy } from "lucide-react";
 
 function priorityLabel(p: string) {
   return p === "urgent"
@@ -119,6 +120,27 @@ export default function TemplatesPage() {
     }
   }
 
+  async function handleDuplicate(t: Template) {
+    const payload: Partial<Template> = {
+      title: `Copia de ${t.title}`,
+      description: t.description,
+      instructions: t.instructions,
+      estimated_minutes: t.estimated_minutes,
+      priority: t.priority,
+      tags: t.tags,
+      is_active: true,
+      show_in_dashboard: t.show_in_dashboard,
+      section: t.section,
+      department: t.department,
+    };
+    try {
+      await createTemplate(payload);
+      await load();
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? "No pude duplicar la plantilla");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -191,7 +213,17 @@ export default function TemplatesPage() {
               key={t.id}
               className="bg-white rounded-[32px] p-6 border border-neutral-100 shadow-sm hover:shadow-xl hover:shadow-obsidian/5 hover:border-neutral-200 transition-all flex flex-col group relative overflow-hidden"
             >
-              <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="absolute top-4 right-4 z-10">
+                <ActionMenu
+                  actions={[
+                    { label: "Editar", icon: Edit2, onClick: () => openEdit(t) },
+                    { label: "Duplicar", icon: Copy, onClick: () => handleDuplicate(t) },
+                    { label: "Eliminar", icon: Trash2, onClick: () => handleDelete(t), danger: true },
+                  ]}
+                />
+              </div>
+
+              <div className="flex items-start justify-between gap-4 mb-4 pr-12">
                 <div className="flex-1">
                   <h3 className="font-bold text-obsidian line-clamp-2 leading-tight">
                     {t.title}
@@ -231,25 +263,25 @@ export default function TemplatesPage() {
                     </span>
                   </div>
 
-                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => openEdit(t)}
-                    title="Editar"
-                    className="h-11 w-11 md:h-8 md:w-8 rounded-xl bg-neutral-50 border border-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-white hover:text-obsidian hover:border-neutral-200 transition-colors"
-                  >
-                    <Edit2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(t)}
-                    title="Eliminar"
-                    className="h-11 w-11 md:h-8 md:w-8 rounded-xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center hover:bg-rose-100 hover:text-rose-600 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => openEdit(t)}
+                      title="Editar"
+                      className="h-11 w-11 rounded-xl bg-neutral-50 border border-neutral-100 text-neutral-400 flex items-center justify-center hover:bg-white hover:text-obsidian hover:border-neutral-200 transition-colors"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(t)}
+                      title="Eliminar"
+                      className="h-11 w-11 rounded-xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center hover:bg-rose-100 hover:text-rose-600 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           ))}
         </div>
       )}

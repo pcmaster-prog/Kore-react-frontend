@@ -50,7 +50,7 @@ export function useTheme() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme }),
       });
-    } catch (e) {
+    } catch (_e) {
       // Silencioso: fallo al sincronizar tema con backend
     }
   }, [theme]);

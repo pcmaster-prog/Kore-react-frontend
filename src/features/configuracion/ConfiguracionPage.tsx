@@ -116,6 +116,62 @@ function buildDefaultWeekSchedule(checkIn: string, checkOut: string): WeekDaySch
   }));
 }
 
+function WeekPreview({ weekSchedule, weekStart }: { weekSchedule: WeekDaySchedule[]; weekStart: number }) {
+  const startIdx = Math.max(0, Math.min(6, weekStart));
+  const ordered = weekSchedule.length === 7
+    ? [...weekSchedule.slice(startIdx), ...weekSchedule.slice(0, startIdx)]
+    : [];
+
+  return (
+    <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 space-y-4">
+      <div className="flex items-center gap-3 pb-2 border-b border-k-border">
+        <CalendarDays className="h-5 w-5 text-k-text-b" />
+        <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Vista previa de la semana</h3>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+        {ordered.map((day, i) => {
+          const isStart = i === 0;
+          return (
+            <div
+              key={day.weekday}
+              className={cx(
+                "rounded-2xl border p-3 text-center transition-all",
+                day.is_working_day
+                  ? "bg-k-bg-card border-k-border"
+                  : "bg-neutral-100 border-neutral-200 opacity-70",
+                isStart && "ring-2 ring-blue-200 border-blue-300"
+              )}
+            >
+              <div className="text-[10px] font-bold uppercase tracking-wider text-k-text-b mb-1">
+                {WEEKDAY_NAMES[day.weekday].slice(0, 3)}
+              </div>
+              {isStart && (
+                <div className="text-[9px] font-bold text-blue-600 mb-1">Inicio</div>
+              )}
+              {day.is_working_day ? (
+                <div className="space-y-0.5">
+                  <div className="text-sm font-black text-k-text-h">{day.check_in_time}</div>
+                  <div className="text-xs text-k-text-b">→</div>
+                  <div className="text-sm font-black text-k-text-h">{day.check_out_time}</div>
+                </div>
+              ) : (
+                <div className="text-sm font-black text-neutral-400 line-through">
+                  {day.check_in_time}
+                </div>
+              )}
+              {!day.is_working_day && (
+                <div className="mt-2 inline-block rounded-full bg-neutral-200 px-2 py-0.5 text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+                  Descanso
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function HorariosTab() {
   const [checkInTime, setCheckInTime] = useState("08:30");
   const [checkOutTime, setCheckOutTime] = useState("17:00");
@@ -289,9 +345,12 @@ function HorariosTab() {
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">Cierre Automático</span>
                 <div className="group relative">
-                  <HelpCircle className="h-4 w-4 text-k-text-b hover:text-k-text-h transition-colors cursor-help" />
+                  <HelpCircle
+                    className="h-4 w-4 text-k-text-b hover:text-k-text-h transition-colors cursor-help"
+                    aria-label="Cierra automáticamente los turnos abiertos de los empleados a la hora indicada."
+                  />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-k-bg-sidebar text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center">
-                    Cierra automáticamente los días abiertos de los empleados.
+                    Cierra automáticamente los turnos abiertos de los empleados a la hora indicada.
                   </div>
                 </div>
               </div>
@@ -381,6 +440,10 @@ function HorariosTab() {
             </div>
           </div>
         </div>
+
+        {weekSchedule.length === 7 && (
+          <WeekPreview weekSchedule={weekSchedule} weekStart={parseInt(weekStart, 10) || 0} />
+        )}
 
         {/* Horario Semanal */}
         <div className="rounded-[28px] border border-k-border bg-k-bg-card2/50 p-6 space-y-6">

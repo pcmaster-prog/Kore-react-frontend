@@ -7,6 +7,8 @@ import {
   Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, MonitorSmartphone, Globe, Moon
 } from "lucide-react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import ThemeModeToggle from "@/components/ThemeModeToggle";
+import { useThemeMode, type ThemeMode } from "@/hooks/useThemeMode";
 import { cx } from "@/lib/utils";
 import { auth } from "@/features/auth/store";
 
@@ -28,6 +30,32 @@ type ProfileData = {
   attendance_status?: string | null;
   curp?: string | null;
 };
+
+type Preferences = {
+  notifications: boolean;
+  language: string;
+  theme: ThemeMode;
+};
+
+const PREFS_KEY = "kore_preferences";
+
+function readPreferences(): Partial<Preferences> {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    return raw ? (JSON.parse(raw) as Partial<Preferences>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePreferences(prefs: Partial<Preferences>) {
+  try {
+    const current = readPreferences();
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ ...current, ...prefs }));
+  } catch {
+    // ignore
+  }
+}
 
 function Avatar({ name, url, onUpload }: { name?: string | null; url?: string | null; onUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   const safeName = name ?? "";
@@ -56,15 +84,21 @@ function InfoField({ label, value, icon, placeholder }: { label: string; value?:
   return (
     <div>
       <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-2">{label}</div>
-      <div className="rounded-2xl border border-k-border bg-k-bg-card2 px-4 py-3 text-sm font-medium text-k-text-h flex items-center gap-3">
+      <div className="rounded-2xl border border-k-border bg-k-bg-card2 px-4 py-3 text-sm font-medium text-k-text-h flex items-center gap-3 min-w-0">
         {icon && <span className="text-k-text-b shrink-0">{icon}</span>}
-        {value || <span className="text-k-text-b italic">{placeholder ?? "—"}</span>}
+        {value ? (
+          <span className="min-w-0 truncate" title={value}>{value}</span>
+        ) : (
+          <span className="text-k-text-b italic">{placeholder ?? "—"}</span>
+        )}
       </div>
     </div>
   );
 }
 
 export default function ProfilePage() {
+  const { mode, setMode } = useThemeMode();
+
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -83,21 +117,33 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
 
-  const [avatarLocal, setAvatarLocal] = useState<string | null>(sessionStorage.getItem("kore_avatar"));
+  const [avatarLocal, setAvatarLocal] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
 
-  const [preferences, setPreferences] = useState(() => {
-    const notif = sessionStorage.getItem("kore_prefs_notif");
-    const lang = sessionStorage.getItem("kore_prefs_lang");
-    const theme = sessionStorage.getItem("kore_prefs_theme");
+  const [preferences, setPreferences] = useState<Preferences>(() => {
+    const saved = readPreferences();
     return {
-      notifications: notif !== "false",
-      language: lang || "es",
-      theme: theme || "system",
+      notifications: saved.notifications ?? true,
+      language: saved.language ?? "es",
+      theme: saved.theme ?? mode ?? "system",
     };
   });
 
   const [securityExpanded, setSecurityExpanded] = useState(false);
+
+  // Mantener el estado local sincronizado con el hook de modo de tema.
+  useEffect(() => {
+    setPreferences((p) => (p.theme === mode ? p : { ...p, theme: mode }));
+  }, [mode]);
+
+  // Persistir preferencias (notificaciones, idioma, tema) en localStorage.
+  useEffect(() => {
+    writePreferences({
+      notifications: preferences.notifications,
+      language: preferences.language,
+      theme: preferences.theme,
+    });
+  }, [preferences.notifications, preferences.language, preferences.theme]);
 
   function showToast(type: "ok" | "err", msg: string) {
     setToast({ type, msg });
@@ -182,7 +228,7 @@ export default function ProfilePage() {
     }
   }
 
-  function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarError(null);
@@ -201,48 +247,83 @@ export default function ProfilePage() {
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64 = reader.result as string;
       setAvatarLocal(base64);
-      // Guardar en sessionStorage (más seguro que localStorage para datos binarios)
-      // Idealmente debería subirse al servidor y guardar solo la URL
+
       try {
-        sessionStorage.setItem("kore_avatar", base64);
-        showToast("ok", "Avatar guardado localmente en esta sesión");
-      } catch (err) {
-        setAvatarError("La imagen es demasiado grande para guardar localmente");
+        const formData = new FormData();
+        formData.append("avatar", file);
+        const res = await api.post("/mi-perfil/avatar", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        const url = res.data?.data?.avatar_url ?? res.data?.avatar_url;
+        if (url) {
+          setAvatarLocal(url);
+          setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev));
+        }
+        showToast("ok", "Avatar actualizado");
+      } catch (e: any) {
+        setAvatarError(e?.response?.data?.message ?? "Error al subir el avatar");
       }
     };
     reader.readAsDataURL(file);
   }
 
-  async function updatePreferenceBackend(key: string, value: any) {
+  async function updatePreferenceBackend(body: Record<string, unknown>) {
     try {
-      await api.put("/users/preferences", { [key]: value });
-    } catch (e) {
-      // Error silencioso: preferencia guardada localmente
+      await api.put("/users/preferences", body);
+    } catch {
+      // Error silencioso: preferencia ya está guardada localmente.
     }
   }
+
   async function toggleNotifications() {
-    const next = !preferences.notifications;
-    
-    if (next && "Notification" in window) {
+    const enabling = !preferences.notifications;
+
+    if (enabling && "Notification" in window) {
       if (Notification.permission !== "granted") {
-        await Notification.requestPermission();
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          const next = false;
+          setPreferences((p) => ({ ...p, notifications: next }));
+          writePreferences({ notifications: next });
+          updatePreferenceBackend({ notifications_enabled: next });
+          showToast(
+            "err",
+            permission === "denied"
+              ? "Permiso de notificaciones denegado"
+              : "Notificaciones no habilitadas"
+          );
+          return;
+        }
       }
     }
 
-    setPreferences(p => ({ ...p, notifications: next }));
-    sessionStorage.setItem("kore_prefs_notif", String(next));
+    const next = enabling;
+    setPreferences((p) => ({ ...p, notifications: next }));
+    writePreferences({ notifications: next });
     showToast("ok", next ? "Notificaciones habilitadas" : "Notificaciones deshabilitadas");
-    updatePreferenceBackend("notifications_enabled", next);
+    updatePreferenceBackend({ notifications_enabled: next });
   }
 
   function changeLanguage(lang: string) {
-    setPreferences(p => ({ ...p, language: lang }));
-    sessionStorage.setItem("kore_prefs_lang", lang);
+    setPreferences((p) => ({ ...p, language: lang }));
+    writePreferences({ language: lang });
     showToast("ok", "Idioma actualizado");
-    updatePreferenceBackend("language", lang);
+    updatePreferenceBackend({ language: lang });
+  }
+
+  async function changeThemeMode(next: ThemeMode) {
+    setMode(next);
+    setPreferences((p) => ({ ...p, theme: next }));
+    writePreferences({ theme: next });
+    showToast("ok", "Modo de tema actualizado");
+    try {
+      await api.put("/users/preferences", { theme: next });
+    } catch {
+      // Silencioso: no bloquear la UI.
+    }
   }
 
   const roleLabel =
@@ -276,9 +357,6 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  // const payRate = profile.pay_type === "daily" ? profile.daily_rate : profile.hourly_rate;
-  // const payLabel = profile.pay_type === "daily" ? "/ día" : "/ hora";
-
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Toast */}
@@ -301,7 +379,7 @@ export default function ProfilePage() {
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/[0.03]" />
               <div className="absolute bottom-0 left-0 h-20 w-32 rounded-full bg-gold/10" />
             </div>
-            <div className="relative flex items-center gap-5">
+            <div className="relative flex items-center gap-5 min-w-0">
               <div className="flex-shrink-0">
                 <Avatar name={profile.full_name} url={avatarLocal || profile.avatar_url} onUpload={handleAvatarUpload} />
                 {avatarError && (
@@ -317,7 +395,10 @@ export default function ProfilePage() {
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
                     Activo
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 px-3 py-1.5 text-[10px] font-bold text-white max-w-full">
+                  <div
+                    className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 px-3 py-1.5 text-[10px] font-bold text-white max-w-full min-w-0"
+                    title={profile.email}
+                  >
                     <Mail className="h-3 w-3 flex-shrink-0" />
                     <span className="truncate">{profile.email}</span>
                   </div>
@@ -444,20 +525,6 @@ export default function ProfilePage() {
                 <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Puesto</div>
                 <div className="text-lg font-black text-obsidian">{profile.position_title ?? roleLabel}</div>
               </div>
-              {/* Forma de pago oculta */}
-              {/* {(profile.pay_type || payRate) && (
-                <div>
-                  <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Estructura Salarial</div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center rounded-xl bg-obsidian text-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
-                      {profile.pay_type === "daily" ? "Diario" : "Horario"}
-                    </span>
-                    <span className="text-lg font-black text-obsidian">
-                      ${payRate ?? "—"} <span className="text-xs font-bold text-neutral-400">{payLabel}</span>
-                    </span>
-                  </div>
-                </div>
-              )} */}
 
               <div>
                 <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Fecha de Ingreso</div>
@@ -487,7 +554,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Preferencias (NUEVO) */}
+          {/* Preferencias */}
           <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card">
             <div className="px-6 py-5 border-b border-k-border flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -518,26 +585,38 @@ export default function ProfilePage() {
                   )} />
                 </button>
               </div>
-              {/* Proximanete Cambio de Idiomas */} 
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Globe className="h-4 w-4 text-k-text-b" />
                   <div className="text-sm font-medium text-k-text-h">Idioma</div>
                 </div>
-                <select 
+                <select
                   className="rounded-xl border border-k-border bg-k-bg-card2 px-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 text-k-text-h"
                   value={preferences.language}
-                  onChange={e => changeLanguage(e.target.value)}
+                  onChange={(e) => changeLanguage(e.target.value)}
                 >
                   <option value="es">Español</option>
                   <option value="en">English</option>
                 </select>
               </div>
-              {/* Theme Switcher */}  
+
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-k-text-h mb-2">
                   <Moon className="w-4 h-4 text-k-text-b" />
-                  Tema visual
+                  Modo de tema
+                </label>
+                <ThemeModeToggle
+                  value={preferences.theme}
+                  onChange={changeThemeMode}
+                  className="w-full justify-between"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-k-text-h mb-2">
+                  <MonitorSmartphone className="w-4 h-4 text-k-text-b" />
+                  Tema de color
                 </label>
                 <ThemeSwitcher />
               </div>
@@ -546,7 +625,7 @@ export default function ProfilePage() {
 
           {/* Change Password Section */}
           <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-            <button 
+            <button
               onClick={() => setSecurityExpanded(!securityExpanded)}
               className="w-full px-6 py-5 flex items-center justify-between hover:bg-k-bg-card2 transition-colors"
             >

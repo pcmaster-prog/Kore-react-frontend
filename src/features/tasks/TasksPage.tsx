@@ -25,8 +25,8 @@ import type {
 } from "./tasks.types";
 
 export default function TasksPage() {
-  // ===== Tabs =====
-  const [tab, setTab] = useState<"tareas" | "aprobaciones">("tareas");
+  // ===== Aprobaciones toggle =====
+  const [showApprovals, setShowApprovals] = useState(false);
 
   // ===== TAREAS =====
   const [page, setPage] = useState(1);
@@ -312,70 +312,72 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6">
-      {tab === "tareas" ? (
-        <div className="space-y-6 animate-in-fade">
-          <TaskFiltersBar
-            status={status}
-            onStatusChange={setStatus}
-            empleadoId={empleadoId}
-            onEmpleadoIdChange={setEmpleadoId}
-            empleados={empleados}
-            search={search}
-            onSearchChange={setSearch}
-            overdue={overdue}
-            onOverdueChange={setOverdue}
-            date={date}
-            onDateChange={setDate}
-            priority={priority}
-            onPriorityChange={setPriority}
-            section={section}
-            onSectionChange={setSection}
-            totalTasks={data?.total ?? 0}
-            pendingApprovalsCount={apData?.total ?? 0}
-            onGotoAprobaciones={() => setTab("aprobaciones")}
-          />
-
-          {showCatalog && (
-            <div className="fixed inset-0 z-50 animate-in-fade">
-              <TaskCatalogPanel
-                onAssigned={() => {
-                  setPage(1);
-                  setReloadKey((k) => k + 1);
-                  setShowCatalog(false);
-                }}
-                onClose={() => setShowCatalog(false)}
-              />
-            </div>
-          )}
-
-          <TaskTable
-            loading={loading}
-            error={err}
-            data={data}
-            busyId={busyId}
-            onQuickSetStatus={quickSetStatus}
-            onReload={handleReload}
-            onOpenEvidences={(taskId) => handleOpenEvidences("", taskId)}
-            page={page}
-            onPageChange={setPage}
-          />
-
-          <TaskMetricsPanel data={data} />
-        </div>
-      ) : (
-        <ApprovalsPanel
-          loading={apLoading}
-          error={apErr}
-          data={apData}
-          page={apPage}
-          onPageChange={setApPage}
-          onReload={() => setApPage(1)}
-          onBack={() => setTab("tareas")}
-          actionBusy={actionBusy}
-          onApprove={doApprove}
-          onOpenEvidences={handleOpenEvidences}
+      <div className="space-y-6 animate-in-fade">
+        <TaskFiltersBar
+          status={status}
+          onStatusChange={setStatus}
+          empleadoId={empleadoId}
+          onEmpleadoIdChange={setEmpleadoId}
+          empleados={empleados}
+          search={search}
+          onSearchChange={setSearch}
+          overdue={overdue}
+          onOverdueChange={setOverdue}
+          date={date}
+          onDateChange={setDate}
+          priority={priority}
+          onPriorityChange={setPriority}
+          section={section}
+          onSectionChange={setSection}
+          tasks={data?.data ?? []}
+          loading={loading}
+          totalTasks={data?.total ?? 0}
+          pendingApprovalsCount={apData?.total ?? 0}
+          showApprovals={showApprovals}
+          onToggleApprovals={() => setShowApprovals((s) => !s)}
         />
-      )}
+
+        {showApprovals && (
+          <ApprovalsPanel
+            loading={apLoading}
+            error={apErr}
+            data={apData}
+            page={apPage}
+            onPageChange={setApPage}
+            onReload={() => setApPage(1)}
+            actionBusy={actionBusy}
+            onApprove={doApprove}
+            onOpenEvidences={handleOpenEvidences}
+          />
+        )}
+
+        {showCatalog && (
+          <div className="fixed inset-0 z-50 animate-in-fade">
+            <TaskCatalogPanel
+              onAssigned={() => {
+                setPage(1);
+                setReloadKey((k) => k + 1);
+                setShowCatalog(false);
+              }}
+              onClose={() => setShowCatalog(false)}
+            />
+          </div>
+        )}
+
+        <TaskTable
+          loading={loading}
+          error={err}
+          data={data}
+          busyId={busyId}
+          onQuickSetStatus={quickSetStatus}
+          onReload={handleReload}
+          onOpenEvidences={(taskId) => handleOpenEvidences("", taskId)}
+          page={page}
+          onPageChange={setPage}
+        />
+
+        <TaskMetricsPanel data={data} />
+      </div>
 
       <EvidenceModal
         assignmentId={evAssignmentId}

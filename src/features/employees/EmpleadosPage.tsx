@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 import { cx } from "@/lib/utils";
+import PageHeader from "@/components/PageHeader";
+import ActionMenu from "@/components/ActionMenu";
 import { useAuthStore } from "@/features/auth/authStore";
 import { useEmpleadoSections, useAssignSectionToEmpleado, useRemoveSectionFromEmpleado } from "@/features/tasks/hooks/useEmpleadoSections";
 import { useAreasWithSections } from "@/features/tasks/hooks/useAreas";
@@ -442,7 +444,7 @@ function UserModal({
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Columna Izquierda: Acceso */}
-              <div className="space-y-6">
+              <div className="space-y-6 pb-20 md:pb-0">
                 <div className="flex items-center gap-3 pb-2 border-b border-k-border">
                   <Shield className="h-5 w-5 text-k-text-b" />
                   <h3 className="text-sm font-bold text-k-text-h uppercase tracking-widest">Cuenta de Acceso</h3>
@@ -950,30 +952,33 @@ export default function EmpleadosPage() {
   return (
     <>
       <div className="space-y-6">
-        {/* ── Hero Header ─────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-k-bg-card p-4 sm:px-6 sm:py-5 rounded-[32px] border border-k-border shadow-k-card flex-wrap">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-            <h1 className="text-xl font-black text-k-text-h tracking-tight flex items-center gap-2">
-              <Users className="h-5 w-5 text-k-text-b" /> Equipo
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 sm:border-l border-k-border sm:pl-6">
-              <div className="flex items-center gap-2 text-sm font-bold">
-                <span className="text-k-text-h">{total}</span>
-                <span className="text-k-text-b uppercase text-[10px] tracking-widest">Total</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm font-bold">
-                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                 <span className="text-k-text-h">{active}</span>
-                 <span className="text-k-text-b uppercase text-[10px] tracking-widest">Activos</span>
-              </div>
-              {inactive > 0 && (
-                <div className="flex items-center gap-2 text-sm font-bold">
-                   <div className="h-2 w-2 rounded-full bg-rose-500" />
-                   <span className="text-k-text-h">{inactive}</span>
-                   <span className="text-k-text-b uppercase text-[10px] tracking-widest">Inactivos</span>
-                </div>
-              )}
-            </div>
+        {/* Header */}
+        <PageHeader
+          compact
+          title="Equipo"
+          subtitle="Gestiona las cuentas y roles del equipo"
+        />
+
+        {/* KPI */}
+        <div className="inline-flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-2xl border border-k-border bg-k-bg-card p-4 shadow-k-card">
+          <div className="flex items-center gap-2 text-sm font-bold text-k-text-h">
+            <Users className="h-4 w-4 text-k-text-b" />
+            <span>{total} empleados</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-medium text-k-text-b">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              {active} activos
+            </span>
+            {inactive > 0 && (
+              <>
+                <span>·</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-rose-500" />
+                  {inactive} inactivos
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -992,7 +997,7 @@ export default function EmpleadosPage() {
           </div>
         )}
 
-        {/* Filtros */}
+        {/* Filtros + Nuevo */}
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-k-text-b" />
@@ -1015,13 +1020,21 @@ export default function EmpleadosPage() {
           </select>
           <button
             onClick={openCreate}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-k-accent-btn px-5 py-3 text-sm font-bold text-k-accent-btn-text hover:opacity-90 transition shadow-k-card h-[46px]"
+            className="hidden md:inline-flex items-center justify-center gap-2 rounded-2xl bg-k-accent-btn px-5 py-3 text-sm font-bold text-k-accent-btn-text hover:opacity-90 transition shadow-k-card h-11 min-h-[44px]"
           >
             <UserPlus className="h-4 w-4" />
-            <span className="hidden md:inline">Nuevo Usuario</span>
-            <span className="md:hidden">Nuevo</span>
+            <span>Nuevo Usuario</span>
           </button>
         </div>
+
+        {/* FAB móvil */}
+        <button
+          onClick={openCreate}
+          className="md:hidden fixed bottom-6 right-6 z-30 h-14 w-14 min-h-[56px] min-w-[56px] rounded-full bg-k-accent-btn text-k-accent-btn-text shadow-lg hover:opacity-90 transition flex items-center justify-center"
+          aria-label="Nuevo Usuario"
+        >
+          <UserPlus className="h-6 w-6" />
+        </button>
 
         {/* Error */}
         {err && (
@@ -1030,7 +1043,7 @@ export default function EmpleadosPage() {
           </div>
         )}
 
-        {/* Tabla */}
+        {/* Tabla / Cards */}
         <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
           {loading ? (
             <div className="p-16 flex flex-col items-center gap-3 text-k-text-b">
@@ -1045,97 +1058,153 @@ export default function EmpleadosPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-k-bg-card2/80 border-b border-k-border">
-                  <tr>
-                    {["Usuario", "Rol", "Puesto", "No. Empleado", "Secciones", "Estado", "Acciones"].map((h) => (
-                      <th key={h} className={cx("text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]", h === "No. Empleado" ? "hidden md:table-cell" : "")}>{h}</th>
+            <>
+              {/* Desktop */}
+              <div className="hidden md:block overflow-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-k-bg-card2/80 border-b border-k-border">
+                    <tr>
+                      {["Usuario", "Rol", "Puesto", "Secciones", "Estado", "Acciones"].map((h) => (
+                        <th key={h} className="text-left px-5 py-4 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr 
+                        key={user.id} 
+                        onDoubleClick={() => openEdit(user)}
+                        className={cx(
+                          "border-t border-k-border transition cursor-pointer group",
+                          !user.is_active ? "opacity-40" : "hover:bg-k-bg-card2/50"
+                        )}
+                      >
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar name={user.name} />
+                            <div>
+                              <div className="text-sm font-bold text-k-text-h" title={user.employee_code ?? undefined}>{user.name}</div>
+                              <div className="text-[10px] text-k-text-b mt-0.5">{user.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <RoleBadge role={user.role} />
+                        </td>
+                        <td className="px-5 py-4 text-sm font-medium text-k-text-b">
+                          {user.position_title ?? <span className="text-neutral-200">—</span>}
+                        </td>
+                        <td className="px-5 py-4">
+                          <SectionsCell empleadoId={user.employee_id ?? null} />
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={cx(
+                            "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
+                            user.is_active
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              : "bg-k-bg-card2 text-k-text-b border-k-border"
+                          )}>
+                            <span className={cx(
+                              "h-1.5 w-1.5 rounded-full",
+                              user.is_active ? "bg-emerald-500" : "bg-neutral-300"
+                            )} />
+                            {user.is_active ? "Activo" : "Inactivo"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); openEdit(user); }}
+                              className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl bg-k-bg-card2 border border-k-border flex items-center justify-center hover:bg-k-bg-card transition"
+                              title="Editar"
+                            >
+                              <Pencil className="h-4 w-4 text-k-text-b" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setToggleTarget(user); }}
+                              className={cx(
+                                "h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border flex items-center justify-center transition",
+                                user.is_active
+                                  ? "border-rose-100 text-rose-400 bg-rose-50 hover:bg-rose-100"
+                                  : "border-emerald-100 text-emerald-500 bg-emerald-50 hover:bg-emerald-100"
+                              )}
+                              title={user.is_active ? "Desactivar" : "Activar"}
+                            >
+                              {user.is_active
+                                ? <UserX className="h-4 w-4" />
+                                : <UserCheck className="h-4 w-4" />}
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setDeleteTarget(user); }}
+                              className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-xl border border-rose-100 bg-rose-50 text-rose-400 flex items-center justify-center hover:bg-rose-100 transition"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr 
-                      key={user.id} 
-                      onDoubleClick={() => openEdit(user)}
-                      className={cx(
-                        "border-t border-k-border transition cursor-pointer group",
-                        !user.is_active ? "opacity-40" : "hover:bg-k-bg-card2/50"
-                      )}
-                    >
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar name={user.name} />
-                          <div>
-                            <div className="text-sm font-bold text-k-text-h">{user.name} <span className="md:hidden text-[10px] text-k-text-b font-mono ml-1">{user.employee_code}</span></div>
-                            <div className="text-[10px] text-k-text-b mt-0.5">{user.email}</div>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y divide-k-border">
+                {users.map((user) => (
+                  <div 
+                    key={user.id} 
+                    className={cx(
+                      "p-4 transition",
+                      !user.is_active ? "opacity-50" : "active:bg-k-bg-card2/50"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar name={user.name} />
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-k-text-h truncate" title={user.employee_code ?? undefined}>{user.name}</div>
+                          <div className="text-[10px] text-k-text-b truncate">{user.email}</div>
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                            <RoleBadge role={user.role} />
+                            <span className={cx(
+                              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                              user.is_active
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                : "bg-k-bg-card2 text-k-text-b border-k-border"
+                            )}>
+                              <span className={cx(
+                                "h-1.5 w-1.5 rounded-full",
+                                user.is_active ? "bg-emerald-500" : "bg-neutral-300"
+                              )} />
+                              {user.is_active ? "Activo" : "Inactivo"}
+                            </span>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <RoleBadge role={user.role} />
-                      </td>
-                      <td className="px-5 py-4 text-sm font-medium text-k-text-b">
-                        {user.position_title ?? <span className="text-neutral-200">—</span>}
-                      </td>
-                      <td className="px-5 py-4 font-mono text-xs font-bold text-k-text-b hidden md:table-cell">
-                        {user.employee_code ?? <span className="text-neutral-200">—</span>}
-                      </td>
-                      <td className="px-5 py-4">
-                        <SectionsCell empleadoId={user.employee_id ?? null} />
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className={cx(
-                          "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
-                          user.is_active
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-k-bg-card2 text-k-text-b border-k-border"
-                        )}>
-                          <span className={cx(
-                            "h-1.5 w-1.5 rounded-full",
-                            user.is_active ? "bg-emerald-500" : "bg-neutral-300"
-                          )} />
-                          {user.is_active ? "Activo" : "Inactivo"}
+                      </div>
+                      <ActionMenu
+                        align="right"
+                        actions={[
+                          { label: "Editar", icon: Pencil, onClick: () => openEdit(user) },
+                          { label: user.is_active ? "Desactivar" : "Activar", icon: user.is_active ? UserX : UserCheck, onClick: () => setToggleTarget(user), danger: user.is_active },
+                          { label: "Eliminar", icon: Trash2, onClick: () => setDeleteTarget(user), danger: true },
+                        ]}
+                      />
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {user.position_title && (
+                        <span className="inline-flex items-center rounded-lg bg-k-bg-card2 border border-k-border px-2 py-1 text-[11px] font-medium text-k-text-h">
+                          {user.position_title}
                         </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); openEdit(user); }}
-                            className="h-10 w-10 md:h-8 md:w-8 rounded-xl bg-k-bg-card2 border border-k-border flex items-center justify-center hover:bg-k-bg-card transition"
-                            title="Editar"
-                          >
-                            <Pencil className="h-4 w-4 md:h-3.5 md:w-3.5 text-k-text-b" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setToggleTarget(user); }}
-                            className={cx(
-                              "h-10 w-10 md:h-8 md:w-8 rounded-xl border flex items-center justify-center transition",
-                              user.is_active
-                                ? "border-rose-100 text-rose-400 bg-rose-50 hover:bg-rose-100"
-                                : "border-emerald-100 text-emerald-500 bg-emerald-50 hover:bg-emerald-100"
-                            )}
-                            title={user.is_active ? "Desactivar" : "Activar"}
-                          >
-                            {user.is_active
-                              ? <UserX className="h-4 w-4 md:h-3.5 md:w-3.5" />
-                              : <UserCheck className="h-4 w-4 md:h-3.5 md:w-3.5" />}
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(user); }}
-                            className="h-10 w-10 md:h-8 md:w-8 rounded-xl border border-rose-100 bg-rose-50 text-rose-400 flex items-center justify-center hover:bg-rose-100 transition"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                      <div className="w-full mt-1">
+                        <SectionsCell empleadoId={user.employee_id ?? null} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

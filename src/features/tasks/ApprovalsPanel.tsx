@@ -13,7 +13,7 @@ interface ApprovalsPanelProps {
   page: number;
   onPageChange: (page: number) => void;
   onReload: () => void;
-  onBack: () => void;
+  onBack?: () => void;
   actionBusy: string | null;
   onApprove: (id: string) => void;
   onOpenEvidences: (assignmentId: string, taskId: string) => void;
@@ -35,12 +35,14 @@ export default function ApprovalsPanel({
     <div className="space-y-6 animate-in-fade">
       <div className="bg-white border border-neutral-100/50 rounded-[32px] p-6 shadow-sm flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="h-10 w-10 rounded-2xl bg-neutral-50 flex items-center justify-center text-neutral-400 hover:text-obsidian hover:bg-neutral-100 transition-colors"
-          >
-            &larr;
-          </button>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="h-10 w-10 rounded-2xl bg-neutral-50 flex items-center justify-center text-neutral-400 hover:text-obsidian hover:bg-neutral-100 transition-colors"
+            >
+              &larr;
+            </button>
+          )}
           <div className="h-12 w-12 rounded-[20px] bg-amber-50 text-amber-500 flex items-center justify-center">
             <Clock className="h-6 w-6" />
           </div>

@@ -33,7 +33,7 @@ export default function WorkloadCard({ workload }: WorkloadCardProps) {
       subtitle="Minutos asignados en tareas activas"
       isOpen={panelOpen}
       onToggle={() => setPanelOpen((p) => !p)}
-      openClassName="rounded-[40px] p-8 min-h-[400px]"
+      openClassName="rounded-[40px] p-8 min-h-[320px]"
       closedClassName="rounded-[24px] p-4 lg:px-8 lg:py-6 min-h-0"
       headerRight={
         <Users className="h-5 w-5 text-k-text-b hidden md:block" />
