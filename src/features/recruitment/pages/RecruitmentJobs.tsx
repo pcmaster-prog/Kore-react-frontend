@@ -120,7 +120,8 @@ export default function RecruitmentJobs() {
         question: q.question,
         options: (q.options || []).join('\n'),
         correctIndex: String(q.correctIndex ?? 0)
-      }))
+      })),
+      scorecard_template: []
     });
     setIsModalOpen(true);
   };
@@ -162,7 +163,11 @@ export default function RecruitmentJobs() {
           options: (q.options || []).join('\n'),
           correctIndex: String(q.correctIndex ?? 0)
         })),
-        scorecard_template: job.scorecard_template || []
+        scorecard_template: (job.scorecard_template || []).map(s => ({
+          name: s.name,
+          score: s.score,
+          notes: s.notes || ''
+        }))
       });
     } else {
       setEditingJob(null);

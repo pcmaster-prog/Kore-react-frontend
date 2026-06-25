@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Briefcase, Users, LayoutDashboard, FileStack, BarChart3, Mail } from "lucide-react";
+import { Briefcase, Users, LayoutDashboard, BarChart3, Mail } from "lucide-react";
 
 export default function RecruitmentLayout() {
   const tabs = [
