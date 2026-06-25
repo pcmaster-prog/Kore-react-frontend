@@ -28,6 +28,7 @@ import BreakTimer from "./BreakTimer";
 import MealScheduleChangeRequestModal from "./MealScheduleChangeRequestModal";
 import OvertimeRequestModal from "./OvertimeRequestModal";
 import { BottomSheet, BottomSheetOption } from "@/components/BottomSheet";
+import { CollapsibleCard } from "@/components/CollapsibleCard";
 import {
   LogIn, LogOut, Coffee, Play, Moon, XCircle, X,
   Clock, CheckCircle2, AlertTriangle, Calendar,
@@ -722,40 +723,32 @@ export default function EmployeeAttendancePage() {
           </div>
 
           {/* Resumen Semanal */}
-          <div className="rounded-[24px] border border-k-border bg-k-bg-card p-5 shadow-k-card">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-2xl bg-obsidian/5 flex items-center justify-center shrink-0">
-                  <Calendar className="h-5 w-5 text-obsidian" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-black text-k-text-h tracking-tight">Resumen Semanal</div>
-                  <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">
-                    {weekRange.from} a {weekRange.to}
-                  </div>
-                </div>
+          <CollapsibleCard
+            title="Resumen Semanal"
+            icon={<Calendar className="h-5 w-5 text-obsidian" />}
+            value={`${minutesToHHMM(workedThisWeek)} · ${completeDays} días completos`}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">
+                  Horas acumuladas: <span className="text-k-text-h">{minutesToHHMM(workedThisWeek)} / 40h</span>
+                </span>
+                <span className="text-xs font-black text-k-text-h">
+                  {Math.min(100, Math.round((workedThisWeek / 2400) * 100))}%
+                </span>
               </div>
-              <div className="text-right shrink-0">
-                <div className="text-lg font-black text-emerald-600">{completeDays}</div>
-                <div className="text-[9px] font-bold text-k-text-b uppercase tracking-wider">Días Completos</div>
+              <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
+                <div
+                  className={cx("h-full rounded-full transition-all duration-500", (workedThisWeek / 2400) < 0.5 ? "bg-rose-500" : (workedThisWeek / 2400) < 0.9 ? "bg-amber-400" : "bg-emerald-500")}
+                  style={{ width: `${Math.min(100, (workedThisWeek / 2400) * 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-2xl bg-k-bg-card2 px-4 py-3">
+                <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Días Completos</span>
+                <span className="text-lg font-black text-emerald-600">{completeDays}</span>
               </div>
             </div>
-
-            <div className="flex items-center justify-between gap-4 mb-2">
-              <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">
-                Horas acumuladas: <span className="text-k-text-h">{minutesToHHMM(workedThisWeek)} / 40h</span>
-              </span>
-              <span className="text-xs font-black text-k-text-h">
-                {Math.min(100, Math.round((workedThisWeek / 2400) * 100))}%
-              </span>
-            </div>
-            <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
-              <div
-                className={cx("h-full rounded-full transition-all duration-500", (workedThisWeek / 2400) < 0.5 ? "bg-rose-500" : (workedThisWeek / 2400) < 0.9 ? "bg-amber-400" : "bg-emerald-500")}
-                style={{ width: `${Math.min(100, (workedThisWeek / 2400) * 100)}%` }}
-              />
-            </div>
-          </div>
+          </CollapsibleCard>
 
           {/* Panel de oportunidad de llegada tarde */}
           {(lateBlocked || today?.pending_late_request || today?.has_approved_late_request) && !dayLocked && state === "out" && (
@@ -973,24 +966,20 @@ export default function EmployeeAttendancePage() {
         />
       )}
 
-      {/* History table */}
-      <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-        <div className="px-8 py-6 border-b border-k-border flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-k-text-b" />
-          <div>
-            <h3 className="text-sm font-black text-k-text-h tracking-tight">Actividad de la Semana</h3>
-            <p className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">Tus últimos registros</p>
-          </div>
-        </div>
-
+      {/* Actividad de la Semana */}
+      <CollapsibleCard
+        title="Actividad de la Semana"
+        icon={<Calendar className="h-5 w-5 text-obsidian" />}
+        value={`${history.filter((r) => r.first_check_in_at).length} registros`}
+      >
         {history.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="py-8 text-center">
             <Calendar className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
             <p className="text-xs font-bold text-k-text-b uppercase tracking-widest">Sin registros aún</p>
           </div>
         ) : (
-          <>
-            <div className="overflow-auto">
+          <div className="space-y-4">
+            <div className="overflow-auto rounded-2xl border border-k-border">
               <table className="w-full text-sm">
                 <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
@@ -1032,13 +1021,13 @@ export default function EmployeeAttendancePage() {
                 </tbody>
               </table>
             </div>
-            <div className="px-8 py-5 border-t border-k-border bg-k-bg-card2/50 flex items-center justify-between">
+            <div className="px-5 py-4 rounded-2xl border border-k-border bg-k-bg-card2/50 flex items-center justify-between">
               <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Total semanal</span>
               <span className="text-xl font-black text-k-text-h">{minutesToHHMM(workedThisWeek)}</span>
             </div>
-          </>
+          </div>
         )}
-      </div>
+      </CollapsibleCard>
     </div>
   );
 }
