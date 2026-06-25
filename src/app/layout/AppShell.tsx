@@ -386,7 +386,7 @@ export default function AppShell() {
           </header>
 
           {/* Dynamic Route Content */}
-          <main id="main-content" className="flex-1 p-4 pb-24 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
+          <main id="main-content" className="flex-1 p-4 pb-28 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
             <div className="min-h-[calc(100vh-144px)] min-w-0 w-full">
               <Outlet />
             </div>
