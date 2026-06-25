@@ -405,11 +405,22 @@ export default function EmployeeAttendancePage() {
   }
 
   const todayMinutes = today?.totals?.worked_minutes ?? 0;
+
+  // En vivo (newManagementEmployee): si está trabajando, usamos el contador del reloj
+  // para que el resumen semanal también avance en tiempo real.
+  const todayDisplayedMinutes = isEnabled("newManagementEmployee") && today?.state === "working"
+    ? liveMinutes
+    : todayMinutes;
+
   const historyMinutes = history
     .filter(d => d.date !== today?.date)
     .reduce((acc, d) => acc + (d.totals?.worked_minutes ?? 0), 0);
-  const workedThisWeek = todayMinutes + historyMinutes;
-  const completeDays = history.filter((d) => d.status === "closed" && !!d.first_check_in_at).length;
+
+  const workedThisWeek = todayDisplayedMinutes + historyMinutes;
+
+  // Días completados: historial de la semana + hoy si ya cerró turno.
+  const todayIsComplete = today?.day?.status === "closed" && !!today?.day?.first_check_in_at;
+  const completeDays = history.filter((d) => d.status === "closed" && !!d.first_check_in_at).length + (todayIsComplete ? 1 : 0);
 
   const stateConf = {
     working: { label: isEnabled("newManagementEmployee") ? `En turno · ${minutesToHHMM(liveMinutes)} transcurridos` : "Jornada Activa", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30", dot: "bg-emerald-400" },
@@ -722,34 +733,6 @@ export default function EmployeeAttendancePage() {
             </div>
           </div>
 
-          {/* Resumen Semanal */}
-          <CollapsibleCard
-            title="Resumen Semanal"
-            icon={<Calendar className="h-5 w-5 text-obsidian" />}
-            value={`${minutesToHHMM(workedThisWeek)} · ${completeDays} días completos`}
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">
-                  Horas acumuladas: <span className="text-k-text-h">{minutesToHHMM(workedThisWeek)} / 40h</span>
-                </span>
-                <span className="text-xs font-black text-k-text-h">
-                  {Math.min(100, Math.round((workedThisWeek / 2400) * 100))}%
-                </span>
-              </div>
-              <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
-                <div
-                  className={cx("h-full rounded-full transition-all duration-500", (workedThisWeek / 2400) < 0.5 ? "bg-rose-500" : (workedThisWeek / 2400) < 0.9 ? "bg-amber-400" : "bg-emerald-500")}
-                  style={{ width: `${Math.min(100, (workedThisWeek / 2400) * 100)}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between rounded-2xl bg-k-bg-card2 px-4 py-3">
-                <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Días Completos</span>
-                <span className="text-lg font-black text-emerald-600">{completeDays}</span>
-              </div>
-            </div>
-          </CollapsibleCard>
-
           {/* Panel de oportunidad de llegada tarde */}
           {(lateBlocked || today?.pending_late_request || today?.has_approved_late_request) && !dayLocked && state === "out" && (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
@@ -851,6 +834,22 @@ export default function EmployeeAttendancePage() {
             </div>
           )}
 
+          {/* Lunch Timer */}
+          {!dayLocked && today?.day?.first_check_in_at && !today?.day?.last_check_out_at && (
+            <LunchTimer
+              lunchState={{
+                lunch_start_at: (today.day as any).lunch_start_at,
+                lunch_end_at:   (today.day as any).lunch_end_at,
+              }}
+              onUpdate={(newState) => {
+                setToday(prev => prev ? {
+                  ...prev,
+                  day: prev.day ? { ...prev.day, ...newState } : prev.day,
+                } : prev);
+              }}
+            />
+          )}
+
           {/* Opciones adicionales */}
           {!dayLocked && (
             <button
@@ -934,21 +933,6 @@ export default function EmployeeAttendancePage() {
             </div>
           )}
 
-          {/* Lunch Timer */}
-          {!dayLocked && today?.day?.first_check_in_at && !today?.day?.last_check_out_at && (
-            <LunchTimer
-              lunchState={{
-                lunch_start_at: (today.day as any).lunch_start_at,
-                lunch_end_at:   (today.day as any).lunch_end_at,
-              }}
-              onUpdate={(newState) => {
-                setToday(prev => prev ? {
-                  ...prev,
-                  day: prev.day ? { ...prev.day, ...newState } : prev.day,
-                } : prev);
-              }}
-            />
-          )}
         </>
       )}
 
@@ -965,6 +949,34 @@ export default function EmployeeAttendancePage() {
           onSaved={() => { setShowOvertime(false); loadToday(); }}
         />
       )}
+
+      {/* Resumen Semanal */}
+      <CollapsibleCard
+        title="Resumen Semanal"
+        icon={<Calendar className="h-5 w-5 text-obsidian" />}
+        value={`${minutesToHHMM(workedThisWeek)} · ${completeDays} días completos`}
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">
+              Horas acumuladas: <span className="text-k-text-h">{minutesToHHMM(workedThisWeek)} / 40h</span>
+            </span>
+            <span className="text-xs font-black text-k-text-h">
+              {Math.min(100, Math.round((workedThisWeek / 2400) * 100))}%
+            </span>
+          </div>
+          <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
+            <div
+              className={cx("h-full rounded-full transition-all duration-500", (workedThisWeek / 2400) < 0.5 ? "bg-rose-500" : (workedThisWeek / 2400) < 0.9 ? "bg-amber-400" : "bg-emerald-500")}
+              style={{ width: `${Math.min(100, (workedThisWeek / 2400) * 100)}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-2xl bg-k-bg-card2 px-4 py-3">
+            <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">Días Completos</span>
+            <span className="text-lg font-black text-emerald-600">{completeDays}</span>
+          </div>
+        </div>
+      </CollapsibleCard>
 
       {/* Actividad de la Semana */}
       <CollapsibleCard
