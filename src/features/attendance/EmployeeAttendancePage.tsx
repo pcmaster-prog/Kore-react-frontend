@@ -27,11 +27,12 @@ import LunchTimer from "./LunchTimer";
 import BreakTimer from "./BreakTimer";
 import MealScheduleChangeRequestModal from "./MealScheduleChangeRequestModal";
 import OvertimeRequestModal from "./OvertimeRequestModal";
+import { BottomSheet, BottomSheetOption } from "@/components/BottomSheet";
 import {
-  LogIn, LogOut, Coffee, Play, Moon, XCircle,
+  LogIn, LogOut, Coffee, Play, Moon, XCircle, X,
   Clock, CheckCircle2, AlertTriangle, Calendar,
-  Timer, Wifi, Loader2, FileText, Send, ChevronDown, ChevronUp,
-  Sparkles, UtensilsCrossed,
+  Wifi, Loader2, FileText, Send, ChevronDown, ChevronUp,
+  Sparkles, UtensilsCrossed, Settings2,
 } from "lucide-react";
 import { isEnabled } from "@/lib/featureFlags";
 
@@ -48,49 +49,6 @@ function DayBadge({ row }: { row: MyDayRow }) {
   return <span className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600"><span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />En curso</span>;
 }
 
-// ─── Botón de acción ──────────────────────────────────────────────
-function ActionBtn({
-  label, icon, sublabel, enabled, busy, variant, onClick,
-}: {
-  label: string; icon: React.ReactNode; sublabel?: string;
-  enabled: boolean; busy: boolean;
-  variant: "primary" | "warning" | "danger" | "neutral";
-  onClick: () => void;
-}) {
-  const v = {
-    primary: "bg-k-bg-card border-k-border text-k-text-h hover:bg-emerald-50 hover:border-emerald-200",
-    warning: "bg-k-bg-card border-k-border text-k-text-h hover:bg-amber-50 hover:border-amber-200",
-    danger: "bg-k-bg-card border-k-border text-k-text-h hover:bg-k-bg-card2",
-    neutral: "bg-k-bg-card2 border-k-border text-k-text-b cursor-not-allowed",
-  }[variant];
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={!enabled || busy}
-      className={cx(
-        "flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-[24px] sm:rounded-[28px] border-2 p-3 sm:p-6 text-center transition-all w-full shadow-k-card min-w-0",
-        "disabled:opacity-30 disabled:cursor-not-allowed",
-        v
-      )}
-    >
-      <div className={cx(
-        "h-10 w-10 sm:h-12 sm:w-12 rounded-[14px] sm:rounded-2xl flex items-center justify-center shrink-0",
-        variant === "primary" ? "bg-emerald-100 text-emerald-600" :
-        variant === "warning" ? "bg-amber-100 text-amber-600" :
-        variant === "danger" ? "bg-neutral-100 text-k-text-h" :
-        "bg-neutral-100 text-k-text-b"
-      )}>
-        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : icon}
-      </div>
-      <div className="min-w-0">
-        <div className="text-xs sm:text-sm font-black tracking-tight truncate">{label}</div>
-        {sublabel && <div className="text-[10px] font-bold text-k-text-b uppercase tracking-wider mt-0.5 truncate">{sublabel}</div>}
-      </div>
-    </button>
-  );
-}
-
 // ─── Badge de solicitud de ausencia ───────────────────────────────────────────
 function AbsenceBadge({ status }: { status: string }) {
   if (status === "approved") return <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600"><CheckCircle2 className="h-2.5 w-2.5" />Aprobada</span>;
@@ -99,8 +57,8 @@ function AbsenceBadge({ status }: { status: string }) {
 }
 
 // ─── Panel de solicitud de ausencia ──────────────────────────────────────────
-function AbsencePanel() {
-  const [open, setOpen] = useState(false);
+function AbsencePanel({ embedded = false }: { embedded?: boolean }) {
+  const [open, setOpen] = useState(embedded);
   const [requests, setRequests] = useState<AbsenceRequest[]>([]);
   const [loadingReqs, setLoadingReqs] = useState(false);
   const [date, setDate] = useState("");
@@ -127,8 +85,8 @@ function AbsencePanel() {
   }, []);
 
   useEffect(() => {
-    if (open) loadRequests();
-  }, [open, loadRequests]);
+    if (open || embedded) loadRequests();
+  }, [open, embedded, loadRequests]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -148,6 +106,97 @@ function AbsencePanel() {
     } finally {
       setSending(false);
     }
+  }
+
+  const panelContent = (
+    <div className="space-y-5">
+      {embedded && (
+        <div className="flex items-start gap-3 text-k-text-b">
+          <FileText className="h-5 w-5 shrink-0 mt-0.5 text-blue-600" />
+          <p className="text-xs font-medium">Envía tu justificación al administrador para ausentarte.</p>
+        </div>
+      )}
+
+      {toast && (
+        <div className={cx(
+          "rounded-2xl border px-4 py-3 text-sm font-bold flex items-center gap-3",
+          toast.type === "ok" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-rose-50 border-rose-100 text-rose-700"
+        )}>
+          {toast.type === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
+          {toast.msg}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Nueva solicitud</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Fecha a ausentarse</label>
+            <input
+              type="date"
+              min={minDate}
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Motivo / Justificación</label>
+          <textarea
+            value={motivo}
+            onChange={e => setMotivo(e.target.value)}
+            rows={3}
+            placeholder="Ej: Cita médica, trámite escolar, asunto familiar urgente..."
+            className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all resize-none"
+          />
+          <div className="text-[10px] text-k-text-b mt-1">{motivo.length}/500 caracteres (mínimo 10)</div>
+        </div>
+        <button
+          type="submit"
+          disabled={sending || !date || motivo.trim().length < 10}
+          className="inline-flex items-center gap-2 rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text hover:opacity-90 transition disabled:opacity-40"
+        >
+          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {sending ? "Enviando..." : "Enviar Solicitud"}
+        </button>
+      </form>
+
+      <div>
+        <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-3">Mis solicitudes</div>
+        {loadingReqs ? (
+          <div className="flex items-center gap-2 py-4 text-k-text-b">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
+          </div>
+        ) : requests.length === 0 ? (
+          <p className="text-xs text-k-text-b py-2">No tienes solicitudes aún.</p>
+        ) : (
+          <div className="space-y-2">
+            {requests.map(r => (
+              <div key={r.id} className="rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-k-text-h">
+                    {new Date(r.date + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}
+                  </div>
+                  <div className="text-xs text-k-text-b mt-0.5 line-clamp-2">{r.motivo}</div>
+                  {r.reviewer_note && (
+                    <div className="text-[11px] text-k-text-b mt-1 italic">Nota: {r.reviewer_note}</div>
+                  )}
+                </div>
+                <div className="shrink-0 pt-0.5">
+                  <AbsenceBadge status={r.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return panelContent;
   }
 
   return (
@@ -170,83 +219,7 @@ function AbsencePanel() {
 
       {open && (
         <div className="px-6 pb-6 space-y-5 border-t border-k-border">
-          {toast && (
-            <div className={cx(
-              "rounded-2xl border px-4 py-3 text-sm font-bold flex items-center gap-3 mt-4",
-              toast.type === "ok" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-rose-50 border-rose-100 text-rose-700"
-            )}>
-              {toast.type === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
-              {toast.msg}
-            </div>
-          )}
-
-          {/* Formulario nuevo */}
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Nueva solicitud</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Fecha a ausentarse</label>
-                <input
-                  type="date"
-                  min={minDate}
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">Motivo / Justificación</label>
-              <textarea
-                value={motivo}
-                onChange={e => setMotivo(e.target.value)}
-                rows={3}
-                placeholder="Ej: Cita médica, trámite escolar, asunto familiar urgente..."
-                className="w-full rounded-2xl border border-k-border bg-k-bg-card px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-obsidian/10 transition-all resize-none"
-              />
-              <div className="text-[10px] text-k-text-b mt-1">{motivo.length}/500 caracteres (mínimo 10)</div>
-            </div>
-            <button
-              type="submit"
-              disabled={sending || !date || motivo.trim().length < 10}
-              className="inline-flex items-center gap-2 rounded-2xl bg-k-accent-btn px-6 py-3 text-sm font-bold text-k-accent-btn-text hover:opacity-90 transition disabled:opacity-40"
-            >
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {sending ? "Enviando..." : "Enviar Solicitud"}
-            </button>
-          </form>
-
-          {/* Historial de solicitudes */}
-          <div>
-            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-3">Mis solicitudes</div>
-            {loadingReqs ? (
-              <div className="flex items-center gap-2 py-4 text-k-text-b">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-xs font-bold uppercase tracking-widest">Cargando...</span>
-              </div>
-            ) : requests.length === 0 ? (
-              <p className="text-xs text-k-text-b py-2">No tienes solicitudes aún.</p>
-            ) : (
-              <div className="space-y-2">
-                {requests.map(r => (
-                  <div key={r.id} className="rounded-2xl border border-k-border bg-k-bg-card2/50 px-4 py-3 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-k-text-h">
-                        {new Date(r.date + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}
-                      </div>
-                      <div className="text-xs text-k-text-b mt-0.5 line-clamp-2">{r.motivo}</div>
-                      {r.reviewer_note && (
-                        <div className="text-[11px] text-k-text-b mt-1 italic">Nota: {r.reviewer_note}</div>
-                      )}
-                    </div>
-                    <div className="shrink-0 pt-0.5">
-                      <AbsenceBadge status={r.status} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {panelContent}
         </div>
       )}
     </div>
@@ -265,6 +238,8 @@ export default function EmployeeAttendancePage() {
   const [liveMinutes, setLiveMinutes] = useState(0);
   const [showMealScheduleChange, setShowMealScheduleChange] = useState(false);
   const [showOvertime, setShowOvertime] = useState(false);
+  const [showOptionsSheet, setShowOptionsSheet] = useState(false);
+  const [showAbsenceModal, setShowAbsenceModal] = useState(false);
   const [lateBlocked, setLateBlocked] = useState(false);
   const [lateRequestMotivo, setLateRequestMotivo] = useState("");
   const [showLateRequestForm, setShowLateRequestForm] = useState(false);
@@ -459,24 +434,6 @@ export default function EmployeeAttendancePage() {
         <h1 className="text-3xl font-black text-k-text-h tracking-tight">Mi Asistencia</h1>
       </div>
 
-      {/* ─── Banner de hora de llegada ────────────────────────────────────── */}
-      {today?.employee_check_in_time && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 flex items-start gap-4">
-          <div className="h-10 w-10 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 text-lg">
-            🕘
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-black text-blue-700 tracking-tight">Hora de llegada</div>
-            <p className="text-xs font-medium text-blue-600 mt-0.5">
-              Tu hora programada es <strong>{today.employee_check_in_time}</strong>.
-              {today.late_window_closes_at && (
-                <> Tienes hasta las <strong>{today.late_window_closes_at}</strong> para marcar sin necesidad de oportunidad.</>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* ─── Banner de salida anticipada (FASE 2) ─────────────────────────── */}
       {today?.early_departure_minutes && today.early_departure_minutes > 0 && (
         <div className="rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 flex items-start gap-4">
@@ -613,89 +570,191 @@ export default function EmployeeAttendancePage() {
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-k-bg-card/[0.03]" />
               <div className="absolute bottom-0 left-1/3 h-16 w-32 rounded-full bg-gold/10" />
             </div>
-            <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-4">
-              <div>
-                <div className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest mb-4 ${stateConf.cls}`}>
-                  <span className={cx("h-2 w-2 rounded-full animate-pulse shrink-0", stateConf.dot)} />
-                  {stateConf.label}
+
+            <div className="relative space-y-6">
+              {/* Top: state, clock, schedule info + entry/exit times */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+                <div className="min-w-0">
+                  <div className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest mb-3 ${stateConf.cls}`}>
+                    <span className={cx("h-2 w-2 rounded-full animate-pulse shrink-0", stateConf.dot)} />
+                    {stateConf.label}
+                  </div>
+                  <div className="text-4xl sm:text-6xl font-black tracking-tight tabular-nums">
+                    {isEnabled("newManagementEmployee") ? minutesToHHMM(liveMinutes) : minutesToHHMM(todayMinutes)}
+                  </div>
+                  <div className="text-white/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
+
+                  {today?.employee_check_in_time && (
+                    <p className="mt-3 text-xs text-white/60 font-medium max-w-xs leading-relaxed">
+                      Tu hora programada es <strong className="text-white/90">{today.employee_check_in_time}</strong>.
+                      {today.late_window_closes_at && (
+                        <> Tienes hasta las <strong className="text-white/90">{today.late_window_closes_at}</strong> para marcar sin oportunidad.</>
+                      )}
+                    </p>
+                  )}
                 </div>
-                <div className="text-4xl sm:text-5xl font-black tracking-tight tabular-nums">{isEnabled("newManagementEmployee") ? minutesToHHMM(liveMinutes) : minutesToHHMM(todayMinutes)}</div>
-                <div className="text-white/40 text-xs font-bold mt-2 capitalize">{todayFormatted}</div>
+
+                <div className="flex gap-6 sm:gap-0 sm:flex-col text-left sm:text-right sm:space-y-2 shrink-0">
+                  <div>
+                    <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Entrada</div>
+                    <div className="text-lg font-black">{formatTime(dayInfo?.first_check_in_at)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Salida</div>
+                    <div className="text-lg font-black">{formatTime(dayInfo?.last_check_out_at)}</div>
+                  </div>
+                  {today?.expected_exit_time && !dayInfo?.last_check_out_at && (
+                    <div>
+                      <div className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest">Salida estimada</div>
+                      <div className="text-lg font-black text-emerald-300">{formatTime(today.expected_exit_time)}</div>
+                    </div>
+                  )}
+                  {today?.required_exit_time && !dayInfo?.last_check_out_at && (
+                    <div>
+                      <div className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">Jornada completa</div>
+                      <div className="text-lg font-black text-amber-300">{formatTime(today.required_exit_time)}</div>
+                    </div>
+                  )}
+                  {(dayInfo as any)?.late_minutes > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">Retardo</div>
+                      <div className="text-lg font-black text-amber-300">{(dayInfo as any).late_minutes}min</div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-8 sm:gap-0 sm:flex-col text-left sm:text-right sm:space-y-3 border-t border-white/10 sm:border-0 pt-4 sm:pt-0">
-                <div>
-                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Entrada</div>
-                  <div className="text-lg font-black">{formatTime(dayInfo?.first_check_in_at)}</div>
+
+              {/* Main action: Check in / Check out */}
+              {!dayLocked && (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => doAction(checkIn, "Entrada registrada")}
+                    disabled={busy || !(actions?.check_in ?? false)}
+                    className={cx(
+                      "flex items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-black tracking-tight transition",
+                      actions?.check_in
+                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 hover:bg-emerald-400"
+                        : "bg-white/10 text-white/40 cursor-not-allowed"
+                    )}
+                  >
+                    <LogIn className="h-5 w-5" /> Entrada
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const requiredTime = today?.required_exit_time || today?.expected_exit_time;
+                      if (requiredTime && !dayInfo?.last_check_out_at) {
+                        const now = new Date();
+                        const required = new Date(requiredTime);
+                        const fmt = (n: number) => String(n).padStart(2, '0');
+                        const todayStr = `${now.getFullYear()}-${fmt(now.getMonth() + 1)}-${fmt(now.getDate())}`;
+                        const requiredAdjusted = new Date(`${todayStr}T${fmt(required.getHours())}:${fmt(required.getMinutes())}`);
+                        if (now < requiredAdjusted) {
+                          const diffMins = Math.ceil((requiredAdjusted.getTime() - now.getTime()) / 60000);
+                          const confirmMsg = `Tu jornada completa es hasta ${formatTime(requiredTime)}. Si sales ahora, te faltan ${diffMins} minutos y quedará registrada como salida anticipada. ¿Deseas continuar?`;
+                          doAction(checkOut, "Salida registrada", confirmMsg);
+                          return;
+                        }
+                      }
+                      doAction(checkOut, "Salida registrada", "¿Confirmas que deseas registrar tu salida?");
+                    }}
+                    disabled={busy || !dayInfo?.first_check_in_at || !!dayInfo?.last_check_out_at}
+                    className={cx(
+                      "flex items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-black tracking-tight transition",
+                      dayInfo?.first_check_in_at && !dayInfo?.last_check_out_at
+                        ? "bg-rose-500 text-white shadow-lg shadow-rose-900/20 hover:bg-rose-400"
+                        : "bg-white/10 text-white/40 cursor-not-allowed"
+                    )}
+                  >
+                    <LogOut className="h-5 w-5" /> Salida
+                  </button>
                 </div>
-                <div>
-                  <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Salida</div>
-                  <div className="text-lg font-black">{formatTime(dayInfo?.last_check_out_at)}</div>
+              )}
+
+              {/* Secondary action: break buttons */}
+              {!dayLocked && (
+                <div className="grid grid-cols-2 gap-3">
+                  {(!isEnabled("newManagementEmployee") || actions?.break_start) && (
+                    <button
+                      onClick={() => doAction(breakStart, "Pausa iniciada", "¿Deseas iniciar tu pausa?")}
+                      disabled={busy || !(actions?.break_start ?? false)}
+                      className={cx(
+                        "flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold tracking-tight transition",
+                        actions?.break_start
+                          ? "bg-white/15 text-white hover:bg-white/25"
+                          : "bg-white/5 text-white/30 cursor-not-allowed"
+                      )}
+                    >
+                      <Coffee className="h-4 w-4" /> Inicio Descanso
+                    </button>
+                  )}
+                  {(!isEnabled("newManagementEmployee") || actions?.break_end) && (
+                    <button
+                      onClick={() => doAction(breakEnd, "Pausa terminada", "¿Deseas terminar tu pausa?")}
+                      disabled={busy || !(actions?.break_end ?? false)}
+                      className={cx(
+                        "flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold tracking-tight transition",
+                        actions?.break_end
+                          ? "bg-white/15 text-white hover:bg-white/25"
+                          : "bg-white/5 text-white/30 cursor-not-allowed"
+                      )}
+                    >
+                      <Play className="h-4 w-4" /> Fin Descanso
+                    </button>
+                  )}
                 </div>
-                {/* Salida estimada (FASE 2) */}
-                {today?.expected_exit_time && !dayInfo?.last_check_out_at && (
-                  <div>
-                    <div className="text-[10px] font-bold text-emerald-400/70 uppercase tracking-widest">Salida estimada</div>
-                    <div className="text-lg font-black text-emerald-300">{formatTime(today.expected_exit_time)}</div>
-                  </div>
-                )}
-                {/* Jornada completa (hasta cuándo debe trabajar para cumplir 8h) */}
-                {today?.required_exit_time && !dayInfo?.last_check_out_at && (
-                  <div>
-                    <div className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">Jornada completa</div>
-                    <div className="text-lg font-black text-amber-300">{formatTime(today.required_exit_time)}</div>
-                  </div>
-                )}
-                {/* Retardo de hoy */}
-                {(dayInfo as any)?.late_minutes > 0 && (
-                  <div>
-                    <div className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">Retardo</div>
-                    <div className="text-lg font-black text-amber-300">{(dayInfo as any).late_minutes}min</div>
-                  </div>
-                )}
-              </div>
+              )}
+
+              {state === "break" && (
+                <BreakTimer
+                  durationMinutes={today?.break_duration_minutes ?? 10}
+                />
+              )}
+
+              {today?.required_exit_time && !dayInfo?.last_check_out_at && (
+                <div className="text-center">
+                  <span className="text-[10px] font-bold text-amber-300/80 uppercase tracking-widest">
+                    Jornada completa: {formatTime(today.required_exit_time)} · Salir antes queda como anticipada
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          {isEnabled("newManagementEmployee") && (
-            <div className="rounded-[24px] border border-k-border bg-k-bg-card p-4 shadow-k-card flex items-center justify-between gap-4">
-              <div className="text-xs font-bold text-k-text-b uppercase tracking-widest flex-1">
-                Llevas <span className="text-k-text-h">{minutesToHHMM(workedThisWeek)}</span> / 40h
+          {/* Resumen Semanal */}
+          <div className="rounded-[24px] border border-k-border bg-k-bg-card p-5 shadow-k-card">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-2xl bg-obsidian/5 flex items-center justify-center shrink-0">
+                  <Calendar className="h-5 w-5 text-obsidian" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-k-text-h tracking-tight">Resumen Semanal</div>
+                  <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mt-0.5">
+                    {weekRange.from} a {weekRange.to}
+                  </div>
+                </div>
               </div>
-              <div className="w-1/2 bg-neutral-100 rounded-full h-2.5 overflow-hidden flex">
-                <div 
-                  className={cx("h-full rounded-full transition-all duration-500", (workedThisWeek / 2400) < 0.5 ? "bg-rose-500" : (workedThisWeek / 2400) < 0.9 ? "bg-amber-400" : "bg-emerald-500")}
-                  style={{ width: `${Math.min(100, (workedThisWeek / 2400) * 100)}%` }}
-                />
+              <div className="text-right shrink-0">
+                <div className="text-lg font-black text-emerald-600">{completeDays}</div>
+                <div className="text-[9px] font-bold text-k-text-b uppercase tracking-wider">Días Completos</div>
               </div>
             </div>
-          )}
 
-          {/* KPI minibar */}
-          <div className={cx("grid gap-2 sm:gap-4", (!isEnabled("newManagementEmployee") || lateCount > 0) ? "grid-cols-3" : "grid-cols-2")}>
-            <div className="rounded-[24px] sm:rounded-[28px] border border-k-border bg-k-bg-card p-3 sm:p-5 shadow-k-card text-center min-w-0 flex flex-col items-center justify-center">
-              <Timer className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-200 mb-1 sm:mb-2" />
-              <div className="text-lg sm:text-2xl font-black text-k-text-h">{minutesToHHMM(workedThisWeek)}</div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-k-text-b uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Esta Semana</div>
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <span className="text-xs font-bold text-k-text-b uppercase tracking-widest">
+                Horas acumuladas: <span className="text-k-text-h">{minutesToHHMM(workedThisWeek)} / 40h</span>
+              </span>
+              <span className="text-xs font-black text-k-text-h">
+                {Math.min(100, Math.round((workedThisWeek / 2400) * 100))}%
+              </span>
             </div>
-            <div className="rounded-[24px] sm:rounded-[28px] border border-k-border bg-k-bg-card p-3 sm:p-5 shadow-k-card text-center min-w-0 flex flex-col items-center justify-center">
-              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-200 mb-1 sm:mb-2" />
-              <div className="text-lg sm:text-2xl font-black text-emerald-600">{completeDays}</div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-k-text-b uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">Días Completos</div>
+            <div className="w-full bg-neutral-100 rounded-full h-2.5 overflow-hidden">
+              <div
+                className={cx("h-full rounded-full transition-all duration-500", (workedThisWeek / 2400) < 0.5 ? "bg-rose-500" : (workedThisWeek / 2400) < 0.9 ? "bg-amber-400" : "bg-emerald-500")}
+                style={{ width: `${Math.min(100, (workedThisWeek / 2400) * 100)}%` }}
+              />
             </div>
-            {(!isEnabled("newManagementEmployee") || lateCount > 0) && (
-              <div className={cx(
-                "rounded-[24px] sm:rounded-[28px] border p-3 sm:p-5 shadow-k-card text-center min-w-0 flex flex-col items-center justify-center",
-                lateCount >= 3 ? "border-rose-200 bg-rose-50" : lateCount > 0 ? "border-amber-200 bg-amber-50" : "border-k-border bg-k-bg-card"
-              )}>
-                <Clock className={cx("h-4 w-4 sm:h-5 sm:w-5 mb-1 sm:mb-2", lateCount >= 3 ? "text-rose-300" : lateCount > 0 ? "text-amber-300" : "text-amber-200")} />
-                <div className={cx("text-lg sm:text-2xl font-black", lateCount >= 3 ? "text-rose-600" : lateCount > 0 ? "text-amber-600" : "text-amber-600")}>
-                  {lateCount}
-                </div>
-                <div className="text-[9px] sm:text-[10px] font-bold text-k-text-b uppercase tracking-wider sm:tracking-widest mt-1 truncate w-full px-1">
-                  Retardos (mes)
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Panel de oportunidad de llegada tarde */}
@@ -778,8 +837,8 @@ export default function EmployeeAttendancePage() {
             </div>
           )}
 
-          {/* Action buttons or Locked Banner */}
-          {dayLocked ? (
+          {/* Jornada cerrada */}
+          {dayLocked && (
             <div className="rounded-[32px] sm:rounded-[40px] border-2 border-dashed border-k-border bg-k-bg-card2 p-8 flex flex-col items-center justify-center text-center gap-4">
               <div className="h-14 w-14 rounded-[18px] bg-neutral-100 border border-k-border flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-k-text-b" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -797,80 +856,89 @@ export default function EmployeeAttendancePage() {
                 Tu asistencia de hoy fue registrada y cerrada. Si hay algún error, comunícate con tu supervisor.
               </p>
             </div>
-          ) : (
-          <div className="rounded-[32px] sm:rounded-[40px] border border-k-border bg-k-bg-card p-5 sm:p-6 shadow-k-card">
-            <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-4 sm:mb-5">Acciones Rápidas</div>
-            <div className="grid grid-cols-2 gap-4">
-              <ActionBtn label="Entrada" icon={<LogIn className="h-5 w-5" />} enabled={actions?.check_in ?? false} busy={busy} variant="primary" onClick={() => doAction(checkIn, "Entrada registrada")} />
-              <ActionBtn label="Salida" icon={<LogOut className="h-5 w-5" />} enabled={!dayLocked && !!dayInfo?.first_check_in_at} busy={busy} variant="danger" onClick={() => {
-                const requiredTime = today?.required_exit_time || today?.expected_exit_time;
-                if (requiredTime && !dayInfo?.last_check_out_at) {
-                  const now = new Date();
-                  const required = new Date(requiredTime);
-                  // Ajustar required al día de hoy para comparación justa (usar hora LOCAL, no UTC)
-                  const fmt = (n: number) => String(n).padStart(2, '0');
-                  const todayStr = `${now.getFullYear()}-${fmt(now.getMonth() + 1)}-${fmt(now.getDate())}`;
-                  const requiredAdjusted = new Date(`${todayStr}T${fmt(required.getHours())}:${fmt(required.getMinutes())}`);
-                  if (now < requiredAdjusted) {
-                    const diffMins = Math.ceil((requiredAdjusted.getTime() - now.getTime()) / 60000);
-                    const confirmMsg = `⚠️ Tu jornada completa es hasta ${formatTime(requiredTime)}.\nSi sales ahora, te faltan ${diffMins} minutos y quedará registrada como salida anticipada.\n\n¿Deseas continuar?`;
-                    doAction(checkOut, "Salida registrada", confirmMsg);
-                    return;
-                  }
-                }
-                doAction(checkOut, "Salida registrada", "¿Confirmas que deseas registrar tu salida?");
-              }} />
-              
-              {(!isEnabled("newManagementEmployee") || actions?.break_start) && (
-                <ActionBtn label="Inicio Descanso" icon={<Coffee className="h-5 w-5" />} enabled={actions?.break_start ?? false} busy={busy} variant="warning" onClick={() => doAction(breakStart, "Pausa iniciada", "¿Deseas iniciar tu pausa?")} />
-              )}
-              {(!isEnabled("newManagementEmployee") || actions?.break_end) && (
-                <ActionBtn label="Fin Descanso" icon={<Play className="h-5 w-5" />} enabled={actions?.break_end ?? false} busy={busy} variant="warning" onClick={() => doAction(breakEnd, "Pausa terminada", "¿Deseas terminar tu pausa?")} />
-              )}
-            </div>
+          )}
 
-            {/* Contexto de salida anticipada (FASE 2+) */}
-            {today?.required_exit_time && !dayInfo?.last_check_out_at && (
-              <div className="mt-3 text-center">
-                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">
-                  Jornada completa: {formatTime(today.required_exit_time)} · Salir antes queda como anticipada
-                </span>
-              </div>
-            )}
+          {/* Opciones adicionales */}
+          {!dayLocked && (
+            <button
+              onClick={() => setShowOptionsSheet(true)}
+              className="w-full rounded-2xl border border-k-border bg-k-bg-card px-5 py-4 text-sm font-bold text-k-text-h shadow-k-card hover:bg-k-bg-card2 transition flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4 text-k-text-b" /> Opciones Adicionales
+              </span>
+              <ChevronDown className="h-4 w-4 text-k-text-b -rotate-90" />
+            </button>
+          )}
 
-            {/* Timer de descanso (FASE 3) */}
-            {state === "break" && (
-              <BreakTimer
-                durationMinutes={today?.break_duration_minutes ?? 10}
+          <BottomSheet
+            open={showOptionsSheet}
+            onClose={() => setShowOptionsSheet(false)}
+            title="Gestionar mi turno"
+          >
+            <div className="space-y-3">
+              {state === "out" && !today?.is_rest_day && today?.state !== "rest" && (
+                <BottomSheetOption
+                  icon={<Moon className="h-5 w-5" />}
+                  label="Marcar día de descanso"
+                  sublabel="Registra este día como tu descanso semanal."
+                  onClick={() => {
+                    setShowOptionsSheet(false);
+                    doAction(() => markRestDay(today!.date), "Día de descanso marcado");
+                  }}
+                />
+              )}
+              <BottomSheetOption
+                icon={<UtensilsCrossed className="h-5 w-5" />}
+                label="Cambiar horario de comida"
+                sublabel="Solicita un cambio en tu horario de alimentos."
+                onClick={() => {
+                  setShowOptionsSheet(false);
+                  setShowMealScheduleChange(true);
+                }}
               />
-            )}
-
-            {state === "out" && !today?.is_rest_day && today?.state !== "rest" && (
-              <button
-                onClick={() => doAction(() => markRestDay(today!.date), "Día de descanso marcado")}
-                disabled={busy}
-                className="mt-5 w-full rounded-2xl border-2 border-dashed border-k-border bg-k-bg-card2 px-4 py-3.5 text-sm font-bold text-k-text-b hover:bg-neutral-100 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <Moon className="h-4 w-4" />Marcar día de descanso
-              </button>
-            )}
-
-            {/* Acciones adicionales (FASE 4-5) */}
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setShowMealScheduleChange(true)}
-                className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-700 hover:bg-amber-100 transition flex items-center justify-center gap-2"
-              >
-                <UtensilsCrossed className="h-4 w-4" /> Cambiar horario de comida
-              </button>
-              <button
-                onClick={() => setShowOvertime(true)}
-                className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-xs font-bold text-violet-700 hover:bg-violet-100 transition flex items-center justify-center gap-2"
-              >
-                <Clock className="h-4 w-4" /> Horas extras
-              </button>
+              <BottomSheetOption
+                icon={<Clock className="h-5 w-5" />}
+                label="Horas extras"
+                sublabel="Registra tiempo extra trabajado."
+                onClick={() => {
+                  setShowOptionsSheet(false);
+                  setShowOvertime(true);
+                }}
+              />
+              <BottomSheetOption
+                icon={<FileText className="h-5 w-5" />}
+                label="Solicitar Ausencia Justificada"
+                sublabel="Envía tu justificación al administrador."
+                onClick={() => {
+                  setShowOptionsSheet(false);
+                  setShowAbsenceModal(true);
+                }}
+              />
             </div>
-          </div>
+          </BottomSheet>
+
+          {/* Modal de solicitud de ausencia */}
+          {showAbsenceModal && (
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+              <div className="absolute inset-0 bg-obsidian/40 backdrop-blur-sm" onClick={() => setShowAbsenceModal(false)} />
+              <div className="relative z-10 w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[28px] bg-white shadow-2xl max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+                <div className="sticky top-0 bg-white px-6 pt-5 pb-3 border-b border-k-border flex items-center justify-between">
+                  <h3 className="text-base font-black text-k-text-h tracking-tight">Solicitar Ausencia Justificada</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowAbsenceModal(false)}
+                    className="h-9 w-9 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 hover:bg-neutral-200 transition"
+                    aria-label="Cerrar"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="p-6">
+                  <AbsencePanel embedded />
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Lunch Timer */}
@@ -904,9 +972,6 @@ export default function EmployeeAttendancePage() {
           onSaved={() => { setShowOvertime(false); loadToday(); }}
         />
       )}
-
-      {/* ─── Panel de solicitudes de ausencia ────────────────────────────────── */}
-      <AbsencePanel />
 
       {/* History table */}
       <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
