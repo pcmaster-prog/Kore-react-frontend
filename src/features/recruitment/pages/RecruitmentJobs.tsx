@@ -811,6 +811,8 @@ export default function RecruitmentJobs() {
                           />
                         </div>
                       </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
