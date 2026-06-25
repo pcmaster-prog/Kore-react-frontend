@@ -2,17 +2,16 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey:            'AIzaSyBSuXppFbXeEPsSrvHmeipEKotlc4Q7jDg',
-  authDomain:        'kore-ops.firebaseapp.com',
-  projectId:         'kore-ops',
-  storageBucket:     'kore-ops.firebasestorage.app',
-  messagingSenderId: '387072867680',
-  appId:             '1:387072867680:web:a6b4d462e649fced607205',
+  apiKey:            'AIzaSyAE4Z0mZIcQYWL7CkXsq9M5YWXE6S6M1Rc',
+  authDomain:        'gen-lang-client-0235122332.firebaseapp.com',
+  projectId:         'gen-lang-client-0235122332',
+  storageBucket:     'gen-lang-client-0235122332.firebasestorage.app',
+  messagingSenderId: '402133484686',
+  appId:             '1:402133484686:web:7840f50d960c7cc44675df',
 });
 
 const messaging = firebase.messaging();
 
-// Manejar notificaciones en segundo plano
 messaging.onBackgroundMessage((payload) => {
   const { title, body } = payload.notification ?? {};
   if (!title) return;
@@ -26,7 +25,6 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-// Click en notificación → abrir la app
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
