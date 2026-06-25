@@ -6,7 +6,7 @@ import { auth } from "@/features/auth/store";
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const nav = useNavigate();
-  const { token, user } = auth.get();
+  const { user } = auth.get();
 
   useEffect(() => {
     const on401 = () => {
@@ -17,10 +17,6 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     window.addEventListener("kore:unauthorized", on401);
     return () => window.removeEventListener("kore:unauthorized", on401);
   }, [nav, location]);
-
-  if (!token) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;

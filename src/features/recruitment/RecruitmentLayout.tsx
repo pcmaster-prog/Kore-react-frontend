@@ -5,7 +5,6 @@ export default function RecruitmentLayout() {
   const tabs = [
     { to: "/app/manager/reclutamiento", icon: LayoutDashboard, label: "Dashboard", exact: true },
     { to: "/app/manager/reclutamiento/vacantes", icon: Briefcase, label: "Vacantes" },
-    { to: "/app/manager/reclutamiento/plantillas", icon: FileStack, label: "Plantillas" },
     { to: "/app/manager/reclutamiento/candidatos", icon: Users, label: "Candidatos" },
     { to: "/app/manager/reclutamiento/emails", icon: Mail, label: "Emails" },
     { to: "/app/manager/reclutamiento/reportes", icon: BarChart3, label: "Reportes" },

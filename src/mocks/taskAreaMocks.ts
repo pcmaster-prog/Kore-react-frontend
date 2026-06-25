@@ -13,6 +13,8 @@ import type {
   RoutineSchedule,
   Incident,
   TaskV2,
+  TaskPriority,
+  ChecklistItem,
   EmpleadoSection,
   UnassignedTask,
   CreateAreaPayload,
@@ -644,18 +646,19 @@ export async function mockCreateTask(payload: {
   due_at?: string | null;
   catalog_date?: string;
   estimated_minutes?: number;
-  meta?: any;
+  meta?: unknown;
 }): Promise<{ item: TaskV2 }> {
   await delay(400);
+  const checklist = (payload.meta as { checklist?: ChecklistItem[] } | undefined)?.checklist ?? [];
   const newTask: TaskV2 = {
     id: nextId(),
     name: payload.title,
     description: payload.description || "",
-    priority: (payload.priority as any) || "medium",
+    priority: (payload.priority as TaskPriority) || "medium",
     status: "open",
     completed: false,
     attachments: [],
-    checklist: payload.meta?.checklist || [],
+    checklist,
     notes: "",
     incidents: [],
     dueDate: payload.due_at || undefined,
@@ -674,21 +677,22 @@ export async function mockUpdateTask(
     priority?: string;
     due_at?: string | null;
     estimated_minutes?: number;
-    meta?: any;
+    meta?: unknown;
   }
 ): Promise<{ item: TaskV2 }> {
   await delay(300);
   const idx = MOCK_TASKS.findIndex((t) => t.id === id);
   if (idx === -1) throw new Error("Tarea no encontrada");
   const current = MOCK_TASKS[idx];
+  const checklist = (payload.meta as { checklist?: ChecklistItem[] } | undefined)?.checklist ?? current.checklist;
   MOCK_TASKS[idx] = {
     ...current,
     name: payload.title ?? current.name,
     description: payload.description ?? current.description,
-    priority: (payload.priority as any) ?? current.priority,
+    priority: (payload.priority as TaskPriority) ?? current.priority,
     dueDate: payload.due_at === null ? undefined : (payload.due_at ?? current.dueDate),
     estimatedTime: payload.estimated_minutes ?? current.estimatedTime,
-    checklist: payload.meta?.checklist ?? current.checklist,
+    checklist,
   };
   return { item: MOCK_TASKS[idx] };
 }

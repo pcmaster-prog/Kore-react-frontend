@@ -47,7 +47,8 @@ export default function RecruitmentJobs() {
     offer_details: '',
     closing_statement: '',
     screening_pass_score: '7',
-    screening_questions: [] as { question: string; options: string; correctIndex: string }[]
+    screening_questions: [] as { question: string; options: string; correctIndex: string }[],
+    scorecard_template: [] as { name: string; score: number; notes: string }[]
   });
 
   // Share modal state
@@ -160,7 +161,8 @@ export default function RecruitmentJobs() {
           question: q.question,
           options: (q.options || []).join('\n'),
           correctIndex: String(q.correctIndex ?? 0)
-        }))
+        })),
+        scorecard_template: job.scorecard_template || []
       });
     } else {
       setEditingJob(null);
@@ -193,7 +195,8 @@ export default function RecruitmentJobs() {
         offer_details: '',
         closing_statement: '',
         screening_pass_score: '7',
-        screening_questions: []
+        screening_questions: [],
+        scorecard_template: []
       });
     }
     setIsModalOpen(true);
@@ -231,7 +234,8 @@ export default function RecruitmentJobs() {
             question: q.question.trim(),
             options: q.options.split('\n').map(o => o.trim()).filter(o => o),
             correctIndex: parseInt(q.correctIndex, 10) || 0
-          }))
+          })),
+        scorecard_template: formData.scorecard_template.filter(s => s.name.trim())
       };
 
       if (editingJob) {
@@ -269,6 +273,28 @@ export default function RecruitmentJobs() {
       const next = [...prev.screening_questions];
       next[index] = { ...next[index], [field]: value };
       return { ...prev, screening_questions: next };
+    });
+  };
+
+  const addScorecardCriterion = () => {
+    setFormData(prev => ({
+      ...prev,
+      scorecard_template: [...prev.scorecard_template, { name: '', score: 0, notes: '' }]
+    }));
+  };
+
+  const removeScorecardCriterion = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      scorecard_template: prev.scorecard_template.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateScorecardCriterion = (index: number, value: string) => {
+    setFormData(prev => {
+      const next = [...prev.scorecard_template];
+      next[index] = { ...next[index], name: value };
+      return { ...prev, scorecard_template: next };
     });
   };
 
@@ -335,68 +361,83 @@ export default function RecruitmentJobs() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {jobs.map(job => (
-            <div key={job.id} className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-black text-k-text-h">{job.title}</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${job.status === 'open' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-gray-500/10 text-gray-600'}`}>
-                  {job.status}
-                </span>
-              </div>
-              <p className="text-k-text-b text-sm mt-2 line-clamp-2">{job.description}</p>
+            <div key={job.id} className="group relative bg-white border border-k-border/50 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-k-accent/5 rounded-bl-[100px] z-0 transition-transform group-hover:scale-110"></div>
               
-              <div className="mt-4 flex flex-wrap gap-2">
-                {job.location && (
-                  <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
-                    {job.location}
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1 pr-4">
+                    <h3 className="text-xl font-black text-k-text-h leading-tight group-hover:text-k-accent-btn transition-colors">{job.title}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-medium text-k-text-b">{job.department || 'Sin departamento'}</span>
+                      <span className="w-1 h-1 rounded-full bg-k-border"></span>
+                      <span className="text-xs font-medium text-k-text-b">{job.location || 'Remoto/No esp.'}</span>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider border ${
+                    job.status === 'open' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                    : job.status === 'draft' ? 'bg-amber-50 text-amber-600 border-amber-200' 
+                    : 'bg-gray-50 text-gray-600 border-gray-200'
+                  }`}>
+                    {job.status === 'open' ? 'Activa' : job.status === 'draft' ? 'Borrador' : 'Cerrada'}
                   </span>
-                )}
-                {job.job_type && (
-                  <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
-                    {job.job_type}
-                  </span>
-                )}
-                {job.department && (
-                  <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
-                    {job.department}
-                  </span>
-                )}
-                <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
-                  {job.schedule}
-                </span>
-                <span className="text-xs bg-k-bg-card2 text-k-text-b px-2 py-1 rounded-lg">
-                  {job.salary_range}
-                </span>
-                {job.is_featured && (
-                  <span className="text-xs bg-k-accent-btn/10 text-k-accent-btn px-2 py-1 rounded-lg font-bold">
-                    Destacada
-                  </span>
-                )}
-              </div>
+                </div>
+                
+                <p className="text-k-text-b text-sm mt-3 line-clamp-2 leading-relaxed">{job.description || 'Sin descripción.'}</p>
+                
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {job.job_type && (
+                    <span className="text-xs bg-k-bg-primary text-k-text-h font-medium px-3 py-1.5 rounded-lg border border-k-border shadow-sm">
+                      {job.job_type === 'full-time' ? 'Tiempo completo' : job.job_type === 'part-time' ? 'Medio tiempo' : job.job_type}
+                    </span>
+                  )}
+                  {job.schedule && (
+                    <span className="text-xs bg-k-bg-primary text-k-text-h font-medium px-3 py-1.5 rounded-lg border border-k-border shadow-sm">
+                      {job.schedule}
+                    </span>
+                  )}
+                  {job.salary_range && (
+                    <span className="text-xs bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-lg border border-emerald-100 shadow-sm">
+                      {job.salary_range}
+                    </span>
+                  )}
+                  {job.is_featured && (
+                    <span className="text-xs bg-k-accent-btn text-white font-bold px-3 py-1.5 rounded-lg shadow-sm shadow-k-accent-btn/30">
+                      ✨ Destacada
+                    </span>
+                  )}
+                </div>
 
-              <div className="mt-2 text-xs text-k-text-b">
-                {typeof job.views_count === 'number' ? `${job.views_count} vista${job.views_count === 1 ? '' : 's'}` : ''}
-              </div>
-              
-              <div className="mt-4 flex justify-end space-x-3 border-t border-k-border pt-4">
-                <button
-                  onClick={() => setShareJob(job)}
-                  className="text-sm font-bold text-k-text-b hover:text-k-accent-btn transition-colors flex items-center gap-1"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Compartir
-                </button>
-                <button 
-                  onClick={() => openModal(job)}
-                  className="text-sm font-bold text-k-text-b hover:text-k-accent-btn transition-colors"
-                >
-                  Editar
-                </button>
-                <button 
-                  onClick={() => handleDelete(job.id)}
-                  className="text-sm font-bold text-k-text-b hover:text-red-500 transition-colors"
-                >
-                  Cerrar
-                </button>
+                <div className="mt-6 flex justify-between items-center border-t border-k-border/50 pt-4">
+                  <div className="flex items-center gap-1.5 text-xs text-k-text-b font-medium">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    {job.views_count || 0} vista{(job.views_count !== 1) ? 's' : ''}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShareJob(job)}
+                      className="p-2 text-k-text-b hover:text-k-accent-btn hover:bg-k-accent/5 rounded-xl transition-all"
+                      title="Compartir"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => openModal(job)}
+                      className="p-2 text-k-text-b hover:text-amber-500 hover:bg-amber-50 rounded-xl transition-all"
+                      title="Editar"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(job.id)}
+                      className="p-2 text-k-text-b hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                      title="Eliminar/Cerrar"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -770,7 +811,43 @@ export default function RecruitmentJobs() {
                           />
                         </div>
                       </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-bold text-k-text-h">Rúbricas de Entrevista (Scorecards)</label>
+                    <button
+                      type="button"
+                      onClick={addScorecardCriterion}
+                      className="text-xs font-bold text-k-accent-btn hover:underline"
+                    >
+                      + Agregar criterio
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {formData.scorecard_template.map((s, idx) => (
+                      <div key={idx} className="bg-k-bg-primary border border-k-border rounded-xl p-3 space-y-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <input
+                            type="text"
+                            placeholder="Ej. Comunicación asertiva, Habilidades técnicas..."
+                            className="flex-1 bg-white border border-k-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-k-accent"
+                            value={s.name}
+                            onChange={(e) => updateScorecardCriterion(idx, e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeScorecardCriterion(idx)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     ))}
+                    {formData.scorecard_template.length === 0 && (
+                      <p className="text-xs text-k-text-b italic">No hay criterios definidos. Agrega uno para calificar a los candidatos en entrevista.</p>
+                    )}
                   </div>
                 </div>
               </section>

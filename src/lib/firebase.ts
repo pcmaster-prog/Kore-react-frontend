@@ -39,22 +39,30 @@ export async function requestNotificationPermission(): Promise<string | null> {
     const messaging = await getMessagingInstance();
     const token = await getToken(messaging, { vapidKey: VAPID_KEY });
     return token || null;
-  } catch (err) {
+  } catch (_err) {
     // Error silencioso en producción
     return null;
   }
 }
 
+// Tipado mínimo para payloads de Firebase Messaging.
+type FirebaseMessagePayload = {
+  notification?: { title?: string; body?: string };
+  data?: Record<string, string>;
+};
+
 /**
  * Escuchar notificaciones cuando la app está en primer plano.
  * Retorna función de unsuscripción.
  */
-export async function onForegroundMessage(callback: (payload: any) => void): Promise<() => void> {
+export async function onForegroundMessage(
+  callback: (payload: FirebaseMessagePayload) => void
+): Promise<() => void> {
   try {
     const { onMessage } = await import('firebase/messaging');
     const messaging = await getMessagingInstance();
-    return onMessage(messaging, callback);
-  } catch (err) {
+    return onMessage(messaging, callback as (payload: unknown) => void);
+  } catch (_err) {
     // Error silencioso en producción
     return () => {}; // noop unsubscribe
   }

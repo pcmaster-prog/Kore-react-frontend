@@ -37,6 +37,7 @@ export interface JobOpening {
     closing_statement?: string;
     screening_questions?: ScreeningQuestion[];
     screening_pass_score?: number;
+    scorecard_template?: ScorecardCriterion[];
     status: JobOpeningStatus;
     views_count?: number;
     created_at: string;
@@ -189,6 +190,8 @@ export interface Application {
     interview_result?: string;
     manual_review_required?: boolean;
     manual_review_reason?: string;
+    is_rehire?: boolean;
+    blacklist_alert?: boolean;
     created_at: string;
     updated_at: string;
 

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "./store";
-import { login as apiLogin } from "./api";
+import { login as apiLogin, resendVerificationEmail } from "./api";
 import { isValidEmail } from "@/lib/utils";
 
 
@@ -20,6 +20,8 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
   const [caps, setCaps] = useState(false);
 
   // Rate limiting state
@@ -42,7 +44,7 @@ export default function LoginPage() {
   // ✅ si ya está logueado y cae a /login -> lo mandas a su landing
   useEffect(() => {
     const s = auth.get();
-    if (s.token && s.user) {
+    if (s.user) {
       nav(defaultLanding(s.user.role), { replace: true });
     }
   }, [nav]);
@@ -95,15 +97,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await apiLogin(trimmedEmail, password);
+      const res = await apiLogin(trimmedEmail, password, remember);
 
-      // Guardar auth y resetear contadores
-      auth.set({ token: res.token, user: res.user });
-      try {
-        const { default: api } = await import("@/lib/http");
-        const modRes = await api.get("/me/modulos");
-        auth.setModules(modRes.data?.modulos ?? []);
-      } catch { /* silently continue — modules will be empty */ }
+      // Guardar usuario y resetear contadores
+      auth.set({ user: res.user });
+      // Cargar módulos de forma no bloqueante; si fallan, simplemente quedarán vacíos.
+      import("@/lib/http")
+        .then(({ default: api }) => api.get("/me/modulos"))
+        .then((modRes) => auth.setModules(modRes.data?.modulos ?? []))
+        .catch(() => { /* silently continue */ });
       setFailCount(0);
       setCooldownEnd(null);
 
@@ -111,8 +113,14 @@ export default function LoginPage() {
       nav(target, { replace: true });
     } catch (e: any) {
       const newFails = failCount + 1;
-      setFailCount(newFails);
-      setErr(e?.response?.data?.message ?? "No se pudo iniciar sesión. Verifica tus credenciales.");
+      const data = e?.response?.data ?? {};
+      setErr(data.message ?? "No se pudo iniciar sesión. Verifica tus credenciales.");
+
+      if (e?.response?.status === 403 && data.requires_email_verification) {
+        setVerificationEmail(trimmedEmail);
+      } else {
+        setVerificationEmail(null);
+      }
 
       // Aplicar cooldown exponencial después de 3 intentos
       if (newFails >= 3) {
@@ -197,6 +205,27 @@ export default function LoginPage() {
                 <div>
                   <div className="text-xs font-bold text-rose-800 uppercase tracking-widest">Error de acceso</div>
                   <div className="mt-1 text-sm font-medium text-rose-600 leading-relaxed">{err}</div>
+                  {verificationEmail && (
+                    <button
+                      type="button"
+                      disabled={resending}
+                      onClick={async () => {
+                        setResending(true);
+                        try {
+                          await resendVerificationEmail();
+                          setErr("Se ha reenviado el correo de verificación. Revisa tu bandeja de entrada.");
+                          setVerificationEmail(null);
+                        } catch (e: any) {
+                          setErr(e?.response?.data?.message ?? "No se pudo reenviar el correo.");
+                        } finally {
+                          setResending(false);
+                        }
+                      }}
+                      className="mt-2 text-xs font-bold text-rose-800 underline hover:text-rose-900 disabled:opacity-50"
+                    >
+                      {resending ? "Reenviando..." : "Reenviar correo de verificación"}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

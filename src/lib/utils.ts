@@ -88,7 +88,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
  */
 export function reportError(context: string, err?: unknown): void {
   if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
+     
     console.error(`[${context}]`, err);
   }
   const message = err instanceof Error ? err.message : typeof err === "string" ? err : "Error desconocido";

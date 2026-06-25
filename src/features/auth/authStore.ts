@@ -16,37 +16,27 @@ export type AuthUser = {
 };
 
 export type AuthState = {
-  token: string | null;
   user: AuthUser | null;
 };
 
 interface AuthStoreState {
-  token: string | null;
   user: AuthUser | null;
   modules: string[];
-  tokenExpiresAt: number | null; // timestamp in ms
 
-  setAuth: (token: string, user: AuthUser) => void;
+  setUser: (user: AuthUser | null) => void;
   setModules: (modules: string[]) => void;
   logout: () => void;
-  isTokenExpired: () => boolean;
 }
-
-const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas — debe coincidir con config/sanctum.php expiration
 
 export const useAuthStore = create<AuthStoreState>()(
   persist(
-    (set, get) => ({
-      token: null,
+    (set) => ({
       user: null,
       modules: [],
-      tokenExpiresAt: null,
 
-      setAuth: (token, user) =>
+      setUser: (user) =>
         set({
-          token,
           user,
-          tokenExpiresAt: Date.now() + TOKEN_TTL_MS,
         }),
 
       setModules: (modules) => {
@@ -57,17 +47,9 @@ export const useAuthStore = create<AuthStoreState>()(
 
       logout: () =>
         set({
-          token: null,
           user: null,
           modules: [],
-          tokenExpiresAt: null,
         }),
-
-      isTokenExpired: () => {
-        const { tokenExpiresAt } = get();
-        if (!tokenExpiresAt) return true;
-        return Date.now() > tokenExpiresAt;
-      },
     }),
     {
       name: 'kore-auth',
@@ -89,18 +71,14 @@ export const useAuthStore = create<AuthStoreState>()(
 
 // ─── Legacy wrapper para retrocompatibilidad ───────────────────────────────
 // Todos los archivos que importan `auth` de `./store` seguirán funcionando.
+// El token ya no se almacena en el cliente; la sesión vive en una cookie HttpOnly.
 export const auth = {
   get(): AuthState {
-    const { token, user, isTokenExpired } = useAuthStore.getState();
-    // Si el token expiró, limpiamos
-    if (token && isTokenExpired()) {
-      useAuthStore.getState().logout();
-      return { token: null, user: null };
-    }
-    return { token, user };
+    const { user } = useAuthStore.getState();
+    return { user };
   },
-  set(payload: { token: string; user: AuthUser }) {
-    useAuthStore.getState().setAuth(payload.token, payload.user);
+  set(payload: { user: AuthUser }) {
+    useAuthStore.getState().setUser(payload.user);
   },
   clear() {
     useAuthStore.getState().logout();

@@ -1,3 +1,8 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Logs
 logs
 *.log
@@ -27,5 +32,8 @@ android/
 *.sln
 *.sw?
 dev-dist/
+
+# Generated Firebase service worker
+public/firebase-messaging-sw.js
 
 .vercel

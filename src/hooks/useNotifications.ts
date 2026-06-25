@@ -23,7 +23,7 @@ export function useNotifications() {
           token,
           platform: 'web',
         });
-      } catch (err) {
+      } catch (_err) {
         // Error silencioso en producción
       }
     }
@@ -41,7 +41,7 @@ export function useNotifications() {
           }));
         });
         unsubRef.current = unsub;
-      } catch (err) {
+      } catch (_err) {
         // Error silencioso en producción
       }
     }

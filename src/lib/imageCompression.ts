@@ -20,7 +20,7 @@ export async function compressImage(file: File): Promise<File> {
     const compressed = await imageCompression(file, options);
     // Preservar el nombre original del archivo
     return new File([compressed], file.name, { type: compressed.type });
-  } catch (err) {
+  } catch (_err) {
     // Fallback a imagen original en silencio
     return file; // Fallback: usar el archivo sin comprimir
   }

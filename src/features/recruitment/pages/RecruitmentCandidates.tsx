@@ -82,7 +82,7 @@ export default function RecruitmentCandidates() {
   const reviewCount = applications.filter((a) => a.manual_review_required).length;
 
   const CandidateCard = ({ app }: { app: Application }) => (
-    <div className="bg-k-bg-card border border-k-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all hover:border-k-accent/30 group">
+    <div className={`bg-k-bg-card border ${app.blacklist_alert || app.is_rehire ? 'border-red-500 shadow-red-500/20' : 'border-k-border'} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all hover:border-k-accent/30 group`}>
       <Link
         to={`/app/manager/reclutamiento/candidatos/${app.id}`}
         className="block"
@@ -100,6 +100,13 @@ export default function RecruitmentCandidates() {
             </p>
           </div>
         </div>
+
+        {(app.blacklist_alert || app.is_rehire) && (
+          <div className="mb-3 flex items-center gap-1 text-xs font-bold text-red-600 bg-red-500/10 px-2 py-1 rounded-lg w-fit">
+            <Flag className="w-3 h-3" />
+            Alerta: Ex-empleado
+          </div>
+        )}
 
         {app.manual_review_required && (
           <div className="mb-3 flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-500/10 px-2 py-1 rounded-lg w-fit">

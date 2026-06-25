@@ -5,6 +5,7 @@ import DOMPurify from 'dompurify';
  * Sanitiza una cadena HTML eliminando scripts y atributos peligrosos.
  * Usar antes de renderizar contenido dinámico del backend.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function sanitizeHTML(dirty: string): string {
   return DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS: [

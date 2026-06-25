@@ -67,7 +67,6 @@ const RecruitmentDashboard = lazy(() => import("@/features/recruitment/pages/Rec
 const RecruitmentJobs = lazy(() => import("@/features/recruitment/pages/RecruitmentJobs"));
 const RecruitmentCandidates = lazy(() => import("@/features/recruitment/pages/RecruitmentCandidates"));
 const RecruitmentCandidateDetail = lazy(() => import("@/features/recruitment/pages/RecruitmentCandidateDetail"));
-const RecruitmentJobTemplates = lazy(() => import("@/features/recruitment/pages/RecruitmentJobTemplates"));
 const RecruitmentReports = lazy(() => import("@/features/recruitment/pages/RecruitmentReports"));
 const RecruitmentEmailTemplates = lazy(() => import("@/features/recruitment/pages/RecruitmentEmailTemplates"));
 
@@ -137,7 +136,7 @@ function RouteError() {
 
 function RoleAwareRedirect() {
   const user = useAuthStore((s) => s.user);
-  if (user?.role === "empleado") {
+  if (user?.role === "empleado" || user?.role === "empleado_prueba") {
     return <Navigate to="/app/employee/dashboard" replace />;
   }
   return <Navigate to="/app/manager/dashboard" replace />;
@@ -262,7 +261,6 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Suspended><RecruitmentDashboard /></Suspended> },
           { path: "vacantes", element: <Suspended><RecruitmentJobs /></Suspended> },
-          { path: "plantillas", element: <Suspended><RecruitmentJobTemplates /></Suspended> },
           { path: "reportes", element: <Suspended><RecruitmentReports /></Suspended> },
           { path: "candidatos", element: <Suspended><RecruitmentCandidates /></Suspended> },
           { path: "candidatos/:id", element: <Suspended><RecruitmentCandidateDetail /></Suspended> },
@@ -314,7 +312,7 @@ export const router = createBrowserRouter([
       {
         path: "employee/dashboard",
         element: (
-          <RequireRole allow={["empleado"]}>
+          <RequireRole allow={["empleado", "empleado_prueba"]}>
             <Suspended><EmployeeDashboard /></Suspended>
           </RequireRole>
         ),
@@ -322,7 +320,7 @@ export const router = createBrowserRouter([
       {
         path: "employee/mis-tareas/asignaciones",
         element: (
-          <RequireRole allow={["empleado"]}>
+          <RequireRole allow={["empleado", "empleado_prueba"]}>
             <Suspended><TasksPageEmployee /></Suspended>
           </RequireRole>
         ),
@@ -330,7 +328,7 @@ export const router = createBrowserRouter([
       {
         path: "employee/mis-tareas/areas",
         element: (
-          <RequireRole allow={["empleado"]}>
+          <RequireRole allow={["empleado", "empleado_prueba"]}>
             <Suspended><EmployeeTaskAreasPage /></Suspended>
           </RequireRole>
         ),
@@ -354,7 +352,7 @@ export const router = createBrowserRouter([
       {
         path: "employee/mis-recibos",
         element: (
-          <RequireRole allow={["empleado"]}>
+          <RequireRole allow={["empleado", "empleado_prueba"]}>
             <Suspended><MisRecibosPage /></Suspended>
           </RequireRole>
         ),

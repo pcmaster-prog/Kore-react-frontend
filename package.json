@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/generate-firebase-sw.cjs",
     "dev": "vite",
+    "prebuild": "node scripts/generate-firebase-sw.cjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -32,6 +34,7 @@
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-google-recaptcha-v3": "^1.11.0",
     "react-is": "^18.3.1",
     "react-router-dom": "^7.12.0",
     "recharts": "^3.8.1",

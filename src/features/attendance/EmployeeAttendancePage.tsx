@@ -339,7 +339,7 @@ export default function EmployeeAttendancePage() {
       const res = await getMyDays({ from: weekRange.from, to: weekRange.to, page: 1 });
       setHistory(res.data ?? []);
     } catch (e) { reportError("Cargando asistencia", e); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [weekRange.from, weekRange.to]);
 
   // ─── Polling + alerts (Fase 1: robustez sin depender de push) ───────────

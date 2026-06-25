@@ -88,7 +88,6 @@ describe("LoginPage", () => {
     const user = userEvent.setup();
     const mockLogin = apiLogin as ReturnType<typeof vi.fn>;
     mockLogin.mockResolvedValueOnce({
-      token: "valid-token",
       user: {
         id: "u1",
         name: "Admin",
@@ -113,7 +112,6 @@ describe("LoginPage", () => {
     const user = userEvent.setup();
     const mockLogin = apiLogin as ReturnType<typeof vi.fn>;
     mockLogin.mockResolvedValueOnce({
-      token: "emp-token",
       user: {
         id: "u2",
         name: "Empleado",

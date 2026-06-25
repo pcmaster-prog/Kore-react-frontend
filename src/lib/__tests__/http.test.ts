@@ -1,21 +1,18 @@
 // src/lib/__tests__/http.test.ts
-// Tests for the HTTP interceptor: 401 logout + 500+ error event dispatch
+// Tests for the HTTP interceptor: 401 event dispatch + 500+ error event dispatch
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 
-
-// We need to mock authStore before importing http
-vi.mock("@/features/auth/authStore", () => ({
-  useAuthStore: {
-    getState: vi.fn(() => ({
-      token: "test-token",
-      isTokenExpired: () => false,
-      logout: vi.fn(),
-    })),
-  },
-}));
-
 import api from "../http";
-import { useAuthStore } from "@/features/auth/authStore";
+
+type InterceptorHandler = {
+  rejected: (error: {
+    response?: { status: number; data?: { message?: string } };
+  }) => Promise<never>;
+};
+
+type InterceptorHandlers = {
+  handlers: InterceptorHandler[];
+};
 
 describe("HTTP Interceptor", () => {
   let eventHandler: ReturnType<typeof vi.fn>;
@@ -26,17 +23,12 @@ describe("HTTP Interceptor", () => {
   });
 
   afterEach(() => {
-    window.removeEventListener("kore-error" as any, eventHandler as EventListener);
-    window.removeEventListener("kore:unauthorized" as any, eventHandler as EventListener);
-  });
-
-  it("attaches Authorization header when token exists", () => {
-    const state = useAuthStore.getState();
-    expect(state.token).toBe("test-token");
+    window.removeEventListener("kore-error" as unknown as string, eventHandler as EventListener);
+    window.removeEventListener("kore:unauthorized" as unknown as string, eventHandler as EventListener);
   });
 
   it("dispatches kore-error event on 500+ responses", async () => {
-    window.addEventListener("kore-error" as any, eventHandler as EventListener);
+    window.addEventListener("kore-error" as unknown as string, eventHandler as EventListener);
 
     // Simulate a 500 response via axios interceptor
     const errorResponse = {
@@ -47,7 +39,7 @@ describe("HTTP Interceptor", () => {
     };
 
     // Access the response interceptor directly
-    const interceptors = (api.interceptors.response as any).handlers;
+    const interceptors = (api.interceptors.response as unknown as InterceptorHandlers).handlers;
     const errorInterceptor = interceptors[interceptors.length - 1].rejected;
 
     try {
@@ -63,7 +55,7 @@ describe("HTTP Interceptor", () => {
   });
 
   it("dispatches kore-error with default message when server returns no message", async () => {
-    window.addEventListener("kore-error" as any, eventHandler as EventListener);
+    window.addEventListener("kore-error" as unknown as string, eventHandler as EventListener);
 
     const errorResponse = {
       response: {
@@ -72,7 +64,7 @@ describe("HTTP Interceptor", () => {
       },
     };
 
-    const interceptors = (api.interceptors.response as any).handlers;
+    const interceptors = (api.interceptors.response as unknown as InterceptorHandlers).handlers;
     const errorInterceptor = interceptors[interceptors.length - 1].rejected;
 
     try {
@@ -87,15 +79,8 @@ describe("HTTP Interceptor", () => {
     expect(event.detail.status).toBe(503);
   });
 
-  it("dispatches kore:unauthorized and calls logout on 401", async () => {
-    window.addEventListener("kore:unauthorized" as any, eventHandler as EventListener);
-
-    const mockLogout = vi.fn();
-    (useAuthStore.getState as ReturnType<typeof vi.fn>).mockReturnValue({
-      token: "test-token",
-      isTokenExpired: () => false,
-      logout: mockLogout,
-    });
+  it("dispatches kore:unauthorized on 401", async () => {
+    window.addEventListener("kore:unauthorized" as unknown as string, eventHandler as EventListener);
 
     const errorResponse = {
       response: {
@@ -104,7 +89,7 @@ describe("HTTP Interceptor", () => {
       },
     };
 
-    const interceptors = (api.interceptors.response as any).handlers;
+    const interceptors = (api.interceptors.response as unknown as InterceptorHandlers).handlers;
     const errorInterceptor = interceptors[interceptors.length - 1].rejected;
 
     try {
@@ -114,11 +99,10 @@ describe("HTTP Interceptor", () => {
     }
 
     expect(eventHandler).toHaveBeenCalledOnce();
-    expect(mockLogout).toHaveBeenCalled();
   });
 
   it("does NOT dispatch kore-error for 4xx client errors (other than 401)", async () => {
-    window.addEventListener("kore-error" as any, eventHandler as EventListener);
+    window.addEventListener("kore-error" as unknown as string, eventHandler as EventListener);
 
     const errorResponse = {
       response: {
@@ -127,7 +111,7 @@ describe("HTTP Interceptor", () => {
       },
     };
 
-    const interceptors = (api.interceptors.response as any).handlers;
+    const interceptors = (api.interceptors.response as unknown as InterceptorHandlers).handlers;
     const errorInterceptor = interceptors[interceptors.length - 1].rejected;
 
     try {

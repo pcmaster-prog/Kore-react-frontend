@@ -6,6 +6,17 @@
 
 export type TaskStatus = "open" | "in_progress" | "completed";
 
+export type TaskAssignee = {
+  id?: string;
+  empleado?: {
+    id?: string;
+    full_name?: string | null;
+    name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+  has_evidence?: boolean;
+};
+
 export type Task = {
   id: string;
   title: string;
@@ -14,7 +25,7 @@ export type Task = {
   status: TaskStatus;
   due_at?: string | null;
   created_at: string;
-  meta?: Record<string, any> | null;
+  meta?: Record<string, unknown> | null;
   /** Sección a la que pertenece la tarea */
   section?: string | null;
   /** Departamento al que pertenece la tarea */
@@ -30,7 +41,7 @@ export type Task = {
     name?: string | null;
     avatar_url?: string | null;
   } | null;
-  assignees?: any[] | null;
+  assignees?: TaskAssignee[] | null;
 };
 
 export type Paginated<T> = {

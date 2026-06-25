@@ -1,7 +1,7 @@
 // src/features/auth/RegisterPage.tsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "./store";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { register, type RegisterPayload } from "./api";
 
 import { cx } from "@/lib/utils";
@@ -17,9 +17,11 @@ const MODULES = [
 
 export default function RegisterPage() {
   const nav = useNavigate();
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Step 1
   const [empresaName, setEmpresaName] = useState("");
@@ -55,19 +57,27 @@ export default function RegisterPage() {
     setLoading(true);
     setErr(null);
     try {
+      let recaptchaToken = "";
+      if (executeRecaptcha) {
+        recaptchaToken = await executeRecaptcha("register");
+      }
+
       const payload: RegisterPayload = {
         empresa_nombre: empresaName.trim(),
         industry,
-        employee_range: employeeRange,
+        employee_count_range: employeeRange,
         modules,
         admin_name: adminName.trim(),
         admin_email: adminEmail.trim(),
         admin_password: adminPassword,
+        recaptcha_token: recaptchaToken,
       };
       const res = await register(payload);
-      auth.set({ token: res.token, user: res.user });
-      auth.setModules(modules);
-      nav("/app/manager/dashboard", { replace: true });
+      setSuccess(
+        res.message ||
+          "Registro exitoso. Revisa tu correo electrónico para activar tu cuenta."
+      );
+      setTimeout(() => nav("/login", { replace: true }), 2500);
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error al registrar. Intenta de nuevo.");
     } finally {
@@ -135,6 +145,11 @@ export default function RegisterPage() {
             {err && (
               <div className="mb-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-3 text-sm text-rose-200">
                 {err}
+              </div>
+            )}
+            {success && (
+              <div className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                {success}
               </div>
             )}
 

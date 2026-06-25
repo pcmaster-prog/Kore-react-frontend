@@ -1,21 +1,55 @@
 import axios from "axios";
-import { useAuthStore } from "@/features/auth/authStore";
 
-const baseURL =
-  import.meta.env.VITE_API_URL ??
-  'https://kore-laravel-backend-production.up.railway.app/api/v1';
+const baseURL = import.meta.env.VITE_API_URL;
+
+if (!baseURL) {
+  throw new Error(
+    "VITE_API_URL no está definida. Crea un archivo .env.local con la URL del backend."
+  );
+}
 
 // URL base del backend (sin /api/v1) para CSRF cookie
 const backendOrigin = baseURL.replace(/\/api\/v1\/?$/, '');
 
 const api = axios.create({
   baseURL,
-  withCredentials: true, // Necesario para cookies CSRF de Sanctum
+  withCredentials: true, // Necesario para cookies de sesión y CSRF
   headers: {
     "Content-Type": "application/json",
     "Accept-Language": "es",
   },
 });
+
+// Instancia para endpoints stateful de Laravel que viven en la raíz del backend
+// (login, registro, logout, CSRF, verificación de correo, etc.).
+export const webApi = axios.create({
+  baseURL: backendOrigin,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+    "Accept-Language": "es",
+  },
+});
+
+webApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401) {
+      window.dispatchEvent(new CustomEvent("kore:unauthorized"));
+    }
+    if (status && status >= 500) {
+      const serverMsg =
+        error?.response?.data?.message ?? "Error del servidor. Intenta más tarde.";
+      window.dispatchEvent(
+        new CustomEvent("kore-error", {
+          detail: { message: serverMsg, status },
+        })
+      );
+    }
+    return Promise.reject(error);
+  }
+);
 
 // ─── CSRF: obtener cookie antes de requests que lo requieran ────────────────
 export async function fetchCsrfCookie(): Promise<void> {
@@ -24,23 +58,6 @@ export async function fetchCsrfCookie(): Promise<void> {
   });
 }
 
-// ─── Request interceptor: adjuntar token + verificar expiración ────────────
-api.interceptors.request.use((config) => {
-  const { token, isTokenExpired, logout } = useAuthStore.getState();
-
-  if (token) {
-    // Si el token expiró, limpiar y redirigir
-    if (isTokenExpired()) {
-      logout();
-      window.dispatchEvent(new CustomEvent("kore:unauthorized"));
-      return Promise.reject(new axios.Cancel("Token expirado"));
-    }
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
 // ─── Response interceptor: manejar 401 + toast global para 500+ ───────────
 api.interceptors.response.use(
   (response) => response,
@@ -48,7 +65,6 @@ api.interceptors.response.use(
     const status = error?.response?.status;
 
     if (status === 401) {
-      useAuthStore.getState().logout();
       window.dispatchEvent(new CustomEvent("kore:unauthorized"));
     }
 
