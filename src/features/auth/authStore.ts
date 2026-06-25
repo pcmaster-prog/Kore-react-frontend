@@ -1,5 +1,6 @@
 // src/features/auth/authStore.ts
 import { create } from 'zustand';
+import type { PositionPermissions } from "@/features/puestos/types";
 import { persist } from 'zustand/middleware';
 
 export type Role = "admin" | "supervisor" | "empleado" | "empleado_prueba";
@@ -22,9 +23,11 @@ export type AuthState = {
 interface AuthStoreState {
   user: AuthUser | null;
   modules: string[];
+  permissions: PositionPermissions;
 
   setUser: (user: AuthUser | null) => void;
   setModules: (modules: string[]) => void;
+  setPermissions: (permissions: PositionPermissions) => void;
   logout: () => void;
 }
 
@@ -33,6 +36,7 @@ export const useAuthStore = create<AuthStoreState>()(
     (set) => ({
       user: null,
       modules: [],
+      permissions: {},
 
       setUser: (user) =>
         set({
@@ -45,10 +49,15 @@ export const useAuthStore = create<AuthStoreState>()(
         window.dispatchEvent(new CustomEvent("kore-modules-updated"));
       },
 
+      setPermissions: (permissions) => {
+        set({ permissions });
+      },
+
       logout: () =>
         set({
           user: null,
           modules: [],
+          permissions: {},
         }),
     }),
     {
@@ -88,5 +97,11 @@ export const auth = {
   },
   getModules(): string[] {
     return useAuthStore.getState().modules;
+  },
+  setPermissions(permissions: PositionPermissions) {
+    useAuthStore.getState().setPermissions(permissions);
+  },
+  getPermissions(): PositionPermissions {
+    return useAuthStore.getState().permissions;
   },
 };

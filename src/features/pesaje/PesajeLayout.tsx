@@ -1,18 +1,58 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Scale, FileText, BookOpen } from "lucide-react";
 import { cx } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/authStore";
+import type { PositionPermissions } from "@/features/puestos/types";
+
+const MODULE_SLUG = "produccion_pesaje";
 
 const PESAJE_TABS = [
-  { path: "/app/pesaje/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-  { path: "/app/pesaje/registrar", label: "Registrar", icon: <Scale className="h-4 w-4" /> },
-  { path: "/app/pesaje/historial", label: "Historial", icon: <FileText className="h-4 w-4" /> },
+  { path: "/app/pesaje/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" />, permissionKey: "dashboard" },
+  { path: "/app/pesaje/registrar", label: "Registrar", icon: <Scale className="h-4 w-4" />, permissionKey: "registrar" },
+  { path: "/app/pesaje/historial", label: "Historial", icon: <FileText className="h-4 w-4" />, permissionKey: "historial" },
   { path: "/app/pesaje/sabores", label: "Sabores", icon: <BookOpen className="h-4 w-4" />, adminOnly: true },
 ];
 
+function hasTabPermission(
+  isAdmin: boolean,
+  permissions: PositionPermissions,
+  permissionKey?: string
+): boolean {
+  if (isAdmin || !permissionKey) return true;
+
+  const modulePerms = permissions[MODULE_SLUG];
+
+  // Sin permisos configurados = acceso total (compatibilidad hacia atrás).
+  if (!modulePerms || modulePerms.length === 0) return true;
+
+  return modulePerms.includes(permissionKey);
+}
+
 export default function PesajeLayout() {
-  const isAdmin = useAuthStore((s: any) => s.user?.role === "admin");
-  const tabs = PESAJE_TABS.filter((t) => !t.adminOnly || isAdmin);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = useAuthStore((s) => s.user);
+  const permissions = useAuthStore((s) => s.permissions);
+  const isAdmin = user?.role === "admin";
+
+  const tabs = useMemo(
+    () => PESAJE_TABS.filter((t) => !t.adminOnly || isAdmin).filter((t) => hasTabPermission(isAdmin, permissions, t.permissionKey)),
+    [isAdmin, permissions]
+  );
+
+  // Seguridad UX: si el usuario escribe una URL a la que no tiene acceso,
+  // redirigirlo a la primera pestaña permitida.
+  useEffect(() => {
+    if (tabs.length === 0) return;
+
+    const currentPath = location.pathname;
+    const isAllowed = tabs.some((t) => currentPath === t.path || currentPath.startsWith(`${t.path}/`));
+
+    if (!isAllowed) {
+      navigate(tabs[0].path, { replace: true });
+    }
+  }, [location.pathname, tabs, navigate]);
 
   return (
     <div className="space-y-6 animate-in-up flex flex-col h-full">
@@ -38,7 +78,7 @@ export default function PesajeLayout() {
           </div>
         </div>
       </div>
-      
+
       <div className="flex-1">
         <Outlet />
       </div>

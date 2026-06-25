@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { auth } from "./store";
 import { login as apiLogin, resendVerificationEmail } from "./api";
+import { getMyPermissions } from "@/features/puestos/api";
 import { isValidEmail } from "@/lib/utils";
 
 
@@ -101,10 +102,13 @@ export default function LoginPage() {
 
       // Guardar usuario y resetear contadores
       auth.set({ user: res.user });
-      // Cargar módulos de forma no bloqueante; si fallan, simplemente quedarán vacíos.
+      // Cargar módulos y permisos granulares de forma no bloqueante.
       import("@/lib/http")
         .then(({ default: api }) => api.get("/me/modulos"))
         .then((modRes) => auth.setModules(modRes.data?.modulos ?? []))
+        .catch(() => { /* silently continue */ });
+      getMyPermissions()
+        .then((permissions) => auth.setPermissions(permissions))
         .catch(() => { /* silently continue */ });
       setFailCount(0);
       setCooldownEnd(null);

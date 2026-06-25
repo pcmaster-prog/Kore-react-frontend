@@ -44,7 +44,7 @@ function getXsrfToken() {
   return null;
 }
 
-const addCsrfHeader = (config: any) => {
+const addCsrfHeader = (config: { headers?: Record<string, string> }) => {
   const token = getXsrfToken();
   if (token && config.headers) {
     config.headers['X-XSRF-TOKEN'] = token;

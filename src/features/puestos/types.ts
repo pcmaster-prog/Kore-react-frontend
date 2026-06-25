@@ -1,9 +1,15 @@
+export type PositionPermissions = {
+  produccion_maderas?: string[];
+  produccion_pesaje?: string[];
+};
+
 export type Puesto = {
   id: string;
   nombre: string;
   descripcion: string | null;
   activo: boolean;
   modulos: string[];           // slugs de módulos asignados
+  permisos: PositionPermissions;
   empleados_count?: number;
   created_at: string;
 };

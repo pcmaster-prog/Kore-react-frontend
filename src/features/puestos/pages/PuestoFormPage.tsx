@@ -1,8 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Save, Briefcase, AlertTriangle, Shield } from "lucide-react";
+import { ArrowLeft, Save, Briefcase, AlertTriangle, Shield, Lock } from "lucide-react";
 import { usePuestos, useCreatePuesto, useUpdatePuesto, useModulosDisponibles } from "../hooks/usePuestos";
 import { ModulosSelector } from "../components/ModulosSelector";
+import type { PositionPermissions } from "../types";
+
+const DETAILED_PERMISSIONS = {
+  produccion_maderas: [
+    { key: "dashboard", label: "Dashboard" },
+    { key: "inventario", label: "Inventario" },
+    { key: "produccion", label: "Producción" },
+    { key: "ensamblaje", label: "Ensamblaje" },
+    { key: "pedidos", label: "Pedidos" },
+  ],
+  produccion_pesaje: [
+    { key: "dashboard", label: "Dashboard" },
+    { key: "registrar", label: "Registrar" },
+    { key: "historial", label: "Historial" },
+  ],
+};
+
+type ModuleSlug = keyof typeof DETAILED_PERMISSIONS;
 
 export default function PuestoFormPage() {
   const { id } = useParams();
@@ -18,16 +36,18 @@ export default function PuestoFormPage() {
   const [descripcion, setDescripcion] = useState("");
   const [activo, setActivo] = useState(true);
   const [selectedModulos, setSelectedModulos] = useState<string[]>([]);
+  const [permisos, setPermisos] = useState<PositionPermissions>({});
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (isEdit && puestosData?.data) {
-      const p = puestosData.data.find(x => x.id === id);
+      const p = puestosData.data.find((x) => x.id === id);
       if (p) {
         setNombre(p.nombre);
         setDescripcion(p.descripcion ?? "");
         setActivo(p.activo);
         setSelectedModulos(p.modulos ?? []);
+        setPermisos(p.permisos ?? {});
       }
     }
   }, [id, isEdit, puestosData]);
@@ -36,13 +56,58 @@ export default function PuestoFormPage() {
   const saving = creating || updating;
   const canSave = nombre.trim().length > 0;
 
+  const modulosConPermisosDetallados = useMemo(
+    () => (Object.keys(DETAILED_PERMISSIONS) as ModuleSlug[]).filter((slug) => selectedModulos.includes(slug)),
+    [selectedModulos]
+  );
+
+  function togglePermission(moduleSlug: ModuleSlug, permissionKey: string) {
+    setPermisos((prev) => {
+      const current = prev[moduleSlug] ?? [];
+      const next = current.includes(permissionKey)
+        ? current.filter((k) => k !== permissionKey)
+        : [...current, permissionKey];
+
+      return {
+        ...prev,
+        [moduleSlug]: next,
+      };
+    });
+  }
+
+  function selectAllPermissions(moduleSlug: ModuleSlug) {
+    setPermisos((prev) => ({
+      ...prev,
+      [moduleSlug]: DETAILED_PERMISSIONS[moduleSlug].map((p) => p.key),
+    }));
+  }
+
+  function clearPermissions(moduleSlug: ModuleSlug) {
+    setPermisos((prev) => {
+      const next = { ...prev };
+      delete next[moduleSlug];
+      return next;
+    });
+  }
+
   async function handleSave() {
     setErr(null);
     try {
+      // Solo enviar permisos de módulos que estén seleccionados.
+      const permisosActivos: PositionPermissions = {};
+      for (const slug of modulosConPermisosDetallados) {
+        if (permisos[slug] && permisos[slug].length > 0) {
+          permisosActivos[slug] = permisos[slug];
+        }
+      }
+
       if (isEdit) {
-        await updatePuesto({ id, payload: { nombre, descripcion, modulos: selectedModulos, activo } });
+        await updatePuesto({
+          id,
+          payload: { nombre, descripcion, modulos: selectedModulos, permisos: permisosActivos, activo },
+        });
       } else {
-        await createPuesto({ nombre, descripcion, modulos: selectedModulos });
+        await createPuesto({ nombre, descripcion, modulos: selectedModulos, permisos: permisosActivos });
       }
       nav("/app/manager/puestos");
     } catch (e: any) {
@@ -94,7 +159,7 @@ export default function PuestoFormPage() {
             <Briefcase className="h-5 w-5 text-k-text-b" />
             <h2 className="font-bold text-k-text-h uppercase tracking-widest text-sm">Información General</h2>
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-k-text-b mb-2">Nombre del Puesto</label>
@@ -135,7 +200,7 @@ export default function PuestoFormPage() {
             <Shield className="h-5 w-5 text-k-text-b" />
             <h2 className="font-bold text-k-text-h uppercase tracking-widest text-sm">Permisos de Módulos</h2>
           </div>
-          
+
           <div className="space-y-4">
             <p className="text-sm text-k-text-b">
               Selecciona los módulos a los que tendrán acceso los empleados con este puesto.
@@ -148,6 +213,72 @@ export default function PuestoFormPage() {
           </div>
         </div>
       </div>
+
+      {modulosConPermisosDetallados.length > 0 && (
+        <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-sm space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-k-border">
+            <Lock className="h-5 w-5 text-k-text-b" />
+            <h2 className="font-bold text-k-text-h uppercase tracking-widest text-sm">Permisos Detallados</h2>
+          </div>
+
+          <p className="text-sm text-k-text-b">
+            Limita las pestañas específicas a las que podrán acceder los empleados con este puesto.
+            Si no marcas ninguna opción, podrán ver todas las pestañas del módulo.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {modulosConPermisosDetallados.map((moduleSlug) => {
+              const moduleName = moduleSlug === "produccion_maderas" ? "Producción Maderas" : "Módulo Pesaje";
+              const selected = permisos[moduleSlug] ?? [];
+
+              return (
+                <div key={moduleSlug} className="rounded-2xl border border-k-border bg-k-bg-card2 p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-k-text-h text-sm">{moduleName}</h3>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => selectAllPermissions(moduleSlug)}
+                        className="text-xs font-bold text-violet-600 hover:text-violet-700"
+                      >
+                        Todas
+                      </button>
+                      <span className="text-k-text-b">·</span>
+                      <button
+                        type="button"
+                        onClick={() => clearPermissions(moduleSlug)}
+                        className="text-xs font-bold text-k-text-b hover:text-k-text-h"
+                      >
+                        Ninguna
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {DETAILED_PERMISSIONS[moduleSlug].map((perm) => {
+                      const checked = selected.includes(perm.key);
+                      return (
+                        <label
+                          key={perm.key}
+                          className="flex items-center gap-3 p-3 rounded-xl border border-k-border bg-k-bg-card cursor-pointer hover:border-violet-500/50 transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => togglePermission(moduleSlug, perm.key)}
+                            className="h-4 w-4 rounded text-violet-600 focus:ring-violet-500"
+                          />
+                          <span className="text-sm font-medium text-k-text-h">{perm.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
