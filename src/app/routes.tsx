@@ -11,6 +11,8 @@ import { useAuthStore } from "@/features/auth/store";
 import LoginPage from "@/features/auth/LoginPage";
 import RegisterPage from "@/features/auth/RegisterPage";
 import SetPasswordPage from "@/features/auth/SetPasswordPage";
+import ForgotPasswordPage from "@/features/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/features/auth/ResetPasswordPage";
 
 // ─── Lazy Loaded Components ──────────────────────────────────────────────────
 // Dashboards
@@ -145,8 +147,18 @@ function RoleAwareRedirect() {
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
-  { path: "/set-password", element: <SetPasswordPage /> },
-
+  {
+    path: "forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "password-reset/:token",
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: "/set-password",
+    element: <SetPasswordPage />,
+  },
   {
     path: "/app",
     element: (

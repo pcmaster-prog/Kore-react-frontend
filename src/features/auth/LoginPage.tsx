@@ -1,6 +1,6 @@
 //features/auth/LoginPage.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { auth } from "./store";
 import { login as apiLogin, resendVerificationEmail } from "./api";
 import { isValidEmail } from "@/lib/utils";
@@ -292,9 +292,9 @@ export default function LoginPage() {
                 </span>
               </label>
 
-              <button type="button" className="text-[11px] font-bold text-k-text-b hover:text-k-text-h uppercase tracking-widest transition-colors">
+              <Link to="/forgot-password" className="text-[11px] font-bold text-k-text-b hover:text-k-text-h uppercase tracking-widest transition-colors">
                 ¿Olvidaste tu clave?
-              </button>
+              </Link>
             </div>
 
             <button

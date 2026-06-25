@@ -43,4 +43,16 @@ export async function resendVerificationEmail(): Promise<{ message: string }> {
   return res.data;
 }
 
+export async function sendPasswordResetLink(email: string): Promise<{ status: string }> {
+  await fetchCsrfCookie();
+  const res = await webApi.post("/forgot-password", { email });
+  return res.data;
+}
+
+export async function resetPassword(payload: any): Promise<{ status: string }> {
+  await fetchCsrfCookie();
+  const res = await webApi.post("/reset-password", payload);
+  return res.data;
+}
+
 export default api;
