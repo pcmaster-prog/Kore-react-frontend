@@ -17,6 +17,7 @@ import { getPendientesSupervisor } from "@/features/semaforo/api";
 import { isEnabled } from "@/lib/featureFlags";
 
 import { cx } from "@/lib/utils";
+import { EmployeeBottomNav } from "@/features/employee/components/EmployeeBottomNav";
 // ─── Link simple con Prefetch ─────────────────────────────────────────────────
 function SidebarLink({
   to, label, icon, indent = false, onClick,
@@ -286,6 +287,8 @@ export default function AppShell() {
     nav("/login", { replace: true });
   }
 
+  const isEmployee = role === "empleado" || role === "empleado_prueba";
+
   return (
     <div className="min-h-screen bg-k-bg-page flex overflow-hidden w-full max-w-[100vw]">
       {/* ── A11y Skip to content ── */}
@@ -293,76 +296,103 @@ export default function AppShell() {
         Saltar al contenido principal
       </a>
 
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block w-72 shrink-0 h-screen fixed">
-        <SidebarContent user={user} role={role} onLogout={logout} />
-      </aside>
+      {!isEmployee ? (
+        <>
+          {/* Sidebar - Desktop */}
+          <aside className="hidden lg:block w-72 shrink-0 h-screen fixed">
+            <SidebarContent user={user} role={role} onLogout={logout} />
+          </aside>
 
-      <div className="flex-1 flex flex-col lg:ml-72 min-h-screen relative min-w-0 w-full">
-        {/* Top Header */}
-        <header className="h-20 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-10 shrink-0 gap-2">
-          <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1">
-            <button
-              className="lg:hidden shrink-0 h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-neutral-100"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="h-5 w-5 text-neutral-800" />
-            </button>
-            <div className="min-w-0 overflow-x-auto scrollbar-hide whitespace-nowrap mask-fade-right">
-              <Breadcrumbs />
+          <div className="flex-1 flex flex-col lg:ml-72 min-h-screen relative min-w-0 w-full">
+            {/* Top Header */}
+            <header className="h-20 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-10 shrink-0 gap-2">
+              <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1">
+                <button
+                  className="lg:hidden shrink-0 h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-neutral-100"
+                  onClick={() => setMobileOpen(true)}
+                >
+                  <Menu className="h-5 w-5 text-neutral-800" />
+                </button>
+                <div className="min-w-0 overflow-x-auto scrollbar-hide whitespace-nowrap mask-fade-right">
+                  <Breadcrumbs />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 lg:gap-6 shrink-0">
+                 <button className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-neutral-100 shadow-sm hover:bg-neutral-50 transition-colors relative">
+                   <Bell className="h-4.5 w-4.5 text-neutral-700" />
+                   <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-rose-500 border-2 border-white" />
+                 </button>
+                 <button
+                   onClick={() => nav(role === 'admin' ? '/app/manager/configuracion' : '/app/perfil')}
+                   className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-neutral-100 shadow-sm hover:bg-neutral-50 transition-colors"
+                 >
+                   <Settings className="h-4.5 w-4.5 text-neutral-700" />
+                 </button>
+                 
+                 <div className="h-8 w-px bg-neutral-200 mx-1 hidden sm:block" />
+
+                 <div className="hidden sm:flex items-center gap-3">
+                   <div className="text-right">
+                     <div className="text-[13px] font-bold text-neutral-900 leading-none truncate max-w-[120px]">{user?.name ?? "Usuario"}</div>
+                     <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-1.5">{role === 'admin' ? 'Operations Manager' : 'Staff'}</div>
+                   </div>
+                   <div className="h-10 w-10 rounded-xl flex-shrink-0 bg-neutral-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+                     <User className="h-6 w-6 text-neutral-400 mt-2" />
+                   </div>
+                 </div>
+              </div>
+            </header>
+
+            {/* Dynamic Route Content */}
+            <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-10 pt-4 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
+              {/* Internal main-card container effect */}
+              <div className="min-h-[calc(100vh-160px)] min-w-0 w-full">
+                 <Outlet />
+              </div>
+            </main>
+          </div>
+
+          {/* Mobile Drawer */}
+          {mobileOpen && (
+            <div className="fixed inset-0 z-[100] lg:hidden">
+              <div className="absolute inset-0 bg-obsidian/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+              <div className="absolute left-0 top-0 h-[100dvh] w-[280px] bg-obsidian animate-out-in shadow-2xl overflow-hidden flex flex-col">
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="absolute top-6 right-6 z-50 text-white/40 hover:text-white transition-colors bg-obsidian/50 rounded-full p-1 backdrop-blur-sm"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+                <div className="flex-1 h-full min-h-0 relative">
+                  <SidebarContent user={user} role={role} onNav={() => setMobileOpen(false)} onLogout={() => { setMobileOpen(false); logout(); }} />
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 lg:gap-6 shrink-0">
-             <button className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-neutral-100 shadow-sm hover:bg-neutral-50 transition-colors relative">
-               <Bell className="h-4.5 w-4.5 text-neutral-700" />
-               <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-rose-500 border-2 border-white" />
-             </button>
-             <button
-               onClick={() => nav(role === 'admin' ? '/app/manager/configuracion' : '/app/perfil')}
-               className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-neutral-100 shadow-sm hover:bg-neutral-50 transition-colors"
-             >
-               <Settings className="h-4.5 w-4.5 text-neutral-700" />
-             </button>
-             
-             <div className="h-8 w-px bg-neutral-200 mx-1 hidden sm:block" />
-
-             <div className="hidden sm:flex items-center gap-3">
-               <div className="text-right">
-                 <div className="text-[13px] font-bold text-neutral-900 leading-none truncate max-w-[120px]">{user?.name ?? "Usuario"}</div>
-                 <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mt-1.5">{role === 'admin' ? 'Operations Manager' : 'Staff'}</div>
-               </div>
-               <div className="h-10 w-10 rounded-xl flex-shrink-0 bg-neutral-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-                 <User className="h-6 w-6 text-neutral-400 mt-2" />
-               </div>
-             </div>
-          </div>
-        </header>
-
-        {/* Dynamic Route Content */}
-        <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-10 pt-4 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
-          {/* Internal main-card container effect */}
-          <div className="min-h-[calc(100vh-160px)] min-w-0 w-full">
-             <Outlet />
-          </div>
-        </main>
-      </div>
-
-      {/* Mobile Drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
-          <div className="absolute inset-0 bg-obsidian/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-[100dvh] w-[280px] bg-obsidian animate-out-in shadow-2xl overflow-hidden flex flex-col">
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute top-6 right-6 z-50 text-white/40 hover:text-white transition-colors bg-obsidian/50 rounded-full p-1 backdrop-blur-sm"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <div className="flex-1 h-full min-h-0 relative">
-              <SidebarContent user={user} role={role} onNav={() => setMobileOpen(false)} onLogout={() => { setMobileOpen(false); logout(); }} />
+          )}
+        </>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-screen relative min-w-0 w-full">
+          {/* Employee Top Header */}
+          <header className="h-16 flex items-center justify-between px-4 z-10 shrink-0 bg-white/80 backdrop-blur-sm border-b border-neutral-100">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="h-8 w-8 rounded-xl bg-k-sb-active shadow-md flex items-center justify-center text-k-bg-sidebar font-black text-sm italic">
+                K
+              </div>
+              <div className="min-w-0 overflow-x-auto scrollbar-hide whitespace-nowrap mask-fade-right">
+                <Breadcrumbs />
+              </div>
             </div>
-          </div>
+          </header>
+
+          {/* Dynamic Route Content */}
+          <main id="main-content" className="flex-1 p-4 pb-24 overflow-y-auto overflow-x-hidden min-w-0 w-full relative">
+            <div className="min-h-[calc(100vh-144px)] min-w-0 w-full">
+              <Outlet />
+            </div>
+          </main>
+
+          <EmployeeBottomNav onLogout={logout} />
         </div>
       )}
 
