@@ -14,6 +14,7 @@ const backendOrigin = baseURL.replace(/\/api\/v1\/?$/, '');
 const api = axios.create({
   baseURL,
   withCredentials: true, // Necesario para cookies de sesión y CSRF
+  withXSRFToken: true, // Añadido para enviar el token CSRF en requests cross-origin (subdominios)
   headers: {
     "Content-Type": "application/json",
     "Accept-Language": "es",
@@ -25,6 +26,7 @@ const api = axios.create({
 export const webApi = axios.create({
   baseURL: backendOrigin,
   withCredentials: true,
+  withXSRFToken: true, // Añadido para enviar el token CSRF en requests cross-origin (subdominios)
   headers: {
     "Content-Type": "application/json",
     "Accept-Language": "es",
