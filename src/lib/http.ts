@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const baseURL = import.meta.env.VITE_API_URL;
 
@@ -44,9 +44,9 @@ function getXsrfToken() {
   return null;
 }
 
-const addCsrfHeader = (config: { headers?: Record<string, string> }) => {
+const addCsrfHeader = (config: InternalAxiosRequestConfig) => {
   const token = getXsrfToken();
-  if (token && config.headers) {
+  if (token) {
     config.headers['X-XSRF-TOKEN'] = token;
   }
   return config;
