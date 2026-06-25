@@ -33,6 +33,28 @@ export const webApi = axios.create({
   },
 });
 
+// Extraer manualmente el token CSRF para forzar su envío en subdominios
+function getXsrfToken() {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; XSRF-TOKEN=`);
+  if (parts.length === 2) {
+    const token = parts.pop()?.split(';').shift();
+    return token ? decodeURIComponent(token) : null;
+  }
+  return null;
+}
+
+const addCsrfHeader = (config: any) => {
+  const token = getXsrfToken();
+  if (token && config.headers) {
+    config.headers['X-XSRF-TOKEN'] = token;
+  }
+  return config;
+};
+
+api.interceptors.request.use(addCsrfHeader);
+webApi.interceptors.request.use(addCsrfHeader);
+
 webApi.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -55,7 +77,7 @@ webApi.interceptors.response.use(
 
 // ─── CSRF: obtener cookie antes de requests que lo requieran ────────────────
 export async function fetchCsrfCookie(): Promise<void> {
-  await axios.get(`${backendOrigin}/sanctum/csrf-cookie`, {
+  await axios.get(`${backendOrigin}/sanctum/csrf-cookie?t=${new Date().getTime()}`, {
     withCredentials: true,
   });
 }
