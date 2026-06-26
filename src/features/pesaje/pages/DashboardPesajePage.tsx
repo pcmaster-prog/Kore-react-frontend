@@ -1,9 +1,15 @@
-import { LayoutDashboard, TrendingUp, TrendingDown, Scale, Route } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, Scale, Route, Package } from "lucide-react";
 import { useDashboardPesaje } from "../hooks/usePesaje";
+import type { PesajeRegistro } from "../types";
 
 export default function DashboardPesajePage() {
   const { data: dashboard, isLoading } = useDashboardPesaje();
   const stats = dashboard?.data;
+
+  const formatViaje = (viaje: PesajeRegistro) => {
+    const unidad = viaje.sabor?.unidad ?? "unidad";
+    return `${viaje.cantidad} ${unidad}${viaje.cantidad === 1 ? "" : "s"}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -27,8 +33,8 @@ export default function DashboardPesajePage() {
                 <h3 className="text-sm font-bold uppercase tracking-wider">Kg Ingresados Hoy</h3>
               </div>
               <p className="text-4xl font-black text-k-text-h">{stats.kgIngresadosHoy} <span className="text-xl font-medium text-k-text-b">kg</span></p>
-              
-              <div className={`mt-4 flex items-center gap-2 text-sm font-bold ${stats.tendencia >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+
+              <div className={`mt-4 flex items-center gap-2 text-sm font-bold ${stats.tendencia >= 0 ? "text-green-500" : "text-red-500"}`}>
                 {stats.tendencia >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 {Math.abs(stats.tendencia)}% vs ayer
               </div>
@@ -41,26 +47,34 @@ export default function DashboardPesajePage() {
               </div>
               <p className="text-4xl font-black text-k-text-h">{stats.viajesHoy} <span className="text-xl font-medium text-k-text-b">viajes</span></p>
             </div>
+
+            <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card">
+              <div className="flex items-center gap-3 mb-4 text-blue-600">
+                <Package className="h-6 w-6" />
+                <h3 className="text-sm font-bold uppercase tracking-wider">Unidades Hoy</h3>
+              </div>
+              <p className="text-4xl font-black text-k-text-h">{stats.unidadesHoy ?? 0} <span className="text-xl font-medium text-k-text-b">unidades</span></p>
+            </div>
           </div>
 
           <div className="bg-k-bg-card border border-k-border rounded-3xl p-6 shadow-k-card">
             <h2 className="text-lg font-bold text-k-text-h mb-4">Últimos Registros</h2>
             {stats.ultimosViajes && stats.ultimosViajes.length > 0 ? (
               <ul className="divide-y divide-k-border">
-                {stats.ultimosViajes.map((viaje: any) => (
+                {stats.ultimosViajes.map((viaje: PesajeRegistro) => (
                   <li key={viaje.id} className="py-3 flex justify-between items-center">
                     <div>
                       <p className="font-bold text-k-text-h text-sm">
-                        {viaje.empleado ? `${viaje.empleado.nombres} ${viaje.empleado.apellidos}` : 'Usuario'}
+                        {viaje.empleado ? `${viaje.empleado.nombres} ${viaje.empleado.apellidos}` : "Usuario"}
                       </p>
                       <p className="text-xs text-k-text-b">
-                        {viaje.sabor ? `${viaje.sabor.nombre} ${viaje.sabor.presentacion ? `(${viaje.sabor.presentacion})` : ''}` : '-'}
+                        {viaje.sabor ? `${viaje.sabor.nombre} ${viaje.sabor.presentacion ? `(${viaje.sabor.presentacion})` : ""}` : "-"}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-black text-amber-600">{viaje.peso} kg</p>
                       <p className="text-xs text-k-text-b">
-                        {new Intl.DateTimeFormat('es-MX', { hour: '2-digit', minute: '2-digit' }).format(new Date(viaje.fecha_registro))}
+                        {formatViaje(viaje)} — {new Intl.DateTimeFormat("es-MX", { hour: "2-digit", minute: "2-digit" }).format(new Date(viaje.fecha_registro))}
                       </p>
                     </div>
                   </li>

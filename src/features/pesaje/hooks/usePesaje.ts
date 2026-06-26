@@ -1,5 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getDashboardPesaje, getHistorialPesaje, createPesaje, getSabores, createSabor, updateSabor } from "../api";
+import {
+  getDashboardPesaje,
+  getHistorialPesaje,
+  createPesaje,
+  updatePesaje,
+  deletePesaje,
+  getSabores,
+  createSabor,
+  updateSabor,
+  deleteSabor,
+} from "../api";
+import type { CreatePesajePayload, CreateSaborPayload, UpdateSaborPayload } from "../types";
 
 export function useDashboardPesaje() {
   return useQuery({
@@ -8,24 +19,46 @@ export function useDashboardPesaje() {
   });
 }
 
-export function useHistorialPesaje(params?: any) {
+export function useHistorialPesaje(params?: { search?: string; limit?: number }) {
   return useQuery({
     queryKey: ["pesaje-historial", params],
     queryFn: () => getHistorialPesaje(params),
   });
 }
 
-export function useSabores() {
+export function useSabores(conInactivos = false) {
   return useQuery({
-    queryKey: ["pesaje-sabores"],
-    queryFn: getSabores,
+    queryKey: ["pesaje-sabores", conInactivos],
+    queryFn: () => getSabores(conInactivos),
   });
 }
 
 export function useCreatePesaje() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createPesaje,
+    mutationFn: (payload: CreatePesajePayload) => createPesaje(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pesaje-historial"] });
+      queryClient.invalidateQueries({ queryKey: ["pesaje-dashboard"] });
+    },
+  });
+}
+
+export function useUpdatePesaje() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<CreatePesajePayload> }) => updatePesaje(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pesaje-historial"] });
+      queryClient.invalidateQueries({ queryKey: ["pesaje-dashboard"] });
+    },
+  });
+}
+
+export function useDeletePesaje() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deletePesaje(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pesaje-historial"] });
       queryClient.invalidateQueries({ queryKey: ["pesaje-dashboard"] });
@@ -36,7 +69,7 @@ export function useCreatePesaje() {
 export function useCreateSabor() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createSabor,
+    mutationFn: (payload: CreateSaborPayload) => createSabor(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pesaje-sabores"] });
     },
@@ -46,7 +79,17 @@ export function useCreateSabor() {
 export function useUpdateSabor() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => updateSabor(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateSaborPayload }) => updateSabor(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pesaje-sabores"] });
+    },
+  });
+}
+
+export function useDeleteSabor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteSabor(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pesaje-sabores"] });
     },
