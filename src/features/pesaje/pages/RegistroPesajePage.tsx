@@ -95,13 +95,22 @@ export default function RegistroPesajePage() {
         <div className="bg-gradient-to-br from-k-bg-card to-k-bg-card2 border border-k-border rounded-3xl p-6 shadow-k-card">
           <h3 className="text-sm font-bold text-k-text-b uppercase tracking-widest mb-4">Captura Manual</h3>
           <div className="space-y-4">
-            {esEmpleado && empleadoPropio ? (
-              <div>
-                <label className="block text-xs font-semibold text-k-text-b mb-1">Operario</label>
-                <div className="w-full bg-k-bg-page border border-k-border rounded-xl px-4 py-2 text-sm text-k-text-h font-medium">
-                  {empleadoPropio.full_name}
+            {esEmpleado ? (
+              empleadoPropio ? (
+                <div>
+                  <label className="block text-xs font-semibold text-k-text-b mb-1">Operario</label>
+                  <div className="w-full bg-k-bg-page border border-k-border rounded-xl px-4 py-2 text-sm text-k-text-h font-medium">
+                    {empleadoPropio.full_name}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <p className="text-sm font-bold text-red-700">No tienes un empleado asociado</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Contacta al administrador para que vincule tu usuario con un empleado.
+                  </p>
+                </div>
+              )
             ) : (
               <div>
                 <label className="block text-xs font-semibold text-k-text-b mb-1">Operario</label>
