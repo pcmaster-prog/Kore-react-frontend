@@ -3,9 +3,12 @@ import {
   ClipboardList,
   CalendarCheck,
   User,
+  Hammer,
+  Scale,
   LogOut,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { auth } from "@/features/auth/store";
 
 export type NavItemType = "link" | "action";
 
@@ -20,15 +23,22 @@ export interface EmployeeNavItem {
 }
 
 export function useEmployeeNavItems(): EmployeeNavItem[] {
-  // Nota: Maderas y Pesaje están ocultos temporalmente para empleados.
-  // Para reactivarlos, importar Hammer/Scale de lucide-react, leer auth.getModules()
-  // y agregar los ítems condicionales según los módulos produccion_maderas / produccion_pesaje.
+  const modules = auth.getModules();
+  const hasModule = (slug: string) => modules.length === 0 || modules.includes(slug);
 
   const items: EmployeeNavItem[] = [
     { type: "link", label: "Dashboard", to: "/app/employee/dashboard", icon: LayoutDashboard },
     { type: "link", label: "Mi Agenda", to: "/app/employee/mis-tareas/asignaciones", icon: ClipboardList },
     { type: "link", label: "Asistencia", to: "/app/employee/asistencia", icon: CalendarCheck },
   ];
+
+  if (hasModule("produccion_maderas")) {
+    items.push({ type: "link", label: "Maderas", to: "/app/maderas/dashboard", icon: Hammer });
+  }
+
+  if (hasModule("produccion_pesaje")) {
+    items.push({ type: "link", label: "Pesaje", to: "/app/pesaje/dashboard", icon: Scale });
+  }
 
   items.push(
     { type: "link", label: "Perfil", to: "/app/perfil", icon: User },
