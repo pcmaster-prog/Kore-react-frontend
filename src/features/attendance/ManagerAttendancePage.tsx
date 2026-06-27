@@ -366,7 +366,7 @@ function EnComidaTab({ date }: { date: string }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
-  const [ajustandoComida, setAjustandoComida] = useState<{empleadoId:string;empleadoNombre:string;lunchStart?:string;lunchEnd?:string}|null>(null);
+  const [ajustandoComida, setAjustandoComida] = useState<{empleadoId:string;empleadoNombre:string;lunchStart?:string|null;lunchEnd?:string|null}|null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -933,7 +933,7 @@ export default function ManagerAttendancePage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ajustando, setAjustando] = useState<{empleadoId:string;empleadoNombre:string;checkIn?:string;checkOut?:string}|null>(null);
-  const [ajustandoComida, setAjustandoComida] = useState<{empleadoId:string;empleadoNombre:string;lunchStart?:string;lunchEnd?:string}|null>(null);
+  const [ajustandoComida, setAjustandoComida] = useState<{empleadoId:string;empleadoNombre:string;lunchStart?:string|null;lunchEnd?:string|null}|null>(null);
   const [descansoAdmin, setDescansoAdmin] = useState<{empleadoId:string;empleadoNombre:string;tieneDiaDescanso:boolean}|null>(null);
   const [cerrarMasivo, setCerrarMasivo] = useState(false);
 
