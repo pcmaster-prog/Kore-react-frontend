@@ -63,6 +63,8 @@ export type ByDateItem = AttendanceDay & {
   early_departure_minutes?: number | null;
   required_exit_time?: string | null;
   late_minutes?: number | null;
+  lunch_start_at?: string | null;
+  lunch_end_at?: string | null;
 };
 
 export type WeeklySummary = {
