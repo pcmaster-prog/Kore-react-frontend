@@ -205,6 +205,22 @@ export async function eliminarAsistencia(empleadoId: string, fecha: string) {
   return res.data;
 }
 
+export async function ajustarComida(
+  empleadoId: string,
+  fecha: string,
+  data: {
+    lunch_start_at?: string;  // "HH:mm"
+    lunch_end_at?: string;    // "HH:mm"
+    motivo: string;
+  }
+) {
+  const res = await api.patch(
+    `/asistencia/comida/ajustar/${empleadoId}/${fecha}`,
+    data
+  );
+  return res.data;
+}
+
 // ─── Empleado: Comida ────────────────────────────────────────────────────────
 
 export async function iniciarComida() {

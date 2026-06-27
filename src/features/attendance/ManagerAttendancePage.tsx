@@ -34,6 +34,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import AjustarAsistenciaModal from "./AjustarAsistenciaModal";
+import AjustarComidaModal from "./AjustarComidaModal";
 import DiaDescansoAdminModal from "./DiaDescansoAdminModal";
 import CerrarJornadaModal from "./CerrarJornadaModal";
 import { isEnabled } from "@/lib/featureFlags";
@@ -359,12 +360,13 @@ function MealScheduleChangeRequestsTab() {
   );
 }
 
-function EnComidaTab() {
+function EnComidaTab({ date }: { date: string }) {
   const [rows, setRows] = useState<EnComidaRow[]>([]);
   const [meta, setMeta] = useState<{ current_server_time: string; meal_duration_minutes: number; count: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
+  const [ajustandoComida, setAjustandoComida] = useState<{empleadoId:string;empleadoNombre:string;lunchStart?:string;lunchEnd?:string}|null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -440,13 +442,24 @@ function EnComidaTab() {
                       <div className="text-xs text-k-text-b">Inició a las {start.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</div>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="text-right shrink-0 flex flex-col items-end gap-2">
                     <div className={cx("text-lg font-black tabular-nums", row.is_overtime ? "text-rose-600" : "text-k-text-h")}>
                       {minutesToHHMM(elapsed)}
                     </div>
                     {overtime > 0 && (
                       <div className="text-xs font-bold text-rose-500">+{minutesToHHMM(overtime)} excedido</div>
                     )}
+                    <button
+                      onClick={() => setAjustandoComida({
+                        empleadoId: row.empleado_id,
+                        empleadoNombre: row.employee_name,
+                        lunchStart: row.lunch_start_at,
+                        lunchEnd: undefined,
+                      })}
+                      className="text-xs font-bold text-k-text-b hover:text-k-text-h underline"
+                    >
+                      Corregir / cerrar
+                    </button>
                   </div>
                 </div>
               );
@@ -454,6 +467,21 @@ function EnComidaTab() {
           </div>
         )}
       </div>
+
+      {ajustandoComida && (
+        <AjustarComidaModal
+          empleadoId={ajustandoComida.empleadoId}
+          empleadoNombre={ajustandoComida.empleadoNombre}
+          fecha={date}
+          lunchStartActual={ajustandoComida.lunchStart}
+          lunchEndActual={ajustandoComida.lunchEnd}
+          onClose={() => setAjustandoComida(null)}
+          onSaved={() => {
+            setAjustandoComida(null);
+            load();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -905,6 +933,7 @@ export default function ManagerAttendancePage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ajustando, setAjustando] = useState<{empleadoId:string;empleadoNombre:string;checkIn?:string;checkOut?:string}|null>(null);
+  const [ajustandoComida, setAjustandoComida] = useState<{empleadoId:string;empleadoNombre:string;lunchStart?:string;lunchEnd?:string}|null>(null);
   const [descansoAdmin, setDescansoAdmin] = useState<{empleadoId:string;empleadoNombre:string;tieneDiaDescanso:boolean}|null>(null);
   const [cerrarMasivo, setCerrarMasivo] = useState(false);
 
@@ -1162,6 +1191,16 @@ export default function ManagerAttendancePage() {
                                       }),
                                     },
                                     {
+                                      label: "Corregir comida",
+                                      icon: UtensilsCrossed,
+                                      onClick: () => setAjustandoComida({
+                                        empleadoId: emp.id,
+                                        empleadoNombre: empName,
+                                        lunchStart: item?.lunch_start_at,
+                                        lunchEnd: item?.lunch_end_at,
+                                      }),
+                                    },
+                                    {
                                       label: tieneDiaDescanso ? "Quitar descanso" : "Marcar descanso",
                                       icon: Calendar,
                                       onClick: () => setDescansoAdmin({
@@ -1192,6 +1231,18 @@ export default function ManagerAttendancePage() {
                                   <Pencil className="h-3.5 w-3.5 text-k-text-b" />
                                 </button>
                                 <button
+                                  onClick={() => setAjustandoComida({
+                                    empleadoId: emp.id,
+                                    empleadoNombre: empName,
+                                    lunchStart: item?.lunch_start_at,
+                                    lunchEnd: item?.lunch_end_at,
+                                  })}
+                                  className="h-8 w-8 shrink-0 rounded-xl bg-k-bg-card2 border border-k-border flex items-center justify-center hover:bg-k-bg-card hover:border-k-border transition"
+                                  title="Corregir comida"
+                                >
+                                  <UtensilsCrossed className="h-3.5 w-3.5 text-k-text-b" />
+                                </button>
+                                <button
                                   onClick={() => setDescansoAdmin({
                                     empleadoId: emp.id,
                                     empleadoNombre: empName,
@@ -1220,7 +1271,7 @@ export default function ManagerAttendancePage() {
       ) : tab === "meal-schedule" ? (
         <MealScheduleChangeRequestsTab />
       ) : tab === "en-comida" ? (
-        <EnComidaTab />
+        <EnComidaTab date={date} />
       ) : tab === "overtime" ? (
         <OvertimeRequestsTab />
       ) : tab === "late-arrivals" ? (
@@ -1239,6 +1290,21 @@ export default function ManagerAttendancePage() {
           onClose={() => setAjustando(null)}
           onSaved={() => {
             setAjustando(null);
+            loadDay();
+          }}
+        />
+      )}
+
+      {ajustandoComida && (
+        <AjustarComidaModal
+          empleadoId={ajustandoComida.empleadoId}
+          empleadoNombre={ajustandoComida.empleadoNombre}
+          fecha={date}
+          lunchStartActual={ajustandoComida.lunchStart}
+          lunchEndActual={ajustandoComida.lunchEnd}
+          onClose={() => setAjustandoComida(null)}
+          onSaved={() => {
+            setAjustandoComida(null);
             loadDay();
           }}
         />
