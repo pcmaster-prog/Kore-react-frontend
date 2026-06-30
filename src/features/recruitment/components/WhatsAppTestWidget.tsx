@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MessageSquare, Send, CheckCircle, AlertCircle } from "lucide-react";
-import api from "../../../lib/axios";
+import http from "@/lib/http";
 
 export default function WhatsAppTestWidget() {
   const [phone, setPhone] = useState("");
@@ -15,7 +15,7 @@ export default function WhatsAppTestWidget() {
     setLoading(true);
     setStatus('idle');
     try {
-      const response = await api.post('/whatsapp/test', { phone, message });
+      const response = await http.post('/whatsapp/test', { phone, message });
       if (response.data.success) {
         setStatus('success');
       } else {
