@@ -1,6 +1,7 @@
 import { Briefcase, Users, CheckCircle, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { recruitmentApi } from "../api/recruitmentApi";
+import WhatsAppTestWidget from "../components/WhatsAppTestWidget";
 
 export default function RecruitmentDashboard() {
   const [stats, setStats] = useState({
@@ -61,6 +62,9 @@ export default function RecruitmentDashboard() {
           );
         })}
       </div>
+
+      {/* Widget de Prueba de WhatsApp */}
+      <WhatsAppTestWidget />
     </div>
   );
 }
