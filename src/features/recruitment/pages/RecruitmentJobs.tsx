@@ -1,13 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { recruitmentApi } from "../api/recruitmentApi";
-import type { JobOpening, JobOpeningTemplate, ScreeningQuestion } from "../types/recruitment";
+import type { JobOpening, JobOpeningTemplate } from "../types/recruitment";
 import { Plus, X, Share2, Link as LinkIcon, Copy, Check, MessageCircle, Facebook, Linkedin } from "lucide-react";
-import BulletListField from "../components/BulletListField";
 import JobFormWizard from "../components/JobFormWizard";
-
-const splitLines = (value: string) =>
-  value.split('\n').map((line) => line.trim()).filter((line) => line.length > 0);
 
 export default function RecruitmentJobs() {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
