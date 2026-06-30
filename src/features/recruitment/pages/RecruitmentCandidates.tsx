@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { recruitmentApi } from "../api/recruitmentApi";
 import type { Application } from "../types/recruitment";
 import { Link } from "react-router-dom";
-import { ChevronRight, Calendar, Check, X, Loader2, Flag, ListFilter } from "lucide-react";
+import { ChevronRight, Calendar, Check, X, Loader2, Flag, ListFilter, Briefcase, Users, CheckCircle } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
   new: "Nuevos",
@@ -87,16 +87,6 @@ export default function RecruitmentCandidates() {
         to={`/app/manager/reclutamiento/candidatos/${app.id}`}
         className="block"
       >
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-k-accent to-purple-500 flex items-center justify-center text-white font-black shadow-sm">
-            {app.user?.name?.charAt(0) || "?"}
-          </div>
-          <div className="min-w-0">
-            <p className="font-bold text-k-text-h text-sm leading-tight group-hover:text-k-accent-btn transition-colors truncate">
-              {app.user?.name}
-            </p>
-            <p className="text-xs text-k-text-b truncate max-w-[150px]">
-              {app.jobOpening?.title}
         <div className="flex items-center space-x-4 mb-4">
           <div className="relative w-12 h-12 rounded-full bg-gradient-to-tr from-k-accent-btn to-purple-500 flex items-center justify-center text-white font-black shadow-lg shadow-k-accent-btn/30 group-hover:scale-110 transition-transform duration-500">
             {app.user?.name?.charAt(0) || "?"}
