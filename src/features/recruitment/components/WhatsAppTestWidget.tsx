@@ -15,7 +15,7 @@ export default function WhatsAppTestWidget() {
     setLoading(true);
     setStatus('idle');
     try {
-      const response = await http.post('/whatsapp/test', { phone, message });
+      const response = await http.post('/ats/whatsapp/test', { phone, message });
       if (response.data.success) {
         setStatus('success');
       } else {
