@@ -187,13 +187,12 @@ export default function RecruitmentCandidateDetail() {
 
   const handleScheduleInterview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !interviewDate) return;
+    if (!id || !interviewDate || !interviewMethod) return;
     runAction(async () => {
-      await recruitmentApi.scheduleInterview(id, {
-        interview_scheduled_at: new Date(interviewDate).toISOString(),
-        notes: interviewNotes,
-        notify_whatsapp: notifyWhatsapp,
-        method: interviewMethod || undefined,
+      await recruitmentApi.createInterview(id, {
+        scheduled_at: new Date(interviewDate).toISOString(),
+        method: interviewMethod as 'in-person' | 'video' | 'phone',
+        notes: interviewNotes || undefined,
         location: interviewLocation || undefined,
         meeting_url: interviewMeetingUrl || undefined,
       });
