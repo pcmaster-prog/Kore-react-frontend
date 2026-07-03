@@ -53,7 +53,8 @@ export default function JobFormWizard({ initialJob, initialTemplate, onClose, on
     closing_statement: '',
     screening_pass_score: '7',
     screening_questions: [] as { question: string; options: string; correctIndex: string }[],
-    scorecard_template: [] as { name: string; score: number; notes: string }[]
+    scorecard_template: [] as { name: string; score: number; notes: string }[],
+    interview_guide_questions: [] as { category: string; question: string }[]
   });
 
   useEffect(() => {
@@ -92,7 +93,8 @@ export default function JobFormWizard({ initialJob, initialTemplate, onClose, on
           options: (q.options || []).join('\n'),
           correctIndex: String(q.correctIndex ?? 0)
         })),
-        scorecard_template: []
+        scorecard_template: [],
+        interview_guide_questions: []
       });
     } else if (initialJob) {
       setFormData({
@@ -133,6 +135,10 @@ export default function JobFormWizard({ initialJob, initialTemplate, onClose, on
           name: s.name,
           score: s.score,
           notes: s.notes || ''
+        })),
+        interview_guide_questions: (initialJob.interview_guide_questions || []).map(q => ({
+          category: q.category,
+          question: q.question
         }))
       });
     }
@@ -169,7 +175,8 @@ export default function JobFormWizard({ initialJob, initialTemplate, onClose, on
           options: q.options.split('\n').map(o => o.trim()).filter(o => o),
           correctIndex: parseInt(q.correctIndex, 10) || 0
         })),
-      scorecard_template: formData.scorecard_template.filter(s => s.name.trim())
+      scorecard_template: formData.scorecard_template.filter(s => s.name.trim()),
+      interview_guide_questions: formData.interview_guide_questions.filter(q => q.question.trim())
     };
 
     await onSubmit(payload);
@@ -217,6 +224,41 @@ export default function JobFormWizard({ initialJob, initialTemplate, onClose, on
       next[index] = { ...next[index], name: value };
       return { ...prev, scorecard_template: next };
     });
+  };
+
+  // ── Interview Guide Questions helpers ────────────────────────────────────
+  const DEFAULT_SCORECARD_NAMES = ['Comunicación oral', 'Actitud y disposición', 'Puntualidad', 'Presentación personal', 'Experiencia relevante'];
+  const GUIDE_CATEGORIES = ['Motivación', 'Experiencia', 'Disponibilidad', 'Actitud', 'Conocimiento técnico'];
+
+  const addGuideQuestion = () => {
+    setFormData(prev => ({
+      ...prev,
+      interview_guide_questions: [...prev.interview_guide_questions, { category: GUIDE_CATEGORIES[0], question: '' }]
+    }));
+  };
+
+  const removeGuideQuestion = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      interview_guide_questions: prev.interview_guide_questions.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateGuideQuestion = (index: number, field: 'category' | 'question', value: string) => {
+    setFormData(prev => {
+      const next = [...prev.interview_guide_questions];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, interview_guide_questions: next };
+    });
+  };
+
+  const prefillDefaultScorecard = () => {
+    if (formData.scorecard_template.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        scorecard_template: DEFAULT_SCORECARD_NAMES.map(name => ({ name, score: 0, notes: '' }))
+      }));
+    }
   };
 
   return (
@@ -593,44 +635,127 @@ export default function JobFormWizard({ initialJob, initialTemplate, onClose, on
                         ))}
                       </div>
                     </div>
+                  </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-bold text-k-text-h">Rúbricas de Entrevista (Scorecards)</label>
+                  {/* ── Interview Guide Questions ── */}
+                  <div className="border border-k-border/50 rounded-2xl overflow-hidden">
+                    <details className="group">
+                      <summary className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 cursor-pointer select-none hover:from-indigo-500/10 hover:to-purple-500/10 transition-colors list-none">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🎤</span>
+                          <span className="text-sm font-black text-k-text-h">Guía de Preguntas de Entrevista</span>
+                          {formData.interview_guide_questions.length > 0 && (
+                            <span className="bg-indigo-500/15 text-indigo-600 border border-indigo-500/20 text-xs font-bold px-2 py-0.5 rounded-lg">
+                              {formData.interview_guide_questions.length}
+                            </span>
+                          )}
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-k-text-b transition-transform group-open:rotate-90" />
+                      </summary>
+                      <div className="px-5 pb-5 pt-4 space-y-3 bg-k-bg-card/30">
+                        <p className="text-xs text-k-text-b">Estas preguntas aparecerán al entrevistador durante el Modo Entrevista, agrupadas por categoría.</p>
+                        {formData.interview_guide_questions.map((q, idx) => (
+                          <div key={idx} className="bg-white border border-k-border rounded-xl p-3 flex gap-3 items-start group/q relative shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => removeGuideQuestion(idx)}
+                              className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-0 group-hover/q:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <div className="flex flex-col gap-2 flex-1 min-w-0 pr-6">
+                              <select
+                                value={q.category}
+                                onChange={(e) => updateGuideQuestion(idx, 'category', e.target.value)}
+                                className="w-full md:w-48 bg-gray-50 border border-k-border rounded-lg px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-k-accent/50 text-k-text-h"
+                              >
+                                {GUIDE_CATEGORIES.map(c => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                              <input
+                                type="text"
+                                placeholder="Escribe la pregunta de entrevista..."
+                                className="w-full bg-transparent border-b border-k-border/50 px-1 py-1.5 text-sm focus:outline-none focus:border-k-accent font-medium text-k-text-h"
+                                value={q.question}
+                                onChange={(e) => updateGuideQuestion(idx, 'question', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={addGuideQuestion}
+                          className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-500/10 hover:bg-indigo-500/20 px-4 py-2 rounded-xl transition-colors w-fit"
+                        >
+                          + Agregar pregunta
+                        </button>
+                      </div>
+                    </details>
+                  </div>
+
+                  {/* ── Scorecard Template ── */}
+                  <div className="border border-k-border/50 rounded-2xl overflow-hidden">
+                    <details className="group">
+                      <summary className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-amber-500/5 to-orange-500/5 cursor-pointer select-none hover:from-amber-500/10 hover:to-orange-500/10 transition-colors list-none">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">⭐</span>
+                          <span className="text-sm font-black text-k-text-h">Plantilla de Evaluación (Scorecard)</span>
+                          {formData.scorecard_template.length > 0 && (
+                            <span className="bg-amber-500/15 text-amber-600 border border-amber-500/20 text-xs font-bold px-2 py-0.5 rounded-lg">
+                              {formData.scorecard_template.length} criterios
+                            </span>
+                          )}
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-k-text-b transition-transform group-open:rotate-90" />
+                      </summary>
+                      <div className="px-5 pb-5 pt-4 space-y-3 bg-k-bg-card/30">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-k-text-b">Criterios con los que se evaluará al candidato durante la entrevista.</p>
+                          {formData.scorecard_template.length === 0 && (
+                            <button
+                              type="button"
+                              onClick={prefillDefaultScorecard}
+                              className="text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1 rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              Usar predeterminados
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          {formData.scorecard_template.map((s, idx) => (
+                            <div key={idx} className="bg-white border border-k-border rounded-xl p-2 flex items-center gap-2 shadow-sm">
+                              <span className="text-k-text-b text-sm ml-1 shrink-0">⭐</span>
+                              <input
+                                type="text"
+                                placeholder="Ej. Comunicación asertiva, Habilidades técnicas..."
+                                className="flex-1 bg-transparent border-none px-3 py-1.5 text-sm focus:outline-none text-k-text-h"
+                                value={s.name}
+                                onChange={(e) => updateScorecardCriterion(idx, e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeScorecardCriterion(idx)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                          {formData.scorecard_template.length === 0 && (
+                            <p className="text-xs text-k-text-b italic p-3 bg-gray-50 rounded-xl">No hay criterios. Agrega uno o usa los predeterminados.</p>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={addScorecardCriterion}
-                          className="text-xs font-bold text-k-accent-btn hover:text-k-accent-btn/80 transition-colors"
+                          className="flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 px-4 py-2 rounded-xl transition-colors w-fit"
                         >
                           + Agregar criterio
                         </button>
                       </div>
-                      <div className="space-y-3">
-                        {formData.scorecard_template.map((s, idx) => (
-                          <div key={idx} className="bg-white border border-k-border rounded-xl p-2 flex items-center gap-2 shadow-sm relative">
-                            <input
-                              type="text"
-                              placeholder="Ej. Comunicación asertiva, Habilidades técnicas..."
-                              className="flex-1 bg-transparent border-none px-3 py-1.5 text-sm focus:outline-none"
-                              value={s.name}
-                              onChange={(e) => updateScorecardCriterion(idx, e.target.value)}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeScorecardCriterion(idx)}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                        {formData.scorecard_template.length === 0 && (
-                          <p className="text-xs text-k-text-b italic p-2 bg-gray-50 rounded-lg">No hay criterios. Agrega uno para calificar a los candidatos durante la entrevista.</p>
-                        )}
-                      </div>
-                    </div>
+                    </details>
                   </div>
-                </div>
 
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { recruitmentApi } from "../api/recruitmentApi";
 import type { Application, ApplicationStatus, Interview, OnboardingDocument, RehireCheck, ScorecardCriterion } from "../types/recruitment";
+import InterviewModePanel from "../components/InterviewModePanel";
 import {
   ArrowLeft,
   FileText,
@@ -79,6 +80,7 @@ export default function RecruitmentCandidateDetail() {
   const [scorecardDraft, setScorecardDraft] = useState<ScorecardCriterion[]>([]);
   const [scorecardNotesDraft, setScorecardNotesDraft] = useState("");
   const [scorecardResultDraft, setScorecardResultDraft] = useState<"pending" | "passed" | "failed">("pending");
+  const [interviewModeId, setInterviewModeId] = useState<string | null>(null);
 
   // Rehire
   const [rehireCheck, setRehireCheck] = useState<RehireCheck | null>(null);
@@ -353,6 +355,7 @@ export default function RecruitmentCandidateDetail() {
   const status = app.status;
 
   return (
+    <>
     <div className="space-y-8 max-w-7xl mx-auto pb-12 px-4 md:px-8">
       <button
         onClick={() => navigate(-1)}
@@ -1156,6 +1159,14 @@ export default function RecruitmentCandidateDetail() {
                         </div>
                         
                         <div className="flex items-center gap-2 shrink-0 self-start">
+                          {interview.result === 'pending' && (
+                            <button
+                              onClick={() => setInterviewModeId(interview.id)}
+                              className="px-3 py-2 rounded-xl bg-gradient-to-r from-k-accent/10 to-purple-500/10 text-k-accent border border-k-accent/20 text-xs font-bold hover:from-k-accent hover:to-purple-600 hover:text-white hover:border-transparent transition-all shadow-sm whitespace-nowrap"
+                            >
+                              🎤 Modo Entrevista
+                            </button>
+                          )}
                           <button
                             onClick={() => startEditingScorecard(interview)}
                             className="px-3 py-2 rounded-xl bg-violet-500/10 text-violet-600 border border-violet-500/20 text-xs font-bold hover:bg-violet-500 hover:text-white transition-all shadow-sm"
@@ -1381,5 +1392,31 @@ export default function RecruitmentCandidateDetail() {
         </div>
       </div>
     </div>
+
+    {/* Interview Mode Panel */}
+    {interviewModeId && app && (() => {
+      const iview = interviews.find((i) => i.id === interviewModeId);
+      if (!iview) return null;
+      return (
+        <InterviewModePanel
+          interview={iview}
+          application={app}
+          onClose={() => setInterviewModeId(null)}
+          onSave={async (interviewId, data) => {
+            await recruitmentApi.updateInterview(interviewId, data as Partial<Interview>);
+            await fetchInterviews();
+          }}
+          onApprove={() => {
+            setInterviewModeId(null);
+            if (id) runAction(() => recruitmentApi.changeStatus(id, 'offer-sent'));
+          }}
+          onReject={() => {
+            setInterviewModeId(null);
+            handleReject();
+          }}
+        />
+      );
+    })()}
+    </>
   );
 }

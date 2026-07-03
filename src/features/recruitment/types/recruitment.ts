@@ -6,6 +6,18 @@ export interface ScreeningQuestion {
     correctIndex: number;
 }
 
+export interface InterviewGuideQuestion {
+    category: string;
+    question: string;
+}
+
+export interface InterviewDocumentChecklist {
+    type: string;
+    label: string;
+    status: 'presented' | 'missing' | 'pending';
+    notes?: string;
+}
+
 export interface JobOpening {
     id: string;
     empresa_id: string;
@@ -38,6 +50,7 @@ export interface JobOpening {
     screening_questions?: ScreeningQuestion[];
     screening_pass_score?: number;
     scorecard_template?: ScorecardCriterion[];
+    interview_guide_questions?: InterviewGuideQuestion[];
     status: JobOpeningStatus;
     views_count?: number;
     created_at: string;
@@ -234,6 +247,7 @@ export interface Interview {
     scorecard?: ScorecardCriterion[];
     recommendation?: string;
     result: InterviewResult;
+    document_checklist?: InterviewDocumentChecklist[];
     created_by?: string;
     creator?: {
         id: string;
