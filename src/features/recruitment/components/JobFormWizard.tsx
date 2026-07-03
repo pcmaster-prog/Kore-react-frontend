@@ -760,6 +760,8 @@ export default function JobFormWizard({ initialJob, initialTemplate, onClose, on
               </div>
             </div>
 
+            </div>
+
           </form>
         </div>
 
