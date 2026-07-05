@@ -1,10 +1,11 @@
 // src/features/profile/ProfilePage.tsx
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "@/lib/http";
 import {
   User, Mail, Phone, MapPin, Briefcase, Shield,
   Calendar, Hash, CheckCircle2, AlertTriangle,
-  Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, MonitorSmartphone, Globe, Moon
+  Pencil, Save, X, Loader2, Key, Camera, ChevronDown, Bell, MonitorSmartphone, Globe, Moon, FileText
 } from "lucide-react";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import ThemeModeToggle from "@/components/ThemeModeToggle";
@@ -553,6 +554,24 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+
+          {/* Mis Recibos */}
+          <Link 
+            to="/employee/mis-recibos"
+            className="group flex flex-col rounded-[32px] border border-k-border bg-gradient-to-br from-k-bg-card to-white shadow-k-card hover:shadow-lg hover:border-k-accent/30 hover:-translate-y-0.5 transition-all overflow-hidden"
+          >
+            <div className="px-6 py-5 border-b border-k-border flex items-center justify-between group-hover:bg-k-bg-sidebar transition-colors">
+              <div className="flex items-center gap-2 group-hover:text-white text-k-text-h transition-colors">
+                <FileText className="h-4 w-4" />
+                <span className="text-sm font-black tracking-tight">Mis Recibos de Nómina</span>
+              </div>
+            </div>
+            <div className="p-6">
+              <p className="text-xs font-medium text-k-text-b leading-relaxed">
+                Revisa el historial de tus pagos, consulta tus recibos detallados y fírmalos digitalmente.
+              </p>
+            </div>
+          </Link>
 
           {/* Preferencias */}
           <div className="rounded-[32px] border border-k-border bg-k-bg-card shadow-k-card">
