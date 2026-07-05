@@ -364,7 +364,7 @@ export const router = createBrowserRouter([
       {
         path: "employee/mis-recibos",
         element: (
-          <RequireRole allow={["empleado", "empleado_prueba"]}>
+          <RequireRole allow={["empleado", "empleado_prueba", "admin", "supervisor"]}>
             <Suspended><MisRecibosPage /></Suspended>
           </RequireRole>
         ),
