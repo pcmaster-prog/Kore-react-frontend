@@ -216,7 +216,7 @@ export default function LoginPage() {
                       onClick={async () => {
                         setResending(true);
                         try {
-                          await resendVerificationEmail();
+                          await resendVerificationEmail(verificationEmail ?? undefined);
                           setErr("Se ha reenviado el correo de verificación. Revisa tu bandeja de entrada.");
                           setVerificationEmail(null);
                         } catch (e: any) {

@@ -37,9 +37,9 @@ export async function register(payload: RegisterPayload): Promise<RegisterRespon
   return res.data;
 }
 
-export async function resendVerificationEmail(): Promise<{ message: string }> {
+export async function resendVerificationEmail(email?: string): Promise<{ message: string }> {
   await fetchCsrfCookie();
-  const res = await webApi.post("/email/resend");
+  const res = await webApi.post("/email/resend", email ? { email } : {});
   return res.data;
 }
 
