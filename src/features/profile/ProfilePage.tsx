@@ -557,7 +557,7 @@ export default function ProfilePage() {
 
           {/* Mis Recibos */}
           <Link 
-            to="/employee/mis-recibos"
+            to="/app/employee/mis-recibos"
             className="group flex flex-col rounded-[32px] border border-k-border bg-gradient-to-br from-k-bg-card to-white shadow-k-card hover:shadow-lg hover:border-k-accent/30 hover:-translate-y-0.5 transition-all overflow-hidden"
           >
             <div className="px-6 py-5 border-b border-k-border flex items-center justify-between group-hover:bg-k-bg-sidebar transition-colors">
