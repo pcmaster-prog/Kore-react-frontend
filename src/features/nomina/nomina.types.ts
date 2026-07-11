@@ -19,6 +19,9 @@ export type Entry = {
   bonus_amount: number;
   bonus_note?: string | null;
   total: number;
+  status: "draft" | "locked";
+  locked_at?: string | null;
+  locked_by?: string | null;
 };
 
 export type Period = {

@@ -9,6 +9,8 @@ import {
   AlertTriangle,
   Loader2,
   UtensilsCrossed,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import type { Entry, Period, MealScheduleItem } from "./nomina.types";
 import { fmt, fmtUnits, formatTime12 } from "./nomina.utils";
@@ -19,7 +21,8 @@ export type EntryRowProps = {
   approved: boolean;
   mealSchedule?: MealScheduleItem;
   onSave: (id: string, patch: Partial<Entry>) => Promise<void>;
-  onToggleExclude: (empleadoId: string, excluir: boolean) => Promise<void>;
+  onLock: (id: string) => Promise<void>;
+  onUnlock: (id: string) => Promise<void>;
   pendingPatch?: Partial<Entry>;
   onPatch: (id: string, patch: Partial<Entry>) => void;
 };
@@ -31,6 +34,8 @@ export default function EntryRow({
   mealSchedule,
   onSave,
   onToggleExclude,
+  onLock,
+  onUnlock,
   pendingPatch,
   onPatch,
 }: EntryRowProps) {
@@ -71,6 +76,7 @@ export default function EntryRow({
 
   const computedTotal = entry.subtotal + currentAdj;
   const isExcluded = (period?.excluded_employee_ids ?? []).includes(entry.empleado_id);
+  const isLocked = entry.status === "locked" || approved;
 
   return (
     <>
@@ -100,6 +106,11 @@ export default function EntryRow({
               {entry.empleado_role && (
                 <div className="text-[10px] text-k-text-b uppercase tracking-wider mt-0.5">
                   {entry.empleado_role}
+                </div>
+              )}
+              {entry.status === "locked" && !approved && (
+                <div className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                  <Lock className="h-3 w-3" /> Nómina Cerrada
                 </div>
               )}
             </div>
@@ -160,7 +171,7 @@ export default function EntryRow({
 
         {/* Ajuste */}
         <td className="px-5 py-4">
-          {approved ? (
+          {isLocked ? (
             <div
               className={cx(
                 "text-sm font-semibold",
@@ -264,10 +275,45 @@ export default function EntryRow({
                           setSaving(false);
                           setDirty(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm font-semibold text-k-text-h hover:bg-k-bg-card2 flex items-center gap-2"
+                        disabled={entry.status === "locked"}
+                        className={cx(
+                          "w-full text-left px-4 py-2 text-sm font-semibold flex items-center gap-2",
+                          entry.status === "locked"
+                            ? "text-k-text-b opacity-50 cursor-not-allowed"
+                            : "text-k-text-h hover:bg-k-bg-card2"
+                        )}
                       >
                         <Check className="h-4 w-4" /> Guardar fila
                       </button>
+                      
+                      <div className="h-px w-full bg-neutral-100 my-1" />
+                      
+                      {entry.status === "locked" ? (
+                        <button
+                          onClick={async () => {
+                            setShowDropdown(false);
+                            setSaving(true);
+                            await onUnlock(entry.id);
+                            setSaving(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm font-semibold text-amber-600 hover:bg-amber-50 flex items-center gap-2"
+                        >
+                          <Unlock className="h-4 w-4" /> Reabrir Nómina
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            setShowDropdown(false);
+                            setSaving(true);
+                            await onLock(entry.id);
+                            setSaving(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 flex items-center gap-2"
+                        >
+                          <Lock className="h-4 w-4" /> Cerrar Nómina
+                        </button>
+                      )}
+
                       <div className="h-px w-full bg-neutral-100 my-1" />
                       <button
                         onClick={() => {
@@ -298,16 +344,43 @@ export default function EntryRow({
                     disabled={saving}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-k-bg-sidebar px-3 py-1.5 text-[11px] font-bold text-white hover:opacity-90 transition disabled:opacity-50"
                   >
-                    {saving ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <>
-                        <Check className="h-3 w-3" />
-                        Guardar
-                      </>
-                    )}
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                    Guardar
                   </button>
                 )}
+                
+                {!dirty && entry.status === "draft" && !isExcluded && (
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      await onLock(entry.id);
+                      setSaving(false);
+                    }}
+                    disabled={saving}
+                    title="Cerrar nómina de este empleado"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-600 px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-100 transition disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Lock className="h-3 w-3" />}
+                    Cerrar
+                  </button>
+                )}
+                
+                {entry.status === "locked" && !isExcluded && (
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      await onUnlock(entry.id);
+                      setSaving(false);
+                    }}
+                    disabled={saving}
+                    title="Reabrir nómina de este empleado"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 text-amber-600 px-3 py-1.5 text-[11px] font-bold hover:bg-amber-100 transition disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unlock className="h-3 w-3" />}
+                    Reabrir
+                  </button>
+                )}
+
                 <button
                   onClick={async () => {
                     await onToggleExclude(entry.empleado_id, !isExcluded);

@@ -14,6 +14,8 @@ export type NominaTableProps = {
   totalEmp: number;
   onSave: (id: string, patch: Partial<Entry>) => Promise<void>;
   onToggleExclude: (empleadoId: string, excluir: boolean) => Promise<void>;
+  onLock: (id: string) => Promise<void>;
+  onUnlock: (id: string) => Promise<void>;
   onPatch: (id: string, patch: Partial<Entry>) => void;
   onRecalculate: () => void;
 };
@@ -27,6 +29,8 @@ export default function NominaTable({
   totalEmp,
   onSave,
   onToggleExclude,
+  onLock,
+  onUnlock,
   onPatch,
   onRecalculate,
 }: NominaTableProps) {
@@ -105,6 +109,8 @@ export default function NominaTable({
                   mealSchedule={mealSchedules.find((ms) => ms.employee_id === entry.empleado_id)}
                   onSave={onSave}
                   onToggleExclude={onToggleExclude}
+                  onLock={onLock}
+                  onUnlock={onUnlock}
                   pendingPatch={globalPatches[entry.id]}
                   onPatch={onPatch}
                 />

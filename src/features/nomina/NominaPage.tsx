@@ -136,6 +136,8 @@ export default function NominaPage() {
             totalEmp={totalEmp}
             onSave={saveEntry}
             onToggleExclude={toggleExclude}
+            onLock={lockEntry}
+            onUnlock={unlockEntry}
             onPatch={patchEntry}
             onRecalculate={generate}
           />

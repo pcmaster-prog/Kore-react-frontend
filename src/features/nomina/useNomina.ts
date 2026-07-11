@@ -251,6 +251,53 @@ export function useNomina() {
     }
   }
 
+  async function lockEntry(entryId: string) {
+    if (!period) return;
+    try {
+      const res = await api.post(`/nomina/periodos/${period.id}/entradas/${entryId}/cerrar`);
+      const updatedEntry: Entry = res.data?.entry;
+
+      setPeriod((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          entries: prev.entries.map((e) =>
+            e.id === entryId ? { ...e, ...updatedEntry } : e
+          ),
+        };
+      });
+      showToast("ok", "Nómina del empleado cerrada");
+    } catch (e: unknown) {
+      const axiosError = e as { response?: { data?: { message?: string } } };
+      showToast("err", axiosError?.response?.data?.message ?? "Error al cerrar nómina del empleado");
+      throw e;
+    }
+  }
+
+  async function unlockEntry(entryId: string) {
+    if (!period) return;
+    if (!confirm("¿Reabrir esta entrada? Se eliminará el recibo individual generado.")) return;
+    try {
+      const res = await api.post(`/nomina/periodos/${period.id}/entradas/${entryId}/reabrir`);
+      const updatedEntry: Entry = res.data?.entry;
+
+      setPeriod((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          entries: prev.entries.map((e) =>
+            e.id === entryId ? { ...e, ...updatedEntry } : e
+          ),
+        };
+      });
+      showToast("ok", "Nómina del empleado reabierta");
+    } catch (e: unknown) {
+      const axiosError = e as { response?: { data?: { message?: string } } };
+      showToast("err", axiosError?.response?.data?.message ?? "Error al reabrir nómina del empleado");
+      throw e;
+    }
+  }
+
   function patchEntry(id: string, patch: Partial<Entry>) {
     setGlobalPatches((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   }
@@ -440,5 +487,7 @@ export function useNomina() {
     saveNotes,
     patchEntry,
     reopening,
+    lockEntry,
+    unlockEntry,
   };
 }
