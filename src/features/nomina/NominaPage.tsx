@@ -46,6 +46,8 @@ export default function NominaPage() {
     setNotes,
     saveNotes,
     patchEntry,
+    lockEntry,
+    unlockEntry,
   } = useNomina();
 
   return (

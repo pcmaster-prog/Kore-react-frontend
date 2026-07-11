@@ -21,6 +21,7 @@ export type EntryRowProps = {
   approved: boolean;
   mealSchedule?: MealScheduleItem;
   onSave: (id: string, patch: Partial<Entry>) => Promise<void>;
+  onToggleExclude: (empleadoId: string, excluir: boolean) => Promise<void>;
   onLock: (id: string) => Promise<void>;
   onUnlock: (id: string) => Promise<void>;
   pendingPatch?: Partial<Entry>;
