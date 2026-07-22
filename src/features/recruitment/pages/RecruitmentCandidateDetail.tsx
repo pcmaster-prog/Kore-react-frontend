@@ -191,12 +191,13 @@ export default function RecruitmentCandidateDetail() {
     e.preventDefault();
     if (!id || !interviewDate || !interviewMethod) return;
     runAction(async () => {
-      await recruitmentApi.createInterview(id, {
-        scheduled_at: new Date(interviewDate).toISOString(),
+      await recruitmentApi.scheduleInterview(id, {
+        interview_scheduled_at: new Date(interviewDate).toISOString(),
         method: interviewMethod as 'in-person' | 'video' | 'phone',
         notes: interviewNotes || undefined,
         location: interviewLocation || undefined,
         meeting_url: interviewMeetingUrl || undefined,
+        notify_whatsapp: notifyWhatsapp,
       });
       setShowInterviewForm(false);
       setInterviewDate("");
@@ -1408,7 +1409,7 @@ export default function RecruitmentCandidateDetail() {
           }}
           onApprove={() => {
             setInterviewModeId(null);
-            if (id) runAction(() => recruitmentApi.changeStatus(id, 'offer-sent'));
+            setShowOfferForm(true);
           }}
           onReject={() => {
             setInterviewModeId(null);
