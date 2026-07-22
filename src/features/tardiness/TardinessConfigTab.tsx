@@ -176,9 +176,9 @@ export default function TardinessConfigTab() {
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <label className="text-[11px] font-bold text-k-text-b uppercase tracking-widest">
-                    Umbral mínimo para retardo (min)
+                    Límite para bloqueo automático (min)
                   </label>
-                  <Tooltip text="Minutos DESPUÉS del periodo de gracia para que cuente como retardo. Si es 1 y la gracia es 10, a los 11 minutos es retardo." />
+                  <Tooltip text="Minutos después de la hora de entrada en los que se bloquea el acceso y se requiere autorización. Ej: si la entrada es 8:30 y el límite es 60, a las 9:30 se bloquea." />
                 </div>
                 <input
                   type="number"
