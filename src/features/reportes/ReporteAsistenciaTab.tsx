@@ -22,7 +22,7 @@ const ESTADO_COLORES: Record<string, { bg: string; text: string; label: string }
   incapacidad: { bg: "#90CDF4", text: "#2C5282", label: "Incapacidad" },
   festivo: { bg: "#9F7AEA", text: "#FFFFFF", label: "Festivo" },
   retardo: { bg: "#F6AD55", text: "#744210", label: "Retardo" },
-  presente: { bg: "#FFFFFF", text: "#1A202C", label: "Presente" },
+  presente: { bg: "#C6F6D5", text: "#22543D", label: "Puntual" },
   en_turno: { bg: "#FEFCBF", text: "#744210", label: "En turno" },
   ausente: { bg: "#E2E8F0", text: "#4A5568", label: "Ausente" },
 };
@@ -77,6 +77,14 @@ function CeldaDia({ dia }: { dia?: { fecha: string; entrada?: string | null; sal
       )}
       {!dia.entrada && !dia.salida && (
         <span className="text-[10px] text-neutral-400">—</span>
+      )}
+      {tieneHoras && (
+        <span
+          className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-px rounded-full leading-tight"
+          style={{ backgroundColor: style.bg, color: style.text }}
+        >
+          {style.label}
+        </span>
       )}
     </div>
   );
@@ -151,6 +159,8 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
         { label: "COMIDA 30 min", color: COMIDA_COLOR },
         { label: "ENTRADA", color: ENTRADA_COLOR },
         { label: "SALIDA", color: SALIDA_COLOR },
+        { label: "PUNTUAL", color: ESTADO_COLORES.presente.bg },
+        { label: "RETARDO", color: ESTADO_COLORES.retardo.bg },
         { label: "FALTA", color: ESTADO_COLORES.falta.bg },
         { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
         { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
@@ -196,12 +206,22 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
           if (dia.entrada) lines.push(formatHora(dia.entrada));
           if (dia.salida) lines.push(formatHora(dia.salida));
           if (lines.length === 0) lines.push("—");
+          lines.push(style.label.toUpperCase());
+
+          // Tinte de fondo según estado para lectura rápida de la matriz
+          const tint =
+            dia.estado === "retardo"
+              ? hexToRgb("#FDE8CC")
+              : dia.estado === "presente"
+                ? hexToRgb("#E6F7EC")
+                : undefined;
 
           return {
             content: lines.join("\n"),
             styles: {
               halign: "center" as const,
               fontSize: 6,
+              ...(tint ? { fillColor: tint } : {}),
             },
           };
         });
@@ -353,6 +373,8 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                   { label: "COMIDA 30 min", color: COMIDA_COLOR },
                   { label: "ENTRADA", color: ENTRADA_COLOR },
                   { label: "SALIDA", color: SALIDA_COLOR },
+                  { label: "PUNTUAL", color: ESTADO_COLORES.presente.bg },
+                  { label: "RETARDO", color: ESTADO_COLORES.retardo.bg },
                   { label: "FALTA", color: ESTADO_COLORES.falta.bg },
                   { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
                   { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
