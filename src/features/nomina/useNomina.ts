@@ -324,6 +324,8 @@ export function useNomina() {
         const adjNote = e.adjustment_note
           ? ` (${escapeHtml(e.adjustment_note)})`
           : "";
+        const bonosTotal =
+          (e.attendance_bonus_amount ?? 0) + (e.punctuality_bonus_amount ?? 0) + (e.bonus_amount ?? 0);
         return `
       <tr>
         <td>${escapeHtml(e.empleado_name)}</td>
@@ -331,6 +333,7 @@ export function useNomina() {
         <td>${escapeHtml(fmtUnits(e.payment_type, e.units))}${e.rest_days_paid > 0 ? ` +${e.rest_days_paid}d` : ""}</td>
         <td>${escapeHtml(fmt(e.rate))}</td>
         <td>${escapeHtml(fmt(e.subtotal))}</td>
+        <td>${bonosTotal !== 0 ? escapeHtml(fmt(bonosTotal)) : "—"}</td>
         <td>${e.adjustment_amount !== 0 ? escapeHtml(fmt(e.adjustment_amount)) : "—"}${adjNote}</td>
         <td><strong>${escapeHtml(fmt(e.total))}</strong></td>
       </tr>`;
@@ -376,12 +379,13 @@ export function useNomina() {
       <table>
         <thead><tr>
           <th>Empleado</th><th>Comida</th><th>Horas/Días</th><th>Tarifa</th>
-          <th>Subtotal</th><th>Ajuste</th><th>Total</th>
+          <th>Subtotal</th><th>Bonos</th><th>Ajuste</th><th>Total</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="totals">
         <div class="total-box"><div class="label">Total Nómina</div><div class="val">${escapeHtml(fmt(period.total_amount))}</div></div>
+        <div class="total-box"><div class="label">Bonos</div><div class="val">${escapeHtml(fmt(period.total_bonuses))}</div></div>
         <div class="total-box"><div class="label">Ajustes</div><div class="val">${escapeHtml(fmt(period.total_adjustments))}</div></div>
         <div class="total-box"><div class="label">Empleados</div><div class="val">${visibleEntries.length}</div></div>
       </div>
@@ -402,7 +406,7 @@ export function useNomina() {
       (e) => !excludedIds.includes(e.empleado_id)
     );
 
-    const header = "Empleado,Comida,Horas/Días,Tarifa,Subtotal,Ajuste,Motivo Ajuste,Total\n";
+    const header = "Empleado,Comida,Horas/Días,Tarifa,Subtotal,Bono Asistencia,Bono Puntualidad,Bono Resultados,Ajuste,Motivo Ajuste,Total\n";
     const rows = visibleEntries
       .map((e) => {
         const ms = mealSchedules.find((m) => m.employee_id === e.empleado_id);
@@ -415,6 +419,9 @@ export function useNomina() {
           fmtUnits(e.payment_type, e.units),
           e.rate,
           e.subtotal,
+          e.attendance_bonus_amount ?? 0,
+          e.punctuality_bonus_amount ?? 0,
+          e.bonus_amount ?? 0,
           e.adjustment_amount,
           `"${e.adjustment_note ?? ""}"`,
           e.total,

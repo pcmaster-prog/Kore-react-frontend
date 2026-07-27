@@ -42,9 +42,19 @@ export default function EntryRow({
 }: EntryRowProps) {
   const currentAdj = pendingPatch?.adjustment_amount ?? entry.adjustment_amount ?? 0;
   const currentAdjNote = pendingPatch?.adjustment_note ?? entry.adjustment_note ?? "";
+  const currentBonus = pendingPatch?.bonus_amount ?? entry.bonus_amount ?? 0;
 
   const [adj, setAdj] = useState(String(currentAdj));
   const [adjNote, setAdjNote] = useState(currentAdjNote);
+  const [bonus, setBonus] = useState(String(currentBonus));
+
+  const attendanceBonus = entry.attendance_bonus_amount ?? 0;
+  const punctualityBonus = entry.punctuality_bonus_amount ?? 0;
+  const attendanceTarget = entry.attendance_bonus_target ?? 0;
+  const punctualityTarget = entry.punctuality_bonus_target ?? 0;
+  const resultsTarget = entry.results_bonus_target ?? 0;
+  const hasBonusScheme =
+    attendanceTarget > 0 || punctualityTarget > 0 || resultsTarget > 0 || currentBonus > 0;
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -57,8 +67,9 @@ export default function EntryRow({
     if (!dirty) {
       setAdj(String(currentAdj));
       setAdjNote(currentAdjNote);
+      setBonus(String(currentBonus));
     }
-  }, [currentAdj, currentAdjNote, dirty]);
+  }, [currentAdj, currentAdjNote, currentBonus, dirty]);
 
   function handleChange() {
     setDirty(true);
@@ -66,6 +77,7 @@ export default function EntryRow({
     onPatch(entry.id, {
       adjustment_amount: parsedAdj,
       adjustment_note: adjNote || null,
+      bonus_amount: parseFloat(bonus) || 0,
     });
   }
 
@@ -73,9 +85,10 @@ export default function EntryRow({
     if (dirty) {
       handleChange();
     }
-  }, [adj, adjNote]);
+  }, [adj, adjNote, bonus]);
 
-  const computedTotal = entry.subtotal + currentAdj;
+  const computedTotal =
+    entry.subtotal + currentAdj + attendanceBonus + punctualityBonus + (parseFloat(bonus) || 0);
   const isExcluded = (period?.excluded_employee_ids ?? []).includes(entry.empleado_id);
   const isLocked = entry.status === "locked" || approved;
 
@@ -168,6 +181,59 @@ export default function EntryRow({
         {/* Subtotal */}
         <td className="px-5 py-4">
           <div className="text-sm font-bold text-k-text-h">{fmt(entry.subtotal)}</div>
+        </td>
+
+        {/* Bonos (asistencia/puntualidad automáticos + resultados manual) */}
+        <td className="px-5 py-4">
+          {!hasBonusScheme ? (
+            <span className="text-sm font-semibold text-k-text-b">—</span>
+          ) : (
+            <div className="space-y-1">
+              {attendanceTarget > 0 && (
+                <div
+                  className={cx(
+                    "text-[11px] font-bold",
+                    attendanceBonus > 0 ? "text-emerald-600" : "text-rose-400 line-through"
+                  )}
+                  title={attendanceBonus > 0 ? "Bono de asistencia ganado" : "Perdido por falta en la semana"}
+                >
+                  Asist. {fmt(attendanceTarget)}
+                </div>
+              )}
+              {punctualityTarget > 0 && (
+                <div
+                  className={cx(
+                    "text-[11px] font-bold",
+                    punctualityBonus > 0 ? "text-emerald-600" : "text-rose-400 line-through"
+                  )}
+                  title={punctualityBonus > 0 ? "Bono de puntualidad ganado" : "Perdido por retardo en la semana"}
+                >
+                  Punt. {fmt(punctualityTarget)}
+                </div>
+              )}
+              {isLocked ? (
+                (parseFloat(bonus) || 0) > 0 && (
+                  <div className="text-[11px] font-bold text-sky-600">Result. {fmt(parseFloat(bonus) || 0)}</div>
+                )
+              ) : (
+                <div className="flex items-center gap-1" title="Bono de resultados (captura manual)">
+                  <span className="text-[10px] font-bold text-k-text-b uppercase">Result.</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={bonus}
+                    onChange={(e) => {
+                      setBonus(e.target.value);
+                      setDirty(true);
+                    }}
+                    placeholder={resultsTarget > 0 ? String(resultsTarget) : "0"}
+                    className="w-20 rounded-lg border border-k-border bg-k-bg-card px-2 py-1 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10 focus:border-neutral-300"
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </td>
 
         {/* Ajuste */}
@@ -272,6 +338,7 @@ export default function EntryRow({
                           await onSave(entry.id, {
                             adjustment_amount: parseFloat(adj) || 0,
                             adjustment_note: adjNote || null,
+                            bonus_amount: parseFloat(bonus) || 0,
                           });
                           setSaving(false);
                           setDirty(false);
@@ -338,6 +405,7 @@ export default function EntryRow({
                       await onSave(entry.id, {
                         adjustment_amount: parseFloat(adj) || 0,
                         adjustment_note: adjNote || null,
+                        bonus_amount: parseFloat(bonus) || 0,
                       });
                       setSaving(false);
                       setDirty(false);
@@ -405,7 +473,7 @@ export default function EntryRow({
       {/* Confirm Exclude Modal */}
       {showConfirmExclude && (
         <tr>
-          <td colSpan={7} className="px-5 py-4 bg-rose-50 border-t border-rose-100">
+          <td colSpan={8} className="px-5 py-4 bg-rose-50 border-t border-rose-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5 text-rose-600" />
@@ -439,7 +507,7 @@ export default function EntryRow({
       {/* Fila de motivos expandida */}
       {expanded && !approved && (
         <tr className="bg-amber-50/20">
-          <td colSpan={7} className="px-5 pb-4 pt-0">
+          <td colSpan={8} className="px-5 pb-4 pt-0">
             <div className="flex items-center gap-4 ml-14 mt-2">
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1.5 block">
