@@ -22,6 +22,9 @@ export type UserItem = {
   payment_type?: "hourly" | "daily" | null;
   hourly_rate?: number | null;
   daily_rate?: number | null;
+  attendance_bonus?: number | null;
+  punctuality_bonus?: number | null;
+  results_bonus?: number | null;
 };
 
 function extractUser(responseData: any): any {
@@ -82,6 +85,9 @@ function normalizeUser(user: any): UserItem {
     payment_type: emp.payment_type ?? user.payment_type ?? null,
     hourly_rate: emp.hourly_rate ?? user.hourly_rate ?? null,
     daily_rate: emp.daily_rate ?? user.daily_rate ?? null,
+    attendance_bonus: emp.attendance_bonus ?? user.attendance_bonus ?? null,
+    punctuality_bonus: emp.punctuality_bonus ?? user.punctuality_bonus ?? null,
+    results_bonus: emp.results_bonus ?? user.results_bonus ?? null,
   };
 }
 
@@ -100,12 +106,19 @@ export type CreateUserPayload = {
   payment_type?: "hourly" | "daily";
   hourly_rate?: number;
   daily_rate?: number;
+  attendance_bonus?: number;
+  punctuality_bonus?: number;
+  results_bonus?: number;
   check_in_time?: string;
 };
 
-export type UpdateUserPayload = Partial<Omit<CreateUserPayload, "password"> & {
+export type UpdateUserPayload = Partial<Omit<CreateUserPayload, "password" | "attendance_bonus" | "punctuality_bonus" | "results_bonus"> & {
   password?: string;
   is_active?: boolean;
+  // null = quitar el bono al empleado (se envía como cadena vacía en FormData)
+  attendance_bonus?: number | null;
+  punctuality_bonus?: number | null;
+  results_bonus?: number | null;
 }>;
 
 
@@ -144,9 +157,14 @@ export async function createUser(payload: CreateUserPayload) {
 export async function updateUser(id: string, payload: UpdateUserPayload) {
   const formData = new FormData();
   formData.append("_method", "PUT"); // Laravel way to spoof PUT with POST and files
+  // Campos donde null significa "borrar el valor": se envían como cadena vacía
+  // (Laravel la convierte a null); omitirlos dejaría el valor anterior intacto.
+  const clearableWithNull = ["attendance_bonus", "punctuality_bonus", "results_bonus"];
   Object.entries(payload).forEach(([k, v]) => {
     if (v !== undefined && v !== null) {
       formData.append(k, v instanceof File ? v : String(v));
+    } else if (v === null && clearableWithNull.includes(k)) {
+      formData.append(k, "");
     }
   });
 

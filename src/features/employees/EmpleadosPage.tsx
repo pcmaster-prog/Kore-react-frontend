@@ -256,6 +256,9 @@ function UserModal({
   const [paymentType, setPaymentType] = useState<"hourly" | "daily">("hourly");
   const [hourlyRate, setHourlyRate] = useState("");
   const [dailyRate, setDailyRate] = useState("");
+  const [attendanceBonus, setAttendanceBonus] = useState("");
+  const [punctualityBonus, setPunctualityBonus] = useState("");
+  const [resultsBonus, setResultsBonus] = useState("");
   const [rfc, setRfc] = useState("");
   const [nss, setNss] = useState("");
   const [checkInTime, setCheckInTime] = useState("");
@@ -281,6 +284,9 @@ function UserModal({
       setPaymentType((initial.payment_type as any) ?? "hourly");
       setHourlyRate(String(initial.hourly_rate ?? ""));
       setDailyRate(String(initial.daily_rate ?? ""));
+      setAttendanceBonus(initial.attendance_bonus != null ? String(initial.attendance_bonus) : "");
+      setPunctualityBonus(initial.punctuality_bonus != null ? String(initial.punctuality_bonus) : "");
+      setResultsBonus(initial.results_bonus != null ? String(initial.results_bonus) : "");
       setRfc(initial.rfc ?? "");
       setNss(initial.nss ?? "");
       setCheckInTime(initial.check_in_time ?? "");
@@ -295,6 +301,9 @@ function UserModal({
       setPaymentType("hourly");
       setHourlyRate("");
       setDailyRate("");
+      setAttendanceBonus("");
+      setPunctualityBonus("");
+      setResultsBonus("");
       setRfc("");
       setNss("");
       setCheckInTime("");
@@ -325,6 +334,9 @@ function UserModal({
           payment_type: paymentType,
           hourly_rate: hourlyRate ? parseFloat(hourlyRate) : undefined,
           daily_rate: dailyRate ? parseFloat(dailyRate) : undefined,
+          attendance_bonus: attendanceBonus ? parseFloat(attendanceBonus) : undefined,
+          punctuality_bonus: punctualityBonus ? parseFloat(punctualityBonus) : undefined,
+          results_bonus: resultsBonus ? parseFloat(resultsBonus) : undefined,
           rfc: rfc.trim() || undefined,
           nss: nss.trim() || undefined,
           expediente: expediente,
@@ -342,6 +354,9 @@ function UserModal({
           payment_type: paymentType,
           hourly_rate: hourlyRate ? parseFloat(hourlyRate) : undefined,
           daily_rate: dailyRate ? parseFloat(dailyRate) : undefined,
+          attendance_bonus: attendanceBonus ? parseFloat(attendanceBonus) : null,
+          punctuality_bonus: punctualityBonus ? parseFloat(punctualityBonus) : null,
+          results_bonus: resultsBonus ? parseFloat(resultsBonus) : null,
           rfc: rfc.trim() || undefined,
           nss: nss.trim() || undefined,
           expediente: expediente,
@@ -679,6 +694,37 @@ function UserModal({
                       </div>
                     </div>
                   )}
+
+                  {/* Bonos semanales (matriz de compensación) */}
+                  <div className="pt-2">
+                    <label className="block text-[11px] font-bold text-k-text-b uppercase tracking-widest mb-1.5">
+                      Bonos semanales (opcional)
+                    </label>
+                    <p className="text-[10px] text-k-text-b mb-2">
+                      Déjalos vacíos si no aplican. Asistencia se pierde con 1 falta y puntualidad con 1 retardo en la semana; resultados se captura cada semana en Nómina.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { label: "Asistencia", value: attendanceBonus, set: setAttendanceBonus },
+                        { label: "Puntualidad", value: punctualityBonus, set: setPunctualityBonus },
+                        { label: "Resultados", value: resultsBonus, set: setResultsBonus },
+                      ].map((b) => (
+                        <div key={b.label}>
+                          <span className="block text-[10px] font-bold text-k-text-b mb-1">{b.label}</span>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-k-text-b font-bold text-xs">$</span>
+                            <input
+                              type="number" step="0.01" min="0"
+                              className="w-full rounded-xl border border-k-border bg-k-bg-card2/50 pl-6 pr-2 py-2.5 text-sm font-medium outline-none focus:bg-k-bg-card focus:ring-2 focus:ring-obsidian/10 transition-all placeholder:text-k-text-b"
+                              placeholder="—"
+                              value={b.value}
+                              onChange={(e) => b.set(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

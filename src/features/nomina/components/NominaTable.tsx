@@ -71,7 +71,7 @@ export default function NominaTable({
         <table className="w-full text-sm">
           <thead className="bg-k-bg-card2/80 border-b border-k-border">
             <tr>
-              {["Empleado", "Comida", "Horas/Días", "Tarifa", "Subtotal", "Ajuste", "Total"].map(
+              {["Empleado", "Comida", "Horas/Días", "Tarifa", "Subtotal", "Bonos", "Ajuste", "Total"].map(
                 (h, i) => (
                   <th
                     key={i}
@@ -92,7 +92,7 @@ export default function NominaTable({
           <tbody>
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-5 py-16 text-center">
+                <td colSpan={9} className="px-5 py-16 text-center">
                   <Users className="h-10 w-10 text-neutral-100 mx-auto mb-3" />
                   <p className="text-sm font-bold text-k-text-b uppercase tracking-widest">
                     Sin empleados en este periodo

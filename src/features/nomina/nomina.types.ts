@@ -18,6 +18,11 @@ export type Entry = {
   adjustment_note?: string | null;
   bonus_amount: number;
   bonus_note?: string | null;
+  attendance_bonus_amount: number;
+  punctuality_bonus_amount: number;
+  attendance_bonus_target?: number | null;
+  punctuality_bonus_target?: number | null;
+  results_bonus_target?: number | null;
   total: number;
   status: "draft" | "locked";
   locked_at?: string | null;
