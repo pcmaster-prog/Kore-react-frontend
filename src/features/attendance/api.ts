@@ -593,3 +593,76 @@ export function formatTime(iso?: string | null): string {
     minute: "2-digit",
   });
 }
+
+// ─── Correcciones de asistencia (olvidé marcar entrada/salida) ───────────────
+
+export type AttendanceCorrectionType = "check_in" | "check_out";
+
+export type AttendanceCorrectionRequest = {
+  id: string;
+  empleado_id: string;
+  empleado_name: string;
+  date: string;
+  type: AttendanceCorrectionType;
+  requested_time: string; // HH:mm
+  motivo: string;
+  status: "pending" | "approved" | "rejected";
+  reviewer_note?: string | null;
+  reviewer_name?: string | null;
+  created_at?: string | null;
+  reviewed_at?: string | null;
+};
+
+export async function createCorrectionRequest(data: {
+  date: string;
+  type: AttendanceCorrectionType;
+  requested_time: string;
+  motivo: string;
+}): Promise<AttendanceCorrectionRequest> {
+  const res = await api.post("/asistencia/correcciones", data);
+  return res.data.request as AttendanceCorrectionRequest;
+}
+
+export async function getMyCorrectionRequests(): Promise<AttendanceCorrectionRequest[]> {
+  const res = await api.get("/asistencia/correcciones/mis-solicitudes");
+  return (res.data.data ?? []) as AttendanceCorrectionRequest[];
+}
+
+export async function getPendingCorrectionRequests(): Promise<AttendanceCorrectionRequest[]> {
+  const res = await api.get("/asistencia/correcciones/pendientes");
+  return (res.data.data ?? []) as AttendanceCorrectionRequest[];
+}
+
+export async function reviewCorrectionRequest(
+  id: string,
+  status: "approved" | "rejected",
+  reviewerNote?: string
+): Promise<AttendanceCorrectionRequest> {
+  const res = await api.patch(`/asistencia/correcciones/${id}`, {
+    status,
+    reviewer_note: reviewerNote || undefined,
+  });
+  return res.data.request as AttendanceCorrectionRequest;
+}
+
+export async function approveAllCorrectionRequests(): Promise<{ approved: number; message: string }> {
+  const res = await api.post("/asistencia/correcciones/aprobar-todas");
+  return res.data as { approved: number; message: string };
+}
+
+// ─── Ajuste masivo (matriz del reporte semanal) ──────────────────────────────
+
+export type BulkAdjustItem = {
+  empleado_id: string;
+  fecha: string; // YYYY-MM-DD
+  first_check_in_at?: string; // HH:mm
+  last_check_out_at?: string; // HH:mm
+};
+
+export async function ajustarAsistenciaMasivo(
+  items: BulkAdjustItem[],
+  motivo: string
+): Promise<{ applied: number; message: string }> {
+  const res = await api.patch("/asistencia/ajustar-masivo", { items, motivo });
+  return res.data as { applied: number; message: string };
+}

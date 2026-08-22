@@ -34,6 +34,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import AjustarAsistenciaModal from "./AjustarAsistenciaModal";
+import AttendanceCorrectionRequestsTab from "./AttendanceCorrectionRequestsTab";
 import AjustarComidaModal from "./AjustarComidaModal";
 import DiaDescansoAdminModal from "./DiaDescansoAdminModal";
 import CerrarJornadaModal from "./CerrarJornadaModal";
@@ -926,7 +927,7 @@ function WeeklyPanel({ employees, date }: { employees: Employee[]; date: string 
 }
 
 export default function ManagerAttendancePage() {
-  const [tab, setTab] = useState<"daily" | "weekly" | "requests" | "meal-schedule" | "en-comida" | "overtime" | "late-arrivals">("daily");
+  const [tab, setTab] = useState<"daily" | "weekly" | "requests" | "meal-schedule" | "en-comida" | "overtime" | "late-arrivals" | "corrections">("daily");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [items, setItems] = useState<ByDateItem[]>([]);
@@ -1006,6 +1007,7 @@ export default function ManagerAttendancePage() {
           { key: "en-comida",      label: "En Comida" },
           { key: "overtime",       label: "Horas Extras" },
           { key: "late-arrivals",  label: "Oportunidades" },
+          { key: "corrections",    label: "Correcciones" },
         ] as const).map(t => (
           <button
             key={t.key}
@@ -1276,6 +1278,8 @@ export default function ManagerAttendancePage() {
         <OvertimeRequestsTab />
       ) : tab === "late-arrivals" ? (
         <LateArrivalRequestsTab />
+      ) : tab === "corrections" ? (
+        <AttendanceCorrectionRequestsTab />
       ) : (
         <AbsenceRequestsTab />
       )}
