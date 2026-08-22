@@ -1,14 +1,14 @@
 // src/features/reportes/ReporteAsistenciaTab.tsx
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   getReporteAsistenciaSemanal,
   DIAS_ORDEN,
   type FiltrosAsistencia,
   type ReporteAsistenciaResponse,
 } from "./api";
-import { minutesToHHMM } from "@/features/attendance/api";
+import { minutesToHHMM, ajustarAsistenciaMasivo, type BulkAdjustItem } from "@/features/attendance/api";
 import FiltrosReporte from "./FiltrosReporte";
-import { Loader2, AlertTriangle, Download, Trash2, RotateCcw } from "lucide-react";
+import { Loader2, AlertTriangle, Download, Trash2, RotateCcw, Pencil, Save, X } from "lucide-react";
 import { cx } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -39,14 +39,65 @@ function hexToRgb(hex: string): [number, number, number] {
     : [0, 0, 0];
 }
 
+// Zona horaria de la empresa: el backend interpreta las HH:mm de los ajustes en
+// esta zona, así que la matriz debe mostrarlas igual sin importar el navegador.
+const COMPANY_TZ = "America/Mexico_City";
+
 function formatHora(iso?: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: COMPANY_TZ });
 }
 
-function CeldaDia({ dia }: { dia?: { fecha: string; entrada?: string | null; salida?: string | null; estado: string } }) {
+function todayISO(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+type CeldaDiaProps = {
+  dia?: { fecha: string; entrada?: string | null; salida?: string | null; estado: string };
+  editable?: boolean;
+  draft?: { entrada?: string; salida?: string };
+  onDraft?: (patch: { entrada?: string; salida?: string }) => void;
+};
+
+function isoToHHmm(iso?: string | null): string {
+  if (!iso) return "";
+  // en-GB da "HH:mm" en 24h; se fuerza la zona de la empresa
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: COMPANY_TZ });
+}
+
+function CeldaDia({ dia, editable, draft, onDraft }: CeldaDiaProps) {
   if (!dia) {
     return <div className="h-full flex items-center justify-center text-[10px] text-neutral-300">—</div>;
+  }
+
+  // Modo edición: entrada y salida editables en la misma celda (también en faltas)
+  if (editable) {
+    const entradaVal = draft?.entrada ?? isoToHHmm(dia.entrada);
+    const salidaVal = draft?.salida ?? isoToHHmm(dia.salida);
+    const changed = !!draft?.entrada || !!draft?.salida;
+    const inputCls = "w-full rounded border border-k-border bg-white px-1 py-0.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-obsidian/10";
+    return (
+      <div className={cx("h-full flex flex-col items-center justify-center gap-0.5 py-1 px-1", changed && "bg-amber-50")}>
+        <input
+          type="time"
+          value={entradaVal}
+          onChange={(e) => onDraft?.({ entrada: e.target.value })}
+          className={inputCls}
+          style={{ color: ENTRADA_COLOR }}
+          title="Entrada"
+        />
+        <input
+          type="time"
+          value={salidaVal}
+          onChange={(e) => onDraft?.({ salida: e.target.value })}
+          className={inputCls}
+          style={{ color: SALIDA_COLOR }}
+          title="Salida"
+        />
+      </div>
+    );
   }
 
   const style = ESTADO_COLORES[dia.estado] ?? ESTADO_COLORES.ausente;
@@ -88,11 +139,25 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const [err, setErr] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [hiddenRows, setHiddenRows] = useState<Set<string>>(new Set());
+  const [lastFiltros, setLastFiltros] = useState<FiltrosAsistencia | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [changes, setChanges] = useState<Record<string, { entrada?: string; salida?: string }>>({});
+  const [motivo, setMotivo] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const pendingEditsRef = useRef(0);
 
   const handleFilter = useCallback(async (filtros: FiltrosAsistencia) => {
+    if (pendingEditsRef.current > 0 && !window.confirm("Hay cambios sin guardar en la matriz. ¿Descartarlos y generar el reporte?")) {
+      return;
+    }
     setLoading(true);
     setErr(null);
     setHiddenRows(new Set());
+    setLastFiltros(filtros);
+    setChanges({});
+    setEditMode(false);
+    setMotivo("");
     try {
       const res = await getReporteAsistenciaSemanal(filtros);
       setData(res);
@@ -113,6 +178,62 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
 
   function resetRows() {
     setHiddenRows(new Set());
+  }
+
+  // ── Edición masiva de horas (entrada/salida) ──
+  const cambiosCount = Object.values(changes).filter((c) => !!c.entrada || !!c.salida).length;
+  useEffect(() => {
+    pendingEditsRef.current = cambiosCount;
+  }, [cambiosCount]);
+  const hoy = todayISO();
+
+  function setDraft(empleadoId: string, fecha: string, patch: { entrada?: string; salida?: string }) {
+    const key = `${empleadoId}|${fecha}`;
+    setChanges((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+  }
+
+  function cancelarEdicion() {
+    if (cambiosCount > 0 && !window.confirm("Hay cambios sin guardar. ¿Descartarlos?")) return;
+    setChanges({});
+    setMotivo("");
+    setEditMode(false);
+  }
+
+  async function guardarCambios() {
+    const items: BulkAdjustItem[] = Object.entries(changes)
+      .map(([key, c]) => {
+        const [empleado_id, fecha] = key.split("|");
+        return {
+          empleado_id,
+          fecha,
+          first_check_in_at: c.entrada || undefined,
+          last_check_out_at: c.salida || undefined,
+        };
+      })
+      .filter((i) => i.first_check_in_at || i.last_check_out_at);
+    if (items.length === 0) return;
+
+    setSaving(true);
+    setErr(null);
+    try {
+      await ajustarAsistenciaMasivo(items, motivo.trim() || "Ajuste desde reporte semanal");
+    } catch (e: any) {
+      setErr(e?.response?.data?.message ?? "Error al guardar los ajustes");
+      setSaving(false);
+      return;
+    }
+    setChanges({});
+    setMotivo("");
+    setEditMode(false);
+    try {
+      if (lastFiltros) {
+        setData(await getReporteAsistenciaSemanal(lastFiltros));
+      }
+    } catch {
+      setErr("Los cambios se guardaron, pero no se pudo recargar el reporte. Vuelve a generarlo.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const visibleFilas = data?.filas.filter((f) => !hiddenRows.has(f.empleado.id)) ?? [];
@@ -302,14 +423,52 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                 </button>
               )}
             </div>
-            <button
-              onClick={descargarPDF}
-              disabled={exporting}
-              className="inline-flex items-center gap-2 rounded-xl bg-k-bg-sidebar text-white px-4 py-2.5 text-sm font-bold hover:bg-obsidian transition disabled:opacity-50"
-            >
-              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {exporting ? "Generando PDF..." : "Descargar PDF"}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {editMode ? (
+                <>
+                  <input
+                    type="text"
+                    value={motivo}
+                    onChange={(e) => setMotivo(e.target.value)}
+                    placeholder="Motivo (ej. Olvidaron marcar)"
+                    className="w-56 rounded-xl border border-k-border bg-k-bg-card px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-obsidian/10"
+                  />
+                  <button
+                    onClick={guardarCambios}
+                    disabled={saving || cambiosCount === 0}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2.5 text-sm font-bold hover:bg-emerald-700 transition disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Guardar {cambiosCount} cambio{cambiosCount !== 1 ? "s" : ""}
+                  </button>
+                  <button
+                    onClick={cancelarEdicion}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 rounded-xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-bold text-k-text-b hover:bg-k-bg-card2 transition disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancelar
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setEditMode(true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-bold text-k-text-h hover:bg-k-bg-card2 transition"
+                  title="Corrige entradas y salidas de toda la semana en una sola pantalla"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Editar horas
+                </button>
+              )}
+              <button
+                onClick={descargarPDF}
+                disabled={exporting || editMode}
+                className="inline-flex items-center gap-2 rounded-xl bg-k-bg-sidebar text-white px-4 py-2.5 text-sm font-bold hover:bg-obsidian transition disabled:opacity-50"
+              >
+                {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {exporting ? "Generando PDF..." : "Descargar PDF"}
+              </button>
+            </div>
           </div>
 
           {/* Contenedor del reporte (se captura para PDF) */}
@@ -452,6 +611,13 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                                       salida: fila.dias[d]!.salida,
                                       estado: fila.dias[d]!.estado,
                                     }
+                                  : undefined
+                              }
+                              editable={editMode && !!fila.dias[d] && fila.dias[d]!.fecha <= hoy}
+                              draft={fila.dias[d] ? changes[`${fila.empleado.id}|${fila.dias[d]!.fecha}`] : undefined}
+                              onDraft={
+                                fila.dias[d]
+                                  ? (patch) => setDraft(fila.empleado.id, fila.dias[d]!.fecha, patch)
                                   : undefined
                               }
                             />

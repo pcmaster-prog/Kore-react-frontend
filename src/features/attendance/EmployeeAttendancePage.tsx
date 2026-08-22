@@ -27,6 +27,7 @@ import LunchTimer from "./LunchTimer";
 import BreakTimer from "./BreakTimer";
 import MealScheduleChangeRequestModal from "./MealScheduleChangeRequestModal";
 import OvertimeRequestModal from "./OvertimeRequestModal";
+import AttendanceCorrectionCard from "./AttendanceCorrectionCard";
 import { BottomSheet, BottomSheetOption } from "@/components/BottomSheet";
 import { CollapsibleCard } from "@/components/CollapsibleCard";
 import {
@@ -732,6 +733,9 @@ export default function EmployeeAttendancePage() {
               )}
             </div>
           </div>
+
+          {/* Olvidé marcar entrada/salida → solicitud de corrección al admin */}
+          <AttendanceCorrectionCard />
 
           {/* Panel de oportunidad de llegada tarde */}
           {(lateBlocked || today?.pending_late_request || today?.has_approved_late_request) && !dayLocked && state === "out" && (
