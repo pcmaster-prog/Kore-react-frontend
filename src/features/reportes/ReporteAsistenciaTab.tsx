@@ -5,10 +5,11 @@ import {
   DIAS_ORDEN,
   type FiltrosAsistencia,
   type ReporteAsistenciaResponse,
+  type ReporteAsistenciaFila,
 } from "./api";
 import { minutesToHHMM, ajustarAsistenciaMasivo, type BulkAdjustItem } from "@/features/attendance/api";
 import FiltrosReporte from "./FiltrosReporte";
-import { Loader2, AlertTriangle, Download, Trash2, RotateCcw, Pencil, Save, X } from "lucide-react";
+import { Loader2, AlertTriangle, Download, Trash2, RotateCcw, Pencil, Save, X, CalendarRange } from "lucide-react";
 import { cx } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -144,6 +145,8 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const [changes, setChanges] = useState<Record<string, { entrada?: string; salida?: string }>>({});
   const [motivo, setMotivo] = useState("");
   const [saving, setSaving] = useState(false);
+  // Panel "aplicar a toda la semana" de un empleado
+  const [fillRow, setFillRow] = useState<{ empId: string; nombre: string; entrada: string; salida: string; overwrite: boolean } | null>(null);
 
   const pendingEditsRef = useRef(0);
 
@@ -197,6 +200,38 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
     setChanges({});
     setMotivo("");
     setEditMode(false);
+    setFillRow(null);
+  }
+
+  // Estados que no deben recibir horas al rellenar la semana
+  const NO_RELLENAR = new Set(["descanso", "festivo", "vacaciones", "incapacidad"]);
+
+  /** Aplica entrada/salida a todos los días editables de la semana de un empleado. */
+  function aplicarSemana(fila: ReporteAsistenciaFila) {
+    if (!fillRow || (!fillRow.entrada && !fillRow.salida)) return;
+    const next = { ...changes };
+    let tocados = 0;
+    for (const d of DIAS_ORDEN) {
+      const dia = fila.dias[d];
+      if (!dia || dia.fecha > hoy || NO_RELLENAR.has(dia.estado)) continue;
+      const key = `${fila.empleado.id}|${dia.fecha}`;
+      const draft = next[key] ?? {};
+      const entradaActual = draft.entrada ?? isoToHHmm(dia.entrada);
+      const salidaActual = draft.salida ?? isoToHHmm(dia.salida);
+      const patch: { entrada?: string; salida?: string } = {};
+      if (fillRow.entrada && (fillRow.overwrite || !entradaActual)) patch.entrada = fillRow.entrada;
+      if (fillRow.salida && (fillRow.overwrite || !salidaActual)) patch.salida = fillRow.salida;
+      if (Object.keys(patch).length === 0) continue;
+      next[key] = { ...draft, ...patch };
+      tocados++;
+    }
+    setChanges(next);
+    setFillRow(null);
+    if (tocados === 0) {
+      setErr("No había días por rellenar para ese empleado (todos ya tienen hora, son descanso/festivo o son futuros). Activa \"Sobrescribir\" si quieres forzar la misma hora.");
+    } else {
+      setErr(null);
+    }
   }
 
   async function guardarCambios() {
@@ -471,6 +506,68 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
             </div>
           </div>
 
+          {/* Panel: aplicar las mismas horas a toda la semana de un empleado */}
+          {editMode && fillRow && (
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 flex flex-wrap items-end gap-3">
+              <div className="min-w-[180px]">
+                <div className="text-[10px] font-bold text-sky-700 uppercase tracking-widest">Toda la semana</div>
+                <div className="text-sm font-black text-k-text-h">{fillRow.nombre}</div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1">Entrada</label>
+                <input
+                  type="time"
+                  value={fillRow.entrada}
+                  onChange={(e) => setFillRow({ ...fillRow, entrada: e.target.value })}
+                  className="rounded-xl border border-k-border bg-white px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-obsidian/10"
+                  style={{ color: ENTRADA_COLOR }}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-k-text-b uppercase tracking-widest mb-1">Salida</label>
+                <input
+                  type="time"
+                  value={fillRow.salida}
+                  onChange={(e) => setFillRow({ ...fillRow, salida: e.target.value })}
+                  className="rounded-xl border border-k-border bg-white px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-obsidian/10"
+                  style={{ color: SALIDA_COLOR }}
+                />
+              </div>
+              <label className="flex items-center gap-2 text-xs font-bold text-k-text-b pb-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={fillRow.overwrite}
+                  onChange={(e) => setFillRow({ ...fillRow, overwrite: e.target.checked })}
+                  className="h-4 w-4 rounded border-k-border"
+                />
+                Sobrescribir las que ya tienen hora
+              </label>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  onClick={() => {
+                    const fila = visibleFilas.find((f) => f.empleado.id === fillRow.empId);
+                    if (fila) aplicarSemana(fila);
+                  }}
+                  disabled={!fillRow.entrada && !fillRow.salida}
+                  className="inline-flex items-center gap-2 rounded-xl bg-sky-600 text-white px-4 py-2 text-sm font-bold hover:bg-sky-700 transition disabled:opacity-50"
+                >
+                  <CalendarRange className="h-4 w-4" />
+                  Aplicar a la semana
+                </button>
+                <button
+                  onClick={() => setFillRow(null)}
+                  className="rounded-xl border border-k-border bg-white px-3 py-2 text-sm font-bold text-k-text-b hover:bg-k-bg-card2 transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+              <p className="w-full text-[11px] text-sky-700">
+                Se aplica a los días laborables de la semana hasta hoy (no toca descansos, festivos, vacaciones ni incapacidades).
+                Sin "Sobrescribir", solo rellena los días que no tienen esa hora. Los cambios quedan pendientes hasta que pulses Guardar.
+              </p>
+            </div>
+          )}
+
           {/* Contenedor del reporte (se captura para PDF) */}
           <div className="space-y-4 bg-white p-4 rounded-[28px]">
             {/* Header del reporte */}
@@ -580,6 +677,23 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                           <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{fila.empleado.nombre}</div>
                           {fila.empleado.position_title && (
                             <div className="text-[9px] text-k-text-b">{fila.empleado.position_title}</div>
+                          )}
+                          {editMode && (
+                            <button
+                              onClick={() =>
+                                setFillRow({ empId: fila.empleado.id, nombre: fila.empleado.nombre, entrada: "", salida: "", overwrite: false })
+                              }
+                              className={cx(
+                                "mt-1 inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px] font-bold transition",
+                                fillRow?.empId === fila.empleado.id
+                                  ? "bg-sky-600 border-sky-600 text-white"
+                                  : "bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100"
+                              )}
+                              title="Poner la misma entrada y salida en todos los días de la semana"
+                            >
+                              <CalendarRange className="h-3 w-3" />
+                              Toda la semana
+                            </button>
                           )}
                         </td>
 
