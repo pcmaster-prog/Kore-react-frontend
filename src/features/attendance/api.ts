@@ -159,9 +159,18 @@ export type AttendanceSummary = {
   attendance_rate: number;
 };
 
-export async function getByDate(date: string) {
+export type ByDateResponse = {
+  date: string;
+  items: ByDateItem[];
+  /** Empleados con descanso ese día (override de calendario o rest_weekday). */
+  rest_employee_ids?: string[];
+  holiday_name?: string | null;
+  is_working_day?: boolean;
+};
+
+export async function getByDate(date: string): Promise<ByDateResponse> {
   const res = await api.get("/asistencia/por-fecha", { params: { date } });
-  return res.data as { date: string; items: ByDateItem[] };
+  return res.data as ByDateResponse;
 }
 
 export async function getSummary(date: string): Promise<AttendanceSummary> {

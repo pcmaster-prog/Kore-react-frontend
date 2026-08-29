@@ -814,13 +814,22 @@ function Badge({
   );
 }
 
-function StatusBadge({ item, isAbsent }: { item?: ByDateItem; isAbsent?: boolean }) {
+function StatusBadge({ item, isAbsent, isRest, isHoliday }: { item?: ByDateItem; isAbsent?: boolean; isRest?: boolean; isHoliday?: boolean }) {
+  const hasCheckIn = !!item?.first_check_in_at;
+
+  // Si no marcó, el día puede ser festivo o descanso antes que una ausencia.
+  // (Si sí marcó, gana el estado de su jornada aunque fuera su descanso.)
+  if (!hasCheckIn) {
+    if (isHoliday || item?.status === "holiday") return <Badge tone="violet" dot>Festivo</Badge>;
+    if (isRest || item?.status === "day_off") return <Badge tone="sky">Descanso</Badge>;
+  }
+
   // Sin registro alguno → Ausente
   if (!item || isAbsent) {
     return <Badge tone="rose" dot>Ausente</Badge>;
   }
 
-  const checkedIn = !!item.first_check_in_at;
+  const checkedIn = hasCheckIn;
   const closed = item.status === "closed" || !!item.last_check_out_at;
 
   if (item.status === "holiday") return <Badge tone="violet" dot>Festivo</Badge>;
@@ -937,6 +946,8 @@ export default function ManagerAttendancePage() {
   const [ajustandoComida, setAjustandoComida] = useState<{empleadoId:string;empleadoNombre:string;lunchStart?:string|null;lunchEnd?:string|null}|null>(null);
   const [descansoAdmin, setDescansoAdmin] = useState<{empleadoId:string;empleadoNombre:string;tieneDiaDescanso:boolean}|null>(null);
   const [cerrarMasivo, setCerrarMasivo] = useState(false);
+  const [restIds, setRestIds] = useState<Set<string>>(new Set());
+  const [holidayName, setHolidayName] = useState<string | null>(null);
 
   const loadDay = useCallback(async () => {
     setLoading(true);
@@ -945,6 +956,8 @@ export default function ManagerAttendancePage() {
       const { listEmployees } = await import("@/features/tasks/employeeApi");
       const [dayRes, empRes] = await Promise.all([getByDate(date), listEmployees()]);
       setItems(dayRes.items ?? []);
+      setRestIds(new Set(dayRes.rest_employee_ids ?? []));
+      setHolidayName(dayRes.holiday_name ?? null);
       const empArr = Array.isArray(empRes) ? empRes : [];
       setEmployees(empArr);
     } catch (e) {
@@ -959,7 +972,11 @@ export default function ManagerAttendancePage() {
   const checkedIn = items.filter((i) => !!i.first_check_in_at).length;
   const closed = items.filter((i) => !!i.last_check_out_at).length;
   const onShift = items.filter((i) => !!i.first_check_in_at && !i.last_check_out_at).length;
-  const absent = Math.max(0, employees.length - checkedIn);
+  // Quien descansa (o es festivo) no cuenta como ausente
+  const restCount = employees.filter((e) => restIds.has(e.id)).length;
+  const absent = holidayName
+    ? 0
+    : Math.max(0, employees.length - checkedIn - restCount);
   const totalEmps = employees.length || 1;
 
   const dateLabel = formatDateShort(date + "T12:00:00");
@@ -1135,7 +1152,7 @@ export default function ManagerAttendancePage() {
                       {employees.map((emp) => {
                         const item = items.find((i) => i.empleado_id === emp.id);
                         const empName = emp.full_name ?? emp.name ?? "Empleado";
-                        const tieneDiaDescanso = item?.status === 'day_off' || (item as any)?.is_rest_day;
+                        const tieneDiaDescanso = restIds.has(emp.id) || item?.status === 'day_off' || (item as any)?.is_rest_day;
 
                         return (
                           <tr key={emp.id} className="group border-t border-k-border hover:bg-k-bg-card2/50 transition">
@@ -1168,7 +1185,7 @@ export default function ManagerAttendancePage() {
                               )}
                             </td>
                             <td className="px-5 py-4">
-                              <StatusBadge item={item} isAbsent={!item} />
+                              <StatusBadge item={item} isAbsent={!item} isRest={tieneDiaDescanso} isHoliday={!!holidayName} />
                             </td>
                             <td className="px-5 py-4 font-black text-sm text-k-text-h">
                               {item?.totals ? minutesToHHMM(item.totals.worked_minutes) : "—"}
