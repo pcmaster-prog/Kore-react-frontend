@@ -162,7 +162,16 @@ export async function bulkCreateFromCatalog(payload: {
 
 // ───────── Employees ─────────
 export async function listEmployees() {
-  const res = await api.get("/empleados");
-  const p = unwrapPaginated<Employee>(res);
-  return p.data;
+  // El endpoint pagina: hay que recorrer todas las paginas o se pierden los
+  // empleados que quedan fuera de la primera.
+  const first = await api.get("/empleados", { params: { per_page: 200, page: 1 } });
+  const out = [...unwrapPaginated<Employee>(first).data];
+  const lastPage = Number(first.data?.meta?.last_page ?? 1);
+
+  for (let page = 2; page <= Math.min(lastPage, 20); page++) {
+    const res = await api.get("/empleados", { params: { per_page: 200, page } });
+    out.push(...unwrapPaginated<Employee>(res).data);
+  }
+
+  return out;
 }
