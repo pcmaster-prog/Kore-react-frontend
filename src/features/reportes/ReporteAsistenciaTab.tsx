@@ -31,6 +31,7 @@ import {
   Save,
   X,
   CalendarRange,
+  ChevronDown,
   Sigma,
   Info,
 } from "lucide-react";
@@ -89,6 +90,13 @@ const LEYENDA = [
   { label: "VACACIONES", color: ESTADO_COLORES.vacaciones.bg },
   { label: "HORAS TOTAL", color: TOTAL_COLOR },
 ];
+
+const OPCION_CLS = "w-full text-left px-3 py-2 text-sm font-bold text-k-text-h hover:bg-neutral-50 transition";
+
+/** La leyenda no anuncia lo que el reporte no está mostrando. */
+function leyendaVisible(mostrarComida: boolean) {
+  return LEYENDA.filter((l) => mostrarComida || l.label !== "COMIDA 30 min");
+}
 
 type CeldaDiaProps = {
   dia?: { fecha: string; entrada?: string | null; salida?: string | null; estado: string };
@@ -170,6 +178,8 @@ type MatrizSemanaProps = {
   semanaIdx: number;
   filas: ReporteAsistenciaFila[];
   mostrarTitulo: boolean;
+  /** Columna Comida: la controla el checkbox "Incluir tiempos de comida". */
+  mostrarComida: boolean;
   editMode: boolean;
   changes: Record<string, { entrada?: string; salida?: string }>;
   hoy: string;
@@ -184,6 +194,7 @@ function MatrizSemana({
   semanaIdx,
   filas,
   mostrarTitulo,
+  mostrarComida,
   editMode,
   changes,
   hoy,
@@ -192,6 +203,9 @@ function MatrizSemana({
   onFill,
   onHideRow,
 }: MatrizSemanaProps) {
+  // nombre + [comida] + 7 días + total + firma + botón de quitar
+  const columnas = 1 + (mostrarComida ? 1 : 0) + DIAS_ORDEN.length + 3;
+
   return (
     <div className="rounded-[28px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
       {mostrarTitulo && (
@@ -212,14 +226,16 @@ function MatrizSemana({
               <th className="text-left px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border sticky left-0 bg-k-bg-card2/95 z-10 min-w-[140px]">
                 Nombre
               </th>
-              <th
-                className="text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
-                style={{ backgroundColor: `${COMIDA_COLOR}22` }}
-              >
-                Comida
-                <br />
-                <span className="text-[9px] opacity-70">30 min</span>
-              </th>
+              {mostrarComida && (
+                <th
+                  className="text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
+                  style={{ backgroundColor: `${COMIDA_COLOR}22` }}
+                >
+                  Comida
+                  <br />
+                  <span className="text-[9px] opacity-70">30 min</span>
+                </th>
+              )}
               {DIAS_ORDEN.map((d) => (
                 <th
                   key={d}
@@ -272,14 +288,16 @@ function MatrizSemana({
                 </td>
 
                 {/* Comida */}
-                <td
-                  className="px-2 py-2 text-center border-r border-k-border"
-                  style={{ backgroundColor: `${COMIDA_COLOR}33` }}
-                >
-                  <span className="text-xs font-bold" style={{ color: "#B7791F" }}>
-                    {fila.empleado.comida_hora ?? "—"}
-                  </span>
-                </td>
+                {mostrarComida && (
+                  <td
+                    className="px-2 py-2 text-center border-r border-k-border"
+                    style={{ backgroundColor: `${COMIDA_COLOR}33` }}
+                  >
+                    <span className="text-xs font-bold" style={{ color: "#B7791F" }}>
+                      {fila.empleado.comida_hora ?? "—"}
+                    </span>
+                  </td>
+                )}
 
                 {/* Días */}
                 {DIAS_ORDEN.map((d) => (
@@ -329,9 +347,10 @@ function MatrizSemana({
 
                 {/* Eliminar */}
                 <td className="px-2 py-2 text-center">
+                  {/* En táctil no hay hover: visible siempre en móvil, al pasar el cursor en escritorio */}
                   <button
                     onClick={() => onHideRow(fila.empleado.id)}
-                    className="h-7 w-7 rounded-lg border border-k-border bg-k-bg-card2 flex items-center justify-center hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 transition opacity-0 group-hover:opacity-100"
+                    className="h-7 w-7 rounded-lg border border-k-border bg-k-bg-card2 flex items-center justify-center hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 transition opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
                     title="Quitar del reporte"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -342,7 +361,7 @@ function MatrizSemana({
 
             {filas.length === 0 && (
               <tr>
-                <td colSpan={13} className="px-8 py-12 text-center text-k-text-b text-sm">
+                <td colSpan={columnas} className="px-8 py-12 text-center text-k-text-b text-sm">
                   No hay registros para esta semana.
                 </td>
               </tr>
@@ -356,7 +375,7 @@ function MatrizSemana({
 
 // ─── Totales del período (lo que se paga) ────────────────────────────────────
 
-function TablaTotales({ totales }: { totales: TotalPeriodo[] }) {
+function TablaTotales({ totales, mostrarRetardos }: { totales: TotalPeriodo[]; mostrarRetardos: boolean }) {
   return (
     <div className="rounded-[28px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
       <div className="px-5 py-3 border-b border-k-border bg-k-bg-card2/60">
@@ -376,9 +395,11 @@ function TablaTotales({ totales }: { totales: TotalPeriodo[] }) {
               <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border">
                 Faltas
               </th>
-              <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border">
-                Retardos
-              </th>
+              {mostrarRetardos && (
+                <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border">
+                  Retardos
+                </th>
+              )}
               <th
                 className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border"
                 style={{ backgroundColor: `${TOTAL_COLOR}15` }}
@@ -407,11 +428,13 @@ function TablaTotales({ totales }: { totales: TotalPeriodo[] }) {
                     {t.faltas}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-center">
-                  <span className={cx("text-sm font-bold", t.retardos > 0 ? "text-amber-600" : "text-k-text-b")}>
-                    {t.retardos}
-                  </span>
-                </td>
+                {mostrarRetardos && (
+                  <td className="px-3 py-2 text-center">
+                    <span className={cx("text-sm font-bold", t.retardos > 0 ? "text-amber-600" : "text-k-text-b")}>
+                      {t.retardos}
+                    </span>
+                  </td>
+                )}
                 <td className="px-3 py-2 text-center" style={{ backgroundColor: `${TOTAL_COLOR}10` }}>
                   <span className="text-sm font-black" style={{ color: TOTAL_COLOR }}>
                     {minutesToHHMM(t.minutos)}
@@ -477,8 +500,9 @@ function SeccionPromedio({ filas, semanas }: { filas: FilaPromedio[]; semanas: n
             Promedio de las {semanas} semanas del período: cada celda es la hora promedio de entrada y salida de ese día
             de la semana, calculada solo con los días que tienen registro, así que descansos, vacaciones e incapacidades
             no arrastran el promedio.{" "}
-            <span className="font-bold">No se usa para nómina, no se puede editar y no entra al PDF.</span> Para pagar,
-            usa los totales del período.
+            <span className="font-bold">No se usa para nómina, no se puede editar y no entra en el reporte que se firma.</span>{" "}
+            Si la necesitas aparte, está en Descargar PDF → Semana promedio, en una hoja marcada como informativa. Para
+            pagar, usa los totales del período.
           </p>
         </div>
       </div>
@@ -545,13 +569,20 @@ function SeccionPromedio({ filas, semanas }: { filas: FilaPromedio[]; semanas: n
 
 const PDF_MARGIN = 10;
 
-function encabezadoPDF(pdf: jsPDF, desde: string, hasta: string, etiqueta: string, valor: string): number {
+function encabezadoPDF(
+  pdf: jsPDF,
+  desde: string,
+  hasta: string,
+  etiqueta: string,
+  valor: string,
+  opciones?: { titulo?: string; leyenda?: typeof LEYENDA; aviso?: string }
+): number {
   const pageW = pdf.internal.pageSize.getWidth();
   const m = PDF_MARGIN;
 
   pdf.setFontSize(16);
   pdf.setFont("helvetica", "bold");
-  pdf.text("CONTROL DE ASISTENCIA", pageW / 2, m + 6, { align: "center" });
+  pdf.text(opciones?.titulo ?? "CONTROL DE ASISTENCIA", pageW / 2, m + 6, { align: "center" });
 
   pdf.setFontSize(9);
   pdf.setFont("helvetica", "normal");
@@ -570,20 +601,56 @@ function encabezadoPDF(pdf: jsPDF, desde: string, hasta: string, etiqueta: strin
   pdf.setFontSize(6);
   pdf.setFont("helvetica", "normal");
   let legendX = m;
-  LEYENDA.forEach((item) => {
+  (opciones?.leyenda ?? LEYENDA).forEach((item) => {
     pdf.setFillColor(item.color);
     pdf.rect(legendX, legendY, 2.5, 2.5, "F");
     pdf.text(item.label, legendX + 3.5, legendY + 2);
     legendX += pdf.getTextWidth(item.label) + 7;
   });
 
-  return legendY + 6;
+  let y = legendY + 6;
+
+  if (opciones?.aviso) {
+    pdf.setFontSize(7);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(185, 28, 28);
+    pdf.text(opciones.aviso, m, y + 2);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont("helvetica", "normal");
+    y += 6;
+  }
+
+  return y;
 }
 
-function hojaSemanaPDF(pdf: jsPDF, semana: ReporteAsistenciaResponse, filas: ReporteAsistenciaFila[]) {
-  const startY = encabezadoPDF(pdf, semana.rango.desde, semana.rango.hasta, "SEMANA", String(semana.semana));
+function hojaSemanaPDF(
+  pdf: jsPDF,
+  semana: ReporteAsistenciaResponse,
+  filas: ReporteAsistenciaFila[],
+  mostrarComida: boolean
+) {
+  const startY = encabezadoPDF(pdf, semana.rango.desde, semana.rango.hasta, "SEMANA", String(semana.semana), {
+    leyenda: leyendaVisible(mostrarComida),
+  });
 
-  const head = [["NOMBRE", "COMIDA\n30 min", "DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "TOTAL", "FIRMA"]];
+  // Sin la columna Comida todo lo que va después corre un lugar a la izquierda.
+  const firmaIdx = mostrarComida ? 10 : 9;
+
+  const head = [
+    [
+      "NOMBRE",
+      ...(mostrarComida ? ["COMIDA\n30 min"] : []),
+      "DOMINGO",
+      "LUNES",
+      "MARTES",
+      "MIÉRCOLES",
+      "JUEVES",
+      "VIERNES",
+      "SÁBADO",
+      "TOTAL",
+      "FIRMA",
+    ],
+  ];
 
   const body = filas.map((fila) => {
     const nombre = fila.empleado.nombre + (fila.empleado.position_title ? `\n${fila.empleado.position_title}` : "");
@@ -619,7 +686,9 @@ function hojaSemanaPDF(pdf: jsPDF, semana: ReporteAsistenciaResponse, filas: Rep
 
     return [
       { content: nombre, styles: { fontSize: 7, valign: "middle" as const } },
-      { content: comida, styles: { halign: "center" as const, fontSize: 6, valign: "middle" as const } },
+      ...(mostrarComida
+        ? [{ content: comida, styles: { halign: "center" as const, fontSize: 6, valign: "middle" as const } }]
+        : []),
       ...diasCells,
       {
         content: minutesToHHMM(fila.total_horas),
@@ -637,10 +706,14 @@ function hojaSemanaPDF(pdf: jsPDF, semana: ReporteAsistenciaResponse, filas: Rep
     styles: { fontSize: 6, cellPadding: 1, lineColor: [200, 200, 200], lineWidth: 0.15, font: "helvetica" },
     headStyles: { fillColor: [243, 244, 246], textColor: [60, 60, 60], fontStyle: "bold", fontSize: 6, halign: "center", valign: "middle" },
     alternateRowStyles: { fillColor: [248, 249, 250] },
-    columnStyles: { 0: { cellWidth: 38 }, 1: { cellWidth: 16 }, 10: { cellWidth: 22 } },
+    columnStyles: {
+      0: { cellWidth: 38 },
+      ...(mostrarComida ? { 1: { cellWidth: 16 } } : {}),
+      [firmaIdx]: { cellWidth: 22 },
+    },
     didDrawCell: (hookData) => {
       // Dibujar línea de firma en la columna FIRMA
-      if (hookData.column.index === 10 && hookData.cell.section === "body") {
+      if (hookData.column.index === firmaIdx && hookData.cell.section === "body") {
         const { cell, doc } = hookData;
         const y = cell.y + cell.height - 2.5;
         doc.setDrawColor(180, 180, 180);
@@ -652,16 +725,28 @@ function hojaSemanaPDF(pdf: jsPDF, semana: ReporteAsistenciaResponse, filas: Rep
   });
 }
 
-function hojaTotalesPDF(pdf: jsPDF, totales: TotalPeriodo[], desde: string, hasta: string, semanas: number) {
-  const startY = encabezadoPDF(pdf, desde, hasta, "SEMANAS", String(semanas));
+function hojaTotalesPDF(
+  pdf: jsPDF,
+  totales: TotalPeriodo[],
+  desde: string,
+  hasta: string,
+  semanas: number,
+  mostrarRetardos: boolean
+) {
+  const startY = encabezadoPDF(pdf, desde, hasta, "SEMANAS", String(semanas), {
+    titulo: "TOTALES DEL PERÍODO",
+    leyenda: leyendaVisible(false).filter((l) => l.label !== "ENTRADA" && l.label !== "SALIDA"),
+  });
+
+  const firmaIdx = mostrarRetardos ? 5 : 4;
 
   autoTable(pdf, {
-    head: [["NOMBRE", "DÍAS TRABAJADOS", "FALTAS", "RETARDOS", "HORAS TOTALES", "FIRMA"]],
+    head: [["NOMBRE", "DÍAS TRABAJADOS", "FALTAS", ...(mostrarRetardos ? ["RETARDOS"] : []), "HORAS TOTALES", "FIRMA"]],
     body: totales.map((t) => [
       { content: t.empleado.nombre + (t.empleado.position_title ? `\n${t.empleado.position_title}` : ""), styles: { fontSize: 7 } },
       { content: String(t.dias_trabajados), styles: { halign: "center" as const } },
       { content: String(t.faltas), styles: { halign: "center" as const } },
-      { content: String(t.retardos), styles: { halign: "center" as const } },
+      ...(mostrarRetardos ? [{ content: String(t.retardos), styles: { halign: "center" as const } }] : []),
       {
         content: minutesToHHMM(t.minutos),
         styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: hexToRgb(TOTAL_COLOR) },
@@ -673,9 +758,9 @@ function hojaTotalesPDF(pdf: jsPDF, totales: TotalPeriodo[], desde: string, hast
     styles: { fontSize: 7, cellPadding: 1.5, lineColor: [200, 200, 200], lineWidth: 0.15, font: "helvetica" },
     headStyles: { fillColor: [243, 244, 246], textColor: [60, 60, 60], fontStyle: "bold", fontSize: 6, halign: "center", valign: "middle" },
     alternateRowStyles: { fillColor: [248, 249, 250] },
-    columnStyles: { 0: { cellWidth: 60 }, 5: { cellWidth: 45 } },
+    columnStyles: { 0: { cellWidth: 60 }, [firmaIdx]: { cellWidth: 45 } },
     didDrawCell: (hookData) => {
-      if (hookData.column.index === 5 && hookData.cell.section === "body") {
+      if (hookData.column.index === firmaIdx && hookData.cell.section === "body") {
         const { cell, doc } = hookData;
         const y = cell.y + cell.height - 2.5;
         doc.setDrawColor(180, 180, 180);
@@ -687,7 +772,68 @@ function hojaTotalesPDF(pdf: jsPDF, totales: TotalPeriodo[], desde: string, hast
   });
 }
 
+/**
+ * Hoja de la semana promedio: informativa, sin columna de firma y con el aviso
+ * de que no sirve para nómina.
+ */
+function hojaPromedioPDF(pdf: jsPDF, filas: FilaPromedio[], desde: string, hasta: string, semanas: number) {
+  const startY = encabezadoPDF(pdf, desde, hasta, "SEMANAS", String(semanas), {
+    titulo: "SEMANA PROMEDIO",
+    leyenda: LEYENDA.filter((l) => l.label === "ENTRADA" || l.label === "SALIDA"),
+    aviso: "SOLO INFORMATIVO — NO SE USA PARA NÓMINA. Promedia únicamente los días con registro.",
+  });
+
+  autoTable(pdf, {
+    head: [["NOMBRE", "DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "HORAS POR\nSEMANA"]],
+    body: filas.map((fila) => [
+      {
+        content: `${fila.empleado.nombre}\n${fila.semanas_contadas} sem. con actividad`,
+        styles: { fontSize: 7, valign: "middle" as const },
+      },
+      ...DIAS_ORDEN.map((d) => {
+        const dia = fila.dias[d];
+        if (dia.muestras === 0) {
+          const style = dia.estado ? ESTADO_COLORES[dia.estado] ?? ESTADO_COLORES.ausente : null;
+          if (!style) return { content: "—", styles: { halign: "center" as const, fontSize: 6 } };
+          return {
+            content: style.label,
+            styles: {
+              fillColor: hexToRgb(style.bg),
+              textColor: hexToRgb(style.text),
+              halign: "center" as const,
+              fontSize: 6,
+              fontStyle: "bold" as const,
+            },
+          };
+        }
+        const lines: string[] = [];
+        if (dia.entrada !== undefined) lines.push(minutosAHHmm(dia.entrada));
+        if (dia.salida !== undefined) lines.push(minutosAHHmm(dia.salida));
+        lines.push(`${dia.muestras} día${dia.muestras !== 1 ? "s" : ""}`);
+        return { content: lines.join("\n"), styles: { halign: "center" as const, fontSize: 6 } };
+      }),
+      {
+        content: minutesToHHMM(fila.minutos_promedio),
+        styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: hexToRgb(TOTAL_COLOR), valign: "middle" as const },
+      },
+    ]),
+    startY,
+    margin: { left: PDF_MARGIN, right: PDF_MARGIN },
+    styles: { fontSize: 6, cellPadding: 1.5, lineColor: [200, 200, 200], lineWidth: 0.15, font: "helvetica" },
+    headStyles: { fillColor: [224, 242, 254], textColor: [12, 74, 110], fontStyle: "bold", fontSize: 6, halign: "center", valign: "middle" },
+    alternateRowStyles: { fillColor: [248, 249, 250] },
+    columnStyles: { 0: { cellWidth: 50 }, 8: { cellWidth: 28 } },
+  });
+}
+
 // ─── Pestaña ─────────────────────────────────────────────────────────────────
+
+/** Qué hoja se baja: el período completo, una semana, los totales o el promedio. */
+type OpcionDescarga =
+  | { tipo: "todo" }
+  | { tipo: "semana"; idx: number }
+  | { tipo: "totales" }
+  | { tipo: "promedio" };
 
 export default function ReporteAsistenciaTab({ employees }: { employees: EmployeeOption[] }) {
   // Una entrada por semana del período, en orden cronológico.
@@ -702,6 +848,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const [motivo, setMotivo] = useState("");
   const [saving, setSaving] = useState(false);
   const [verPromedio, setVerPromedio] = useState(false);
+  const [menuDescarga, setMenuDescarga] = useState(false);
   // Panel "aplicar a toda la semana" de un empleado en una semana concreta
   const [fillRow, setFillRow] = useState<{ semanaIdx: number; empId: string; nombre: string; entrada: string; salida: string; overwrite: boolean } | null>(null);
 
@@ -732,6 +879,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
       setEditMode(false);
       setMotivo("");
       setVerPromedio(false);
+      setMenuDescarga(false);
       setFillRow(null);
       try {
         setSemanas(await cargar(filtros));
@@ -847,6 +995,10 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   }
 
   // ── Agregados del período ──
+  // El backend manda retardos y comida siempre (ignora incluir_retardos), así que
+  // los checkboxes del filtro deciden aquí qué se muestra y qué sale en el PDF.
+  const mostrarRetardos = !!lastFiltros?.incluir_retardos;
+  const mostrarComida = lastFiltros?.incluir_tiempos_comida !== false;
   const multi = (semanas?.length ?? 0) > 1;
   const rango =
     semanas && semanas.length > 0
@@ -859,25 +1011,41 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const totalesVisibles = totales.filter((t) => !hiddenRows.has(t.empleado.id));
   const promedioVisible = promedio.filter((f) => !hiddenRows.has(f.empleado.id));
 
-  function descargarPDF() {
+  function descargarPDF(opcion: OpcionDescarga) {
     if (!semanas || semanas.length === 0 || !rango) return;
+    setMenuDescarga(false);
     setExporting(true);
     try {
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      semanas.forEach((s, i) => {
-        if (i > 0) pdf.addPage();
-        hojaSemanaPDF(pdf, s, filasVisibles(s));
-      });
-      // La semana promedio no entra: el PDF es el documento de nómina.
-      if (multi) {
-        pdf.addPage();
-        hojaTotalesPDF(pdf, totalesVisibles, rango.desde, rango.hasta, semanas.length);
-      }
-      pdf.save(
-        multi
+      let nombre: string;
+
+      if (opcion.tipo === "semana") {
+        const s = semanas[opcion.idx];
+        if (!s) return;
+        hojaSemanaPDF(pdf, s, filasVisibles(s), mostrarComida);
+        nombre = `control-asistencia-semana-${s.semana}.pdf`;
+      } else if (opcion.tipo === "totales") {
+        hojaTotalesPDF(pdf, totalesVisibles, rango.desde, rango.hasta, semanas.length, mostrarRetardos);
+        nombre = `totales-asistencia-${rango.desde}_a_${rango.hasta}.pdf`;
+      } else if (opcion.tipo === "promedio") {
+        hojaPromedioPDF(pdf, promedioVisible, rango.desde, rango.hasta, semanas.length);
+        nombre = `semana-promedio-${rango.desde}_a_${rango.hasta}.pdf`;
+      } else {
+        semanas.forEach((s, i) => {
+          if (i > 0) pdf.addPage();
+          hojaSemanaPDF(pdf, s, filasVisibles(s), mostrarComida);
+        });
+        // El promedio no entra aquí: este es el documento que se firma.
+        if (multi) {
+          pdf.addPage();
+          hojaTotalesPDF(pdf, totalesVisibles, rango.desde, rango.hasta, semanas.length, mostrarRetardos);
+        }
+        nombre = multi
           ? `control-asistencia-${rango.desde}_a_${rango.hasta}.pdf`
-          : `control-asistencia-semana-${semanas[0].semana}.pdf`
-      );
+          : `control-asistencia-semana-${semanas[0].semana}.pdf`;
+      }
+
+      pdf.save(nombre);
     } catch (e) {
       console.error("Error generando PDF:", e);
     } finally {
@@ -964,7 +1132,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                           ? "bg-sky-600 border-sky-600 text-white hover:bg-sky-700"
                           : "border-k-border bg-k-bg-card text-k-text-h hover:bg-k-bg-card2"
                       )}
-                      title="Tabla aislada, solo de muestra: no afecta la nómina ni el PDF"
+                      title="Tabla aislada, solo de muestra: no afecta la nómina ni el reporte que se firma"
                     >
                       <Sigma className="h-4 w-4" />
                       {verPromedio ? "Ocultar promedio" : "Ver semana promedio"}
@@ -980,14 +1148,79 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                   </button>
                 </>
               )}
-              <button
-                onClick={descargarPDF}
-                disabled={exporting || editMode}
-                className="inline-flex items-center gap-2 rounded-xl bg-k-bg-sidebar text-white px-4 py-2.5 text-sm font-bold hover:bg-obsidian transition disabled:opacity-50"
-              >
-                {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                {exporting ? "Generando PDF..." : "Descargar PDF"}
-              </button>
+              {multi ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setMenuDescarga((p) => !p)}
+                    disabled={exporting || editMode}
+                    className="inline-flex items-center gap-2 rounded-xl bg-k-bg-sidebar text-white px-4 py-2.5 text-sm font-bold hover:bg-obsidian transition disabled:opacity-50"
+                  >
+                    {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                    {exporting ? "Generando PDF..." : "Descargar PDF"}
+                    <ChevronDown className={cx("h-4 w-4 transition", menuDescarga && "rotate-180")} />
+                  </button>
+
+                  {menuDescarga && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setMenuDescarga(false)} />
+                      <div className="absolute right-0 z-20 mt-1 w-80 max-h-96 overflow-y-auto rounded-xl border border-k-border bg-white shadow-lg py-2">
+                        <div className="px-3 pt-1 pb-2 text-[10px] font-bold text-k-text-b uppercase tracking-widest">
+                          Para nómina
+                        </div>
+                        <button onClick={() => descargarPDF({ tipo: "todo" })} className={OPCION_CLS}>
+                          Todo el período
+                          <span className="block text-[10px] font-medium text-k-text-b">
+                            {semanas.length} semanas, una hoja cada una, más la de totales
+                          </span>
+                        </button>
+                        <button onClick={() => descargarPDF({ tipo: "totales" })} className={OPCION_CLS}>
+                          Solo los totales
+                          <span className="block text-[10px] font-medium text-k-text-b">
+                            Una hoja: horas, días, faltas y retardos del período
+                          </span>
+                        </button>
+
+                        <div className="my-1 border-t border-k-border" />
+                        <div className="px-3 pt-1 pb-2 text-[10px] font-bold text-k-text-b uppercase tracking-widest">
+                          Una sola semana
+                        </div>
+                        {semanas.map((s, idx) => (
+                          <button
+                            key={`${s.anio}-${s.semana}-${s.rango.desde}`}
+                            onClick={() => descargarPDF({ tipo: "semana", idx })}
+                            className={OPCION_CLS}
+                          >
+                            Semana {s.semana}
+                            <span className="block text-[10px] font-medium text-k-text-b">
+                              {formatFechaCorta(s.rango.desde)} — {formatFechaCorta(s.rango.hasta)}
+                            </span>
+                          </button>
+                        ))}
+
+                        <div className="my-1 border-t border-k-border" />
+                        <div className="px-3 pt-1 pb-2 text-[10px] font-bold text-sky-700 uppercase tracking-widest">
+                          Solo informativo
+                        </div>
+                        <button onClick={() => descargarPDF({ tipo: "promedio" })} className={OPCION_CLS}>
+                          Semana promedio
+                          <span className="block text-[10px] font-medium text-k-text-b">
+                            Sale marcada como no válida para nómina y sin firma
+                          </span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => descargarPDF({ tipo: "todo" })}
+                  disabled={exporting || editMode}
+                  className="inline-flex items-center gap-2 rounded-xl bg-k-bg-sidebar text-white px-4 py-2.5 text-sm font-bold hover:bg-obsidian transition disabled:opacity-50"
+                >
+                  {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  {exporting ? "Generando PDF..." : "Descargar PDF"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -1089,7 +1322,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
             {/* Leyenda */}
             <div className="rounded-[20px] border border-k-border bg-k-bg-card p-4 shadow-k-card">
               <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-                {[...LEYENDA, { label: "FIRMA DE CONFORMIDAD", color: "transparent" }].map((item) => (
+                {[...leyendaVisible(mostrarComida), { label: "FIRMA DE CONFORMIDAD", color: "transparent" }].map((item) => (
                   <div key={item.label} className="flex items-center gap-1.5">
                     <div
                       className="h-3 w-3 rounded-sm border border-neutral-200 shrink-0"
@@ -1109,6 +1342,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                 semanaIdx={idx}
                 filas={filasVisibles(s)}
                 mostrarTitulo={multi}
+                mostrarComida={mostrarComida}
                 editMode={editMode}
                 changes={changes}
                 hoy={hoy}
@@ -1129,7 +1363,9 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
             ))}
 
             {/* Totales del período */}
-            {multi && totalesVisibles.length > 0 && <TablaTotales totales={totalesVisibles} />}
+            {multi && totalesVisibles.length > 0 && (
+              <TablaTotales totales={totalesVisibles} mostrarRetardos={mostrarRetardos} />
+            )}
           </div>
 
           {/* Semana promedio: fuera del contenedor del reporte, solo de muestra */}

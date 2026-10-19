@@ -34,6 +34,12 @@ export default function ReporteEmpleadoTab({ employees }: { employees: EmployeeO
   const [data, setData] = useState<ReporteEmpleadoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [lastFiltros, setLastFiltros] = useState<FiltrosAsistencia | null>(null);
+
+  // El resumen trae los retardos aunque no se pidan, así que el checkbox decide
+  // aquí si se muestran. Con la comida apagada el backend manda 0 y sobra la columna.
+  const mostrarRetardos = !!lastFiltros?.incluir_retardos;
+  const mostrarComida = lastFiltros?.incluir_tiempos_comida !== false;
 
   const handleFilter = useCallback(
     async (filtros: FiltrosAsistencia) => {
@@ -43,6 +49,7 @@ export default function ReporteEmpleadoTab({ employees }: { employees: EmployeeO
       }
       setLoading(true);
       setErr(null);
+      setLastFiltros(filtros);
       try {
         const res = await getReporteEmpleado(selectedEmp, filtros);
         setData(res);
@@ -142,16 +149,24 @@ export default function ReporteEmpleadoTab({ employees }: { employees: EmployeeO
                 val: minutesToHHMM(data.resumen.total_horas),
                 icon: Clock,
               },
-              {
-                label: "Retardos",
-                val: data.resumen.total_retardos,
-                icon: AlertCircle,
-              },
-              {
-                label: "Comida promedio",
-                val: `${Math.round(data.resumen.promedio_comida_minutos)}m`,
-                icon: Coffee,
-              },
+              ...(mostrarRetardos
+                ? [
+                    {
+                      label: "Retardos",
+                      val: data.resumen.total_retardos,
+                      icon: AlertCircle,
+                    },
+                  ]
+                : []),
+              ...(mostrarComida
+                ? [
+                    {
+                      label: "Comida promedio",
+                      val: `${Math.round(data.resumen.promedio_comida_minutos)}m`,
+                      icon: Coffee,
+                    },
+                  ]
+                : []),
             ].map((kpi) => (
               <div
                 key={kpi.label}
@@ -175,7 +190,15 @@ export default function ReporteEmpleadoTab({ employees }: { employees: EmployeeO
               <table className="w-full text-sm">
                 <thead className="bg-k-bg-card2/80 border-b border-k-border">
                   <tr>
-                    {["Fecha", "Entrada", "Salida", "Estado", "Horas", "Comida", "Retardo"].map((h) => (
+                    {[
+                      "Fecha",
+                      "Entrada",
+                      "Salida",
+                      "Estado",
+                      "Horas",
+                      ...(mostrarComida ? ["Comida"] : []),
+                      ...(mostrarRetardos ? ["Retardo"] : []),
+                    ].map((h) => (
                       <th
                         key={h}
                         className="text-left px-4 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em]"
@@ -213,18 +236,25 @@ export default function ReporteEmpleadoTab({ employees }: { employees: EmployeeO
                         <td className="px-4 py-3 text-sm font-bold text-k-text-h">
                           {minutesToHHMM(row.horas_trabajadas)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-k-text-b">
-                          {row.tiempo_comida_minutos > 0 ? `${row.tiempo_comida_minutos}m` : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-k-text-b">
-                          {row.retardos_minutos ? `${row.retardos_minutos}m` : "—"}
-                        </td>
+                        {mostrarComida && (
+                          <td className="px-4 py-3 text-sm text-k-text-b">
+                            {row.tiempo_comida_minutos > 0 ? `${row.tiempo_comida_minutos}m` : "—"}
+                          </td>
+                        )}
+                        {mostrarRetardos && (
+                          <td className="px-4 py-3 text-sm text-k-text-b">
+                            {row.retardos_minutos ? `${row.retardos_minutos}m` : "—"}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
                   {data.detalle.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-8 py-12 text-center text-k-text-b text-sm">
+                      <td
+                        colSpan={5 + (mostrarComida ? 1 : 0) + (mostrarRetardos ? 1 : 0)}
+                        className="px-8 py-12 text-center text-k-text-b text-sm"
+                      >
                         No hay registros para el período seleccionado.
                       </td>
                     </tr>
