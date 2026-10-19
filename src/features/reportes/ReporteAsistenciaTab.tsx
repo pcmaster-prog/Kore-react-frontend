@@ -1162,8 +1162,10 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
 
                   {menuDescarga && (
                     <>
-                      <div className="fixed inset-0 z-10" onClick={() => setMenuDescarga(false)} />
-                      <div className="absolute right-0 z-20 mt-1 w-80 max-h-96 overflow-y-auto rounded-xl border border-k-border bg-white shadow-lg py-2">
+                      <div className="fixed inset-0 z-10 max-md:bg-black/20" onClick={() => setMenuDescarga(false)} />
+                      {/* En escritorio cuelga del botón; en móvil no cabe (320px anclados a la
+                          derecha se salen de pantalla), así que va como hoja inferior. */}
+                      <div className="absolute right-0 z-20 mt-1 w-80 max-h-96 overflow-y-auto rounded-xl border border-k-border bg-white shadow-lg py-2 max-md:fixed max-md:inset-x-3 max-md:bottom-3 max-md:top-auto max-md:mt-0 max-md:w-auto max-md:max-h-[70vh] max-md:rounded-2xl max-md:shadow-2xl">
                         <div className="px-3 pt-1 pb-2 text-[10px] font-bold text-k-text-b uppercase tracking-widest">
                           Para nómina
                         </div>
