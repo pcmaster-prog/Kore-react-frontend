@@ -1,15 +1,39 @@
 // src/features/reportes/ReporteAsistenciaTab.tsx
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   getReporteAsistenciaSemanal,
   DIAS_ORDEN,
+  type DiaSemana,
   type FiltrosAsistencia,
   type ReporteAsistenciaResponse,
   type ReporteAsistenciaFila,
 } from "./api";
+import {
+  COMPANY_TZ,
+  MAX_SEMANAS,
+  isoToHHmm,
+  minutosAHHmm,
+  semanaPromedio,
+  totalesPeriodo,
+  weekChunks,
+  type FilaPromedio,
+  type TotalPeriodo,
+} from "./periodo";
 import { minutesToHHMM, ajustarAsistenciaMasivo, type BulkAdjustItem } from "@/features/attendance/api";
 import FiltrosReporte from "./FiltrosReporte";
-import { Loader2, AlertTriangle, Download, Trash2, RotateCcw, Pencil, Save, X, CalendarRange } from "lucide-react";
+import {
+  Loader2,
+  AlertTriangle,
+  Download,
+  Trash2,
+  RotateCcw,
+  Pencil,
+  Save,
+  X,
+  CalendarRange,
+  Sigma,
+  Info,
+} from "lucide-react";
 import { cx } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -40,13 +64,13 @@ function hexToRgb(hex: string): [number, number, number] {
     : [0, 0, 0];
 }
 
-// Zona horaria de la empresa: el backend interpreta las HH:mm de los ajustes en
-// esta zona, así que la matriz debe mostrarlas igual sin importar el navegador.
-const COMPANY_TZ = "America/Mexico_City";
-
 function formatHora(iso?: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: COMPANY_TZ });
+}
+
+function formatFechaCorta(fecha: string): string {
+  return new Date(fecha + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 }
 
 function todayISO(): string {
@@ -55,18 +79,23 @@ function todayISO(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+const LEYENDA = [
+  { label: "COMIDA 30 min", color: COMIDA_COLOR },
+  { label: "ENTRADA", color: ENTRADA_COLOR },
+  { label: "SALIDA", color: SALIDA_COLOR },
+  { label: "FALTA", color: ESTADO_COLORES.falta.bg },
+  { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
+  { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
+  { label: "VACACIONES", color: ESTADO_COLORES.vacaciones.bg },
+  { label: "HORAS TOTAL", color: TOTAL_COLOR },
+];
+
 type CeldaDiaProps = {
   dia?: { fecha: string; entrada?: string | null; salida?: string | null; estado: string };
   editable?: boolean;
   draft?: { entrada?: string; salida?: string };
   onDraft?: (patch: { entrada?: string; salida?: string }) => void;
 };
-
-function isoToHHmm(iso?: string | null): string {
-  if (!iso) return "";
-  // en-GB da "HH:mm" en 24h; se fuerza la zona de la empresa
-  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: COMPANY_TZ });
-}
 
 function CeldaDia({ dia, editable, draft, onDraft }: CeldaDiaProps) {
   if (!dia) {
@@ -134,8 +163,535 @@ function CeldaDia({ dia, editable, draft, onDraft }: CeldaDiaProps) {
   );
 }
 
+// ─── Matriz de una semana ────────────────────────────────────────────────────
+
+type MatrizSemanaProps = {
+  semana: ReporteAsistenciaResponse;
+  semanaIdx: number;
+  filas: ReporteAsistenciaFila[];
+  mostrarTitulo: boolean;
+  editMode: boolean;
+  changes: Record<string, { entrada?: string; salida?: string }>;
+  hoy: string;
+  fillRow: { semanaIdx: number; empId: string } | null;
+  onDraft: (empleadoId: string, fecha: string, patch: { entrada?: string; salida?: string }) => void;
+  onFill: (semanaIdx: number, fila: ReporteAsistenciaFila) => void;
+  onHideRow: (id: string) => void;
+};
+
+function MatrizSemana({
+  semana,
+  semanaIdx,
+  filas,
+  mostrarTitulo,
+  editMode,
+  changes,
+  hoy,
+  fillRow,
+  onDraft,
+  onFill,
+  onHideRow,
+}: MatrizSemanaProps) {
+  return (
+    <div className="rounded-[28px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+      {mostrarTitulo && (
+        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-k-border bg-k-bg-card2/60">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Semana</span>
+            <span className="text-xl font-black text-k-text-h leading-none">{semana.semana}</span>
+          </div>
+          <span className="text-xs font-bold text-k-text-b">
+            {formatFechaCorta(semana.rango.desde)} — {formatFechaCorta(semana.rango.hasta)}
+          </span>
+        </div>
+      )}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-k-bg-card2/80">
+              <th className="text-left px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border sticky left-0 bg-k-bg-card2/95 z-10 min-w-[140px]">
+                Nombre
+              </th>
+              <th
+                className="text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
+                style={{ backgroundColor: `${COMIDA_COLOR}22` }}
+              >
+                Comida
+                <br />
+                <span className="text-[9px] opacity-70">30 min</span>
+              </th>
+              {DIAS_ORDEN.map((d) => (
+                <th
+                  key={d}
+                  className={cx(
+                    "text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[80px]",
+                    (d === "sábado" || d === "domingo") && "bg-neutral-50/50"
+                  )}
+                >
+                  {d}
+                </th>
+              ))}
+              <th
+                className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
+                style={{ backgroundColor: `${TOTAL_COLOR}15` }}
+              >
+                Total
+              </th>
+              <th className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[100px]">
+                Firma de
+                <br />
+                Conformidad
+              </th>
+              <th className="w-10 border-b border-k-border" />
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((fila) => (
+              <tr key={fila.empleado.id} className="border-t border-k-border hover:bg-k-bg-card2/30 transition group">
+                {/* Nombre */}
+                <td className="px-3 py-2 sticky left-0 bg-k-bg-card border-r border-k-border z-10">
+                  <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{fila.empleado.nombre}</div>
+                  {fila.empleado.position_title && (
+                    <div className="text-[9px] text-k-text-b">{fila.empleado.position_title}</div>
+                  )}
+                  {editMode && (
+                    <button
+                      onClick={() => onFill(semanaIdx, fila)}
+                      className={cx(
+                        "mt-1 inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px] font-bold transition",
+                        fillRow?.empId === fila.empleado.id && fillRow?.semanaIdx === semanaIdx
+                          ? "bg-sky-600 border-sky-600 text-white"
+                          : "bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100"
+                      )}
+                      title="Poner la misma entrada y salida en todos los días de esta semana"
+                    >
+                      <CalendarRange className="h-3 w-3" />
+                      Toda la semana
+                    </button>
+                  )}
+                </td>
+
+                {/* Comida */}
+                <td
+                  className="px-2 py-2 text-center border-r border-k-border"
+                  style={{ backgroundColor: `${COMIDA_COLOR}33` }}
+                >
+                  <span className="text-xs font-bold" style={{ color: "#B7791F" }}>
+                    {fila.empleado.comida_hora ?? "—"}
+                  </span>
+                </td>
+
+                {/* Días */}
+                {DIAS_ORDEN.map((d) => (
+                  <td
+                    key={d}
+                    className={cx(
+                      "px-0 py-0 border-r border-k-border h-[52px] w-[80px]",
+                      (d === "sábado" || d === "domingo") && "bg-neutral-50/30"
+                    )}
+                  >
+                    <CeldaDia
+                      dia={
+                        fila.dias[d]
+                          ? {
+                              fecha: fila.dias[d]!.fecha,
+                              entrada: fila.dias[d]!.entrada,
+                              salida: fila.dias[d]!.salida,
+                              estado: fila.dias[d]!.estado,
+                            }
+                          : undefined
+                      }
+                      editable={editMode && !!fila.dias[d] && fila.dias[d]!.fecha <= hoy}
+                      draft={fila.dias[d] ? changes[`${fila.empleado.id}|${fila.dias[d]!.fecha}`] : undefined}
+                      onDraft={
+                        fila.dias[d]
+                          ? (patch) => onDraft(fila.empleado.id, fila.dias[d]!.fecha, patch)
+                          : undefined
+                      }
+                    />
+                  </td>
+                ))}
+
+                {/* Total de la semana */}
+                <td
+                  className="px-3 py-2 text-center border-r border-k-border"
+                  style={{ backgroundColor: `${TOTAL_COLOR}10` }}
+                >
+                  <span className="text-sm font-black" style={{ color: TOTAL_COLOR }}>
+                    {minutesToHHMM(fila.total_horas)}
+                  </span>
+                </td>
+
+                {/* Firma */}
+                <td className="px-3 py-2 border-r border-k-border">
+                  <div className="h-8 w-full border-b border-dashed border-neutral-300" />
+                </td>
+
+                {/* Eliminar */}
+                <td className="px-2 py-2 text-center">
+                  <button
+                    onClick={() => onHideRow(fila.empleado.id)}
+                    className="h-7 w-7 rounded-lg border border-k-border bg-k-bg-card2 flex items-center justify-center hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 transition opacity-0 group-hover:opacity-100"
+                    title="Quitar del reporte"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {filas.length === 0 && (
+              <tr>
+                <td colSpan={13} className="px-8 py-12 text-center text-k-text-b text-sm">
+                  No hay registros para esta semana.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Totales del período (lo que se paga) ────────────────────────────────────
+
+function TablaTotales({ totales }: { totales: TotalPeriodo[] }) {
+  return (
+    <div className="rounded-[28px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
+      <div className="px-5 py-3 border-b border-k-border bg-k-bg-card2/60">
+        <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Totales del período</div>
+        <div className="text-xs text-k-text-b mt-0.5">Suma de todas las semanas: es lo que se usa para nómina.</div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-k-bg-card2/80">
+              <th className="text-left px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border min-w-[160px]">
+                Nombre
+              </th>
+              <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border">
+                Días trabajados
+              </th>
+              <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border">
+                Faltas
+              </th>
+              <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border">
+                Retardos
+              </th>
+              <th
+                className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border"
+                style={{ backgroundColor: `${TOTAL_COLOR}15` }}
+              >
+                Horas totales
+              </th>
+              <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border min-w-[120px]">
+                Firma de
+                <br />
+                Conformidad
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {totales.map((t) => (
+              <tr key={t.empleado.id} className="border-t border-k-border hover:bg-k-bg-card2/30 transition">
+                <td className="px-3 py-2">
+                  <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{t.empleado.nombre}</div>
+                  {t.empleado.position_title && (
+                    <div className="text-[9px] text-k-text-b">{t.empleado.position_title}</div>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-center text-sm font-bold text-k-text-h">{t.dias_trabajados}</td>
+                <td className="px-3 py-2 text-center">
+                  <span className={cx("text-sm font-bold", t.faltas > 0 ? "text-rose-600" : "text-k-text-b")}>
+                    {t.faltas}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-center">
+                  <span className={cx("text-sm font-bold", t.retardos > 0 ? "text-amber-600" : "text-k-text-b")}>
+                    {t.retardos}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-center" style={{ backgroundColor: `${TOTAL_COLOR}10` }}>
+                  <span className="text-sm font-black" style={{ color: TOTAL_COLOR }}>
+                    {minutesToHHMM(t.minutos)}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <div className="h-8 w-full border-b border-dashed border-neutral-300" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Semana promedio (aislada, solo de muestra) ──────────────────────────────
+
+function CeldaPromedio({ dia }: { dia: FilaPromedio["dias"][DiaSemana] }) {
+  if (dia.muestras === 0) {
+    const style = dia.estado ? ESTADO_COLORES[dia.estado] ?? ESTADO_COLORES.ausente : null;
+    if (!style) {
+      return <div className="h-full flex items-center justify-center text-[10px] text-neutral-300">—</div>;
+    }
+    return (
+      <div
+        className="h-full flex items-center justify-center rounded-sm mx-0.5 my-0.5"
+        style={{ backgroundColor: style.bg, color: style.text }}
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wider">{style.label}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center gap-0.5 py-1">
+      {dia.entrada !== undefined && (
+        <span className="text-[11px] font-bold" style={{ color: ENTRADA_COLOR }}>
+          {minutosAHHmm(dia.entrada)}
+        </span>
+      )}
+      {dia.salida !== undefined && (
+        <span className="text-[11px] font-bold" style={{ color: SALIDA_COLOR }}>
+          {minutosAHHmm(dia.salida)}
+        </span>
+      )}
+      <span className="text-[9px] text-k-text-b">
+        {dia.muestras} día{dia.muestras !== 1 ? "s" : ""}
+      </span>
+    </div>
+  );
+}
+
+function SeccionPromedio({ filas, semanas }: { filas: FilaPromedio[]; semanas: number }) {
+  return (
+    <div className="rounded-[28px] border-2 border-dashed border-sky-300 bg-sky-50/40 p-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <Info className="h-5 w-5 text-sky-600 shrink-0 mt-0.5" />
+        <div>
+          <div className="text-sm font-black text-k-text-h">Semana promedio — solo de muestra</div>
+          <p className="text-xs text-k-text-b mt-1 max-w-3xl">
+            Promedio de las {semanas} semanas del período: cada celda es la hora promedio de entrada y salida de ese día
+            de la semana, calculada solo con los días que tienen registro, así que descansos, vacaciones e incapacidades
+            no arrastran el promedio.{" "}
+            <span className="font-bold">No se usa para nómina, no se puede editar y no entra al PDF.</span> Para pagar,
+            usa los totales del período.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-[20px] border border-sky-200 bg-white overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-sky-50">
+                <th className="text-left px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-sky-200 min-w-[160px]">
+                  Nombre
+                </th>
+                {DIAS_ORDEN.map((d) => (
+                  <th
+                    key={d}
+                    className="text-center px-2 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-sky-200 min-w-[80px]"
+                  >
+                    {d}
+                  </th>
+                ))}
+                <th className="text-center px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-sky-200 min-w-[90px]">
+                  Horas por
+                  <br />
+                  semana
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((fila) => (
+                <tr key={fila.empleado.id} className="border-t border-sky-100">
+                  <td className="px-3 py-2">
+                    <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{fila.empleado.nombre}</div>
+                    <div className="text-[9px] text-k-text-b">
+                      {fila.semanas_contadas} semana{fila.semanas_contadas !== 1 ? "s" : ""} con actividad
+                    </div>
+                  </td>
+                  {DIAS_ORDEN.map((d) => (
+                    <td key={d} className="px-0 py-0 border-l border-sky-100 h-[56px] w-[80px]">
+                      <CeldaPromedio dia={fila.dias[d]} />
+                    </td>
+                  ))}
+                  <td className="px-3 py-2 text-center border-l border-sky-100">
+                    <span className="text-sm font-black text-sky-700">{minutesToHHMM(fila.minutos_promedio)}</span>
+                    <div className="text-[9px] text-k-text-b">promedio</div>
+                  </td>
+                </tr>
+              ))}
+              {filas.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="px-8 py-10 text-center text-k-text-b text-sm">
+                    No hay datos suficientes para promediar.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PDF: una hoja por semana + una hoja de totales ──────────────────────────
+
+const PDF_MARGIN = 10;
+
+function encabezadoPDF(pdf: jsPDF, desde: string, hasta: string, etiqueta: string, valor: string): number {
+  const pageW = pdf.internal.pageSize.getWidth();
+  const m = PDF_MARGIN;
+
+  pdf.setFontSize(16);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("CONTROL DE ASISTENCIA", pageW / 2, m + 6, { align: "center" });
+
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "normal");
+  const d = new Date(desde + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long" });
+  const h = new Date(hasta + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+  pdf.text(`del ${d} al ${h}`, pageW / 2, m + 11, { align: "center" });
+
+  pdf.setFontSize(7);
+  pdf.text(etiqueta, pageW - m - 2, m + 4, { align: "right" });
+  pdf.setFontSize(20);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(valor, pageW - m - 2, m + 13, { align: "right" });
+
+  // Leyenda
+  const legendY = m + 16;
+  pdf.setFontSize(6);
+  pdf.setFont("helvetica", "normal");
+  let legendX = m;
+  LEYENDA.forEach((item) => {
+    pdf.setFillColor(item.color);
+    pdf.rect(legendX, legendY, 2.5, 2.5, "F");
+    pdf.text(item.label, legendX + 3.5, legendY + 2);
+    legendX += pdf.getTextWidth(item.label) + 7;
+  });
+
+  return legendY + 6;
+}
+
+function hojaSemanaPDF(pdf: jsPDF, semana: ReporteAsistenciaResponse, filas: ReporteAsistenciaFila[]) {
+  const startY = encabezadoPDF(pdf, semana.rango.desde, semana.rango.hasta, "SEMANA", String(semana.semana));
+
+  const head = [["NOMBRE", "COMIDA\n30 min", "DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "TOTAL", "FIRMA"]];
+
+  const body = filas.map((fila) => {
+    const nombre = fila.empleado.nombre + (fila.empleado.position_title ? `\n${fila.empleado.position_title}` : "");
+    const comida = fila.empleado.comida_hora ?? "—";
+
+    const diasCells = DIAS_ORDEN.map((d) => {
+      const dia = fila.dias[d];
+      if (!dia) return { content: "—", styles: { halign: "center" as const, fontSize: 6 } };
+
+      const style = ESTADO_COLORES[dia.estado] ?? ESTADO_COLORES.ausente;
+      const tieneHoras = !!dia.entrada || !!dia.salida;
+
+      if (!tieneHoras && dia.estado !== "presente" && dia.estado !== "en_turno") {
+        return {
+          content: style.label,
+          styles: {
+            fillColor: hexToRgb(style.bg),
+            textColor: hexToRgb(style.text),
+            halign: "center" as const,
+            fontSize: 6,
+            fontStyle: "bold" as const,
+          },
+        };
+      }
+
+      const lines: string[] = [];
+      if (dia.entrada) lines.push(formatHora(dia.entrada));
+      if (dia.salida) lines.push(formatHora(dia.salida));
+      if (lines.length === 0) lines.push("—");
+
+      return { content: lines.join("\n"), styles: { halign: "center" as const, fontSize: 6 } };
+    });
+
+    return [
+      { content: nombre, styles: { fontSize: 7, valign: "middle" as const } },
+      { content: comida, styles: { halign: "center" as const, fontSize: 6, valign: "middle" as const } },
+      ...diasCells,
+      {
+        content: minutesToHHMM(fila.total_horas),
+        styles: { halign: "center" as const, fontSize: 7, fontStyle: "bold" as const, textColor: hexToRgb(TOTAL_COLOR), valign: "middle" as const },
+      },
+      { content: "", styles: { minCellHeight: 8 } },
+    ];
+  });
+
+  autoTable(pdf, {
+    head,
+    body,
+    startY,
+    margin: { left: PDF_MARGIN, right: PDF_MARGIN },
+    styles: { fontSize: 6, cellPadding: 1, lineColor: [200, 200, 200], lineWidth: 0.15, font: "helvetica" },
+    headStyles: { fillColor: [243, 244, 246], textColor: [60, 60, 60], fontStyle: "bold", fontSize: 6, halign: "center", valign: "middle" },
+    alternateRowStyles: { fillColor: [248, 249, 250] },
+    columnStyles: { 0: { cellWidth: 38 }, 1: { cellWidth: 16 }, 10: { cellWidth: 22 } },
+    didDrawCell: (hookData) => {
+      // Dibujar línea de firma en la columna FIRMA
+      if (hookData.column.index === 10 && hookData.cell.section === "body") {
+        const { cell, doc } = hookData;
+        const y = cell.y + cell.height - 2.5;
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(cell.x + 1, y, cell.x + cell.width - 1, y);
+        doc.setLineDashPattern([], 0);
+      }
+    },
+  });
+}
+
+function hojaTotalesPDF(pdf: jsPDF, totales: TotalPeriodo[], desde: string, hasta: string, semanas: number) {
+  const startY = encabezadoPDF(pdf, desde, hasta, "SEMANAS", String(semanas));
+
+  autoTable(pdf, {
+    head: [["NOMBRE", "DÍAS TRABAJADOS", "FALTAS", "RETARDOS", "HORAS TOTALES", "FIRMA"]],
+    body: totales.map((t) => [
+      { content: t.empleado.nombre + (t.empleado.position_title ? `\n${t.empleado.position_title}` : ""), styles: { fontSize: 7 } },
+      { content: String(t.dias_trabajados), styles: { halign: "center" as const } },
+      { content: String(t.faltas), styles: { halign: "center" as const } },
+      { content: String(t.retardos), styles: { halign: "center" as const } },
+      {
+        content: minutesToHHMM(t.minutos),
+        styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: hexToRgb(TOTAL_COLOR) },
+      },
+      { content: "", styles: { minCellHeight: 8 } },
+    ]),
+    startY,
+    margin: { left: PDF_MARGIN, right: PDF_MARGIN },
+    styles: { fontSize: 7, cellPadding: 1.5, lineColor: [200, 200, 200], lineWidth: 0.15, font: "helvetica" },
+    headStyles: { fillColor: [243, 244, 246], textColor: [60, 60, 60], fontStyle: "bold", fontSize: 6, halign: "center", valign: "middle" },
+    alternateRowStyles: { fillColor: [248, 249, 250] },
+    columnStyles: { 0: { cellWidth: 60 }, 5: { cellWidth: 45 } },
+    didDrawCell: (hookData) => {
+      if (hookData.column.index === 5 && hookData.cell.section === "body") {
+        const { cell, doc } = hookData;
+        const y = cell.y + cell.height - 2.5;
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(cell.x + 1, y, cell.x + cell.width - 1, y);
+        doc.setLineDashPattern([], 0);
+      }
+    },
+  });
+}
+
+// ─── Pestaña ─────────────────────────────────────────────────────────────────
+
 export default function ReporteAsistenciaTab({ employees }: { employees: EmployeeOption[] }) {
-  const [data, setData] = useState<ReporteAsistenciaResponse | null>(null);
+  // Una entrada por semana del período, en orden cronológico.
+  const [semanas, setSemanas] = useState<ReporteAsistenciaResponse[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -145,31 +701,48 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   const [changes, setChanges] = useState<Record<string, { entrada?: string; salida?: string }>>({});
   const [motivo, setMotivo] = useState("");
   const [saving, setSaving] = useState(false);
-  // Panel "aplicar a toda la semana" de un empleado
-  const [fillRow, setFillRow] = useState<{ empId: string; nombre: string; entrada: string; salida: string; overwrite: boolean } | null>(null);
+  const [verPromedio, setVerPromedio] = useState(false);
+  // Panel "aplicar a toda la semana" de un empleado en una semana concreta
+  const [fillRow, setFillRow] = useState<{ semanaIdx: number; empId: string; nombre: string; entrada: string; salida: string; overwrite: boolean } | null>(null);
 
   const pendingEditsRef = useRef(0);
 
-  const handleFilter = useCallback(async (filtros: FiltrosAsistencia) => {
-    if (pendingEditsRef.current > 0 && !window.confirm("Hay cambios sin guardar en la matriz. ¿Descartarlos y generar el reporte?")) {
-      return;
+  /** Pide una respuesta por semana del rango: el endpoint solo cubre 7 días. */
+  const cargar = useCallback(async (filtros: FiltrosAsistencia): Promise<ReporteAsistenciaResponse[]> => {
+    const chunks = weekChunks(filtros.from ?? "", filtros.to ?? "");
+    if (chunks.length === 0) {
+      throw new Error("Revisa el rango: la fecha Desde debe ser anterior o igual a Hasta.");
     }
-    setLoading(true);
-    setErr(null);
-    setHiddenRows(new Set());
-    setLastFiltros(filtros);
-    setChanges({});
-    setEditMode(false);
-    setMotivo("");
-    try {
-      const res = await getReporteAsistenciaSemanal(filtros);
-      setData(res);
-    } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "Error al generar el reporte");
-    } finally {
-      setLoading(false);
+    if (chunks.length > MAX_SEMANAS) {
+      throw new Error(`El rango abarca ${chunks.length} semanas y el máximo es ${MAX_SEMANAS}. Acorta el período.`);
     }
+    return Promise.all(chunks.map((c) => getReporteAsistenciaSemanal({ ...filtros, from: c.from, to: c.to })));
   }, []);
+
+  const handleFilter = useCallback(
+    async (filtros: FiltrosAsistencia) => {
+      if (pendingEditsRef.current > 0 && !window.confirm("Hay cambios sin guardar en la matriz. ¿Descartarlos y generar el reporte?")) {
+        return;
+      }
+      setLoading(true);
+      setErr(null);
+      setHiddenRows(new Set());
+      setLastFiltros(filtros);
+      setChanges({});
+      setEditMode(false);
+      setMotivo("");
+      setVerPromedio(false);
+      setFillRow(null);
+      try {
+        setSemanas(await cargar(filtros));
+      } catch (e: any) {
+        setErr(e?.response?.data?.message ?? e?.message ?? "Error al generar el reporte");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [cargar]
+  );
 
   function hideRow(id: string) {
     setHiddenRows((prev) => {
@@ -206,9 +779,12 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
   // Estados que no deben recibir horas al rellenar la semana
   const NO_RELLENAR = new Set(["descanso", "festivo", "vacaciones", "incapacidad"]);
 
-  /** Aplica entrada/salida a todos los días editables de la semana de un empleado. */
-  function aplicarSemana(fila: ReporteAsistenciaFila) {
+  /** Aplica entrada/salida a todos los días editables de una semana de un empleado. */
+  function aplicarSemana() {
     if (!fillRow || (!fillRow.entrada && !fillRow.salida)) return;
+    const fila = semanas?.[fillRow.semanaIdx]?.filas.find((f) => f.empleado.id === fillRow.empId);
+    if (!fila) return;
+
     const next = { ...changes };
     let tocados = 0;
     for (const d of DIAS_ORDEN) {
@@ -251,7 +827,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
     setSaving(true);
     setErr(null);
     try {
-      await ajustarAsistenciaMasivo(items, motivo.trim() || "Ajuste desde reporte semanal");
+      await ajustarAsistenciaMasivo(items, motivo.trim() || "Ajuste desde reporte de asistencia");
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error al guardar los ajustes");
       setSaving(false);
@@ -260,10 +836,9 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
     setChanges({});
     setMotivo("");
     setEditMode(false);
+    setFillRow(null);
     try {
-      if (lastFiltros) {
-        setData(await getReporteAsistenciaSemanal(lastFiltros));
-      }
+      if (lastFiltros) setSemanas(await cargar(lastFiltros));
     } catch {
       setErr("Los cambios se guardaron, pero no se pudo recargar el reporte. Vuelve a generarlo.");
     } finally {
@@ -271,151 +846,38 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
     }
   }
 
-  const visibleFilas = data?.filas.filter((f) => !hiddenRows.has(f.empleado.id)) ?? [];
-  const totalFilas = data?.filas.length ?? 0;
+  // ── Agregados del período ──
+  const multi = (semanas?.length ?? 0) > 1;
+  const rango =
+    semanas && semanas.length > 0
+      ? { desde: semanas[0].rango.desde, hasta: semanas[semanas.length - 1].rango.hasta }
+      : null;
+  const totales = useMemo(() => (semanas ? totalesPeriodo(semanas) : []), [semanas]);
+  const promedio = useMemo(() => (semanas ? semanaPromedio(semanas) : []), [semanas]);
+
+  const filasVisibles = (s: ReporteAsistenciaResponse) => s.filas.filter((f) => !hiddenRows.has(f.empleado.id));
+  const totalesVisibles = totales.filter((t) => !hiddenRows.has(t.empleado.id));
+  const promedioVisible = promedio.filter((f) => !hiddenRows.has(f.empleado.id));
 
   function descargarPDF() {
-    if (!data) return;
+    if (!semanas || semanas.length === 0 || !rango) return;
     setExporting(true);
     try {
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const margin = 10;
-
-      // ── Header ──
-      pdf.setFontSize(16);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("CONTROL DE ASISTENCIA", pageW / 2, margin + 6, { align: "center" });
-
-      pdf.setFontSize(9);
-      pdf.setFont("helvetica", "normal");
-      const desde = new Date(data.rango.desde + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long" });
-      const hasta = new Date(data.rango.hasta + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
-      pdf.text(`del ${desde} al ${hasta}`, pageW / 2, margin + 11, { align: "center" });
-
-      pdf.setFontSize(7);
-      pdf.text("SEMANA", pageW - margin - 2, margin + 4, { align: "right" });
-      pdf.setFontSize(20);
-      pdf.setFont("helvetica", "bold");
-      pdf.text(String(data.semana), pageW - margin - 2, margin + 13, { align: "right" });
-
-      // ── Leyenda ──
-      pdf.setFontSize(6);
-      pdf.setFont("helvetica", "normal");
-      const legendY = margin + 16;
-      const legendItems = [
-        { label: "COMIDA 30 min", color: COMIDA_COLOR },
-        { label: "ENTRADA", color: ENTRADA_COLOR },
-        { label: "SALIDA", color: SALIDA_COLOR },
-        { label: "FALTA", color: ESTADO_COLORES.falta.bg },
-        { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
-        { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
-        { label: "VACACIONES", color: ESTADO_COLORES.vacaciones.bg },
-        { label: "HORAS TOTAL", color: TOTAL_COLOR },
-      ];
-      let legendX = margin;
-      legendItems.forEach((item) => {
-        pdf.setFillColor(item.color);
-        pdf.rect(legendX, legendY, 2.5, 2.5, "F");
-        pdf.text(item.label, legendX + 3.5, legendY + 2);
-        legendX += pdf.getTextWidth(item.label) + 7;
+      semanas.forEach((s, i) => {
+        if (i > 0) pdf.addPage();
+        hojaSemanaPDF(pdf, s, filasVisibles(s));
       });
-
-      // ── Tabla ──
-      const head = [["NOMBRE", "COMIDA\n30 min", "DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "TOTAL", "FIRMA"]];
-
-      const body = visibleFilas.map((fila) => {
-        const nombre = fila.empleado.nombre + (fila.empleado.position_title ? `\n${fila.empleado.position_title}` : "");
-        const comida = fila.empleado.comida_hora ?? "—";
-
-        const diasCells = DIAS_ORDEN.map((d) => {
-          const dia = fila.dias[d];
-          if (!dia) return { content: "—", styles: { halign: "center" as const, fontSize: 6 } };
-
-          const style = ESTADO_COLORES[dia.estado] ?? ESTADO_COLORES.ausente;
-          const tieneHoras = !!dia.entrada || !!dia.salida;
-
-          if (!tieneHoras && dia.estado !== "presente" && dia.estado !== "en_turno") {
-            return {
-              content: style.label,
-              styles: {
-                fillColor: hexToRgb(style.bg),
-                textColor: hexToRgb(style.text),
-                halign: "center" as const,
-                fontSize: 6,
-                fontStyle: "bold" as const,
-              },
-            };
-          }
-
-          const lines: string[] = [];
-          if (dia.entrada) lines.push(formatHora(dia.entrada));
-          if (dia.salida) lines.push(formatHora(dia.salida));
-          if (lines.length === 0) lines.push("—");
-
-          return {
-            content: lines.join("\n"),
-            styles: {
-              halign: "center" as const,
-              fontSize: 6,
-            },
-          };
-        });
-
-        return [
-          { content: nombre, styles: { fontSize: 7, valign: "middle" as const } },
-          { content: comida, styles: { halign: "center" as const, fontSize: 6, valign: "middle" as const } },
-          ...diasCells,
-          {
-            content: minutesToHHMM(fila.total_horas),
-            styles: { halign: "center" as const, fontSize: 7, fontStyle: "bold" as const, textColor: hexToRgb(TOTAL_COLOR), valign: "middle" as const },
-          },
-          { content: "", styles: { minCellHeight: 8 } },
-        ];
-      });
-
-      autoTable(pdf, {
-        head,
-        body,
-        startY: legendY + 6,
-        margin: { left: margin, right: margin },
-        styles: {
-          fontSize: 6,
-          cellPadding: 1,
-          lineColor: [200, 200, 200],
-          lineWidth: 0.15,
-          font: "helvetica",
-        },
-        headStyles: {
-          fillColor: [243, 244, 246],
-          textColor: [60, 60, 60],
-          fontStyle: "bold",
-          fontSize: 6,
-          halign: "center",
-          valign: "middle",
-        },
-        alternateRowStyles: {
-          fillColor: [248, 249, 250],
-        },
-        columnStyles: {
-          0: { cellWidth: 38 },
-          1: { cellWidth: 16 },
-          10: { cellWidth: 22 },
-        },
-        didDrawCell: (hookData) => {
-          // Dibujar línea de firma en la columna FIRMA
-          if (hookData.column.index === 10 && hookData.cell.section === "body") {
-            const { cell, doc } = hookData;
-            const y = cell.y + cell.height - 2.5;
-            doc.setDrawColor(180, 180, 180);
-            doc.setLineDashPattern([1, 1], 0);
-            doc.line(cell.x + 1, y, cell.x + cell.width - 1, y);
-            doc.setLineDashPattern([], 0);
-          }
-        },
-      });
-
-      pdf.save(`control-asistencia-semana-${data.semana}.pdf`);
+      // La semana promedio no entra: el PDF es el documento de nómina.
+      if (multi) {
+        pdf.addPage();
+        hojaTotalesPDF(pdf, totalesVisibles, rango.desde, rango.hasta, semanas.length);
+      }
+      pdf.save(
+        multi
+          ? `control-asistencia-${rango.desde}_a_${rango.hasta}.pdf`
+          : `control-asistencia-semana-${semanas[0].semana}.pdf`
+      );
     } catch (e) {
       console.error("Error generando PDF:", e);
     } finally {
@@ -434,20 +896,26 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
         </div>
       )}
 
-      {loading && !data && (
+      {loading && !semanas && (
         <div className="flex flex-col items-center gap-3 py-16 text-k-text-b">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="text-xs font-bold uppercase tracking-widest">Generando reporte...</span>
         </div>
       )}
 
-      {data && (
+      {semanas && semanas.length > 0 && rango && (
         <div className="space-y-4">
           {/* Barra de acciones */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm text-k-text-b">
-              Mostrando <span className="font-bold text-k-text-h">{visibleFilas.length}</span> de{" "}
-              <span className="font-bold text-k-text-h">{totalFilas}</span> empleados
+              Mostrando <span className="font-bold text-k-text-h">{totalesVisibles.length}</span> de{" "}
+              <span className="font-bold text-k-text-h">{totales.length}</span> empleados
+              {multi && (
+                <>
+                  {" · "}
+                  <span className="font-bold text-k-text-h">{semanas.length}</span> semanas
+                </>
+              )}
               {hiddenRows.size > 0 && (
                 <button
                   onClick={resetRows}
@@ -486,14 +954,31 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={() => setEditMode(true)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-bold text-k-text-h hover:bg-k-bg-card2 transition"
-                  title="Corrige entradas y salidas de toda la semana en una sola pantalla"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Editar horas
-                </button>
+                <>
+                  {multi && (
+                    <button
+                      onClick={() => setVerPromedio((p) => !p)}
+                      className={cx(
+                        "inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition",
+                        verPromedio
+                          ? "bg-sky-600 border-sky-600 text-white hover:bg-sky-700"
+                          : "border-k-border bg-k-bg-card text-k-text-h hover:bg-k-bg-card2"
+                      )}
+                      title="Tabla aislada, solo de muestra: no afecta la nómina ni el PDF"
+                    >
+                      <Sigma className="h-4 w-4" />
+                      {verPromedio ? "Ocultar promedio" : "Ver semana promedio"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-k-border bg-k-bg-card px-4 py-2.5 text-sm font-bold text-k-text-h hover:bg-k-bg-card2 transition"
+                    title="Corrige entradas y salidas de todo el período en una sola pantalla"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Editar horas
+                  </button>
+                </>
               )}
               <button
                 onClick={descargarPDF}
@@ -506,11 +991,13 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
             </div>
           </div>
 
-          {/* Panel: aplicar las mismas horas a toda la semana de un empleado */}
+          {/* Panel: aplicar las mismas horas a toda una semana de un empleado */}
           {editMode && fillRow && (
             <div className="rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 flex flex-wrap items-end gap-3">
               <div className="min-w-[180px]">
-                <div className="text-[10px] font-bold text-sky-700 uppercase tracking-widest">Toda la semana</div>
+                <div className="text-[10px] font-bold text-sky-700 uppercase tracking-widest">
+                  Semana {semanas[fillRow.semanaIdx]?.semana}
+                </div>
                 <div className="text-sm font-black text-k-text-h">{fillRow.nombre}</div>
               </div>
               <div>
@@ -544,10 +1031,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
               </label>
               <div className="flex items-center gap-2 ml-auto">
                 <button
-                  onClick={() => {
-                    const fila = visibleFilas.find((f) => f.empleado.id === fillRow.empId);
-                    if (fila) aplicarSemana(fila);
-                  }}
+                  onClick={aplicarSemana}
                   disabled={!fillRow.entrada && !fillRow.salida}
                   className="inline-flex items-center gap-2 rounded-xl bg-sky-600 text-white px-4 py-2 text-sm font-bold hover:bg-sky-700 transition disabled:opacity-50"
                 >
@@ -562,32 +1046,28 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                 </button>
               </div>
               <p className="w-full text-[11px] text-sky-700">
-                Se aplica a los días laborables de la semana hasta hoy (no toca descansos, festivos, vacaciones ni incapacidades).
-                Sin "Sobrescribir", solo rellena los días que no tienen esa hora. Los cambios quedan pendientes hasta que pulses Guardar.
+                Se aplica a los días laborables de esa semana hasta hoy (no toca descansos, festivos, vacaciones ni
+                incapacidades). Sin "Sobrescribir", solo rellena los días que no tienen esa hora. Los cambios quedan
+                pendientes hasta que pulses Guardar.
               </p>
             </div>
           )}
 
-          {/* Contenedor del reporte (se captura para PDF) */}
+          {/* Reporte */}
           <div className="space-y-4 bg-white p-4 rounded-[28px]">
             {/* Header del reporte */}
             <div className="rounded-[28px] border border-k-border bg-k-bg-card p-6 shadow-k-card">
               <div className="flex items-start justify-between">
                 <div className="text-center flex-1">
-                  <h2 className="text-xl font-black text-k-text-h tracking-tight uppercase">
-                    Control de Asistencia
-                  </h2>
+                  <h2 className="text-xl font-black text-k-text-h tracking-tight uppercase">Control de Asistencia</h2>
                   <p className="text-sm text-k-text-b mt-1">
                     del{" "}
                     <span className="font-bold">
-                      {new Date(data.rango.desde + "T12:00:00").toLocaleDateString("es-MX", {
-                        day: "numeric",
-                        month: "long",
-                      })}
+                      {new Date(rango.desde + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long" })}
                     </span>{" "}
                     al{" "}
                     <span className="font-bold">
-                      {new Date(data.rango.hasta + "T12:00:00").toLocaleDateString("es-MX", {
+                      {new Date(rango.hasta + "T12:00:00").toLocaleDateString("es-MX", {
                         day: "numeric",
                         month: "long",
                         year: "numeric",
@@ -596,8 +1076,12 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
                   </p>
                 </div>
                 <div className="text-center shrink-0 ml-4">
-                  <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">Semana</div>
-                  <div className="text-5xl font-black text-k-text-h">{data.semana}</div>
+                  <div className="text-[10px] font-bold text-k-text-b uppercase tracking-widest">
+                    {multi ? "Semanas" : "Semana"}
+                  </div>
+                  <div className="text-5xl font-black text-k-text-h">
+                    {multi ? semanas.length : semanas[0].semana}
+                  </div>
                 </div>
               </div>
             </div>
@@ -605,17 +1089,7 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
             {/* Leyenda */}
             <div className="rounded-[20px] border border-k-border bg-k-bg-card p-4 shadow-k-card">
               <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-                {[
-                  { label: "COMIDA 30 min", color: COMIDA_COLOR },
-                  { label: "ENTRADA", color: ENTRADA_COLOR },
-                  { label: "SALIDA", color: SALIDA_COLOR },
-                  { label: "FALTA", color: ESTADO_COLORES.falta.bg },
-                  { label: "DESCANSO", color: ESTADO_COLORES.descanso.bg },
-                  { label: "INCAPACIDAD", color: ESTADO_COLORES.incapacidad.bg },
-                  { label: "VACACIONES", color: ESTADO_COLORES.vacaciones.bg },
-                  { label: "HORAS TOTAL", color: TOTAL_COLOR },
-                  { label: "FIRMA DE CONFORMIDAD", color: "transparent" },
-                ].map((item) => (
+                {[...LEYENDA, { label: "FIRMA DE CONFORMIDAD", color: "transparent" }].map((item) => (
                   <div key={item.label} className="flex items-center gap-1.5">
                     <div
                       className="h-3 w-3 rounded-sm border border-neutral-200 shrink-0"
@@ -627,160 +1101,41 @@ export default function ReporteAsistenciaTab({ employees }: { employees: Employe
               </div>
             </div>
 
-            {/* Tabla matriz */}
-            <div className="rounded-[28px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="bg-k-bg-card2/80">
-                      <th className="text-left px-3 py-3 text-[10px] font-bold text-k-text-b uppercase tracking-[0.1em] border-b border-k-border sticky left-0 bg-k-bg-card2/95 z-10 min-w-[140px]">
-                        Nombre
-                      </th>
-                      <th
-                        className="text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
-                        style={{ backgroundColor: `${COMIDA_COLOR}22` }}
-                      >
-                        Comida
-                        <br />
-                        <span className="text-[9px] opacity-70">30 min</span>
-                      </th>
-                      {DIAS_ORDEN.map((d) => (
-                        <th
-                          key={d}
-                          className={cx(
-                            "text-center px-2 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[80px]",
-                            (d === "sábado" || d === "domingo") && "bg-neutral-50/50"
-                          )}
-                        >
-                          {d}
-                        </th>
-                      ))}
-                      <th
-                        className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[70px]"
-                        style={{ backgroundColor: `${TOTAL_COLOR}15` }}
-                      >
-                        Total
-                      </th>
-                      <th className="text-center px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] border-b border-k-border min-w-[100px]">
-                        Firma de
-                        <br />
-                        Conformidad
-                      </th>
-                      <th className="w-10 border-b border-k-border" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleFilas.map((fila) => (
-                      <tr key={fila.empleado.id} className="border-t border-k-border hover:bg-k-bg-card2/30 transition group">
-                        {/* Nombre */}
-                        <td className="px-3 py-2 sticky left-0 bg-k-bg-card border-r border-k-border z-10">
-                          <div className="text-sm font-bold text-k-text-h whitespace-nowrap">{fila.empleado.nombre}</div>
-                          {fila.empleado.position_title && (
-                            <div className="text-[9px] text-k-text-b">{fila.empleado.position_title}</div>
-                          )}
-                          {editMode && (
-                            <button
-                              onClick={() =>
-                                setFillRow({ empId: fila.empleado.id, nombre: fila.empleado.nombre, entrada: "", salida: "", overwrite: false })
-                              }
-                              className={cx(
-                                "mt-1 inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px] font-bold transition",
-                                fillRow?.empId === fila.empleado.id
-                                  ? "bg-sky-600 border-sky-600 text-white"
-                                  : "bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100"
-                              )}
-                              title="Poner la misma entrada y salida en todos los días de la semana"
-                            >
-                              <CalendarRange className="h-3 w-3" />
-                              Toda la semana
-                            </button>
-                          )}
-                        </td>
+            {/* Una matriz por semana */}
+            {semanas.map((s, idx) => (
+              <MatrizSemana
+                key={`${s.anio}-${s.semana}-${s.rango.desde}`}
+                semana={s}
+                semanaIdx={idx}
+                filas={filasVisibles(s)}
+                mostrarTitulo={multi}
+                editMode={editMode}
+                changes={changes}
+                hoy={hoy}
+                fillRow={fillRow}
+                onDraft={setDraft}
+                onFill={(semanaIdx, fila) =>
+                  setFillRow({
+                    semanaIdx,
+                    empId: fila.empleado.id,
+                    nombre: fila.empleado.nombre,
+                    entrada: "",
+                    salida: "",
+                    overwrite: false,
+                  })
+                }
+                onHideRow={hideRow}
+              />
+            ))}
 
-                        {/* Comida */}
-                        <td
-                          className="px-2 py-2 text-center border-r border-k-border"
-                          style={{ backgroundColor: `${COMIDA_COLOR}33` }}
-                        >
-                          <span className="text-xs font-bold" style={{ color: "#B7791F" }}>
-                            {fila.empleado.comida_hora ?? "—"}
-                          </span>
-                        </td>
-
-                        {/* Días */}
-                        {DIAS_ORDEN.map((d) => (
-                          <td
-                            key={d}
-                            className={cx(
-                              "px-0 py-0 border-r border-k-border h-[52px] w-[80px]",
-                              (d === "sábado" || d === "domingo") && "bg-neutral-50/30"
-                            )}
-                          >
-                            <CeldaDia
-                              dia={
-                                fila.dias[d]
-                                  ? {
-                                      fecha: fila.dias[d]!.fecha,
-                                      entrada: fila.dias[d]!.entrada,
-                                      salida: fila.dias[d]!.salida,
-                                      estado: fila.dias[d]!.estado,
-                                    }
-                                  : undefined
-                              }
-                              editable={editMode && !!fila.dias[d] && fila.dias[d]!.fecha <= hoy}
-                              draft={fila.dias[d] ? changes[`${fila.empleado.id}|${fila.dias[d]!.fecha}`] : undefined}
-                              onDraft={
-                                fila.dias[d]
-                                  ? (patch) => setDraft(fila.empleado.id, fila.dias[d]!.fecha, patch)
-                                  : undefined
-                              }
-                            />
-                          </td>
-                        ))}
-
-                        {/* Total */}
-                        <td
-                          className="px-3 py-2 text-center border-r border-k-border"
-                          style={{ backgroundColor: `${TOTAL_COLOR}10` }}
-                        >
-                          <span className="text-sm font-black" style={{ color: TOTAL_COLOR }}>
-                            {minutesToHHMM(fila.total_horas)}
-                          </span>
-                        </td>
-
-                        {/* Firma */}
-                        <td className="px-3 py-2 border-r border-k-border">
-                          <div className="h-8 w-full border-b border-dashed border-neutral-300" />
-                        </td>
-
-                        {/* Eliminar */}
-                        <td className="px-2 py-2 text-center">
-                          <button
-                            onClick={() => hideRow(fila.empleado.id)}
-                            className="h-7 w-7 rounded-lg border border-k-border bg-k-bg-card2 flex items-center justify-center hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 transition opacity-0 group-hover:opacity-100"
-                            title="Quitar del reporte"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-
-                    {visibleFilas.length === 0 && (
-                      <tr>
-                        <td colSpan={13} className="px-8 py-12 text-center text-k-text-b text-sm">
-                          No hay registros para el período seleccionado.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            {/* Totales del período */}
+            {multi && totalesVisibles.length > 0 && <TablaTotales totales={totalesVisibles} />}
           </div>
+
+          {/* Semana promedio: fuera del contenedor del reporte, solo de muestra */}
+          {verPromedio && multi && <SeccionPromedio filas={promedioVisible} semanas={semanas.length} />}
         </div>
       )}
     </div>
   );
 }
-
