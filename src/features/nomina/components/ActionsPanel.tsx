@@ -1,23 +1,27 @@
-import { CheckCircle2, Download, FileSpreadsheet, Loader2, LockOpen } from "lucide-react";
+import { CheckCircle2, Download, FileSpreadsheet, FolderArchive, Loader2, LockOpen } from "lucide-react";
 
 export type ActionsPanelProps = {
   approved: boolean;
   approving: boolean;
   reopening?: boolean;
+  exportingAll?: boolean;
   onApprove: () => void;
   onReopen?: () => void;
   onExportPDF: () => void;
   onExportCSV: () => void;
+  onExportAllZip?: () => void;
 };
 
 export default function ActionsPanel({
   approved,
   approving,
   reopening,
+  exportingAll,
   onApprove,
   onReopen,
   onExportPDF,
   onExportCSV,
+  onExportAllZip,
 }: ActionsPanelProps) {
   return (
     <div className="rounded-[40px] border border-k-border bg-k-bg-card shadow-k-card overflow-hidden">
@@ -57,8 +61,22 @@ export default function ActionsPanel({
           className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 px-4 py-3 text-xs font-bold text-k-text-h uppercase tracking-widest transition"
         >
           <Download className="h-4 w-4" />
-          Exportar PDF
+          Exportar PDF (Semana)
         </button>
+        {onExportAllZip && (
+          <button
+            onClick={onExportAllZip}
+            disabled={exportingAll}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 px-4 py-3 text-xs font-bold text-k-text-h uppercase tracking-widest transition disabled:opacity-50"
+          >
+            {exportingAll ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FolderArchive className="h-4 w-4" />
+            )}
+            {exportingAll ? "Generando ZIP..." : "Descargar Todos (ZIP)"}
+          </button>
+        )}
         <button
           onClick={onExportCSV}
           className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-k-border bg-k-bg-card hover:bg-k-bg-card2 px-4 py-3 text-xs font-bold text-k-text-h uppercase tracking-widest transition"

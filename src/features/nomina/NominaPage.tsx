@@ -43,6 +43,8 @@ export default function NominaPage() {
     toggleExclude,
     exportPDF,
     exportCSV,
+    exportAllPDFsZip,
+    exportingAll,
     setNotes,
     saveNotes,
     patchEntry,
@@ -57,8 +59,10 @@ export default function NominaPage() {
         approved={approved}
         weekStart={weekStart}
         weekEnd={weekEnd}
+        exportingAll={exportingAll}
         onPrevWeek={prevWeek}
         onNextWeek={nextWeek}
+        onExportAllZip={exportAllPDFsZip}
       />
 
       {/* Toast */}
@@ -156,10 +160,12 @@ export default function NominaPage() {
               approved={approved}
               approving={approving}
               reopening={reopening}
+              exportingAll={exportingAll}
               onApprove={approve}
               onReopen={reopen}
               onExportPDF={exportPDF}
               onExportCSV={exportCSV}
+              onExportAllZip={exportAllPDFsZip}
             />
             <NotesPanel
               notes={notes}

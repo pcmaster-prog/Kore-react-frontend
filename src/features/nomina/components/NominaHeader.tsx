@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, FolderArchive, Loader2 } from "lucide-react";
 import { cx } from "@/lib/utils";
 import type { Period } from "../nomina.types";
 import { getWeekNumber, weekLabel } from "../nomina.utils";
@@ -8,8 +8,10 @@ export type NominaHeaderProps = {
   approved: boolean;
   weekStart: string;
   weekEnd: string;
+  exportingAll?: boolean;
   onPrevWeek: () => void;
   onNextWeek: () => void;
+  onExportAllZip?: () => void;
 };
 
 export default function NominaHeader({
@@ -17,8 +19,10 @@ export default function NominaHeader({
   approved,
   weekStart,
   weekEnd,
+  exportingAll,
   onPrevWeek,
   onNextWeek,
+  onExportAllZip,
 }: NominaHeaderProps) {
   return (
     <div className="relative rounded-[40px] bg-k-bg-sidebar overflow-hidden px-8 py-8 text-white">
@@ -46,7 +50,23 @@ export default function NominaHeader({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {onExportAllZip && (
+            <button
+              onClick={onExportAllZip}
+              disabled={exportingAll}
+              title="Descargar un archivo ZIP con el PDF de cada semana de nómina generada"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition disabled:opacity-50"
+            >
+              {exportingAll ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FolderArchive className="h-4 w-4" />
+              )}
+              {exportingAll ? "Generando ZIP..." : "Descargar Todos (ZIP)"}
+            </button>
+          )}
+
           {period && (
             <span
               className={cx(

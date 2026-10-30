@@ -11,6 +11,11 @@ import {
   fmtUnits,
   formatTime12,
 } from "./nomina.utils";
+import {
+  buildPeriodPdfBytes,
+  createZipBlob,
+  getPeriodPdfFilename,
+} from "./nominaPdfZip";
 
 export function useNomina() {
   const [period, setPeriod] = useState<Period | null>(null);
@@ -18,6 +23,7 @@ export function useNomina() {
   const [generating, setGenerating] = useState(false);
   const [approving, setApproving] = useState(false);
   const [reopening, setReopening] = useState(false);
+  const [exportingAll, setExportingAll] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
@@ -437,6 +443,108 @@ export function useNomina() {
     URL.revokeObjectURL(url);
   }
 
+  async function fetchAllPeriodsForExport(): Promise<Period[]> {
+    try {
+      const res = await api.get("/nomina/periodos/exportar-todos");
+      const list = res.data?.data ?? res.data;
+      if (Array.isArray(list)) {
+        return list;
+      }
+    } catch {
+      // Fallback: paginar /nomina/periodos y obtener el detalle de cada periodo
+    }
+
+    const periodIds: string[] = [];
+    let page = 1;
+    let lastPage = 1;
+
+    do {
+      const pageRes = await api.get("/nomina/periodos", { params: { page } });
+      const items = pageRes.data?.data ?? (Array.isArray(pageRes.data) ? pageRes.data : []);
+      for (const item of items) {
+        if (item?.id && !periodIds.includes(item.id)) {
+          periodIds.push(item.id);
+        }
+      }
+      lastPage = pageRes.data?.meta?.last_page ?? pageRes.data?.last_page ?? 1;
+      page++;
+    } while (page <= lastPage && page <= 50);
+
+    const details = await Promise.all(
+      periodIds.map(async (id) => {
+        const detailRes = await api.get(`/nomina/periodos/${id}/exportar`);
+        return (detailRes.data?.period ?? detailRes.data) as Period;
+      })
+    );
+
+    return details.filter(Boolean);
+  }
+
+  async function exportAllPDFsZip() {
+    if (exportingAll) return;
+    setExportingAll(true);
+    try {
+      let schedules = mealSchedules;
+      if (schedules.length === 0) {
+        try {
+          const mealRes = await api.get("/meal-schedules");
+          schedules = mealRes.data?.data ?? mealRes.data ?? [];
+          setMealSchedules(schedules);
+        } catch {
+          /* meal schedules not yet configured */
+        }
+      }
+
+      const allPeriods = await fetchAllPeriodsForExport();
+      if (!allPeriods || allPeriods.length === 0) {
+        showToast("err", "No hay periodos de nómina generados para descargar");
+        return;
+      }
+
+      const sortedPeriods = [...allPeriods].sort((a, b) =>
+        (a.week_start ?? "").localeCompare(b.week_start ?? "")
+      );
+
+      const usedNames = new Set<string>();
+      const files = sortedPeriods.map((p) => {
+        let name = getPeriodPdfFilename(p);
+        if (usedNames.has(name)) {
+          name = name.replace(/\.pdf$/, `_${p.id.slice(0, 6)}.pdf`);
+        }
+        usedNames.add(name);
+        return {
+          name,
+          data: buildPeriodPdfBytes(p, schedules),
+        };
+      });
+
+      const zipBlob = createZipBlob(files);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Nominas_Semanales_${todayLocalDate()}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      showToast(
+        "ok",
+        `Se descargaron ${files.length} PDF${files.length !== 1 ? "s" : ""} en un archivo ZIP`
+      );
+    } catch (e: unknown) {
+      const axiosError = e as {
+        response?: { data?: { message?: string } };
+      };
+      showToast(
+        "err",
+        axiosError?.response?.data?.message ?? "No se pudieron descargar los PDFs de nómina"
+      );
+    } finally {
+      setExportingAll(false);
+    }
+  }
+
   const approved = period?.status === "approved";
   const excludedIds = period?.excluded_employee_ids ?? [];
   const visibleEntries = (period?.entries ?? []).filter(
@@ -490,6 +598,8 @@ export function useNomina() {
     toggleExclude,
     exportPDF,
     exportCSV,
+    exportAllPDFsZip,
+    exportingAll,
     setNotes,
     saveNotes,
     patchEntry,
